@@ -6,8 +6,7 @@
     const acct = !E.cloud ? `<div class="faint" style="font-size:13px">Cloud sync isn't set up in this copy of the app: data stays on this device.</div>`
       : E.uid ? `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${esc(E.email || "Signed in")}</b><small class="faint" style="display:block;font-size:12.5px">Synced on every device where you sign in${E.pending() ? ` · ${E.pending()} change${E.pending() > 1 ? "s" : ""} waiting for the network` : ""}</small></span><button class="btn soft sm" data-act="eg-signout">Sign out</button></div>`
       : `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>This device only</b><small class="faint" style="display:block;font-size:12.5px">Sign in to keep phone and computer in sync. What's here is uploaded the first time.</small></span><button class="btn primary sm" data-act="eg-signin">Sign in</button></div>`;
-    return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}
-      <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn soft sm" style="cursor:pointer">${ic("download", "sm")}Restore a backup (.json)<input type="file" accept=".json,application/json" data-chg="eg-restore" hidden></label><button class="btn soft sm" data-act="export">${ic("download", "sm")}Download a backup</button></div></section>
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}</section>
       ${suppSettingsCard()}${reminderCard()}${aiCard()}${aiFeatCard()}${proSettingsCard()}${shopSettingsCard()}${settingsCards()}`;
   }
   const origSettings = VIEWS.settings;
@@ -93,14 +92,7 @@
     try { const j = await E.sample.json('Reply with {"ok": true, "kcal_100g_banana": number}'); toast(`AI works · ${E.lastRun?.model || ""} · banana ${j?.kcal_100g_banana ?? "?"} kcal/100 g`); }
     catch (e) { toast("No service answered: " + String(e?.message || e).slice(0, 80)); }
     AIV.chain = (E.lastRun?.tried || []).slice(-12); scheduleRender(); };
-  CHG["eg-restore"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; }
-    if (!j || (j.app !== "Fuel" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
-    openSheet("confirm", { title: "Restore this backup?", text: `From ${String(j.exported || "").slice(0, 10) || "a backup"}: settings, foods, recipes, plans, logs and training replace what's here.`, yes: "Restore", run: () => {
-      const keepKey = S.settings?.intervals?.key, keepAi = S.settings?.ai;
-      if (j.settings) { const s = normalizeSettings(j.settings); if (keepKey && !s.intervals?.key) s.intervals = { ...(s.intervals || {}), key: keepKey }; if (keepAi && !s.ai) s.ai = keepAi; put("settings", "", s); }
-      for (const k of ["shop", "body", "train"]) if (j[k]) put(k, "", j[k]);
-      let n = 0; for (const k of ["foods", "recipes", "days", "logm"]) for (const [id, v] of Object.entries(j[k] || {})) { put(k, id, v); n++; }
-      toast(`Backup restored · ${n} items`); scheduleRender(); } }); }; rd.readAsText(f); };
+  CHG["eg-restore"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; } restoreOpen(j, "file"); }; rd.readAsText(f); };
 
   /* ---- AI ready if a key is saved (also when it was added on another device) ---- */
   setInterval(() => { const on = E.anyAI(); if (on !== !!Sync.sample) { aiReady(); scheduleRender(); } }, 3000);

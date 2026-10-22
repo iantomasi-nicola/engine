@@ -10358,6 +10358,86 @@ ACT["race-start"] = () => { const d = S_().draft, r = races().find(x => x.id ===
 const _raceSheet = SHEETS.race;
 SHEETS.race = sh => { const o = _raceSheet(sh), d = sh.draft; if (!sh.isNew && d.date && !d.result?.done && daysBetween(todayISO(), d.date) <= 1 && daysBetween(todayISO(), d.date) >= -1) o.foot = `<button class="btn tonal" data-act="race-start">${ic("play", "sm")}Start race</button>` + o.foot;
   if (!sh.isNew && d.date >= todayISO()) o.body += raceFuelHTML(d); return o; };
+/* ================= backups: automatic restore points, a file on a schedule, guided restore =================
+   Restore points: a copy of everything, kept on this device once a day (the last 14) and before every restore.
+   Backup file: every N days. Where the browser allows it (Chrome on a computer) it's written by itself into a folder
+   you pick once; elsewhere Today reminds you and one tap saves it. Restore shows what's inside and lets you pick parts. */
+const BK_PARTS = [["settings", "Settings and targets"], ["foods", "Foods and recipes"], ["days", "Meal plans"], ["logm", "Daily logs (weight, workouts, sleep, water)"], ["train", "Training, races, goals and programs"], ["body", "Body: weight, measurements, photo list"], ["shop", "Shopping, pantry and prices"], ["photos", "Progress photos"]];
+const BKP = () => ({ every: 7, keys: false, photos: false, ...(S.settings.backup || {}) });
+const BKDB = (() => { let p = null; const open = () => p || (p = new Promise((ok, no) => { const r = indexedDB.open("engine-backup", 1); r.onupgradeneeded = () => { r.result.createObjectStore("pts"); r.result.createObjectStore("kv"); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+  const tx = async (st, mode, f) => { const db = await open(); return new Promise((ok, no) => { const t = db.transaction(st, mode), s = t.objectStore(st), r = f(s); t.oncomplete = () => ok(r?.result); t.onerror = () => no(t.error); }); };
+  return { get: (st, k) => tx(st, "readonly", s => s.get(k)), put: (st, k, v) => tx(st, "readwrite", s => s.put(v, k)), del: (st, k) => tx(st, "readwrite", s => s.delete(k)), keys: st => tx(st, "readonly", s => s.getAllKeys()) }; })();
+function backupData(o = {}) {
+  const st = clone(S.settings || {});
+  if (!o.keys) { if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) delete x.key; delete st.ai.key; } }
+  return { app: "Engine", version: 3, exported: new Date().toISOString(), settings: st, foods: S.foods, recipes: S.recipes, days: S.days, logm: S.logm, train: S.train, body: S.body, shop: S.shop };
+}
+async function photosData() { const out = {}; for (const x of S.body.photos || []) { const b = await photoBlob(x); if (b) out[x.id] = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); } return out; }
+async function backupJSON(o = BKP()) { const j = backupData(o); if (o.photos) j.photos = await photosData(); return JSON.stringify(j); }
+const bkName = () => `engine-backup-${todayISO()}.json`;
+/* restore points */
+async function restorePoint(why = "daily") { try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData({ keys: true }) }); const ks = (await BKDB.keys("pts")).sort(); for (const old of ks.slice(0, Math.max(0, ks.length - 14))) await BKDB.del("pts", old); } catch (e) {} }
+async function dailyPoint() { try { const ks = (await BKDB.keys("pts")).sort(), last = ks[ks.length - 1]; if (!last || last.slice(0, 10) !== new Date().toISOString().slice(0, 10)) await restorePoint("daily"); } catch (e) {} }
+/* the file on a schedule */
+const bkLast = () => S.settings.backup?.last || null;
+const bkDue = () => { const P = BKP(); if (!P.every) return false; const l = bkLast(); return !l || daysBetween(l.slice(0, 10), todayISO()) >= P.every; };
+const fsOK = () => typeof window.showDirectoryPicker === "function";
+async function bkWriteFolder(silent) { try { const dir = await BKDB.get("kv", "dir"); if (!dir) return false; let perm = await dir.queryPermission?.({ mode: "readwrite" }); if (perm !== "granted") { if (silent) return false; perm = await dir.requestPermission?.({ mode: "readwrite" }); } if (perm !== "granted") return false;
+  const fh = await dir.getFileHandle(bkName(), { create: true }), w = await fh.createWritable(); await w.write(await backupJSON()); await w.close(); return true; } catch (e) { return false; } }
+async function bkSaveNow(auto) {
+  if (await bkWriteFolder(auto)) { bkMark(); if (!auto) toast("Backup written to your folder"); return true; }
+  if (auto) return false;
+  const ok = await saveFile(bkName(), await backupJSON(), "Backup saved"); if (ok) bkMark(); else toast("Couldn't save the file here."); return ok;
+}
+function bkMark() { S.settings.backup = { ...(S.settings.backup || {}), last: new Date().toISOString() }; saveSettings(); }
+setTimeout(async () => { await dailyPoint(); if (bkDue() && fsOK()) bkSaveNow(true); }, 6000);
+function backupToday() { if (!bkDue() || !BKP().every || (S.settings.backup?.snooze || "") >= todayISO()) return ""; const l = bkLast();
+  return `<section class="card pad bk-due"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>Backup due</b><small class="faint" style="display:block;font-size:12.5px">${l ? `Last one ${daysBetween(l.slice(0, 10), todayISO())} days ago` : "No backup file yet"} · one file with everything</small></span><span class="row" style="gap:6px"><button class="btn text sm" data-act="bk-snooze">Later</button><button class="btn primary sm" data-act="bk-save">${ic("download", "sm")}Save</button></span></div></section>`; }
+TODAY_CARDS.push({ col: "a", o: 1, fn: backupToday });
+ACT["bk-save"] = () => bkSaveNow(false);
+ACT["bk-snooze"] = () => { S.settings.backup = { ...(S.settings.backup || {}), snooze: addDays(todayISO(), 2) }; saveSettings(); };
+ACT["bk-folder"] = async () => { if (!fsOK()) return; try { const dir = await window.showDirectoryPicker({ mode: "readwrite", id: "engine-backup" }); await BKDB.put("kv", "dir", dir); S.settings.backup = { ...(S.settings.backup || {}), folder: dir.name }; saveSettings(); await bkSaveNow(false); } catch (e) { if (e?.name !== "AbortError") toast("Couldn't use that folder."); } };
+ACT["bk-nofolder"] = async () => { await BKDB.del("kv", "dir"); const b = { ...(S.settings.backup || {}) }; delete b.folder; S.settings.backup = b; saveSettings(); };
+ACT["bk-every"] = el => { S.settings.backup = { ...(S.settings.backup || {}), every: +el.dataset.v }; saveSettings(); };
+ACT["bk-opt"] = el => { const k = el.dataset.k; S.settings.backup = { ...(S.settings.backup || {}), [k]: !BKP()[k] }; saveSettings(); };
+ACT.export = () => bkSaveNow(false);
+function backupSettings() { const P = BKP(), l = bkLast();
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Backups</span>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-act="bk-save">${ic("download", "sm")}Save a backup now</button><label class="btn soft sm" style="cursor:pointer">${ic("undo", "sm")}Restore from a file<input type="file" accept=".json,application/json" data-chg="bk-file" hidden></label><button class="btn soft sm" data-act="bk-points">Restore points</button></div>
+    <small class="faint">${l ? `Last file ${fmtDM(l.slice(0, 10))}` : "No backup file yet"} · a restore point is kept on this device every day (last 14) and before every restore.</small>
+    <div class="field"><span class="flabel">Backup file every</span><div class="chips">${[[0, "Never"], [1, "Day"], [7, "Week"], [14, "2 weeks"], [30, "Month"]].map(([v, l2]) => `<button class="chip sm" data-act="bk-every" data-v="${v}" aria-pressed="${P.every === v}">${l2}</button>`).join("")}</div></div>
+    ${fsOK() ? `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${P.folder ? `<span>Written by itself to <b>${esc(P.folder)}</b></span><button class="btn text sm" data-act="bk-nofolder">Stop</button>` : `<button class="btn soft sm" data-act="bk-folder">Write it by itself to a folder</button><small class="faint">Chrome on a computer only</small>`}</div>` : `<small class="faint">This browser can't write files by itself: when it's due, Today shows a one-tap Save.</small>`}
+    <label class="row sw-row" style="justify-content:space-between"><span>Include progress photos<small class="faint" style="display:block;font-size:12px">The file gets bigger</small></span><button type="button" class="switch" role="switch" aria-checked="${P.photos}" data-act="bk-opt" data-k="photos" aria-label="Include photos"></button></label>
+    <label class="row sw-row" style="justify-content:space-between"><span>Include API keys<small class="faint" style="display:block;font-size:12px">intervals.icu and AI keys. Off is safer if you share or upload the file</small></span><button type="button" class="switch" role="switch" aria-checked="${P.keys}" data-act="bk-opt" data-k="keys" aria-label="Include API keys"></button></label></section>`; }
+SETTINGS_CARDS.push({ o: 0, fn: backupSettings });
+/* guided restore */
+function bkSummary(j) { const n = o => Object.keys(o || {}).length; let logs = 0, wos = 0; for (const m of Object.values(j.logm || {})) for (const d of Object.values(m.days || {})) { logs++; wos += (d.workouts || []).length; }
+  return { settings: j.settings ? "yes" : "—", foods: `${n(j.foods)} foods · ${n(j.recipes)} recipes`, days: `${n(j.days)} days`, logm: `${logs} days · ${wos} workouts`, train: `${(j.train?.races || []).length} races · ${(j.train?.goals || []).length} goals · ${(j.train?.wk?.tpls || []).length} workouts`, body: `${n(j.body?.w)} weigh-ins · ${n(j.body?.m)} measurements`, shop: `${n(j.shop?.pantry)} in the pantry · ${(j.shop?.buys || []).length} purchases`, photos: j.photos ? `${n(j.photos)} photos` : "not in this file" }; }
+function restoreOpen(j, from) { if (!j || (j.app !== "Fuel" && j.app !== "Engine" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
+  const parts = {}; for (const [k] of BK_PARTS) parts[k] = k === "photos" ? !!j.photos : !!(k === "foods" ? j.foods || j.recipes : j[k]);
+  openSheet("restore", { j, parts, mode: "replace", from: from || "file" }); }
+SHEETS.restore = sh => { const Sm = bkSummary(sh.j);
+  return { title: "Restore", body: `<div class="note">${sh.from === "point" ? "Restore point" : "Backup file"} from <b>${esc(new Date(sh.j.exported || Date.now()).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }))}</b>. Pick what to bring back.</div>
+    <div class="card">${BK_PARTS.map(([k, l]) => { const has = k === "photos" ? !!sh.j.photos : k === "foods" ? !!(sh.j.foods || sh.j.recipes) : !!sh.j[k]; return `<label class="lrow bk-r" style="${has ? "" : "opacity:.5"}"><span><span class="t">${l}</span><span class="s">${esc(Sm[k])}</span></span><span class="end"><button type="button" class="switch" role="switch" aria-checked="${!!sh.parts[k]}" data-act="rs-part" data-k="${k}" ${has ? "" : "disabled"} aria-label="${esc(l)}"></button></span></label>`; }).join("")}</div>
+    <div class="field"><span class="flabel">How</span><div class="strats">${[["replace", "Replace", "What you pick replaces what's here"], ["merge", "Only add what's missing", "Days, foods and recipes that aren't here come back; nothing here changes"]].map(([k, l, t]) => `<button class="strat" data-act="rs-mode" data-k="${k}" aria-pressed="${sh.mode === k}"><b>${l}</b><small>${t}</small></button>`).join("")}</div></div>
+    <div class="faint" style="font-size:12.5px">A restore point of what's here now is kept first, so you can undo this from Settings → Backups → Restore points.</div>`,
+    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="rs-go">Restore</button>` }; };
+ACT["rs-part"] = el => { const sh = S_(); sh.parts[el.dataset.k] = !sh.parts[el.dataset.k]; renderSheet(); };
+ACT["rs-mode"] = el => { S_().mode = el.dataset.k; renderSheet(); };
+ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0;
+  if (P.settings && j.settings && !merge) { const keepKey = S.settings?.intervals?.key, keepAi = S.settings?.ai, s = normalizeSettings(j.settings);
+    if (keepKey && !s.intervals?.key) s.intervals = { ...(s.intervals || {}), key: keepKey }; if (keepAi && !(s.ai?.services || []).some(x => x.key)) s.ai = keepAi; put("settings", "", s); n++; }
+  const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
+  if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
+  if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
+  for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { if (merge) { const cur = clone(S[k]); for (const [x, v] of Object.entries(j[k])) if (cur[x] == null || (Array.isArray(cur[x]) && !cur[x].length)) cur[x] = v; put(k, "", cur); } else put(k, "", j[k]); n++; }
+  if (P.photos && j.photos) { let p = 0; for (const [id, url] of Object.entries(j.photos)) { try { const b = await (await fetch(url)).blob(); await IDB.put(id, b); p++; } catch (e) {} } n += p; }
+  toast(`Restored · ${n} items`); scheduleRender(); };
+CHG["bk-file"] = (v, el) => { const f = el.files?.[0]; if (!f) return; el.value = ""; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; } restoreOpen(j, "file"); }; rd.readAsText(f); };
+SHEETS.bkpoints = sh => ({ title: "Restore points", body: sh.list ? (sh.list.length ? `<div class="card">${[...sh.list].reverse().map(k => `<button class="lrow" data-act="bk-point" data-k="${k}"><span><span class="t">${esc(new Date(k).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</span><span class="s">${esc(sh.why[k] || "")}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : `<div class="note">No restore points yet: the first one is made a few seconds after opening the app.</div>`) : `<div class="result"><span class="spinner"></span></div>`,
+  foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
+ACT["bk-points"] = async () => { openSheet("bkpoints", {}); const sh = S_(); try { const ks = (await BKDB.keys("pts")).sort(), why = {}; for (const k of ks) why[k] = (await BKDB.get("pts", k))?.why || ""; sh.list = ks; sh.why = why; } catch (e) { sh.list = []; sh.why = {}; } if (UI.sheet === sh) renderSheet(); };
+ACT["bk-point"] = async el => { const p = await BKDB.get("pts", el.dataset.k); if (p?.data) restoreOpen({ ...p.data, exported: el.dataset.k }, "point"); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
