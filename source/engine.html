@@ -139,6 +139,17 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .xp-t small{font-size:12.5px;color:var(--muted)}
 .xp-row.bad .xp-t small{color:var(--bad)}
 .tab-dot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+
+.en-card{display:flex;flex-direction:column;gap:12px}
+.en-big{display:flex;flex-direction:column;gap:2px}.en-big b{font-size:34px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.en-big span{font-size:13px;color:var(--muted)}
+.en-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}.en-bar i{display:block;height:100%}
+.en-leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px;font-size:13px;color:var(--muted)}
+.en-leg span{display:flex;align-items:center;gap:6px}.en-leg i{width:10px;height:10px;border-radius:3px;flex:none}.en-leg b{margin-left:auto;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+.xp-row{display:flex!important;flex-wrap:wrap;align-items:center;gap:2px 10px}
+.xp-t{flex:1 1 150px}
+.xp-row .btn{flex:0 0 auto}
+.xp-acts{display:flex;gap:2px;margin-left:auto}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -3055,7 +3066,7 @@ function calisTable() {
   const L = S.train.calis || []; const ex = [...new Set([...(FIT().exercises || []), ...L.map(c => c.ex)])];
   return ex.map(name => {
     const all = L.filter(c => c.ex === name).sort((a, b) => a.date.localeCompare(b.date));
-    const reps = all.filter(c => c.test === "Max reps (BW)"), rm = all.filter(c => c.test === "1RM (+kg)"), hold = all.filter(c => c.test === "Hold (s)");
+    const reps = all.filter(c => c.test === "Max reps (BW)"), rm = all.filter(c => RM_N(c.test)).map(c => ({ ...c, val: r1(est1rm(bwAt(c.date, c.bw), +c.val || 0, RM_N(c.test))) })), hold = all.filter(c => c.test === "Hold (s)");
     const lastOf = arr => { if (!arr.length) return null; const d = arr[arr.length - 1].date; return Math.max(...arr.filter(x => x.date === d).map(x => +x.val)); };
     const prevOf = arr => { if (!arr.length) return null; const d = arr[arr.length - 1].date; const pr = arr.filter(x => x.date < d); if (!pr.length) return null; const pd = pr[pr.length - 1].date; return Math.max(...pr.filter(x => x.date === pd).map(x => +x.val)); };
     const bestOf = arr => arr.length ? arr.reduce((a, x) => +x.val > +a.val ? x : a) : null;
@@ -3667,10 +3678,11 @@ function trainRecords() {
     ${tbl(["Distance", "PB", "Pace", "Date", "VDOT", "vs predicted"], RACE_DIST.map(([k, km]) => { const pb = pbFor(km), p = rs.preds.find(x => x.km === km); const v = pb ? vdotOf(km, pb.sec / 60) : null;
       return `<tr><td>${k}</td><td class="n"><b>${pb ? fmtClock(pb.sec) : "—"}</b></td><td class="n">${pb ? fmtPace(pb.sec / 60 / km) : ""}</td><td>${pb ? fmtDM(pb.date) : ""}</td><td class="n">${v ? r1(v) : ""}</td><td class="n">${pb && p?.sec ? (pb.sec <= p.sec ? "−" : "+") + fmtClock(Math.abs(pb.sec - p.sec)) : ""}</td></tr>`; }))}
     <div class="faint" style="font-size:12.5px">Races at 3k, 5k, 10k, half or marathon distance update your PBs by themselves. Minus = faster than the VDOT prediction.</div>`;
+  h += `<button class="btn tonal sm" data-act="go-tprog" style="align-self:flex-start">${ic("chart", "sm")}Progress charts</button>`;
   h += `<div class="section-h"><h2>Calisthenics tests</h2><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Add</button></div>
     ${(() => { const ct = calisTable().filter(c => c.n); return ct.length ? tbl(["Exercise", "Reps latest", "Best", "Change", "1RM +kg", "× BW", "Hold", "Tests"], ct.map(c => `<tr><td><b>${esc(c.name)}</b></td><td class="n">${c.repsLast ?? "—"}</td><td class="n">${c.repsBest ?? "—"}${c.repsBestOn ? `<span class="s">${fmtDM(c.repsBestOn)}</span>` : ""}</td><td class="n">${c.repsLast != null && c.repsPrev != null ? sgn(c.repsLast - c.repsPrev, 0) : ""}</td><td class="n">${c.rmBest != null ? "+" + r1(c.rmBest) : "—"}${c.rmLast != null && c.rmPrev != null ? `<span class="s">${sgn(c.rmLast - c.rmPrev)} vs prev</span>` : ""}</td><td class="n">${c.xbw ? c.xbw.toFixed(2) : ""}</td><td class="n">${c.hold ? c.hold + " s" : ""}</td><td class="n">${c.n || ""}</td></tr>`)) : `<div class="note">No calisthenics tests yet. Add max reps, a 1RM with added weight or a hold time.</div>`; })()}`;
   const L = S.train.calis || [];
-  if (L.length) h += `<details class="card"><summary class="lrow"><span class="t">Test log (${L.length})</span></summary>${[...L].sort((a, b) => b.date.localeCompare(a.date)).map(c => `<button class="lrow" data-act="edit-result" data-type="calis" data-id="${c.id}"><span><span class="t">${esc(c.ex)} · ${esc(c.test)}: ${c.test === "1RM (+kg)" ? "+" + c.val + " kg" : c.test === "Hold (s)" ? c.val + " s" : c.val + " reps"}</span><span class="s">${fmtDM(c.date)}${c.notes ? " · " + esc(c.notes) : ""}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</details>`;
+  if (L.length) h += `<details class="card"><summary class="lrow"><span class="t">Test log (${L.length})</span></summary>${[...L].sort((a, b) => b.date.localeCompare(a.date)).map(c => `<button class="lrow" data-act="edit-result" data-type="calis" data-id="${c.id}"><span><span class="t">${esc(c.ex)} · ${esc(c.test)}: ${RM_N(c.test) ? "+" + c.val + " kg" : c.test === "Hold (s)" ? c.val + " s" : c.val + " reps"}</span><span class="s">${fmtDM(c.date)}${c.notes ? " · " + esc(c.notes) : ""}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</details>`;
   const P = FIT().top;
   h += `<div class="section-h"><h2>Strength · top sets</h2><button class="link" data-act="open-result" data-type="top">${ic("plus", "sm")} Add</button></div>
     ${topSetTable().some(t => t.last) ? tbl(["Exercise", "Last top set", "e1RM +kg", "Best", "Next top set"], topSetTable().filter(t => t.last).map(t => `<tr><td><b>${esc(t.name)}</b><span class="s">${fmtDM(t.last.date)}</span></td><td class="n">${+t.last.kg ? "+" + r1(t.last.kg) + " kg" : "BW"} × ${t.last.reps} @RIR ${t.last.rir ?? 0}</td><td class="n">${sgn(t.e)}</td><td class="n">${sgn(t.best)}</td><td><b>${esc(t.next)}</b></td></tr>`)) : `<div class="note">Log the heaviest set of each weighted exercise and the app tells you the next one to aim for.</div>`}
@@ -3685,9 +3697,11 @@ function trainRecords() {
 /* ================= Progress tab ================= */
 VIEWS.progress = function () {
   const seg = UI.progSeg;
-  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : "One row per week"}</div></div>${settingsBtn()}</div>
-    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
+  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : seg === "training" ? "Maxes, circuits and running over time" : seg === "energy" ? "BMR, TDEE and how they're estimated" : "One row per week"}</div></div>${settingsBtn()}</div>
+    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
   if (seg === "nutrition") return h + VIEWS.stats(true);
+  if (seg === "training") return h + trainingProgressView();
+  if (seg === "energy") return h + energyView();
   if (seg === "days") return h + daysView();
   if (seg === "body") return h + bodyView();
   if (seg === "weeks") return h + weeksView();
@@ -3781,7 +3795,7 @@ function deficitHTML(date) {
 /* ================= sheet framework ================= */
 const SHEETS = {};
 function openSheet(type, params = {}) { UI.sheet = { type, ...params }; UI.sheet._new = true; renderSheet(); }
-function closeSheet() { UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; }
+function closeSheet() { UI.sheet = null; UI.dest = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; }
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; return; }
@@ -4211,8 +4225,8 @@ SHEETS.result = sh => {
   } else if (t === "calis") {
     const ex = FIT().exercises;
     body += `<div class="field"><span class="flabel">Exercise</span><div class="chips">${ex.map(k => `<button class="chip" data-act="rs-set" data-k="ex" data-v="${esc(k)}" aria-pressed="${d.ex === k}">${esc(k)}</button>`).join("")}</div></div>
-      <div class="field"><span class="flabel">Test</span>${segBar("rs-test", d.test, [["Max reps (BW)", "Max reps"], ["1RM (+kg)", "1RM +kg"], ["Hold (s)", "Hold"]])}</div>
-      <div class="grid2">${dateF}${inp("val", d.test === "1RM (+kg)" ? "Added weight" : d.test === "Hold (s)" ? "Seconds" : "Reps", 'inputmode="decimal"', d.test === "1RM (+kg)" ? "kg" : d.test === "Hold (s)" ? "s" : "")}</div>${inp("bw", "Bodyweight (optional, else trend)", 'inputmode="decimal"', "kg")}`;
+      <div class="field"><span class="flabel">Test</span>${segBar("rs-test", d.test, [["Max reps (BW)", "Max reps"], ["1RM (+kg)", "1RM"], ["3RM (+kg)", "3RM"], ["5RM (+kg)", "5RM"], ["Hold (s)", "Hold"]])}</div>
+      <div class="grid2">${dateF}${inp("val", RM_N(d.test) ? "Added weight" : d.test === "Hold (s)" ? "Seconds" : "Reps", 'inputmode="decimal"', RM_N(d.test) ? "kg" : d.test === "Hold (s)" ? "s" : "")}${RM_N(d.test) > 1 && num(d.val) >= 0 && d.val !== "" && d.val != null ? `<div class="note">≈ 1RM +${r1(est1rm(num(d.bw) || bwAt(d.date || todayISO()), num(d.val), RM_N(d.test)))} kg (Epley, on bodyweight + added)</div>` : ""}</div>${inp("bw", "Bodyweight (optional, else trend)", 'inputmode="decimal"', "kg")}`;
   } else if (t === "top") {
     const ex = FIT().exercises;
     body += `<div class="field"><span class="flabel">Exercise</span><div class="chips">${ex.map(k => `<button class="chip" data-act="rs-set" data-k="ex" data-v="${esc(k)}" aria-pressed="${d.ex === k}">${esc(k)}</button>`).join("")}</div></div>
@@ -5128,7 +5142,8 @@ ACT["fd-save"] = () => {
   delete d.hidden;
   put("foods", d.id, d);
   if (d.barcode && S.queue[d.barcode]) put("queue", d.barcode, { ...S.queue[d.barcode], status: "done", food: d.id });
-  if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: defaultQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
+  if (sh.then === "qty" && UI.dest) destPick(d);
+  else if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: defaultQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
   else if (sh.backQty) { openSheet("qty", sh.backQty); toast("Saved"); }
   else { closeSheet(); toast(`Saved ${d.name}`); }
 };
@@ -5913,7 +5928,7 @@ function reportsView() {
   if (R.avgP != null) h += `<div class="section-h"><h2>Average macros</h2><span class="faint" style="font-size:12px">${R.nM} days with macros</span></div><div class="card pad">${[["Carbs", "avgC", "tC", "carb"], ["Protein", "avgP", "tP", "pro"], ["Fat", "avgF", "tF", "fat"]].map(([l, a, t, c]) => { const pct = R[a] / (R[t] || 1) * 100; return `<div class="adh" style="--c:var(--${c})"><span>${l}</span><span class="bar"><i style="width:${clamp(pct / 1.3, 0, 100)}%"></i><u style="left:${100 / 1.3}%"></u></span><span class="v">${r0(R[a])} g<br><small class="faint">${r0(pct)}%</small></span></div>`; }).join("")}</div>`;
   const sp = Object.entries(R.sports);
   if (sp.length) h += `<div class="section-h"><h2>Training</h2><span class="faint" style="font-size:12px">load ${fmtN(R.load)}</span></div>${tbl(["Sport", "Sessions", "Minutes", "kcal", "km"], sp.map(([k, a]) => `<tr><td><b>${esc(k)}</b></td><td class="n">${a.n}</td><td class="n">${fmtN(a.min)}</td><td class="n">${fmtN(a.kcal)}</td><td class="n">${a.km ? r1(a.km) : "—"}</td></tr>`))}`;
-  const res = [...R.tests.map(t => `${fmtDM(t.date)} · ${esc(t.kind)}${t.km ? ` ${r1(t.km)} km` : ""}${t.sec ? ` in ${fmtClock(t.sec)}` : ""}${t.peak && t.kind === "Max HR test" ? ` · peak ${t.peak}` : ""}`), ...R.calis.map(c => `${fmtDM(c.date)} · ${esc(c.ex)}: ${c.test === "1RM (+kg)" ? "+" + c.val + " kg" : c.val + (c.test === "Hold (s)" ? " s" : " reps")}`), ...R.tops.map(t => `${fmtDM(t.date)} · ${esc(t.ex)} +${t.kg} kg × ${t.reps}`), ...R.circ.map(c => `${fmtDM(c.date)} · ${esc(c.circuit)} ${fmtClock(c.sec)}`)];
+  const res = [...R.tests.map(t => `${fmtDM(t.date)} · ${esc(t.kind)}${t.km ? ` ${r1(t.km)} km` : ""}${t.sec ? ` in ${fmtClock(t.sec)}` : ""}${t.peak && t.kind === "Max HR test" ? ` · peak ${t.peak}` : ""}`), ...R.calis.map(c => `${fmtDM(c.date)} · ${esc(c.ex)}: ${RM_N(c.test) ? `${RM_N(c.test)}RM +${c.val} kg` : c.val + (c.test === "Hold (s)" ? " s" : " reps")}`), ...R.tops.map(t => `${fmtDM(t.date)} · ${esc(t.ex)} +${t.kg} kg × ${t.reps}`), ...R.circ.map(c => `${fmtDM(c.date)} · ${esc(c.circuit)} ${fmtClock(c.sec)}`)];
   if (res.length) h += `<div class="section-h"><h2>Tests and results</h2></div><div class="card">${res.map(x => `<div class="lrow"><span class="t" style="font-weight:550">${x}</span></div>`).join("")}</div>`;
   if (R.best || R.high) h += `<div class="grid2 stack" style="gap:10px">${R.best ? `<button class="card pad" data-act="open-checkin" data-date="${R.best.d}" style="text-align:left"><span class="flabel">Closest to target</span><div><b>${DOWL[dow(R.best.d)]} ${fmtDM(R.best.d)}</b> · ${fmtN(R.best.k)} kcal</div></button>` : ""}${R.high && R.high.d !== R.best?.d ? `<button class="card pad" data-act="open-checkin" data-date="${R.high.d}" style="text-align:left"><span class="flabel">Highest intake</span><div><b>${DOWL[dow(R.high.d)]} ${fmtDM(R.high.d)}</b> · ${fmtN(R.high.k)} kcal</div></button>` : ""}</div>`;
   h += `<details class="card"><summary class="lrow"><span class="t">${kind === "week" ? "All weeks" : "All months"}</span></summary><div style="padding:0 0 4px">${kind === "week" ? weeksView() : monthsView()}</div></details>`;
@@ -8868,11 +8883,13 @@ VIEWS.shop = function () {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy);
   const anyCk = Object.values(S.shop.checked || {}).some(Boolean) || (S.shop.extras || []).some(x => x.done);
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))} · ${toBuy.length} to buy${T.est ? ` · ≈ ${fmtEur(T.est)}${T.known < toBuy.length ? ` for ${T.known} with a price` : ""}` : ""}</div></div>
-    <div class="row"><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div>
+    <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div>
     <div class="chips scroll" style="padding:8px 0 10px">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}
     <label class="chip" style="gap:8px">${ic("calendar", "sm")}<span class="sr">Start date</span><input id="shop-start" type="date" value="${start}" data-in="shop-start" style="border:0;background:transparent;font-size:13.5px;font-weight:600;min-width:0"></label></div></header>`;
   if (!toBuy.length && !(S.shop.extras || []).length) h += `<div class="empty"><h3>Nothing to buy</h3><p>The list builds itself from the meals planned in these days, minus what's in your pantry.</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Plan meals</button></div></div>`;
   else h += `<div class="note shop-hint">Tap a product in the shop to enter how much you took and what it cost: the pantry and your spending update when you finish.</div><div class="card shop-card">${shopListHTML(toBuy, false)}</div>`;
+  const extraIds = Object.keys(S.shop.checked || {}).filter(id => S.shop.checked[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
+  if (extraIds.length) h += `<div class="section-h"><h2>Bought, not on the list</h2></div><div class="card">${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = S.shop.checked[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">goes to the pantry</span></button><button class="shop-q" data-act="shop-buy" data-id="${id}"><b>${c.g ? fmtN(c.g) + " " + (f.unit || "g") : "—"}</b>${c.eur != null ? `<small>${fmtEur(c.eur)}</small>` : ""}</button></div>`; }).join("")}</div>`;
   const covered = rows.filter(r => r.buy <= 0);
   if (covered.length) h += `<details class="card pad shop-covered"><summary>${covered.length} already at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.need)} ${r.f.unit || "g"} planned · ${fmtN(r.have)} at home</span></span></div>`).join("")}</details>`;
   if (anyCk) h += `<div class="shop-done-bar"><button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Finish shopping${T.inCart ? ` · ${fmtEur(T.inCart)}` : ""}</button></div>`;
@@ -8962,12 +8979,12 @@ VIEWS.pantry = function () {
   const today = todayISO(), ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
   const need = shoppingNeeds(today, 7).need;
   ids.sort((a, b) => (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
-  const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
+  const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
   let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
-    <div class="row"><button class="btn ink sm" data-act="pantry-add">${ic("plus", "sm")}Add</button></div></div></header>`;
+    <div class="row"><button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
   h += expiryCard("pantry");
-  if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}<button class="link" data-act="plan-pantry">Plan meals with these</button></div>`;
+  if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
   if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
   return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
     return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} planned` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
@@ -8976,7 +8993,7 @@ VIEWS.pantry = function () {
 ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
   const step = f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
-function pantrySpare(days = 7) { const need = shoppingNeeds(todayISO(), days).need; return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
+function pantrySpare(days = 7) { const need = shoppingNeeds(todayISO(), days).need; return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
 /* settings: leftovers and budget */
 function shopSettingsCard() {
@@ -9001,7 +9018,7 @@ const dlTxt = dl => dl < 0 ? `expired ${-dl === 1 ? "yesterday" : `${-dl} days a
 /* the card on Today, and on top of the pantry */
 function expiryCard(where) {
   const E = expiryList(); if (!E.expired.length && !E.soon.length) return "";
-  const row = x => `<div class="xp-row ${x.dl < 0 ? "bad" : "warn"}"><span class="xp-dot"></span><span class="xp-t"><b>${esc(x.f.name)}</b><small>${fmtN(x.g)} ${x.f.unit || "g"} · ${dlTxt(x.dl)}</small></span>${x.dl < 0 ? `<button class="btn text sm" data-act="xp-toss" data-id="${x.id}">Thrown away</button><button class="btn text sm" data-act="xp-keep" data-id="${x.id}">Still good</button>` : `<button class="btn text sm" data-act="xp-use" data-id="${x.id}">Use it</button>`}</div>`;
+  const row = x => `<div class="xp-row ${x.dl < 0 ? "bad" : "warn"}"><span class="xp-dot"></span><span class="xp-t"><b>${esc(x.f.name)}</b><small>${fmtN(x.g)} ${x.f.unit || "g"} · ${dlTxt(x.dl)}</small></span><span class="xp-acts">${x.dl < 0 ? `<button class="btn text sm" data-act="xp-toss" data-id="${x.id}">Thrown away</button><button class="btn text sm" data-act="xp-keep" data-id="${x.id}">Still good</button>` : `<button class="btn text sm" data-act="xp-use" data-id="${x.id}">Use it</button>`}</span></div>`;
   return `<section class="card pad xp-card" aria-label="Use-by dates"><div class="nut-h"><span class="flabel">${E.expired.length ? `${E.expired.length} expired` : ""}${E.expired.length && E.soon.length ? " · " : ""}${E.soon.length ? `${E.soon.length} to use soon` : ""}</span>${where === "today" ? `<button class="link" data-act="tab" data-tab="pantry">Pantry</button>` : ""}</div>
     ${[...E.expired, ...E.soon].slice(0, where === "today" ? 4 : 50).map(row).join("")}
     ${E.soon.length ? `<button class="btn tonal sm" data-act="plan-pantry" style="align-self:flex-start">${ic("spark", "sm")}Plan meals with these</button>` : ""}</section>`;
@@ -9035,6 +9052,152 @@ ACT["xp-notify"] = async el => {
 CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), soonDays: clamp(Math.round(num(v)) || 2, 0, 14) }; saveSettings(); scheduleRender(); };
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(() => expiryNotify(), 1500); });
 setTimeout(() => expiryNotify(), 6000);
+
+/* ================= add a product straight from the shopping list or the pantry =================
+   Scan it, search it or create it: on the list it's ticked as bought (a planned item keeps its row, anything else
+   is added as an extra purchase), in the pantry it's stored with its use-by date. */
+function destPick(food) {
+  const dest = UI.dest; UI.dest = null; if (!food) return;
+  if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
+    openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || addDays(todayISO(), shelf) }); return; }
+  const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === food.id && x.buy > 0), c = S.shop.checked?.[food.id];
+  if (UI.tab !== "shop") { UI.tab = UI.fuelTab = "shop"; scheduleRender(); }
+  openSheet("buy", { id: food.id, g: c?.g ?? (r ? buyG(r) : food.pack || defaultQty(food)), eur: c?.eur ?? "", extra: !r });
+  toast(r ? `${food.name} is on your list: enter what you took` : `${food.name} isn't on the list: it's added as an extra purchase`);
+}
+const _goQty = goQty;
+goQty = function (food, from) { if (UI.dest) return destPick(food); return _goQty(food, from); };
+SHEETS.prodadd = sh => {
+  const q = sh.q || "", res = q ? foodSearch(q, "all").filter(r => r.t === "food").slice(0, 10) : [];
+  const dest = UI.dest, list = dest === "shop" ? shopToBuy().filter(r => !S.shop.checked?.[r.id]).slice(0, 8) : [];
+  return { title: dest === "pantry" ? "Add to the pantry" : "Bought something", focus: "pd-q",
+    body: `<div class="search">${ic("search")}<input id="pd-q" type="search" placeholder="Search your foods" value="${esc(q)}" data-in="pd-q" autocomplete="off"><button class="btn ink sm" data-act="pd-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
+      <div class="add-acts"><button class="aa aa-main" data-act="pd-new">${ic("plus")}<span>New food</span></button><button class="aa" data-act="pd-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="pd-scan">${ic("scan")}<span>Barcode</span></button></div>
+      <div class="card">${q ? (res.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${shoppingRows(UI.shopStart, S.shop.range || 7).some(x => x.id === r.x.id && x.buy > 0) ? "On your list" : r.x.brand ? esc(r.x.brand) : foodSub(r.x)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") || `<div class="lrow"><span><span class="t">No food called “${esc(q)}”</span><span class="s">Create it, scan its barcode or photograph the label.</span></span><span class="end"><button class="btn tonal sm" data-act="pd-new" data-name="${esc(q)}">Create</button></span></div>`)
+        : list.length ? `<div class="lrow sub-h"><span class="s">Still on the list</span></div>` + list.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.id}"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.buy)} ${r.f.unit || "g"}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") : `<div class="lrow"><span class="s">Type to search, or scan the barcode.</span></div>`}</div>` };
+};
+INP["pd-q"] = v => { const sh = S_(); sh.q = v; renderSheet(); };
+const pdOpen = dest => { UI.dest = dest; openSheet("prodadd", {}); };
+ACT["shop-prod"] = () => pdOpen("shop");
+ACT["pantry-prod"] = () => pdOpen("pantry");
+ACT["pd-pick"] = el => destPick(getFood(el.dataset.id));
+ACT["pd-scan"] = () => { const d = UI.dest; openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); UI.dest = d; camOpen("barcode"); };
+ACT["pd-label"] = () => { const d = UI.dest; openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "label", labelOnly: true }); UI.dest = d; camOpen("label"); };
+ACT["pd-new"] = el => { const d = UI.dest; openSheet("food", { draft: blankFood(el?.dataset?.name || S_()?.q || ""), isNew: true, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = d; };
+
+/* ================= training progress: maxes, circuits and running over time ================= */
+const RM_N = t => { const m = /^(\d+)RM/.exec(t || ""); return m ? +m[1] : null; };
+/* the added-weight 1RM a test or a top set stands for (Epley on bodyweight + added kg) */
+function est1rm(bw, kg, reps) { return reps <= 1 ? kg : (bw + kg) * (1 + reps / 30) - bw; }
+/* one chart for any series of dated values; several lines share the axes */
+function seriesChart(series, o = {}) {
+  const pts = series.flatMap(s => s.pts); if (!pts.length) return `<div class="faint" style="font-size:13px">${o.empty || "No data yet."}</div>`;
+  const W = chartW(o.half), H = o.h || 190, L = o.l || 44, R = 10, Tp = 12, B = 24;
+  const ds = pts.map(p => p[0]).sort(), d0 = ds[0], d1 = ds[ds.length - 1], span = Math.max(1, daysBetween(d0, d1));
+  const vs = pts.map(p => p[1]); let lo = Math.min(...vs), hi = Math.max(...vs); const pad = Math.max((hi - lo) * 0.12, Math.abs(hi) * 0.03, o.minPad || 0.5); lo -= pad; hi += pad; if (o.zero && lo > 0) lo = 0;
+  const x = d => L + (W - L - R) * (span ? daysBetween(d0, d) / span : 0.5), y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
+  let g = "";
+  for (let i = 0; i <= 3; i++) { const v = lo + (hi - lo) * i / 3; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${(o.fmt || r1)(v)}</text>`; }
+  const ticks = span < 1 ? [d0] : [d0, addDays(d0, Math.round(span / 2)), d1];
+  ticks.forEach((d, i) => { g += `<text x="${x(d)}" y="${H - 7}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : i === ticks.length - 1 && ticks.length > 1 ? "end" : "middle"}">${fmtDM(d)}</text>`; });
+  for (const s of series) { if (!s.pts.length) continue; const P = [...s.pts].sort((a, b) => a[0].localeCompare(b[0]));
+    if (P.length > 1) g += `<path d="${P.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+    const dense = P.length > 16; for (const [pi, p] of P.entries()) if (!dense || p[2]?.best || pi === P.length - 1) g += `<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="${p[2]?.best ? 5 : dense ? 3 : 3.5}" fill="${p[2]?.best ? "var(--bg)" : s.color}" stroke="${s.color}" stroke-width="2"><title>${fmtDM(p[0])}: ${(o.fmt || r1)(p[1])}${p[2]?.t ? " · " + esc(p[2].t) : ""}</title></circle>`; }
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Progress chart")}">${g}</svg>${series.length > 1 || o.legend ? `<div class="legend">${series.filter(s => s.pts.length).map(s => `<span><i style="background:${s.color}${s.dash ? ";height:2px" : ""}"></i>${esc(s.name)}</span>`).join("")}${o.invert ? `<span class="faint">higher = faster</span>` : ""}</div>` : ""}`;
+}
+const delta = (a, b, fmt, lowerBetter) => { if (a == null || b == null) return ""; const d = a - b; if (Math.abs(d) < 1e-9) return `<span class="faint">=</span>`; const good = lowerBetter ? d < 0 : d > 0; return `<span style="color:var(--${good ? "good" : "bad"})">${d > 0 ? "+" : "−"}${fmt(Math.abs(d))}</span>`; };
+const markBest = (pts, lower) => { if (!pts.length) return pts; const b = pts.reduce((a, p) => (lower ? p[1] < a[1] : p[1] > a[1]) ? p : a); b[2] = { ...(b[2] || {}), best: true }; return pts; };
+function strengthSeries(name) {
+  const C = (S.train.calis || []).filter(c => c.ex === name && c.date), T = (S.train.topSets || []).filter(s => s.ex === name && s.date);
+  const rm = C.filter(c => RM_N(c.test)).map(c => { const n = RM_N(c.test), bw = bwAt(c.date, c.bw); return [c.date, r1(est1rm(bw, +c.val || 0, n)), { t: n === 1 ? `1RM +${c.val} kg` : `${n}RM +${c.val} kg` }]; });
+  const top = T.map(s => [s.date, r1(e1rm(s)), { t: `top set +${s.kg || 0} kg × ${s.reps} @RIR ${s.rir ?? 0}` }]);
+  const xbw = [...C.filter(c => RM_N(c.test)).map(c => { const bw = bwAt(c.date, c.bw); return [c.date, Math.round((bw + est1rm(bw, +c.val || 0, RM_N(c.test))) / bw * 100) / 100]; })];
+  const reps = C.filter(c => c.test === "Max reps (BW)").map(c => [c.date, +c.val, { t: `${c.val} reps` }]);
+  const hold = C.filter(c => c.test === "Hold (s)").map(c => [c.date, +c.val, { t: `${c.val} s` }]);
+  return { rm: markBest(rm), top: markBest(top), xbw, reps: markBest(reps), hold: markBest(hold) };
+}
+function trainingProgressView() {
+  const ex = [...new Set([...(FIT().exercises || []), ...(S.train.calis || []).map(c => c.ex), ...(S.train.topSets || []).map(s => s.ex)])].filter(Boolean);
+  const withData = ex.filter(n => (S.train.calis || []).some(c => c.ex === n) || (S.train.topSets || []).some(s => s.ex === n));
+  const cur = withData.includes(UI.tpEx) ? UI.tpEx : withData[0] || ex[0];
+  let h = `<div class="section-h"><h2>Calisthenics strength</h2><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Test</button></div>`;
+  if (!withData.length) h += `<div class="note">Log a max test (1RM, 3RM or 5RM with added weight, max reps, a hold) or a top set: the progress charts appear here. Weighted sets you do in a live workout are added as top sets by themselves.</div>`;
+  else {
+    const s = strengthSeries(cur), last = a => a.length ? [...a].sort((p, q) => p[0].localeCompare(q[0])).pop() : null, best = (a, low) => a.length ? a.reduce((m, p) => (low ? p[1] < m[1] : p[1] > m[1]) ? p : m) : null;
+    const all1 = [...s.rm, ...s.top], l1 = last(all1), b1 = best(all1), p90 = all1.filter(p => p[0] <= addDays(todayISO(), -84)).sort((a, b) => a[0].localeCompare(b[0])).pop();
+    h += `<div class="chips scroll">${withData.map(n => `<button class="chip" data-act="tp-ex" data-k="${esc(n)}" aria-pressed="${n === cur}">${esc(n)}</button>`).join("")}</div>`;
+    h += `<div class="stat-grid four">${kpi(l1 ? `+${r1(l1[1])} kg` : "—", "1RM now (added)", l1 ? fmtDM(l1[0]) : "")}${kpi(b1 ? `+${r1(b1[1])} kg` : "—", "best 1RM", b1 ? fmtDM(b1[0]) : "")}${kpi(l1 && p90 ? delta(l1[1], p90[1], v => r1(v) + " kg") : "—", "vs 12 weeks ago")}${kpi(s.xbw.length ? `×${last(s.xbw)[1]}` : s.reps.length ? `${last(s.reps)[1]} reps` : "—", s.xbw.length ? "1RM / bodyweight" : "max reps now")}</div>`;
+    if (all1.length) h += `<div class="card pad"><div class="flabel" style="margin-bottom:6px">Estimated 1RM · added kg</div>${seriesChart([{ name: "Max tests (1RM, 3RM, 5RM)", color: "var(--pro)", pts: s.rm }, { name: "Top sets (e1RM)", color: "var(--carb)", pts: s.top, dash: true }], { fmt: v => "+" + r1(v), label: `${cur} estimated 1RM` })}</div>`;
+    const gr = [];
+    if (s.reps.length) gr.push(`<div class="card pad" style="min-width:0"><div class="flabel" style="margin-bottom:6px">Max reps · bodyweight</div>${seriesChart([{ name: "Reps", color: "var(--accent)", pts: s.reps }], { half: true, h: 160, fmt: v => r0(v), label: `${cur} max reps`, minPad: 1 })}</div>`);
+    if (s.hold.length) gr.push(`<div class="card pad" style="min-width:0"><div class="flabel" style="margin-bottom:6px">Hold · seconds</div>${seriesChart([{ name: "Hold", color: "var(--fat)", pts: s.hold }], { half: true, h: 160, fmt: v => r0(v), label: `${cur} hold`, minPad: 1 })}</div>`);
+    if (s.xbw.length > 1) gr.push(`<div class="card pad" style="min-width:0"><div class="flabel" style="margin-bottom:6px">Relative strength · × bodyweight</div>${seriesChart([{ name: "× BW", color: "var(--good)", pts: s.xbw }], { half: true, h: 160, fmt: v => v.toFixed(2), minPad: .02 })}</div>`);
+    if (gr.length) h += `<div class="grid2 stack" style="gap:14px">${gr.join("")}</div>`;
+  }
+  /* circuits */
+  const circs = circuitTable().filter(c => c.n);
+  h += `<div class="section-h"><h2>Endurance circuits</h2><button class="link" data-act="open-result" data-type="circuit">${ic("plus", "sm")} Time</button></div>`;
+  if (!circs.length) h += `<div class="note">Log a circuit time (Settings → Training to name and describe your circuits): every run of it shows on a chart here.</div>`;
+  else { const cc = circs.find(c => c.name === UI.tpCirc) || circs[0], L = (S.train.circuitLog || []).filter(c => c.circuit === cc.name && c.sec > 0);
+    h += `<div class="chips scroll">${circs.map(c => `<button class="chip" data-act="tp-circ" data-k="${esc(c.name)}" aria-pressed="${c.name === cc.name}">${esc(c.name)}</button>`).join("")}</div>
+      <div class="stat-grid four">${kpi(fmtClock(cc.last.sec), "latest", fmtDM(cc.last.date))}${kpi(fmtClock(cc.best.sec), "best", fmtDM(cc.best.date))}${kpi(cc.chg != null ? delta(cc.last.sec, cc.prev.sec, fmtClock, true) : "—", "vs previous")}${kpi(cc.n, "runs logged")}</div>
+      <div class="card pad">${cc.desc ? `<div class="faint" style="font-size:12.5px;margin-bottom:6px">${esc(cc.desc)}</div>` : ""}${seriesChart([{ name: "Time", color: "var(--accent)", pts: markBest(L.map(c => [c.date, +c.sec, { t: [c.kg ? `+${c.kg} kg` : "", c.rpe ? `RPE ${c.rpe}` : ""].filter(Boolean).join(" · ") }]), true) }], { invert: true, legend: true, fmt: fmtClock, l: 50, label: `${cc.name} times`, minPad: 5 })}</div>`; }
+  /* running */
+  h += runningProgress();
+  return h;
+}
+function runEfforts() {
+  const out = [];
+  for (const t of S.train.tests || []) if (t.date && t.km > 0 && t.sec > 0 && t.kind !== "Max HR test") out.push({ d: t.date, km: +t.km, sec: +t.sec, kind: t.kind });
+  for (const p of S.train.pbs || []) { const km = { "3k": 3, "5k": 5, "10k": 10, "21k": 21.0975, "42k": 42.195 }[p.dist] || RACE_DIST.find(x => x[0] === p.dist)?.[1]; if (km && p.sec > 0 && p.date) out.push({ d: p.date, km, sec: +p.sec, kind: "PB" }); }
+  return out.sort((a, b) => a.d.localeCompare(b.d));
+}
+function runningProgress() {
+  const E = runEfforts(), rs = runState();
+  let h = `<div class="section-h"><h2>Running</h2><button class="link" data-act="open-result" data-type="run">${ic("plus", "sm")} Result</button></div>`;
+  if (!E.length) return h + `<div class="note">Log a race, a time trial or the 30′ lactate test: VDOT and your times per distance show up here over time.</div>`;
+  const vd = markBest(E.map(e => { const v = vdotOf(e.km, e.sec / 60); return v ? [e.d, r1(v), { t: `${e.kind} ${r1(e.km)} km in ${fmtClock(e.sec)}` }] : null; }).filter(Boolean));
+  const dists = RACE_DIST.filter(([, km]) => E.some(e => Math.abs(e.km - km) / km < 0.03)), cd = dists.find(([k]) => k === UI.tpDist) || dists[0];
+  const lastV = vd.length ? vd[vd.length - 1] : null;
+  h += `<div class="stat-grid four">${kpi(lastV ? lastV[1] : "—", "VDOT, latest effort", lastV ? fmtDM(lastV[0]) : "")}${kpi(rs.vdot ? r1(rs.vdot) : "—", "VDOT in use")}${(() => { const p5 = rs.preds?.find(x => x.km === 5), p10 = rs.preds?.find(x => x.km === 10); return kpi(p5?.sec ? fmtClock(p5.sec) : "—", "5k predicted") + kpi(p10?.sec ? fmtClock(p10.sec) : "—", "10k predicted"); })()}</div>`;
+  if (vd.length) h += `<div class="card pad"><div class="flabel" style="margin-bottom:6px">VDOT · fitness from your efforts</div>${seriesChart([{ name: "VDOT", color: "var(--accent)", pts: vd }], { fmt: v => r1(v), label: "VDOT over time" })}</div>`;
+  if (cd) { const [k, km] = cd, pts = markBest(E.filter(e => Math.abs(e.km - km) / km < 0.03).map(e => [e.d, Math.round(e.sec * km / e.km), { t: e.kind }]), true);
+    h += `<div class="chips scroll">${dists.map(([dk]) => `<button class="chip" data-act="tp-dist" data-k="${dk}" aria-pressed="${dk === k}">${dk}</button>`).join("")}</div>
+      <div class="card pad"><div class="flabel" style="margin-bottom:6px">${k} times</div>${seriesChart([{ name: "Time", color: "var(--carb)", pts }], { invert: true, legend: true, fmt: fmtClock, l: 54, label: `${k} times`, minPad: 10 })}</div>`; }
+  return h;
+}
+ACT["go-tprog"] = () => { UI.tab = "progress"; UI.progSeg = "training"; scheduleRender(); scrollTo(0, 0); };
+ACT["tp-ex"] = el => { UI.tpEx = el.dataset.k; scheduleRender(); };
+ACT["tp-circ"] = el => { UI.tpCirc = el.dataset.k; scheduleRender(); };
+ACT["tp-dist"] = el => { UI.tpDist = el.dataset.k; scheduleRender(); };
+
+/* ================= Progress › Energy: BMR, NEAT, training, TEF, TDEE and how they're estimated ================= */
+function energyView() {
+  const s = energySeries(), today = todayISO(), r = s.rows[today] || energyAt(today), E = FIT().energy, prof = FIT().profile;
+  if (!r) return `<div class="note">Add your profile (Settings → Profile) and a weight to see your energy numbers.</div>`;
+  const age = prof.dob ? Math.floor(daysBetween(prof.dob, today) / 365.25) : 30, w = r.trend, h = prof.height || 175, F = prof.sex === "Female", bf = r.bf;
+  const mif = 10 * w + 6.25 * h - 5 * age + (F ? -161 : 5), hb = F ? 655.1 + 9.563 * w + 1.85 * h - 4.676 * age : 66.5 + 13.75 * w + 5.003 * h - 6.775 * age, km = bf != null ? 370 + 21.6 * w * (1 - bf / 100) : null;
+  const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
+  const L7 = last(7), L14 = last(14), avg = (a, k) => a.length ? a.reduce((p, x) => p + (x[k] || 0), 0) / a.length : null;
+  const withI = L14.filter(x => x.intake && !x.intake.est), maint = withI.length >= 7 ? avg(withI, "tdee") : null;
+  const trend14 = (() => { const a = s.rows[addDays(today, -14)], b = r; return a && b ? b.trend - a.trend : null; })();
+  const fromScale = withI.length >= 7 && trend14 != null ? withI.reduce((p, x) => p + x.intake.kcal, 0) / withI.length - trend14 * E.kcalPerKg / 14 : null;
+  const parts = [["BMR", r.bmr, "var(--accent)"], ["Daily activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
+  let hh = `<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
+    <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
+    <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
+    <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
+    <div class="stat-grid four">${kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (r.phase?.kcal ? ` · ${r.phase.kcal > 0 ? "+" : ""}${fmtN(r.phase.kcal)}` : ""))}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
+  hh += `<div class="section-h"><h2>Basal metabolism (BMR)</h2><span class="faint" style="font-size:12.5px">in use: ${esc(E.bmr)}</span></div>
+    <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", E.bmr === "Mifflin-St Jeor" ? "in use" : "")}${kpi(fmtN(hb), "Harris-Benedict", E.bmr === "Harris-Benedict" ? "in use" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(r.bmr), "used today", `${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}`)}</div>`;
+  hh += `<div class="section-h"><h2>Maintenance</h2></div>
+    <div class="stat-grid four">${kpi(fmtN(avg(L7, "tdee")), "TDEE, 7-day average")}${kpi(maint ? fmtN(maint) : "—", "TDEE, 14-day average", "days with food logged")}${kpi(fromScale ? fmtN(fromScale) : "—", "from intake and the scale", trend14 != null ? `trend ${trend14 >= 0 ? "+" : ""}${r1(trend14)} kg in 14 days` : "needs 7 logged days")}${kpi(r.factor.toFixed(2), "calibration", r.factor !== 1 ? "formulas adjusted to your data" : "not enough data yet")}</div>
+    <div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The calibration compares what you ate with how your trend weight moved (${fmtN(E.kcalPerKg)} kcal per kg) over the last 14 days.</div>`;
+  const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
+  hh += `<div class="section-h"><h2>Last 6 weeks</h2></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: pts("tdee") }, { name: "Eaten", color: "var(--carb)", pts: last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)]) }, { name: "Target", color: "var(--faint)", pts: pts("target"), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target", minPad: 50 })}</div>`;
+  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">BMR ${fmtN(x.bmr)} · NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
+  return hh;
+}
 
 /* ================= boot ================= */
 (function boot() {
