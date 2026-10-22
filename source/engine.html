@@ -1858,6 +1858,17 @@ section .gl-bar{background:var(--surface)}
 .gl-ms span{display:flex;flex-direction:column;gap:1px;padding:8px;border-radius:12px;background:var(--surface-2);min-width:0}
 .gl-ms span.on{background:color-mix(in srgb,var(--good) 16%,var(--surface))}
 .gl-ms i{font-style:normal;font-size:11px;color:var(--muted)}.gl-ms b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gl-ms small{font-size:11px;color:var(--muted)}
+.fu-strip{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:16px;background:var(--surface-2)}
+.fu-strip.due{background:color-mix(in srgb,var(--warn) 18%,var(--surface));animation:pulse 1.6s infinite}
+.fu-ic{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb,var(--fat) 22%,transparent);color:var(--fat)}
+.fu-t{display:flex;flex-direction:column;min-width:0}.fu-t b{font-size:15px}.fu-t small{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fu-c{flex:1;text-align:right;min-width:0}.fu-c small{font-size:11.5px;color:var(--muted)}
+.fu-plan{display:flex;flex-wrap:wrap;gap:6px}
+.fu-plan span{display:inline-flex;gap:5px;align-items:baseline;padding:4px 9px;border-radius:99px;font-size:12px;background:var(--surface-2)}
+.fu-plan b{font-variant-numeric:tabular-nums}.fu-plan .fu-gel{background:color-mix(in srgb,var(--carb) 22%,transparent)}.fu-plan .fu-salt{background:color-mix(in srgb,var(--faint) 22%,transparent)}
+@keyframes fuDue{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 50%,transparent)}50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--warn) 0%,transparent)}}
+.fu-strip.due{animation:fuDue 1.6s infinite}
+.run-foot:has(>span:only-child)>span{grid-column:1/-1}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -7549,7 +7560,7 @@ SHEETS.race = sh => { const d = sh.draft, past = d.date && d.date <= todayISO(),
       : `<div class="field"><label for="rc-cat">Category / format</label><input id="rc-cat" class="inp" value="${esc(d.cat || "")}" placeholder="e.g. Endurance, Freestyle, Streetlifting −80 kg" data-in="rc" data-k="cat"></div>`}
     <div class="grid2"><div class="field"><label for="rc-goal">Goal</label><input id="rc-goal" class="inp" value="${esc(d.goal || "")}" placeholder="${run ? "e.g. 44:30" : "e.g. podium, 20 MU"}" data-in="rc" data-k="goal"></div>
       <div class="field"><label for="rc-loc">Place</label><input id="rc-loc" class="inp" value="${esc(d.loc || "")}" placeholder="City" data-in="rc" data-k="loc"></div></div>
-    ${d.date && !past ? `<div class="note">${I.days} days to go · ${I.phase}${I.pred ? ` · predicted ${fmtClock(I.pred)} (${fmtPace(I.pace)}/km)` : ""}${I.goalPace ? ` · goal pace ${fmtPace(I.goalPace)}/km` : ""}${I.zone ? ` · form on race day ${I.form > 0 ? "+" : ""}${r0(I.form)} (${I.zone[1]})` : ""}</div>` : ""}
+    ${d.date && !past ? `<div class="note">${I.days === 1 ? "1 day" : I.days + " days"} to go · ${I.phase}${I.pred ? ` · predicted ${fmtClock(I.pred)} (${fmtPace(I.pace)}/km)` : ""}${I.goalPace ? ` · goal pace ${fmtPace(I.goalPace)}/km` : ""}${I.zone ? ` · form on race day ${I.form > 0 ? "+" : ""}${r0(I.form)} (${I.zone[1]})` : ""}</div>` : ""}
     ${past || d.result?.done ? `<div class="field"><span class="flabel">Result</span><div class="grid2"><input class="inp" value="${esc(d.result?.time || "")}" placeholder="${run ? "Time, e.g. 45:12" : "Score / reps"}" data-in="rc-res" data-k="time" aria-label="Result"><input class="inp" value="${esc(d.result?.place || "")}" placeholder="Place, e.g. 12th / 340" data-in="rc-res" data-k="place" aria-label="Placing"></div>
       <textarea class="inp" rows="2" placeholder="How it went, splits, conditions" data-in="rc-res" data-k="notes" aria-label="Race notes">${esc(d.result?.notes || "")}</textarea>${run ? `<span class="faint" style="font-size:12.5px">A running time updates your PBs, VDOT and paces.</span>` : ""}</div>` : ""}
     <div class="field"><label for="rc-notes">Notes</label><textarea id="rc-notes" class="inp" rows="2" placeholder="Logistics, kit, plan" data-in="rc" data-k="notes">${esc(d.notes || "")}</textarea></div>`,
@@ -8190,7 +8201,7 @@ function runEstKm(tasks) { return tasks.reduce((a, t) => a + (t.km || (t.paceMid
 
 /* live screen for an endurance step: nothing to press */
 function liveRunTask(L, t, r) {
-  const gd = gpsStepLeft(L, t), el = clkEl(L.clk), prep = L.clk && !L.clk.paused && el < 0, nx = L.tasks[L.cur + 1], g = t.tgt || {};
+  const gd = gpsStepLeft(L, t), el = clkEl(L.clk), prep = L.clk && !L.clk.paused && el < 0, nx = L.tasks[L.cur + 1], g = { ...(t.tgt || {}), ...(t.t === "open" && L.paceTgt && !t.tgt?.pace ? { pace: L.paceTgt } : {}) };
   const rest = L.tasks.slice(L.cur).reduce((a, x) => a + (x.dur || 0), 0) - Math.max(0, el);
   const left = t.t === "open" ? Math.max(0, el) : t.dur - Math.max(0, el);
   const pauseBtn = L.clk ? `<button class="btn tonal grow" data-act="lv-pause">${L.clk.paused ? ic("play", "sm") + "Resume" : ic("pause", "sm") + "Pause"}</button>` : "";
@@ -9555,6 +9566,7 @@ const gpsPaceAvg = () => GPS.km > .05 ? GPS.sec / 60 / GPS.km : null;
 function gpsTarget(L) {
   const t = L.tasks[L.cur];
   if (t && t.t === "run" && t.tgt?.pace) return [Math.min(...t.tgt.pace), Math.max(...t.tgt.pace)];
+  if (L.paceTgt) return L.paceTgt;
   const P = GPSP(); if (!P.target) return null;
   const v = String(P.target).split(/[-–]/).map(x => parseClock(x.trim())).filter(Boolean).map(s => s / 60);
   return v.length ? [Math.min(...v), Math.max(...v)] : null;
@@ -10291,6 +10303,61 @@ ACT["goal-save"] = () => { const sh = S_(), g = { ...sh.draft };
   if (sh.isNew) { const pts = goalSeries(g); const p0 = [...pts].reverse().find(p => p[0] <= todayISO()); g.startVal = p0 ? p0[1] : null; g.start = todayISO(); }
   const L = GOALS(), i = L.findIndex(x => x.id === g.id); if (i >= 0) L[i] = { ...L[i], ...g }; else L.push(g); saveWK(); closeSheet(); toast(sh.isNew ? "Goal added" : "Goal saved"); };
 ACT["goal-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this goal?", text: "Its milestones go with it.", yes: "Delete", danger: true, run: () => { S.train.goals = GOALS().filter(g => g.id !== id); saveWK(); } }); };
+ICONS.drop = `<path d="M480-100q-130 0-217-89t-87-223q0-94 73-204t231-244q158 134 231 244t73 204q0 134-87 223t-217 89Zm0-60q104 0 172-70.5T720-412q0-73-60.5-165T480-788Q361-669 300.5-577T240-412q0 111 68 181.5T480-160Z"/>`;
+/* ================= race mode and fuelling: when to take gels, water and salt during long sessions =================
+   A schedule from the session's length (or the predicted race time): carbs per hour split into gels, sips every
+   N minutes, salt every N minutes. Spoken and shown in the live player, with a tap to tick each one. Races can be
+   started from their card: GPS on, goal pace as the target, fuelling on. */
+const FUELP = () => ({ auto: true, minMin: 75, cph: 60, gel: 25, first: 20, water: 15, salt: 45, ...(FIT().player?.fuel || {}) });
+function fuelPlan(sec, P = FUELP()) {
+  const out = [], end = Math.max(sec || 0, 0) || 6 * 3600, gelEvery = Math.max(10, Math.round(60 * P.gel / Math.max(20, P.cph))) * 60;
+  for (let t = P.first * 60; t < end - 5 * 60; t += gelEvery) out.push({ at: t, k: "gel" });
+  if (P.water) for (let t = P.water * 60; t < end - 3 * 60; t += P.water * 60) if (!out.some(x => Math.abs(x.at - t) < 90)) out.push({ at: t, k: "water" });
+  if (P.salt) for (let t = P.salt * 60; t < end - 10 * 60; t += P.salt * 60) out.push({ at: t + 30, k: "salt" });
+  return out.sort((a, b) => a.at - b.at);
+}
+const FUEL_L = { gel: ["Gel", "Prendi un gel, con acqua", "Gel now, with water"], water: ["Water", "Bevi qualche sorso", "Drink a few sips"], salt: ["Salt", "Sale: una capsula", "Salt: one capsule"] };
+function fuelSessionSec(L) { if (L.race) { const r = races().find(x => x.id === L.race); const I = r ? raceInsight(r) : {}; return I.goalSec || I.pred || 0; } return L.tasks.reduce((a, t) => a + (t.dur || 0), 0); }
+function fuelInit(L, force) { const P = FUELP(), sec = fuelSessionSec(L), on = force ?? (!!L.race || (P.auto && GPS_SPORT(L.sport) && sec >= P.minMin * 60));
+  L.fuel = { on: !!on, plan: fuelPlan(L.tasks.some(t => t.t === "open") && !L.race ? 0 : sec, P), done: {} }; return L.fuel; }
+const fuelEl = L => Math.max(0, (nowMs() - L.t0) / 1000);
+function fuelNext(L) { const F = L.fuel; if (!F?.on) return null; const el = fuelEl(L); return F.plan.map((x, i) => ({ ...x, i })).find(x => !F.done[x.i] && x.at >= el - 120) || null; }
+/* the tick: cue at each intake, a reminder 60 s later if not ticked */
+let FUEL_SAID = {};
+const _liveTickF = liveTick;
+liveTick = function () { _liveTickF(); const L = LV(); if (!L || L.phase !== "run" || !L.fuel?.on || UI.tab !== "live") return;
+  const el = fuelEl(L), F = L.fuel;
+  F.plan.forEach((x, i) => { if (F.done[i] || el < x.at) return; const k = L.id + i; if (!FUEL_SAID[k] && el - x.at < 30) { FUEL_SAID[k] = 1; playCue("half"); say(VT(FUEL_L[x.k][1], FUEL_L[x.k][2]), { flush: true }); haptic([80, 60, 80]); scheduleRender(); } else if (FUEL_SAID[k] === 1 && el - x.at > 60 && el - x.at < 90) { FUEL_SAID[k] = 2; say(VT(`Ricorda: ${FUEL_L[x.k][0].toLowerCase()}`, `Reminder: ${FUEL_L[x.k][0].toLowerCase()}`)); } });
+  const n = fuelNext(L); if (n) document.querySelectorAll('[data-fuel="next"]').forEach(e => { const d = n.at - el; e.textContent = d > 0 ? `in ${fmtDur(d)}` : "now"; });
+};
+function fuelStrip(L) { const F = L.fuel; if (!F?.on) return ""; const n = fuelNext(L), el = fuelEl(L), taken = Object.keys(F.done).map(i => F.plan[i]).filter(Boolean), carbs = taken.filter(x => x.k === "gel").length * FUELP().gel;
+  return `<div class="fu-strip ${n && n.at - el <= 0 ? "due" : ""}"><span class="fu-ic">${ic("drop", "sm")}</span><span class="fu-t"><b>${n ? FUEL_L[n.k][0] : "Fuelling done"}</b>${n ? `<small data-fuel="next">${n.at - el > 0 ? "in " + fmtDur(n.at - el) : "now"}</small>` : ""}</span><span class="fu-c"><small>${carbs} g carbs · ${taken.filter(x => x.k === "water").length} drinks</small></span>${n ? `<button class="btn tonal sm" data-act="fu-take" data-i="${n.i}">${ic("check", "sm")}Taken</button>` : ""}</div>`; }
+ACT["fu-take"] = el => { const L = LV(); if (!L?.fuel) return; L.fuel.done[+el.dataset.i] = Math.round(fuelEl(L)); haptic(10); saveWK(); scheduleRender(); };
+ACT["fu-toggle"] = () => { const L = LV(); if (!L) return; if (!L.fuel) fuelInit(L, true); else L.fuel.on = !L.fuel.on; saveWK(); scheduleRender(); };
+function fuelSummary(plan, P = FUELP()) { const g = plan.filter(x => x.k === "gel").length, w = plan.filter(x => x.k === "water").length, s = plan.filter(x => x.k === "salt").length; return `${g} gel${g === 1 ? "" : "s"} (${g * P.gel} g carbs)${w ? ` · ${w} drinks` : ""}${s ? ` · ${s} salt` : ""}`; }
+function fuelPreview(L) { if (!GPS_SPORT(L.sport) && !L.race) return ""; const F = L.fuel || fuelInit(L);
+  return `<div class="gps-pv"><span class="gps-sig" style="--c:var(--${F.on ? "good" : "faint"})"><i></i>Fuelling ${F.on ? "on" : "off"}</span><span class="faint gps-al">${F.on ? esc(fuelSummary(F.plan.filter(x => x.at < (fuelSessionSec(L) || 6 * 3600)))) : "for sessions from " + FUELP().minMin + "′"}</span><button class="btn text sm" data-act="fu-toggle">${F.on ? "Turn off" : "Turn on"}</button><button class="btn text sm" data-act="fu-sheet">${ic("sliders", "sm")}Plan</button></div>`; }
+function fuelSettings() { const P = FUELP(), ch = (k, opts, lab, u = "") => `<div class="field"><span class="flabel">${lab}</span><div class="chips">${opts.map(v => `<button class="chip sm" data-act="fu-set" data-k="${k}" data-v="${v}" aria-pressed="${+P[k] === v}">${v ? v + u : "Off"}</button>`).join("")}</div></div>`;
+  return `${ch("cph", [30, 45, 60, 75, 90], "Carbs per hour", " g")}${ch("gel", [20, 25, 30, 40], "One gel has", " g")}${ch("first", [15, 20, 30, 45], "First gel after", "′")}${ch("water", [0, 10, 15, 20], "Drink every", "′")}${ch("salt", [0, 30, 45, 60], "Salt every", "′")}${ch("minMin", [60, 75, 90, 120], "Turn on by itself from", "′")}
+    <div class="faint" style="font-size:12.5px">30–60 g of carbs an hour for 1–2.5 h efforts, up to 90 g when longer and trained to it (ACSM, Jeukendrup). Practise the race plan in long runs first.</div>`; }
+SHEETS.fuelopt = () => ({ title: "Fuelling plan", body: fuelSettings() + (LV()?.fuel ? `<div class="note">${esc(fuelSummary(LV().fuel.plan.filter(x => x.at < (fuelSessionSec(LV()) || 6 * 3600))))}</div>` : ""), foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
+ACT["fu-sheet"] = () => openSheet("fuelopt", { live: true });
+ACT["fu-set"] = el => { const f = FIT(); f.player = f.player || {}; f.player.fuel = { ...(f.player.fuel || {}), [el.dataset.k]: +el.dataset.v }; saveSettings(); const L = LV(); if (L?.fuel) { const on = L.fuel.on, done = L.fuel.done; fuelInit(L, on); L.fuel.done = done; saveWK(); } renderSheet(); scheduleRender(); };
+/* hooks: plan at start, strip on the run screen, intake count in the summary */
+(() => { const f = ACT["lv-begin"]; ACT["lv-begin"] = (...a) => { const r = f(...a); const L = LV(); if (L && L.auto && !L.fuel) { fuelInit(L); saveWK(); } return r; }; })();
+const _liveRunTaskF = liveRunTask;
+liveRunTask = function (L, t, r) { const o = _liveRunTaskF(L, t, r); if (L.fuel?.on) o.body = o.body.replace('<div class="run-foot">', fuelStrip(L) + '<div class="run-foot">'); return o; };
+const _runPreviewF = runPreview;
+runPreview = function (L) { return _runPreviewF(L).replace('</section>\n    <section class="lv-card flush">', fuelPreview(L) + '</section>\n    <section class="lv-card flush">'); };
+/* race mode: start a race from its card */
+function raceFuelHTML(r) { const I = raceInsight(r), sec = I.goalSec || I.pred; if (!sec || !isRunRace(r) || sec < 50 * 60) return ""; const plan = fuelPlan(sec);
+  return `<div class="field"><span class="flabel">Fuelling for ${fmtClock(sec)}</span><div class="fu-plan">${plan.slice(0, 30).map(x => `<span class="fu-${x.k}"><b>${fmtDurShort(x.at)}</b>${FUEL_L[x.k][0]}</span>`).join("")}</div><small class="faint">${esc(fuelSummary(plan))} · change it in the player settings</small></div>`; }
+ACT["race-start"] = () => { const d = S_().draft, r = races().find(x => x.id === d.id) || d; closeSheet(); if (LV()) { ACT["lv-resume"](); return; }
+  UI.liveFrom = UI.tab; audioOn(); startWorkout({ open: r.name, name: r.name, sport: isRunRace(r) ? FIT().runSport : r.sport || FIT().runSport, date: todayISO(), script: "" });
+  const L = LV(); if (!L) return; L.race = r.id; const I = raceInsight(r); if (I.goalPace) L.paceTgt = [I.goalPace * .99, I.goalPace * 1.01]; fuelInit(L, true); saveWK(); scheduleRender(); };
+const _raceSheet = SHEETS.race;
+SHEETS.race = sh => { const o = _raceSheet(sh), d = sh.draft; if (!sh.isNew && d.date && !d.result?.done && daysBetween(todayISO(), d.date) <= 1 && daysBetween(todayISO(), d.date) >= -1) o.foot = `<button class="btn tonal" data-act="race-start">${ic("play", "sm")}Start race</button>` + o.foot;
+  if (!sh.isNew && d.date >= todayISO()) o.body += raceFuelHTML(d); return o; };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
