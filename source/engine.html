@@ -1769,6 +1769,43 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .pa-units{gap:6px}
 .st-opts{display:flex;gap:8px;flex-wrap:wrap}
 .st-acc{margin-top:8px}.st-acc .chip i{display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
+.wk-rev{display:flex;flex-direction:column;gap:10px}
+.wk-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.wk-k span{display:flex;flex-direction:column;min-width:0}
+.wk-k b{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-k small{font-size:11.5px;color:var(--muted)}
+.wk-tips,.rep-tips ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.4}
+.rep-tips{display:flex;flex-direction:column;gap:6px;border-left:3px solid var(--accent)}
+.ph-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;color:var(--ink);background:color-mix(in srgb,var(--c) 22%,transparent);white-space:nowrap}
+.ph-pill.sm{padding:2px 8px;font-size:11.5px}
+.ph-now{display:flex;flex-direction:column;gap:10px;border-left:4px solid var(--c)}
+.ph-big{font-size:26px;font-weight:750;line-height:1.15}
+.ph-txt{margin:0;font-size:14px;color:var(--muted)}
+.ph-bars{display:flex;flex-direction:column;gap:6px}
+.ph-bars>div{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.ph-bars .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.ph-bars .bar i{display:block;height:100%;background:var(--c);border-radius:99px}
+.ph-bars b{font-variant-numeric:tabular-nums;font-size:13px}
+.ph-strip{display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:3px;align-items:end;height:120px;overflow-x:auto}
+.ph-w{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:18px;padding:0;color:var(--muted)}
+.ph-w i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--c);opacity:.85}
+.ph-w.past i{opacity:.45}
+.ph-w.now i{outline:2px solid var(--ink);outline-offset:1px}
+.ph-w small{font-size:9.5px;line-height:1.1;margin-top:4px;text-align:center;white-space:nowrap}
+.ph-w em{position:absolute;top:0;color:var(--accent)}.ph-w em .ic{width:12px;height:12px}
+.ph-w u{position:absolute;top:16px;width:5px;height:5px;border-radius:50%;background:var(--ink)}
+tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+@media (max-width:520px){.ph-w small{font-size:8.5px}.ph-strip{gap:2px}}
+.cv-sum .ph-pill{align-self:flex-start;margin-bottom:2px}
+@media (max-width:639px){.cv-sum .ph-pill{margin:0}}
+.rp{display:flex;flex-direction:column}
+.rp-r{display:grid;grid-template-columns:minmax(0,1.3fr) 76px repeat(3,minmax(0,.8fr));gap:8px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);text-align:left;color:var(--ink);width:100%}
+.rp-r:first-child{border-top:0}.rp-r.now{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.rp-r .ph-pill{justify-self:start}
+.rp-w b,.rp-n b{display:block;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp-w small,.rp-n small{display:block;font-size:11px;color:var(--muted);white-space:nowrap}
+.rp-n{text-align:right}
+@media (max-width:420px){.rp-r{grid-template-columns:minmax(0,1.2fr) 68px repeat(3,minmax(0,.75fr));gap:5px;padding:8px 10px}.rp-w b,.rp-n b{font-size:12.5px}}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3626,10 +3663,10 @@ function readinessDot() {
 /* ================= Train tab ================= */
 VIEWS.train = function () {
   const seg = UI.trainSeg;
-  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Training</div><div class="top-sub hide-sm">${seg === "races" ? "Races, countdowns and results" : seg === "wk" ? "Programs, workouts and history" : seg === "cal" ? "Your training calendar" : seg === "fitness" ? "Fitness, fatigue and form" : seg === "week" ? (icuPlanMode() ? "Your intervals.icu plan, week by week" : "Plan, pattern and calories of your sessions") : seg === "running" ? "Zones, paces and predictions from your tests" : "Personal bests and tests"}</div></div>
+  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Training</div><div class="top-sub hide-sm">${seg === "races" ? "Races, countdowns and results" : seg === "wk" ? "Programs, workouts and history" : seg === "cal" ? "Your training calendar" : seg === "season" ? "Blocks, deloads and the plan to your races" : seg === "fitness" ? "Fitness, fatigue and form" : seg === "week" ? (icuPlanMode() ? "Your intervals.icu plan, week by week" : "Plan, pattern and calories of your sessions") : seg === "running" ? "Zones, paces and predictions from your tests" : "Personal bests and tests"}</div></div>
     <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Timer">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
-    <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
-  return h + (seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
+    <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ["season", "Season"], ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
+  return h + (seg === "season" ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
 };
 /* ================= Train › Plan: the next two weeks from your calendar, what's done, what it costs in fuel ================= */
 function icuSyncBar() {
@@ -6275,7 +6312,7 @@ function trainCalendar() {
       for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d < ms || d > me) continue; const its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d);
         if (!its.length && !rs.length && d !== today) continue;
         days += `<div class="cv-ad ${d === today ? "now" : ""}" data-sdrop="${d}"><button class="cv-ad-d" data-act="cal-sel" data-date="${d}"><b>${+d.slice(8)}</b><small>${DOW[dow(d)]}</small></button><div class="cv-ad-s">${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${r.km ? r1(r.km) + " km" : esc(r.sport || "")}</small></span></button>`).join("")}${its.map((x, k) => { const w = x.w; return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(x.p?.note || w.note || w.sport)}</b><small>${esc([shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · "))}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") : x.st === "missed" ? "Missed" : ""}</span></button>`; }).join("") || `<span class="cv-empty">Rest</span>`}${d >= today ? `<button class="cv-add" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div></div>`; }
-      h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</b><small>${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}${fe ? ` · fitness ${r0(fe.ctl)}` : ""}</small></div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
+      h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))} ${phPill(weekPhase(ws).ph, true)}</b><small>${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}${fe ? ` · fitness ${r0(fe.ctl)}` : ""}</small></div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
     }
     return h + `</div>`;
   }
@@ -6288,7 +6325,7 @@ function trainCalendar() {
         <span class="cv-n"><span>${+d.slice(8)}</span>${race ? ic("flag", "sm") : ""}</span><span class="cv-ss">${its.slice(0, max).map((x, k) => calItem(d, x, k, narrow)).join("")}${its.length > max ? `<span class="cv-more">+${its.length - max}</span>` : ""}</span></button>`;
     }
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
-    h += `<div class="cv-w">${cells}<div class="cv-sum"><b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
+    h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
   h += `</div>` + calDayPanel(sel);
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
@@ -7739,7 +7776,7 @@ VIEWS.today = function () {
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
   const quick = `<button class="td-q" data-act="gps-run">${ic("pulse", "sm")}GPS run</button><button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
-  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${week}${next}</div></div>`;
+  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`;
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
   return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
@@ -9575,6 +9612,213 @@ function gpsPreview(L) {
   const al = [P.split !== 1 ? `split ${P.split} km` : "split 1 km", P.pace ? "pace alerts" : "", P.every ? `summary ${P.every}′` : "", P.auto ? "auto-pause" : ""].filter(Boolean).join(" · ");
   return `<div class="gps-pv"><span class="gps-sig" style="--c:var(--${c})" data-gps="sig"><i></i>${esc(txt)}</span><span class="faint gps-al">${esc(al)}</span><button class="btn text sm" data-act="gps-sheet">${ic("sliders", "sm")}Alerts</button></div>`;
 }
+/* ================= Today: cards added by the modules below, in two columns ================= */
+const TODAY_CARDS = [];
+function todayCards(col) { return TODAY_CARDS.filter(c => c.col === col).sort((a, b) => a.o - b.o).map(c => { try { return c.fn() || ""; } catch (e) { console.warn(e); return ""; } }).join(""); }
+/* ================= periodization: blocks, deloads and a backward plan to your races =================
+   Every week gets a phase. With an A/B race ahead the plan is built backwards from race day (race week, taper, peak,
+   build blocks with a deload every N weeks, base before that, recovery after). Without one it's a rolling cycle.
+   Auto deloads: the current or next week turns into a deload when load jumps, build weeks pile up or readiness drops.
+   Any week can be set by hand; that always wins. */
+const PH = {
+  base: ["Base", "fat", 0.95, "Aerobic volume, easy runs, technique and general strength. Few hard sessions."],
+  build: ["Build", "carb", 1.05, "Add load step by step: one or two quality sessions, the long run grows."],
+  peak: ["Peak", "pro", 1.1, "Race-specific work at goal pace; the highest load of the block."],
+  taper: ["Taper", "good", 0.65, "Cut volume 30–50%, keep a little intensity, sleep and eat well."],
+  race: ["Race", "accent", 0.45, "Short, sharp openers early in the week, then rest. Race!"],
+  recovery: ["Recovery", "faint", 0.5, "Easy movement only for a few days, then build back gently."],
+  deload: ["Deload", "faint", 0.6, "About −40% volume, same frequency, intensity kept short. Let fitness show up."]
+};
+const PER = () => { const p = S.train.period = S.train.period || {}; p.weeks = p.weeks || {}; return p; };
+const perCycle = () => clamp(+PER().cycle || 3, 2, 5);
+const savePer = () => saveWK();
+function raceFor(ws) { // the next A/B race on or after this week
+  const rs = races().filter(r => !r.result?.done && (r.pri || "B") !== "C" && r.date >= ws).sort((a, b) => a.date.localeCompare(b.date));
+  return rs[0] || null;
+}
+function taperWeeks(r) { const km = +r.km || 0; return km >= 40 ? 3 : km >= 20 ? 2 : km >= 8 ? 1 : 1; }
+/* the auto phase of a week, without manual overrides */
+function autoPhase(ws) {
+  const P = PER(), cyc = perCycle();
+  // recovery after a race
+  const past = races().filter(r => r.date < ws && r.date >= addDays(ws, -7) && (r.pri || "B") === "A");
+  if (past.length) return { ph: "recovery", why: `after ${past[0].name}` };
+  const r = raceFor(ws);
+  if (r) { const rw = weekStartOf(r.date), n = Math.round(daysBetween(ws, rw) / 7), tw = taperWeeks(r);
+    if (n === 0) return { ph: "race", why: r.name, race: r };
+    if (n <= tw) return { ph: "taper", why: `${n} week${n > 1 ? "s" : ""} to ${r.name}`, race: r };
+    if (n <= tw + 2 && r.pri !== "B") return { ph: "peak", why: `${n} weeks to ${r.name}`, race: r };
+    const k = n - tw - (r.pri !== "B" ? 2 : 0); // weeks before the peak, counted backwards
+    if (n <= 18) { if (k % (cyc + 1) === 0) return { ph: "deload", why: `every ${cyc + 1}th week`, race: r }; return { ph: "build", why: `${n} weeks to ${r.name}`, race: r }; }
+    if (n > 18) return { ph: "base", why: `${n} weeks to ${r.name}`, race: r };
+  }
+  // rolling cycle from the start date (default: the last deload the load history shows)
+  const start = P.start || (() => { const L = loadState().weeks.find(w => w.deload); return L ? addDays(L.s, 7) : weekStartOf(todayISO()); })();
+  const i = Math.floor(daysBetween(weekStartOf(start), ws) / 7), m = ((i % (cyc + 1)) + cyc + 1) % (cyc + 1);
+  return m === cyc ? { ph: "deload", why: `${cyc}:1 cycle` } : { ph: P.noRace === "base" ? "base" : "build", why: `${cyc}:1 cycle · week ${m + 1} of ${cyc}` };
+}
+/* why the auto rules would switch this week or the next to a deload now */
+function deloadSignal() {
+  const L = loadState(), R = FIT().run, why = [];
+  if (L.build >= R.deloadAfter) why.push(`${L.build} build weeks since the last deload`);
+  if (L.ratio != null && L.ratio > R.loadCaution + 0.15) why.push(`load ${L.ratio.toFixed(2)}× your usual week`);
+  let red = 0; for (let i = 0; i < 3; i++) { const d = addDays(todayISO(), -i), l = logGet(d) || {}; if ((+l.sleep && l.sleep < 5.5) || (L.hrvOk && +l.hrv && (l.hrv - L.hrvBase) / Math.max(L.hrvSd, L.hrvBase * .06) < -1.5)) red++; }
+  if (L.ready === "red" || red >= 2) why.push("readiness low on most of the last 3 days");
+  return why;
+}
+function weekPhase(ws) {
+  return memo("ph|" + ws, () => {
+    const P = PER(), man = P.weeks[ws];
+    if (man?.ph) return { ph: man.ph, why: "set by you", manual: true, note: man.note || "" };
+    const a = autoPhase(ws), cur = weekStartOf(todayISO());
+    if (P.autoDeload !== false && (ws === cur || ws === addDays(cur, 7)) && ["build", "peak", "base"].includes(a.ph)) {
+      const sig = deloadSignal(), early = daysBetween(cur, todayISO()) <= 2;
+      if (sig.length && (ws === cur ? early : !early && autoPhase(cur).ph !== "deload" && !P.weeks[cur]?.ph)) return { ...a, ph: "deload", auto: true, why: sig.join(" · ") };
+    }
+    return a;
+  });
+}
+/* what a week should weigh: your usual week (last 4 full weeks) × the phase factor; build weeks climb inside the block */
+function weekTarget(ws) {
+  return memo("wt|" + ws, () => {
+    const fit = FIT(), cur = weekStartOf(todayISO()); let l = 0, km = 0, n = 0;
+    for (let k = 1; k <= 4; k++) { const s = addDays(cur, -7 * k); let wl = 0, wk = 0; for (let i = 0; i < 7; i++) { const d = addDays(s, i); wl += dayLoad(d); wk += (logGet(d)?.workouts || []).filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); } if (wl > 0) { l += wl; km += wk; n++; } }
+    const base = n ? l / n : 0, baseKm = n ? km / n : 0, P = weekPhase(ws); let f = PH[P.ph][2];
+    if (P.ph === "build") { let j = 0; for (let k = 1; k <= 4; k++) { if (weekPhase(addDays(ws, -7 * k)).ph === "build") j++; else break; } f += 0.04 * j; }
+    if (P.ph === "taper" && P.race) { const left = Math.round(daysBetween(ws, weekStartOf(P.race.date)) / 7); f = left >= 2 ? 0.75 : 0.55; }
+    return { ph: P, f, load: base * f, km: baseKm * f, base, baseKm };
+  });
+}
+function weekDone(ws) { const fit = FIT(); let l = 0, km = 0; for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d > todayISO()) break; l += dayLoad(d); km += (logGet(d)?.workouts || []).filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); } return { l, km }; }
+const phPill = (ph, sm) => `<span class="ph-pill ${sm ? "sm" : ""}" style="--c:var(--${PH[ph][1]})">${PH[ph][0]}</span>`;
+/* the long run of a running race plan, by weeks to go */
+function longRunFor(r, n) { if (!r || !(r.km > 0) || !isRunRace(r)) return null; const top = r.km >= 40 ? 32 : r.km >= 20 ? 19 : r.km >= 9 ? 14 : 10, ph = weekPhase(addDays(weekStartOf(r.date), -7 * n)).ph;
+  if (n === 0) return null; if (ph === "taper") return r1(top * (n >= 2 ? .65 : .45)); if (ph === "deload") return r1(top * .55); const k = clamp(1 - (n - 3) * .06, .5, 1); return r1(top * k); }
+function trainSeason() {
+  const today = todayISO(), cur = weekStartOf(today), P = PER(), T = weekTarget(cur), D = weekDone(cur), ph = T.ph;
+  let h = `<div class="card pad ph-now" style="--c:var(--${PH[ph.ph][1]})"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px"><div><span class="flabel">This week</span><div class="ph-big">${PH[ph.ph][0]}</div><small class="faint">${esc(ph.why || "")}${ph.auto ? " · auto deload" : ""}</small></div><button class="btn soft sm" data-act="ph-edit" data-w="${cur}">${ic("edit", "sm")}Change</button></div>
+    <p class="ph-txt">${esc(PH[ph.ph][3])}</p>
+    ${T.base ? `<div class="ph-bars"><div><span>Load</span><span class="bar"><i style="width:${clamp(D.l / Math.max(1, T.load) * 100, 0, 100)}%"></i></span><b>${fmtN(r0(D.l))} / ${fmtN(r0(T.load))}</b></div>${T.baseKm ? `<div><span>Run km</span><span class="bar"><i style="width:${clamp(D.km / Math.max(.1, T.km) * 100, 0, 100)}%"></i></span><b>${r1(D.km)} / ${r1(T.km)}</b></div>` : ""}</div>
+      <small class="faint">Target = your usual week (${fmtN(r0(T.base))} load${T.baseKm ? `, ${r1(T.baseKm)} km` : ""}) × ${T.f.toFixed(2)}.</small>` : `<small class="faint">Log a few weeks of training and the targets appear.</small>`}</div>`;
+  // the strip: 4 weeks back, 12 ahead
+  let strip = ""; for (let k = -4; k <= 12; k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), dn = k < 0 ? weekDone(ws).l : null, r = races().find(x => weekStartOf(x.date) === ws);
+    strip += `<button class="ph-w ${k === 0 ? "now" : ""} ${k < 0 ? "past" : ""}" data-act="ph-edit" data-w="${ws}" style="--c:var(--${PH[p.ph][1]})" aria-label="Week of ${fmtDM(ws)}: ${PH[p.ph][0]}"><i style="height:${clamp(((dn ?? t.load) / Math.max(1, t.base * 1.2)) * 100, 12, 100)}%"></i><small>${fmtDM(ws).replace(" ", "<br>")}</small>${r ? `<em>${ic("flag", "sm")}</em>` : ""}${p.manual ? `<u></u>` : ""}</button>`; }
+  h += `<div class="section-h"><h2>Season</h2><span class="faint" style="font-size:12px">bar = load (done or target) · tap a week to change it</span></div><div class="card pad"><div class="ph-strip">${strip}</div>
+    <div class="cv-leg" style="margin-top:8px">${Object.keys(PH).map(k => `<span><i style="background:var(--${PH[k][1]})"></i>${PH[k][0]}</span>`).join("")}</div></div>`;
+  // backward plan to the next race
+  const r = raceFor(cur);
+  if (r) { const n = Math.round(daysBetween(cur, weekStartOf(r.date)) / 7), I = raceInsight(r); let rows = [];
+    for (let k = 0; k <= Math.min(n, 20); k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), lr = longRunFor(r, n - k);
+      rows.push(`<button class="rp-r ${k === 0 ? "now" : ""}" data-act="ph-edit" data-w="${ws}"><span class="rp-w"><b>${k === 0 ? "This week" : fmtDM(ws)}</b><small>${n - k === 0 ? "race week" : `${n - k} to go`}</small></span>${phPill(p.ph, true)}<span class="rp-n"><b>${t.base ? fmtN(r0(t.load)) : "—"}</b><small>load</small></span><span class="rp-n"><b>${t.baseKm ? r1(t.km) : "—"}</b><small>km</small></span><span class="rp-n"><b>${lr ? lr : "—"}</b><small>long run</small></span></button>`); }
+    h += `<div class="section-h"><h2>Plan to ${esc(r.name)}</h2><span class="faint" style="font-size:12px">${I.days} days · ${r.pri || "B"}-race${r.goal ? ` · goal ${esc(r.goal)}` : ""}</span></div>
+      <div class="card rp">${rows.join("")}</div>
+      <div class="faint" style="font-size:12.5px">Built backwards from race day: ${taperWeeks(r)} taper week${taperWeeks(r) > 1 ? "s" : ""}${r.pri !== "B" ? ", 2 peak weeks" : ""}, build blocks of ${perCycle()} weeks + 1 deload, base when it's more than 18 weeks away. B-races get a short taper only; C-races don't change the plan.${I.pred ? ` Predicted time today ${fmtClock(I.pred)}.` : ""}</div>`; }
+  else h += `<div class="note">No A or B race ahead: the season runs a rolling ${perCycle()}:1 cycle. <button class="link" data-act="rc-new">Add a race</button> and the plan is built backwards from it.</div>`;
+  // settings
+  h += `<div class="section-h"><h2>Rules</h2></div><div class="card pad" style="display:flex;flex-direction:column;gap:10px">
+    <label class="row sw-row" style="justify-content:space-between"><span>Automatic deloads<small class="faint" style="display:block;font-size:12px">This or next week turns into a deload when load jumps, build weeks pile up or readiness stays low</small></span><button type="button" class="switch" role="switch" aria-checked="${P.autoDeload !== false}" data-act="ph-auto" aria-label="Automatic deloads"></button></label>
+    <div class="field"><span class="flabel">Block</span><div class="chips">${[2, 3, 4].map(c => `<button class="chip sm" data-act="ph-cycle" data-k="${c}" aria-pressed="${perCycle() === c}">${c} weeks + deload</button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">Without a race</span><div class="chips">${[["build", "Keep building"], ["base", "Base"]].map(([k, l]) => `<button class="chip sm" data-act="ph-norace" data-k="${k}" aria-pressed="${(P.noRace || "build") === k}">${l}</button>`).join("")}</div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="ph-restart">Start a new block this week</button>${Object.keys(P.weeks).length ? `<button class="btn text sm" data-act="ph-clear">Clear the weeks set by hand (${Object.keys(P.weeks).length})</button>` : ""}</div>
+    ${(() => { const sig = deloadSignal(); return sig.length ? `<div class="note warn">Deload signals now: ${esc(sig.join(" · "))}.</div>` : ""; })()}</div>`;
+  return h;
+}
+SHEETS.phase = sh => { const P = PER(), m = P.weeks[sh.w] || {}, a = autoPhase(sh.w), cur = m.ph || "auto";
+  return { title: `Week of ${fmtDM(sh.w)}`, body: `<div class="field"><span class="flabel">Phase</span><div class="chips">${[["auto", `Auto · ${PH[a.ph][0]}`], ...Object.keys(PH).map(k => [k, PH[k][0]])].map(([k, l]) => `<button class="chip" data-act="ph-set" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div></div>
+    <p class="muted" style="margin:0;font-size:13.5px">${esc(PH[m.ph || a.ph][3])}</p>
+    <div class="field"><label for="ph-note">Note</label><input id="ph-note" class="inp" value="${esc(m.note || "")}" placeholder="e.g. holidays, exams, travel" data-chg="ph-note"></div>`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
+ACT["ph-edit"] = el => openSheet("phase", { w: el.dataset.w });
+ACT["ph-set"] = el => { const sh = S_(), P = PER(), k = el.dataset.k; if (k === "auto") { const n = P.weeks[sh.w]?.note; if (n) P.weeks[sh.w] = { note: n }; else delete P.weeks[sh.w]; } else P.weeks[sh.w] = { ...(P.weeks[sh.w] || {}), ph: k }; savePer(); renderSheet(); };
+CHG["ph-note"] = v => { const sh = S_(), P = PER(), w = P.weeks[sh.w] || {}; if (v.trim()) P.weeks[sh.w] = { ...w, note: v.trim() }; else { delete w.note; if (w.ph) P.weeks[sh.w] = w; else delete P.weeks[sh.w]; } savePer(); };
+ACT["ph-auto"] = () => { const P = PER(); P.autoDeload = P.autoDeload === false; savePer(); };
+ACT["ph-cycle"] = el => { PER().cycle = +el.dataset.k; savePer(); };
+ACT["ph-norace"] = el => { PER().noRace = el.dataset.k; savePer(); };
+ACT["ph-restart"] = () => { PER().start = weekStartOf(todayISO()); savePer(); toast("New block from this week"); };
+ACT["ph-clear"] = () => { PER().weeks = {}; savePer(); toast("Back to the automatic plan"); };
+/* ================= weekly report, automatic: spending, adherence and what to change next week =================
+   On Monday (until Wednesday) Today shows last week in review with a few concrete changes for the week ahead; a
+   notification can bring it at a set time. The same lines are in Dashboard › Week. */
+const _periodStats = periodStats;
+periodStats = function (P) {
+  const R = _periodStats(P); if (!R.days) return R;
+  const end = R.end, inR = d => d >= P.a && d <= end;
+  R.spend = (S.shop.buys || []).filter(b => b.eur != null && inR(b.d)).reduce((a, b) => a + +b.eur, 0);
+  R.budget = S.settings.shopPrefs?.budget ? S.settings.shopPrefs.budget * (P.kind === "month" ? R.days / 7 : 1) : null;
+  let planned = 0, done = 0, missed = []; for (let d = P.a; d <= end; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.p || x.st !== "done") { planned++; if (x.st === "done") done++; else if (d < todayISO()) missed.push(d); } }
+  R.plan = planned; R.planDone = done; R.missed = missed.length;
+  let due = 0, ok = 0; for (let d = P.a; d <= end; d = addDays(d, 1)) { if (d >= todayISO()) continue; for (const s of suppSlots(d)) { due++; if (suppTaken(d, s.k)) ok++; } } R.supp = due ? ok / due : null;
+  if (proOn()) { try { const N = weekNut(end, R.days), T = nutTargets(R.avgT || 2200); R.fib = N.days ? [N.v.fib, T.fib] : null; R.salt = N.days ? [N.v.salt, T.salt] : null; } catch (e) {} }
+  if (typeof waterStats === "function") { const w = waterStats(P.a, end); if (w) R.water = w; }
+  return R;
+};
+function nextWeekTips(R) {
+  const t = [], nx = addDays(weekStartOf(R.b), 7), ph = weekPhase(nx), tg = weekTarget(nx), cur = weekPhase(weekStartOf(R.b));
+  t.push(`Next week is ${/^[aeiou]/i.test(PH[ph.ph][0]) ? "an" : "a"} ${PH[ph.ph][0].toLowerCase()} week${ph.why ? ` (${ph.why})` : ""}${tg.base ? `: aim for about ${fmtN(r0(tg.load))} load${tg.baseKm ? `, ${r1(tg.km)} km run` : ""}` : ""}. ${PH[ph.ph][3]}`);
+  if (R.plan >= 3 && R.planDone / R.plan < 0.75) t.push(`You did ${R.planDone} of ${R.plan} planned sessions: plan fewer, or move them to the days that worked${R.missed ? ` (${R.missed} missed)` : ""}.`);
+  if (R.hard > FIT().run.hardMax) t.push(`${R.hard} hard days: keep it to ${FIT().run.hardMax}, with an easy day after each.`);
+  if (R.sleep && R.sleep < 7) t.push(`Sleep averaged ${r1(R.sleep)} h: aim for 7.5 h, start with 30 minutes earlier on training days.`);
+  if (R.avgP != null && R.tP && R.avgP / R.tP < 0.9) t.push(`Protein was ${r0(R.avgP)} g a day vs ${r0(R.tP)} g: add a lean protein to breakfast or a snack.`);
+  if (R.nI >= 3 && R.onT / R.nI < 0.5) t.push(`Only ${R.onT} of ${R.nI} days were within ±10% of target: plan the week ahead in Fuel and cook twice for four meals.`);
+  else if (R.nI < 4 && R.days >= 6) t.push(`Food logged on ${R.nI} days: log at least 5 so the targets keep calibrating.`);
+  if (R.trendChg != null && /cut|lose|deficit/i.test(R.phase || "") && R.trendChg > -0.05 && R.weigh >= 4) t.push(`Weight trend is flat in a cut: trim weekends, or add two 30′ walks.`);
+  if (R.weigh < 4) t.push(`${R.weigh} weigh-ins: weigh in on 5 mornings so the trend stays reliable.`);
+  if (R.budget && R.spend > R.budget * 1.05) t.push(`Food spend €${r0(R.spend)} vs a €${r0(R.budget)} budget: plan with the pantry first and check prices in the list.`);
+  if (R.supp != null && R.supp < 0.8) t.push(`Supplements taken ${r0(R.supp * 100)}% of the time: turn on reminders in Settings.`);
+  if (R.fib && R.fib[0] < R.fib[1] * 0.8) t.push(`Fibre ${r0(R.fib[0])} g a day vs ${r0(R.fib[1])} g: legumes twice, fruit and whole grains daily.`);
+  if (R.salt && R.salt[0] > R.salt[1] * 1.2) t.push(`Salt ${r1(R.salt[0])} g a day: cut cured meats and ready sauces.`);
+  if (R.water && R.water.avg < R.water.goal * 0.8) t.push(`Water ${r1(R.water.avg / 1000)} l a day vs ${r1(R.water.goal / 1000)} l: a bottle on the desk, one glass with each meal.`);
+  const r = nextRace(); if (r) { const dd = daysBetween(todayISO(), r.date); if (dd <= 21 && dd >= 0) t.push(`${r.name} in ${dd} days: ${dd <= 7 ? "race week, rest more than you think" : "taper: keep a little intensity, cut volume"}.`); }
+  if (cur.ph === "deload" && ph.ph === "build") t.push("Deload done: build back to your usual week, not above it in the first days.");
+  return t.slice(0, 6);
+}
+function adherenceHTML(R) {
+  const k = []; if (R.plan) k.push(kpi(`${R.planDone}/${R.plan}`, "planned sessions done", R.missed ? `${R.missed} missed` : "all done"));
+  k.push(kpi(R.spend ? "€" + fmtN(R.spend) : "—", "food spend", R.budget ? `budget €${fmtN(R.budget)}` : "no budget set"));
+  if (R.supp != null) k.push(kpi(r0(R.supp * 100) + "%", "supplements taken", ""));
+  if (R.water) k.push(kpi(r1(R.water.avg / 1000) + " l", "water a day", `goal ${r1(R.water.goal / 1000)} l`));
+  if (R.fib) k.push(kpi(r0(R.fib[0]) + " g", "fibre a day", `target ${r0(R.fib[1])} g`));
+  return `<div class="stat-grid four">${k.join("")}</div>`;
+}
+const _reportsView = reportsView;
+reportsView = function () {
+  let h = _reportsView(); const kind = UI.dashSeg === "month" ? "month" : "week", P = periodOf(kind, UI.repOff || 0), R = periodStats(P); if (!R.days) return h;
+  const add = `<div class="section-h"><h2>Adherence and spending</h2></div>${adherenceHTML(R)}${kind === "week" ? `<div class="card pad rep-tips"><span class="flabel">For next week</span><ul>${nextWeekTips(R).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}`;
+  const i = h.indexOf('<div class="stat-grid four">'); return i < 0 ? h + add : h.slice(0, i) + add + h.slice(i);
+};
+const _reportText = reportText;
+reportText = function () { const kind = UI.dashSeg === "month" ? "month" : "week", R = periodStats(periodOf(kind, UI.repOff || 0)); let t = _reportText();
+  t += `\nPlanned sessions: ${R.planDone}/${R.plan} · Food spend: €${r0(R.spend || 0)}${R.budget ? ` (budget €${r0(R.budget)})` : ""}${R.supp != null ? ` · Supplements ${r0(R.supp * 100)}%` : ""}`;
+  if (kind === "week") t += "\n\nNext week:\n" + nextWeekTips(R).map(x => "• " + x).join("\n"); return t; };
+/* Today, Monday to Wednesday: last week in review */
+function weeklyCard() {
+  const today = todayISO(), ws = weekStartOf(today), last = addDays(ws, -7), RP = S.settings.report || {};
+  if (RP.today === false || daysBetween(ws, today) > 2 || RP.seen === last) return "";
+  const R = periodStats(periodOf("week", -1)); if (!R.days || (!R.sess && !R.nI && !R.weigh)) return "";
+  const kp = [[R.plan ? `${R.planDone}/${R.plan}` : R.sess, R.plan ? "sessions" : "sessions"], [R.trendChg == null ? "—" : sgn(R.trendChg, 1), "kg trend"], [R.nI ? `${R.onT}/${R.nI}` : "—", "days on target"], [R.spend ? "€" + r0(R.spend) : "—", "food"]];
+  return `<section class="card pad wk-rev"><div class="row" style="justify-content:space-between"><span class="flabel">Last week in review</span><button class="icon-btn sm" data-act="rep-seen" aria-label="Dismiss">${ic("close", "sm")}</button></div>
+    <div class="wk-k">${kp.map(([v, l]) => `<span><b>${v}</b><small>${l}</small></span>`).join("")}</div>
+    <ul class="wk-tips">${nextWeekTips(R).slice(0, 3).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    <button class="btn tonal sm" data-act="rep-open" style="align-self:flex-start">Full report</button></section>`;
+}
+TODAY_CARDS.push({ col: "a", o: 0, fn: weeklyCard });
+ACT["rep-seen"] = () => { S.settings.report = { ...(S.settings.report || {}), seen: addDays(weekStartOf(todayISO()), -7) }; saveSettings(); };
+ACT["rep-open"] = () => { UI.tab = "dash"; UI.dashSeg = "week"; UI.repOff = -1; scheduleRender(); window.scrollTo(0, 0); };
+/* the notification on Monday */
+const _reminderTick = reminderTick;
+reminderTick = function () { _reminderTick();
+  const R = S.settings?.reminders || {}, RP = S.settings?.report || {}; if (!R.on || RP.notify === false || !("Notification" in window) || Notification.permission !== "granted") return;
+  const d = todayISO(), key = d + "|report"; if (dow(d) !== 0 || nowHM() < (RP.at || "08:30") || remSent()[key] === d) return; remMark(key);
+  const W = periodStats(periodOf("week", -1)); if (!W.days) return;
+  notify("Your week in review", [`${W.planDone}/${W.plan || W.sess} sessions · trend ${W.trendChg == null ? "—" : sgn(W.trendChg, 1) + " kg"}`, nextWeekTips(W)[0]].join("\n"), "engine-report", { tab: "report" });
+};
+navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-tab" && e.data.tab === "report") ACT["rep-open"](); });
+const _reminderPrefs = reminderPrefs;
+reminderPrefs = function () { const RP = S.settings.report || {};
+  return _reminderPrefs().replace('<button class="btn soft sm" data-act="rem-ics"', `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rep-at" style="font-size:13px">Weekly report on Monday at</label><input id="rep-at" class="inp" type="time" value="${esc(RP.at || "08:30")}" data-chg="rep-at" style="max-width:130px"></div>
+    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${RP.today !== false}" data-act="rep-today" aria-label="Weekly report on Today"></button><span>Last week in review on Today<small class="faint" style="display:block;font-size:12.5px">Monday to Wednesday, until you close it</small></span></label>
+    <button class="btn soft sm" data-act="rem-ics"`); };
+CHG["rep-at"] = v => { S.settings.report = { ...(S.settings.report || {}), at: v || "08:30" }; saveSettings(); };
+ACT["rep-today"] = () => { const RP = S.settings.report || {}; S.settings.report = { ...RP, today: RP.today === false }; saveSettings(); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
