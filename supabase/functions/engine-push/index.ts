@@ -17,8 +17,13 @@ async function stillNeeded(user: string, cond: Record<string, unknown> | null): 
   return true;
 }
 
+/* constant-time comparison, so the secret can't be guessed from response times */
+function safeEqual(a: string, b: string): boolean { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; }
+
 Deno.serve(async (req) => {
-  if (req.headers.get("Authorization") !== `Bearer ${env("CRON_SECRET")}`) return new Response("forbidden", { status: 403 });
+  // only the cron job knows the secret; with no secret set the function refuses everything
+  const secret = env("CRON_SECRET"), got = req.headers.get("Authorization") ?? "";
+  if (secret.length < 16 || !safeEqual(got, `Bearer ${secret}`)) return new Response("forbidden", { status: 403 });
   const now = new Date(), from = new Date(now.getTime() - 2 * 3600e3);
   const { data: due, error } = await db.from("push_queue").select("*").is("sent_at", null).lte("at", now.toISOString()).gte("at", from.toISOString()).limit(500);
   if (error) return new Response(error.message, { status: 500 });
