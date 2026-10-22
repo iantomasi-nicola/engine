@@ -1844,6 +1844,20 @@ tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .ck-h{display:flex;justify-content:space-between;gap:8px;align-items:center}.ck-h b{font-size:14.5px}
 .eo-ph{width:100%;max-height:240px;object-fit:cover;border-radius:14px}
 .eo-res{display:flex;flex-direction:column;gap:6px}
+.gl-list{display:flex;flex-direction:column;gap:10px}
+.gl-c{display:flex;flex-direction:column;gap:10px;text-align:left;padding:14px;border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow);color:var(--ink);width:100%}
+section .gl-c{box-shadow:none;background:var(--surface-2);padding:12px}
+.gl-h{display:flex;justify-content:space-between;gap:8px;align-items:center}.gl-h b{font-size:15px}
+.gl-bar{position:relative;height:10px;border-radius:99px;background:var(--surface-2)}
+section .gl-bar{background:var(--surface)}
+.gl-bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.gl-bar u{position:absolute;top:-2px;width:2px;height:14px;background:var(--line);border-radius:1px}.gl-bar u.on{background:var(--accent-ink)}
+.gl-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.gl-k span{display:flex;flex-direction:column;min-width:0}.gl-k small{font-size:11px;color:var(--muted)}.gl-k b{font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gl-ms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.gl-ms span{display:flex;flex-direction:column;gap:1px;padding:8px;border-radius:12px;background:var(--surface-2);min-width:0}
+.gl-ms span.on{background:color-mix(in srgb,var(--good) 16%,var(--surface))}
+.gl-ms i{font-style:normal;font-size:11px;color:var(--muted)}.gl-ms b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gl-ms small{font-size:11px;color:var(--muted)}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3844,8 +3858,9 @@ function trainRecords() {
 /* ================= Progress tab ================= */
 VIEWS.progress = function () {
   const seg = UI.progSeg;
-  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : seg === "training" ? "Maxes, circuits and running over time" : seg === "energy" ? "BMR, TDEE and how they're estimated" : "One row per week"}</div></div>${settingsBtn()}</div>
-    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
+  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : seg === "training" ? "Maxes, circuits and running over time" : seg === "goals" ? "Targets, milestones and when you'll get there" : seg === "energy" ? "BMR, TDEE and how they're estimated" : "One row per week"}</div></div>${settingsBtn()}</div>
+    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ["goals", "Goals"], ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
+  if (seg === "goals") return h + goalsView();
   if (seg === "nutrition") return h + VIEWS.stats(true);
   if (seg === "training") return h + trainingProgressView();
   if (seg === "energy") return h + energyView();
@@ -10204,6 +10219,78 @@ ACT["eo-est"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if
   sh.busy = false; if (UI.sheet === sh) renderSheet(); };
 ACT["eo-next"] = () => { const sh = S_(), E = sh.est; if (!E) return; const k = sh.por || 1, later = activeMeals().slice(activeMeals().findIndex(m => m.id === sh.meal) + 1).some(m => (getDay(sh.date).meals[m.id] || []).some(it => !it.eaten));
   openSheet("cheat", { date: sh.date, meal: sh.meal, itemId: null, origMeal: null, out: true, draft: { name: E.name, kcal: r0(E.kcal * k), p: r0(E.p * k), c: r0(E.c * k), f: r0(E.f * k), preset: "", strategy: sh.date === todayISO() && later ? "day" : "after" } }); };
+/* ================= long-term goals: 10k under 40′, 15 pull-ups, 75 kg… with milestones and a forecast date =================
+   Each goal reads its own series (weight trend, VDOT from tests and races, calisthenics tests, measurements, body fat).
+   The forecast is a straight line through the last 120 days of it: when it reaches the target, if it's heading there. */
+const GOAL_KINDS = [["weight", "Body weight"], ["run", "Running time"], ["reps", "Max reps"], ["rm", "Strength (1RM +kg)"], ["hold", "Hold time"], ["waist", "Waist"], ["bf", "Body fat"]];
+const GOALS = () => (S.train.goals = S.train.goals || []);
+const goalExs = () => [...new Set([...(FIT().exercises || []), ...(S.train.calis || []).map(c => c.ex)])];
+function goalSeries(g) {
+  if (g.kind === "weight") return weightsSeries().map(([d]) => [d, trendAt(d)]).filter(x => x[1] > 0);
+  if (g.kind === "bf") return allLogDates().filter(d => logGet(d).bf > 0).map(d => [d, +logGet(d).bf]);
+  if (g.kind === "waist") return Object.keys(S.body.m || {}).sort().filter(d => S.body.m[d].waist > 0).map(d => [d, +S.body.m[d].waist]);
+  if (g.kind === "run") return (runState().T || []).filter(t => t.vdot).map(t => [t.date, t.vdot]);
+  const ss = strengthSeries(g.ex || ""); const k = g.kind === "reps" ? "reps" : g.kind === "hold" ? "hold" : "rm";
+  return (ss[k] || []).map(p => [p[0], p[1]]);
+}
+/* the value we compare: running goals in VDOT (higher = faster), the rest as they are */
+const goalTargetVal = g => g.kind === "run" ? vdotOf(+g.km, +g.target / 60) : +g.target;
+function goalFmt(g, v) { if (v == null) return "—"; if (g.kind === "run") return fmtClock(predictMin(+g.km, v) * 60); if (g.kind === "weight") return r1(v) + " kg"; if (g.kind === "bf") return r1(v) + "%"; if (g.kind === "waist") return r1(v) + " cm"; if (g.kind === "hold") return r0(v) + " s"; if (g.kind === "rm") return "+" + r1(v) + " kg"; return r0(v) + " reps"; }
+function goalLabel(g) { if (g.kind === "run") return `${g.km >= 42 ? "Marathon" : g.km >= 21 ? "Half" : r1(g.km) + " km"} under ${fmtClock(+g.target)}`; if (g.kind === "weight") return `Weigh ${r1(g.target)} kg`; if (g.kind === "bf") return `${r1(g.target)}% body fat`; if (g.kind === "waist") return `Waist ${r1(g.target)} cm`; if (g.kind === "hold") return `${g.ex}: ${g.target} s hold`; if (g.kind === "rm") return `${g.ex}: 1RM +${g.target} kg`; return `${g.ex} × ${g.target}`; }
+function goalProg(g) {
+  const pts = goalSeries(g).sort((a, b) => a[0].localeCompare(b[0])), tv = goalTargetVal(g), up = g.kind === "run" || ["reps", "rm", "hold"].includes(g.kind) ? true : tv > (g.startVal ?? pts[0]?.[1] ?? tv);
+  const s0 = g.startVal ?? (pts.find(p => p[0] >= g.start)?.[1] ?? pts[0]?.[1] ?? null), cur = pts.length ? pts[pts.length - 1][1] : null;
+  const prog = s0 == null || cur == null || tv === s0 ? 0 : clamp((cur - s0) / (tv - s0), 0, 1), done = cur != null && (up ? cur >= tv : cur <= tv);
+  // linear fit over the last 120 days
+  const t = todayISO(), win = pts.filter(p => p[0] >= addDays(t, -120)); let eta = null, slope = null, nowFit = null;
+  if (win.length >= 3) { const xs = win.map(p => daysBetween(win[0][0], p[0])), ys = win.map(p => p[1]), mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0); if (sxx > 0) { slope = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / sxx; const b0 = my - slope * mx, lastX = daysBetween(win[0][0], t), now = nowFit = b0 + slope * lastX;
+      if (!done && slope && (up ? slope > 0 : slope < 0)) { const dd = (tv - now) / slope; if (dd > 0 && dd < 3 * 365) eta = addDays(t, Math.round(dd)); } } }
+  const ms = [.25, .5, .75, 1].map(f => { const v = s0 == null ? null : s0 + (tv - s0) * f, hit = v == null ? null : pts.find(p => p[0] >= (g.start || "") && (up ? p[1] >= v : p[1] <= v));
+    let fc = null; if (!hit && v != null && slope && (up ? slope > 0 : slope < 0) && cur != null) { const dd = (v - (nowFit ?? cur)) / slope; if (dd > 0 && dd < 3 * 365) fc = addDays(t, Math.round(dd)); }
+    return { f, v, hit: hit?.[0] || null, fc }; });
+  const late = g.due && eta && eta > g.due, onTrack = done || (eta && (!g.due || eta <= g.due));
+  return { pts, s0, cur, tv, prog, done, eta, slope, ms, late, onTrack, up };
+}
+function goalCard(g, big) {
+  const G = goalProg(g), pct = r0(G.prog * 100);
+  const status = G.done ? `<span class="pill" style="--c:var(--good)">Reached</span>` : !G.pts.length ? `<span class="pill" style="--c:var(--faint)">No data yet</span>` : G.eta ? `<span class="pill" style="--c:var(--${G.late ? "warn" : "good"})">${G.late ? "Late" : "On track"} · ${fmtDM(G.eta)}${G.eta.slice(0, 4) !== todayISO().slice(0, 4) ? " " + G.eta.slice(0, 4) : ""}</span>` : `<span class="pill" style="--c:var(--warn)">Not moving yet</span>`;
+  return `<button class="gl-c" data-act="goal-edit" data-id="${g.id}"><div class="gl-h"><b>${esc(g.name || goalLabel(g))}</b>${status}</div>
+    <div class="gl-bar"><i style="width:${pct}%"></i>${G.ms.slice(0, 3).map(m => `<u style="left:${m.f * 100}%" class="${m.hit ? "on" : ""}"></u>`).join("")}</div>
+    <div class="gl-k"><span><small>Start</small><b>${goalFmt(g, G.s0)}</b></span><span><small>Now</small><b>${goalFmt(g, G.cur)}</b></span><span><small>Goal</small><b>${g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv)}</b></span><span><small>${g.due ? "By" : "Progress"}</small><b>${g.due ? fmtDM(g.due) : pct + "%"}</b></span></div>
+    ${big ? `<div class="gl-ms">${G.ms.map(m => `<span class="${m.hit ? "on" : ""}"><i>${r0(m.f * 100)}%</i><b>${g.kind === "run" ? fmtClock(predictMin(+g.km, m.v) * 60) : goalFmt(g, m.v)}</b><small>${m.hit ? "✓ " + fmtDM(m.hit) : m.fc ? "≈ " + fmtDM(m.fc) : "—"}</small></span>`).join("")}</div>` : ""}</button>`;
+}
+function goalsView() {
+  const L = GOALS(), open = L.filter(g => !goalProg(g).done), done = L.filter(g => goalProg(g).done);
+  let h = `<div class="section-h"><h2>Goals</h2><button class="link" data-act="goal-new">${ic("plus", "sm")} Goal</button></div>`;
+  if (!L.length) return h + `<div class="empty slim"><p>Set the targets that matter: a 10k under 40′, 15 pull-ups, 75 kg. Each one gets milestones at 25, 50 and 75% and a date forecast from your trend.</p><button class="btn tonal" data-act="goal-new">${ic("plus", "sm")}Add a goal</button></div>`;
+  h += `<div class="gl-list">${open.map(g => goalCard(g, true)).join("")}</div>`;
+  if (done.length) h += `<div class="section-h"><h2>Reached</h2></div><div class="gl-list">${done.map(g => goalCard(g)).join("")}</div>`;
+  return h + `<div class="faint" style="font-size:12.5px">Forecast: a straight line through the last 4 months of the goal's data (weight trend, VDOT from your tests and races, calisthenics tests, measurements). Test or measure every few weeks to keep it honest.</div>`;
+}
+function goalsToday() { const L = GOALS().filter(g => !goalProg(g).done).slice(0, 2); if (!L.length) return ""; return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><span class="flabel">Goals</span><button class="link" data-act="goals-open">All</button></div>${L.map(g => goalCard(g)).join("")}</section>`; }
+TODAY_CARDS.push({ col: "b", o: 5, fn: goalsToday });
+SHEETS.goal = sh => { const g = sh.draft, ex = goalExs(), isEx = ["reps", "rm", "hold"].includes(g.kind);
+  const pv = (() => { try { const G = goalProg({ ...g, target: g.kind === "run" ? parseClock(g.tstr) || 0 : num(g.target), km: num(g.km) }); return G.cur != null ? `Now ${g.kind === "run" ? `${fmtClock(predictMin(num(g.km) || 10, G.cur) * 60)} predicted` : goalFmt(g, G.cur)}${G.eta ? ` · forecast ${fmtDM(G.eta)}` : ""}` : "No data for this yet: log a test or a measurement."; } catch (e) { return ""; } })();
+  return { title: sh.isNew ? "New goal" : "Goal", body: `<div class="field"><span class="flabel">Kind</span><div class="chips">${GOAL_KINDS.map(([k, l]) => `<button class="chip sm" data-act="gl-kind" data-k="${k}" aria-pressed="${g.kind === k}">${l}</button>`).join("")}</div></div>
+    ${g.kind === "run" ? `<div class="grid2"><div class="field"><span class="flabel">Distance</span><div class="chips">${[["5k", 5], ["10k", 10], ["Half", 21.0975], ["Marathon", 42.195]].map(([l, k]) => `<button class="chip sm" data-act="gl-km" data-k="${k}" aria-pressed="${+g.km === k}">${l}</button>`).join("")}</div></div><div class="field"><label for="gl-t">Target time</label><input id="gl-t" class="inp" value="${esc(g.tstr || "")}" placeholder="e.g. 39:59" data-in="gl" data-k="tstr"></div></div>`
+      : `${isEx ? `<div class="field"><label for="gl-ex">Exercise</label><select id="gl-ex" class="inp" data-chg="gl-ex">${ex.map(n => `<option ${n === g.ex ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></div>` : ""}<div class="field"><label for="gl-v">Target</label><div class="unit-inp" style="max-width:200px"><input id="gl-v" class="inp" inputmode="decimal" value="${esc(String(g.target ?? ""))}" data-in="gl" data-k="target"><span>${{ weight: "kg", bf: "%", waist: "cm", reps: "reps", rm: "+kg", hold: "s" }[g.kind]}</span></div></div>`}
+    <div class="grid2"><div class="field"><label for="gl-due">By (optional)</label><input id="gl-due" class="inp" type="date" value="${g.due || ""}" data-in="gl" data-k="due"></div><div class="field"><label for="gl-name">Name (optional)</label><input id="gl-name" class="inp" value="${esc(g.name || "")}" placeholder="${esc(goalLabel({ ...g, target: g.kind === "run" ? parseClock(g.tstr) || 0 : g.target || "…" }))}" data-in="gl" data-k="name"></div></div>
+    <div class="note" id="gl-pv">${esc(pv)}</div>`,
+    foot: `${sh.isNew ? "" : `<button class="btn danger" data-act="goal-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>`}<button class="btn primary" data-act="goal-save">Save</button>` }; };
+ACT["goal-new"] = () => openSheet("goal", { isNew: true, draft: { id: puid("gl"), kind: "run", km: 10, tstr: "", target: "", ex: goalExs()[0] || "Pull-up", start: todayISO() } });
+ACT["goal-edit"] = el => { const g = GOALS().find(x => x.id === el.dataset.id); if (g) openSheet("goal", { isNew: false, draft: { ...clone(g), tstr: g.kind === "run" ? fmtClock(+g.target) : "" } }); };
+ACT["goals-open"] = () => { UI.tab = "progress"; UI.progSeg = "goals"; scheduleRender(); scrollTo(0, 0); };
+ACT["gl-kind"] = el => { S_().draft.kind = el.dataset.k; renderSheet(); };
+ACT["gl-km"] = el => { S_().draft.km = +el.dataset.k; renderSheet(); };
+CHG["gl-ex"] = v => { S_().draft.ex = v; renderSheet(); };
+INP.gl = (v, el) => { S_().draft[el.dataset.k] = v; };
+ACT["goal-save"] = () => { const sh = S_(), g = { ...sh.draft };
+  if (g.kind === "run") { const sec = parseClock(g.tstr); if (!sec || !(+g.km > 0)) { toast("Pick the distance and type the time, e.g. 39:59"); return; } g.target = sec; } else { g.target = num(g.target); if (!(g.target > 0)) { toast("Type the target."); return; } }
+  delete g.tstr; if (!["reps", "rm", "hold"].includes(g.kind)) delete g.ex; if (g.kind !== "run") delete g.km; if (!g.due) delete g.due; if (!g.name?.trim()) delete g.name;
+  if (sh.isNew) { const pts = goalSeries(g); const p0 = [...pts].reverse().find(p => p[0] <= todayISO()); g.startVal = p0 ? p0[1] : null; g.start = todayISO(); }
+  const L = GOALS(), i = L.findIndex(x => x.id === g.id); if (i >= 0) L[i] = { ...L[i], ...g }; else L.push(g); saveWK(); closeSheet(); toast(sh.isNew ? "Goal added" : "Goal saved"); };
+ACT["goal-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this goal?", text: "Its milestones go with it.", yes: "Delete", danger: true, run: () => { S.train.goals = GOALS().filter(g => g.id !== id); saveWK(); } }); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
