@@ -34,7 +34,7 @@ button.big-action{width:100%;font:inherit;color:inherit;cursor:pointer}
 
 /* Fuel: sticky sums, no drag handle, nutrients */
 .item{grid-template-columns:36px minmax(0,1fr) auto!important;padding-right:14px!important}
-.fuel-sticky{position:fixed;top:0;z-index:30;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:10px;align-items:end;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--md-sc,var(--bg));border-bottom:1px solid var(--line);box-shadow:var(--md-elev2,0 2px 6px rgba(0,0,0,.12));transform:translateY(-110%);transition:transform .18s ease;pointer-events:none}
+.fuel-sticky{position:fixed;top:0;z-index:30;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:10px;align-items:end;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--md-sc,var(--bg));box-shadow:var(--md-elev2,0 2px 6px rgba(0,0,0,.12));transform:translateY(-110%);transition:transform .18s ease;pointer-events:none}
 .fuel-sticky.on{transform:none;pointer-events:auto}
 .fuel-sticky span{font-size:12px;color:var(--muted);white-space:nowrap}
 .fuel-sticky b{color:var(--ink);font-weight:600}
@@ -214,6 +214,10 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .am-ex{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
 .am-ex .inp{min-height:42px}
 .stp.sm b{min-width:30px!important;font-size:16px}
+.pa-food{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:16px;background:var(--v-fill,var(--surface-2));color:var(--ink);font-size:13.5px}
+.pa-food>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pa-food small{color:var(--md-primary);font-weight:600;font-size:12.5px}
+.pa-food img,.pa-fi{width:40px;height:40px;border-radius:12px;object-fit:cover;flex:none;display:grid;place-items:center;background:var(--v-card,var(--surface));color:var(--md-primary)}
+.sc-ai{display:flex;flex-direction:column;gap:8px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -403,7 +407,7 @@ body.dragging,body.dragging *{cursor:grabbing!important}
 .toolbar::-webkit-scrollbar{display:none}
 
 /* empty / onboarding */
-.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r-lg);padding:22px 18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.empty{background:var(--surface);border:0;border-radius:var(--r-lg);padding:22px 18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 .empty h3{margin:0;font-family:var(--display);font-stretch:112%;font-size:18px;letter-spacing:-.015em}
 .empty p{margin:0;color:var(--muted);max-width:52ch}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -1102,7 +1106,7 @@ body{font-family:var(--body);letter-spacing:.1px}
 .chip[aria-pressed="true"]{background:var(--sec-c)!important;color:var(--on-sec-c)!important;border-color:transparent!important}
 
 
-.chip-a{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 14px;border-radius:8px;border:1px solid color-mix(in srgb,var(--faint) 45%,transparent);background:var(--surface);color:var(--ink);font-size:13.5px;font-weight:500;white-space:nowrap;flex:none}
+.chip-a{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 14px;border-radius:8px;border:0;background:var(--surface);color:var(--ink);font-size:13.5px;font-weight:500;white-space:nowrap;flex:none}
 
 .chip-a.busy{opacity:.65}
 .chip-a svg{width:16px;height:16px}
@@ -1244,7 +1248,7 @@ body.live-mode .main{padding-bottom:120px!important}
 .sum-ex{align-items:center!important}
 .nx{display:flex;gap:5px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:3px}.nx.up{color:var(--good);font-weight:500}.nx svg{width:14px;height:14px}
 .rir-pill{height:32px;padding:0 12px;border-radius:16px;background:var(--sec-c);color:var(--on-sec-c);font-size:12.5px;font-weight:600;white-space:nowrap}
-.rir-pill.empty{background:transparent;border:1px dashed var(--faint);color:var(--muted)}
+.rir-pill.empty{background:var(--v-fill,var(--surface-2));color:var(--muted)}
 .pg-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .pg-row:first-of-type{border-top:0}
 .pg-row b{display:block;font-size:15px;font-weight:600}.pg-row small{display:block;font-size:12.5px;color:var(--muted)}.pg-row>div>span{display:block;font-size:13.5px;margin-top:2px}
@@ -1375,14 +1379,14 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 .pl-k{text-align:right;align-items:flex-end}.pl-k b{font-size:14px;font-weight:650}
 .pl-ss{display:flex;flex-direction:column;gap:6px;min-width:0}
 .pl-s{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:center;text-align:left;color:var(--ink);border-radius:10px;padding:6px 8px;background:color-mix(in srgb,var(--c) 10%,var(--surface));min-width:0}
-.pl-s.planned{background:transparent;border:1px dashed color-mix(in srgb,var(--c) 70%,transparent)}
+.pl-s.planned{background:color-mix(in srgb,var(--c) 7%,transparent)}
 .pl-s.missed{opacity:.55}.pl-s.missed b{text-decoration:line-through}
 .pl-s i{font-style:normal;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;color:var(--c);font-weight:700;font-size:12px}
 .pl-s.done i{background:var(--c);color:var(--surface)}
 .pl-s span{display:flex;flex-direction:column;min-width:0}.pl-s b{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-s small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-rest{font-size:13px;color:var(--faint);padding:6px 0}
-.pl-add{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border-radius:8px;color:var(--muted);border:1px dashed var(--line)}
+.pl-add{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border-radius:13px;color:var(--muted);background:var(--v-fill,var(--surface-2))}
 .pl-add:hover{color:var(--ink);background:var(--surface-2)}
 /* ===== Today (v3): one surface per topic, type does the work ===== */
 .td-top .top-sub{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -1648,7 +1652,7 @@ button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,
 .icon-btn.tonal{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
 .plus-btn{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-radius:12px!important}
 /* chips (filter / assist): 32 dp, corner 8 */
-.chip,.td-q,.td-nudge,.chip-a{min-height:32px!important;height:auto;border-radius:8px!important;border:1px solid var(--md-outline-variant)!important;background:transparent!important;color:var(--muted)!important;font-weight:500!important;font-size:14px!important;padding:0 14px!important;gap:8px!important}
+.chip,.td-q,.td-nudge{min-height:32px!important;height:auto;border-radius:8px!important;border:1px solid var(--md-outline-variant)!important;background:transparent!important;color:var(--muted)!important;font-weight:500!important;font-size:14px!important;padding:0 14px!important;gap:8px!important}
 .chip[aria-pressed="true"]{background:var(--md-secondary-container)!important;border-color:transparent!important;color:var(--md-on-secondary-container)!important}
 .td-nudge:first-child{background:var(--md-primary)!important;color:var(--md-on-primary)!important;border-color:transparent!important}
 .chip.sm{min-height:28px!important;font-size:13px!important}
@@ -2039,7 +2043,11 @@ button.lrow:active{background:var(--v-fill-2)!important}
 .chip[aria-pressed="true"]{background:color-mix(in srgb,var(--md-primary) 16%,var(--v-card))!important;color:var(--md-on-primary-container)!important;font-weight:600!important}
 .chip:hover{background:var(--v-fill-2)!important}
 .chip[aria-pressed="true"]:hover{background:color-mix(in srgb,var(--md-primary) 22%,var(--v-card))!important}
-.chip-a{border-radius:var(--r-pill)!important}
+.chip-a{border-radius:var(--r-pill)!important;border:0!important;background:var(--v-fill)!important;color:var(--md-on-surface)!important}
+/* minimal: no outlines on buttons or tabs; state lives in fill and colour */
+.btn.ghost{box-shadow:none!important;background:var(--v-fill)!important;color:var(--md-on-surface)!important}
+nav.subnav button,nav.subnav button[aria-current="page"]{border:0!important}
+a.btn,a.btn:hover{text-decoration:none!important}
 
 /* ---------- segmented controls (iOS): a track with a floating thumb ---------- */
 .seg,.subseg{background:var(--v-fill)!important;border:0!important;border-radius:var(--r-pill)!important;padding:3px!important;gap:2px!important;overflow:hidden;box-shadow:none!important}
@@ -11480,6 +11488,49 @@ ACT["am-apply"] = () => { const sh = S_(), L = LV(), t = L?.tasks[L.cur], d = sh
     if (holdNext || blockNext) o.body += setupCtl(); return o; }; }
 /* the button, on the AMRAP screen until it starts */
 { const _lt = liveTask; liveTask = function (L, t, r) { const o = _lt(L, t, r); if (t?.t === "amrap" && !L.clk && o?.body) o.body += `<div class="row lv-adj"><button class="btn tonal sm" data-act="am-edit">${ic("edit", "sm")}Edit AMRAP</button></div>`; return o; }; }
+/* ================= pantry and shop: a new product is checked in the food editor; an unknown barcode can be estimated =================
+   Scanning into the pantry or the trip: a product found on Open Food Facts opens in the same editor as Foods › New
+   food (values per 100 g, pack size, portions) before you say how much is at home. A barcode nobody knows: describe
+   it, the AI estimates the values and the pack, the editor opens with them to check. From a pantry item, the whole
+   food can be edited too. */
+lookupAndAdd = async function (code) {
+  const sh = UI.sheet; if (!sh) return;
+  code = String(code).replace(/\D/g, "");
+  if (code.length < 6) { toast("That doesn't look like a barcode number."); return; }
+  sh.code = code;
+  const own = findByBarcode(code);
+  if (own) { toast(`Found in your foods: ${own.name}`); return goQty(own, sh); }
+  sh.stage = "busy"; sh.msg = `Looking up ${code} on Open Food Facts…`; renderSheet();
+  const r = await fetchOFF(code);
+  if (UI.sheet !== sh) return;
+  if (r.food) { put("foods", r.food.id, r.food);
+    if (UI.dest) { const d = UI.dest; toast(`From Open Food Facts: check the values and the pack`); openSheet("food", { draft: clone(r.food), isNew: false, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
+    toast(`Imported from Open Food Facts: ${r.food.name}`); return goQty(r.food, sh); }
+  sh.stage = "missing"; sh.unreachable = !!r.unreachable; renderSheet();
+};
+const _scanSheet = SHEETS.scan;
+SHEETS.scan = sh => { const o = _scanSheet(sh); if ((sh.stage || "start") !== "missing" || !AIF("lookup")) return o;
+  const ai = `<div class="field sc-ai"><label for="sc-desc">Describe it: the AI estimates the values</label><textarea id="sc-desc" class="inp" rows="2" data-in="sc-desc" placeholder="e.g. Esselunga high-protein yogurt, vanilla, 150 g pot">${esc(sh.desc || "")}</textarea>
+    ${sh.aiBusy ? skel("Estimating the values…", 2) : `<button class="btn primary block" data-act="sc-ai">${ic("spark", "sm")}Estimate and check</button>`}</div>`;
+  o.body = o.body.replace('<button class="btn primary block" data-act="open-label-here">', ai + '<button class="btn soft block" data-act="open-label-here">'); return o; };
+INP["sc-desc"] = v => { S_().desc = v; };
+ACT["sc-ai"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if (!text) { toast("Describe the product first."); $("#sc-desc")?.focus(); return; }
+  sh.aiBusy = true; renderSheet();
+  const prompt = `A packaged food product with barcode ${sh.code} is not in any database. The user describes it: """${text.slice(0, 600)}""". Estimate its nutrition per 100 g (per 100 ml if it's a drink) as printed on a typical label for this kind of product in Italy, and the usual pack and serving size. Reply with only JSON: {"name":"short product name","brand":"brand or empty","unit":"g or ml","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"sugars":number,"saturated":number,"salt":number,"pack":number,"serving":number,"confidence":"low|medium|high"}`;
+  try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (UI.sheet !== sh) return; const k = +j?.kcal;
+    if (!(k > 0 && k < 950)) { toast("No estimate came back: add the brand, flavour and size."); }
+    else { const n = v => Math.max(0, r1(+v || 0)), per = { kcal: r0(k), p: n(j.protein), c: n(j.carbs), f: n(j.fat), fib: n(j.fibre), sug: n(j.sugars), sat: n(j.saturated), salt: n(j.salt) };
+      const name = String(j.name || text).slice(0, 60), f = { ...blankFood(name), brand: String(j.brand || "").slice(0, 40), barcode: sh.code, unit: j.unit === "ml" ? "ml" : "g", per, orig: clone(per), pack: n(j.pack), source: "ai", est: true, note: text.slice(0, 300) };
+      if (n(j.serving) > 0) f.servings = [{ l: "1 serving", g: n(j.serving) }]; Object.assign(f, guessRoleMeals(per, "pantry", name));
+      const d = UI.dest; toast(`Estimated (${j.confidence || "?"} confidence): check before saving`); openSheet("food", { draft: f, isNew: true, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; } }
+  catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
+  sh.aiBusy = false; if (UI.sheet === sh) renderSheet(); };
+/* a pantry item: its food, one tap from the whole editor */
+const _pantrySheet = SHEETS.pantry;
+SHEETS.pantry = sh => { const o = _pantrySheet(sh), f = sh.food ? getFood(sh.food) || BUILTIN[sh.food] : null; if (!f) return o;
+  const P = f.per || {}, info = `<button class="pa-food" data-act="pa-food-edit">${f.img ? `<img data-blob="${esc(f.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="pa-fi">${ic("plate", "sm")}</span>`}<span><b>${fmtN(r0(P.kcal || 0))} kcal</b> per 100 ${f.unit || "g"} · ${r1(P.p || 0)}P ${r1(P.c || 0)}C ${r1(P.f || 0)}F${f.pack ? ` · pack ${fmtN(f.pack)} ${f.unit || "g"}` : ""}${f.est ? " · estimated" : ""}<small>Edit values, pack and portions</small></span>${ic("chevR", "sm")}</button>`;
+  o.body = info + o.body; return o; };
+ACT["pa-food-edit"] = () => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; UI.dest = "pantry"; openSheet("food", { draft: clone(f), isNew: false, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = "pantry"; };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
