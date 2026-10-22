@@ -823,6 +823,81 @@ details.card>summary::-webkit-details-marker{display:none}
 .ffw-c b{display:block;font-family:var(--display);font-stretch:118%;font-size:30px;font-weight:840;line-height:1.1;color:var(--c)}
 .ffw-c span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 /* calendar */
+.cv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cv-nav{display:flex;align-items:center;gap:4px}
+.cv-nav b{font-size:17px;font-weight:700;min-width:142px;text-align:center}
+.cv-view{min-width:0}
+.cv-kpi{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted)}
+.cv-kpi b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.cv-tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+.cv{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;touch-action:pan-y}
+.cv-h,.cv-w{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 104px}
+.cv-h span{font-size:11.5px;font-weight:650;color:var(--faint);padding:10px 8px 6px;text-align:left}
+.cv-w{border-top:1px solid var(--line)}
+.cv-d{position:relative;min-height:92px;padding:6px;display:flex;flex-direction:column;gap:4px;text-align:left;color:var(--ink);min-width:0;border-right:1px solid var(--line);transition:background .12s}
+.cv-d:nth-child(7){border-right:0}
+.cv-d:hover{background:var(--surface-2)}
+.cv-d.out{background:color-mix(in srgb,var(--surface-2) 40%,transparent)}.cv-d.out .cv-n{opacity:.4}
+.cv-d.sel{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.cv-d.sel::after{content:"";position:absolute;inset:0;border:2px solid var(--accent);border-radius:4px;pointer-events:none}
+.cv-n{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums}
+.cv-n>span{display:grid;place-items:center;min-width:24px;height:24px;border-radius:12px;margin:-2px 0 0 -2px}
+.cv-d.now .cv-n>span{background:var(--accent);color:var(--accent-ink)}
+.cv-n .ic{width:13px;height:13px;color:var(--accent)}
+.cv-ss{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cv-s{display:flex;flex-direction:column;border-radius:7px;padding:3px 6px;background:color-mix(in srgb,var(--c) 20%,var(--surface));border-left:3px solid var(--c);min-width:0;cursor:pointer}
+.cv-s.planned{background:transparent;outline:1px dashed color-mix(in srgb,var(--c) 70%,transparent);outline-offset:-1px}
+.cv-s.missed{opacity:.55}.cv-s.missed b{text-decoration:line-through}
+.cv-s b{font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-s i{font-style:normal;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-s:hover{filter:brightness(.97)}
+.cv-bar{display:block;height:6px;border-radius:3px;background:var(--c)}
+.cv-bar.planned{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+.cv-bar.missed{background:repeating-linear-gradient(-45deg,var(--c) 0 3px,transparent 3px 6px)}
+.cv-more{font-size:10px;font-weight:700;color:var(--muted)}
+.cv-sum{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 10px;background:var(--surface-2);font-size:11px;min-width:0}
+.cv-sum b{font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
+.cv-sum small{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-day{display:flex;flex-direction:column;gap:6px;padding:14px}
+.cv-day-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.cv-day-h b{display:block;font-size:16px}.cv-day-h small{color:var(--muted);font-size:12.5px}
+.cv-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;padding:9px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink);width:100%}
+.cv-row:hover{filter:brightness(.98)}
+.cv-row b{display:block;font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-row small{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-dot{width:12px;height:12px;border-radius:50%;background:var(--c);display:inline-grid;place-items:center}
+.cv-dot.planned{background:transparent;box-shadow:inset 0 0 0 2px var(--c)}
+.cv-dot.missed{background:transparent;box-shadow:inset 0 0 0 2px var(--c);opacity:.6}
+.cv-dot.race{background:none;color:var(--accent);width:18px;height:18px}
+.cv-st{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--muted)}
+.cv-st.done{color:var(--good)}.cv-st.missed{color:var(--bad)}
+.cv-empty{font-size:13px;color:var(--faint);padding:6px 2px}.cv-empty.pad{padding:10px 14px}
+.cv-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.cv-leg span{display:inline-flex;align-items:center;gap:6px}
+.cv-leg span>i:not(.cv-dot){width:12px;height:6px;border-radius:3px}
+.cv-agenda{display:flex;flex-direction:column;gap:12px;touch-action:pan-y}
+.cv-wk{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.cv-wk-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--surface-2)}
+.cv-wk-h b{font-size:13.5px}.cv-wk-h small{font-size:12px;color:var(--muted)}
+.cv-ad{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
+.cv-ad:first-of-type{border-top:0}
+.cv-ad-d{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;padding:4px 0;color:var(--ink)}
+.cv-ad-d b{font-size:18px;line-height:1.1}.cv-ad-d small{font-size:11px;color:var(--muted)}
+.cv-ad.now .cv-ad-d{background:var(--accent);color:var(--accent-ink)}.cv-ad.now .cv-ad-d small{color:inherit;opacity:.8}
+.cv-ad-s{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cv-add{align-self:flex-start;display:inline-grid;place-items:center;width:32px;height:28px;border-radius:10px;border:1px dashed var(--line);color:var(--muted)}
+body:has(.clip-bar) .cv-d:not(.past){cursor:copy}
+@media (max-width:639px){
+  .cv-h,.cv-w{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .cv-h span{text-align:center;padding:8px 0 4px}
+  .cv-d{min-height:58px;padding:5px 3px;border-right:0;align-items:stretch}
+  .cv-n{justify-content:center}.cv-n .ic{position:absolute;top:3px;right:3px;width:10px;height:10px}
+  .cv-n>span{margin:0;min-width:26px;height:26px;border-radius:13px}
+  .cv-ss{gap:3px;padding:0 3px}
+  .cv-sum{grid-column:1/-1;flex-direction:row;align-items:baseline;gap:4px 10px;padding:5px 10px;flex-wrap:wrap}
+  .cv-sum b{font-size:12.5px}
+  .cv-d.sel::after{border-radius:10px;inset:2px}
+}
 
 label.row:has(.switch){flex-wrap:nowrap}
 .sheet a,.sheet-b a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
@@ -832,36 +907,6 @@ label.row:has(.switch){flex-wrap:nowrap}
 .icu-ck{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center}
 .icu-r[aria-pressed="true"] .icu-ck{background:var(--volt);border-color:var(--volt);color:var(--volt-ink)}
 .icu-r[aria-pressed="false"]{opacity:.55}
-.cal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
-.cal-h,.cal-w{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 92px}
-.cal-h span{font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 8px;border-bottom:1px solid var(--line)}
-.cal-w{border-bottom:1px solid var(--line)}.cal-w:last-child{border-bottom:0}
-.cal-d{min-height:86px;padding:6px;display:flex;flex-direction:column;gap:3px;text-align:left;border-right:1px solid var(--line);color:var(--ink);min-width:0;align-items:stretch}
-.cal-d:hover{background:var(--surface-2)}
-.cal-d.out{background:color-mix(in srgb,var(--surface-2) 45%,transparent)}.cal-d.out .cal-n{opacity:.45}
-.cal-d.now{box-shadow:inset 0 0 0 2px var(--ink)}
-.cal-n{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
-.cal-n em{font-style:normal;font-size:10.5px;font-weight:650;color:var(--muted)}
-.cal-s{display:flex;flex-direction:column;border-radius:7px;padding:3px 6px;background:color-mix(in srgb,var(--c) 22%,var(--surface));border-left:3px solid var(--c);min-width:0}
-.cal-s.pl{background:transparent;border:1px dashed var(--c);border-left-width:3px;border-left-style:solid}
-.cal-s b{font-size:11px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal-s i{font-style:normal;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-miss{font-size:10px;font-weight:700;color:var(--bad)}
-.cal-sum{display:flex;flex-direction:column;gap:5px;padding:7px 9px;background:var(--surface-2);font-size:11px}
-.cal-sum span{display:flex;flex-direction:column;line-height:1.15}
-.cal-sum b{font-family:var(--display);font-stretch:110%;font-size:14px;font-weight:780}
-.cal-sum small{color:var(--muted);font-size:10px}
-@media (max-width:700px){
-  .cal-h,.cal-w{grid-template-columns:repeat(7,minmax(0,1fr))}
-  .cal-h .cal-wk-h{display:none}
-  .cal-d{min-height:64px;padding:4px 3px;border-right:0}
-  .cal-s{padding:2px 3px;border-left-width:2px;border-radius:5px}
-  .cal-s b{font-size:9.5px}.cal-s i{font-size:9px}
-  .cal-n em{display:none}
-  .cal-sum{grid-column:1/-1;flex-direction:row;justify-content:space-between;padding:6px 10px}
-  .cal-sum span{flex-direction:row;gap:4px;align-items:baseline}
-  .cal-sum b{font-size:13px}
-}
 @media (max-width:520px){.top-title{font-stretch:108%;font-size:22px}.ffw-c b{font-size:24px}.ffw-c{padding:10px 11px}}
 
 
@@ -905,9 +950,6 @@ label.row:has(.switch){flex-wrap:nowrap}
 .wo-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px}
 .wo-script{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
 .wo-pv summary{cursor:pointer;list-style:none}.wo-pv summary::-webkit-details-marker{display:none}.wo-pv .pad{padding:0 12px 12px}
-.cal-s[data-act]{cursor:pointer}.cal-s[data-act]:hover{filter:brightness(.96)}
-
-
 /* ===== live player ===== */
 body.live-mode #side,body.live-mode #bnav,body.live-mode .bnav,body.live-mode #fab{display:none!important}
 body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px!important}
@@ -982,7 +1024,7 @@ body{font-family:var(--body);letter-spacing:.1px}
 .top-title,.lv-h,.lv-h1,.wl-main>b,.sb-main>b,.sess-rest b,.t-big,.lv-ttl b,.dh-big,.brand>span:last-child{text-transform:none!important;font-stretch:100%!important;letter-spacing:0!important}
 .top-title{font-family:var(--display);font-size:26px;font-weight:600!important;line-height:1.15}
 .top-sub{font-size:13.5px;color:var(--muted)}
-.eyebrow,.flabel,.field>label,.mc-over,.lv-up small,.am-r small,.lv-subt small,.t-metrics small,.ffw-c small,.cal-h span,.lv-lb,.stat small{text-transform:none!important;letter-spacing:.1px!important}
+.eyebrow,.flabel,.field>label,.mc-over,.lv-up small,.am-r small,.lv-subt small,.t-metrics small,.ffw-c small,.lv-lb,.stat small{text-transform:none!important;letter-spacing:.1px!important}
 .eyebrow,.flabel,.field>label{font-size:12.5px;font-weight:600;color:var(--muted)}
 .section-h h2{font-family:var(--display);font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink)}
 .stat b,.ffw-c b,.t-stats b,.sum-stats b,.fuel-k b,.am-r>b,.lv-clock b,.rc-cd b,.stp b,.mini,.pv-h b,.dt b,.streak b,.dh-big{font-family:var(--display);font-stretch:100%!important}
@@ -1041,7 +1083,7 @@ body{font-family:var(--body);letter-spacing:.1px}
 .inp:focus{border-color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
 select.inp{background:var(--surface)!important}
 /* cards & surfaces */
-.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.hero,.meal,.coach,.dt,.streak,.ffw-c,.cal,.lv-banner{border-radius:16px!important;box-shadow:var(--shadow)!important}
+.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.hero,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner{border-radius:16px!important;box-shadow:var(--shadow)!important}
 
 
 
@@ -1186,12 +1228,9 @@ body.live-mode .main{padding-bottom:120px!important}
 .rc-cd b{font-size:26px;font-weight:600;line-height:1}.rc-cd small{font-size:11.5px;color:var(--muted)}
 .rc-b{min-width:0;display:flex;flex-direction:column;gap:3px}.rc-b>b{font-size:16px;font-weight:600}.rc-b>small{font-size:12.5px;color:var(--muted)}
 .rc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}.rc-tags i{font-style:normal;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted)}.rc-tags i.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
-.cal-race{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.cal-race svg{width:11px;height:11px;flex:none}
-.cal-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .status{font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--surface-2);color:var(--muted);white-space:nowrap}.status.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}.status.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
 .icu-card{display:flex;flex-direction:column;gap:12px}
 .wl-main>b{font-family:var(--display)!important;font-size:18px!important;font-weight:600!important}
-.cal-s.pl{border-style:dashed}
 .lv-up{border-radius:12px!important}
 @media (max-width:420px){.lv-h{font-size:24px!important}.lv-card{padding:16px 14px!important}.rir button{width:40px!important;height:40px!important}.stp b{min-width:52px!important}.sum-stats b{font-size:20px}.top-title{font-size:23px}}
 button,a{touch-action:manipulation}
@@ -1305,9 +1344,6 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 .pl-rest{font-size:13px;color:var(--faint);padding:6px 0}
 .pl-add{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border-radius:8px;color:var(--muted);border:1px dashed var(--line)}
 .pl-add:hover{color:var(--ink);background:var(--surface-2)}
-.cal-s.miss{opacity:.5}.cal-s.miss b{text-decoration:line-through}
-
-
 /* ===== Today (v3): one surface per topic, type does the work ===== */
 .td-top .top-sub{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .td-top .top-title{font-size:30px;margin-top:2px}
@@ -1395,7 +1431,6 @@ button.td-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,
 .clip-bar{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 14px;margin:0 0 12px;border-radius:14px;background:var(--ink);color:var(--surface);font-size:13.5px}
 .clip-bar span{flex:1;min-width:0}.clip-bar .btn{color:var(--surface)!important}
 .pl-add.paste{border-style:solid;border-color:var(--ink);color:var(--ink)}
-body:has(.clip-bar) .cal-d.fut,body:has(.clip-bar) .cal-d.now{cursor:copy}
 /* add food */
 #add-ctx .ctx{display:flex;justify-content:space-between;gap:10px;margin-top:0}
 .add-in{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -1555,7 +1590,7 @@ body{background:var(--bg)!important;color:var(--ink);font-family:var(--body);let
 .sheet-h h3{font-family:var(--body)!important;font-size:22px!important;font-weight:400!important;line-height:28px}
 .lv-h,.lv-h1{font-family:var(--body)!important;font-weight:400!important;letter-spacing:0!important}
 /* surfaces: cards are elevated (light) or tonal (dark), corner 16 */
-.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.cal,.lv-banner,.td-card{background:var(--surface)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;border:0!important}
+.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card{background:var(--surface)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;border:0!important}
 .hero{border-radius:28px!important;box-shadow:none!important}
 .lrow{padding:12px 16px!important;border-top-color:var(--line)!important;transition:background .15s}
 button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
@@ -1648,7 +1683,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .card,.btn,.chip,.icon-btn,.lrow,.seg button,.aa,.fh-b,.tm-mode{transition:background .2s cubic-bezier(.2,0,0,1),box-shadow .2s,color .2s,transform .1s}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* sentence case labels (M3) */
-.day-pill small,.kring .lab,.section-h h2,.field>label,.flabel,.macro-strip small,.tbl th,.dr-bal small,.tbl td:not(:first-child)::before,.brand small,.eyebrow,.subnav button,.t-metrics small,.ffw-c small,.cal-h span,.lv-row .lab,.lv-subt small,.lv-clock small,.lv-up small,.am-r small,.lv-lb,.td-top .top-sub,.td-ov,.off-h,.dfc-m small,.sq-h,.stat small,.sum-stats small,.mc-over{text-transform:none!important;letter-spacing:.02em!important}
+.day-pill small,.kring .lab,.section-h h2,.field>label,.flabel,.macro-strip small,.tbl th,.dr-bal small,.tbl td:not(:first-child)::before,.brand small,.eyebrow,.subnav button,.t-metrics small,.ffw-c small,.lv-row .lab,.lv-subt small,.lv-clock small,.lv-up small,.am-r small,.lv-lb,.td-top .top-sub,.td-ov,.off-h,.dfc-m small,.sq-h,.stat small,.sum-stats small,.mc-over{text-transform:none!important;letter-spacing:.02em!important}
 .td-ov,.eyebrow,.section-h h2{font-weight:500!important}
 .wl-main>b,.lv-ttl b,.sess-rest b,.sb-main>b,.top-title,.t-big{text-transform:none!important}
 .brand{font-family:var(--body)!important;font-stretch:100%!important;font-weight:500!important;font-size:18px!important;letter-spacing:.02em!important}
@@ -6199,27 +6234,75 @@ function fitnessCards() {
     <div class="ffw-c" style="--c:var(--${z[2]})"><small>Form</small><b>${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}</b><span>${z[1]} · ${r0(N.pct)}%</span></div></div>
     <div class="faint" style="font-size:12.5px">${esc(z[3])}. ${fitnessSeries().now?.icu ? "Same fitness and fatigue as intervals.icu (synced daily); the days ahead follow your planned load." : "Load = intervals.icu load, or minutes × RPE (1 h at RPE 8 ≈ 100)."} ${N.ramp > 8 ? "Fitness is ramping fast: watch fatigue." : ""}</div>`;
 }
-/* ================= training calendar (weeks × days + weekly totals) ================= */
-function trainCalendar() {
-  const today = todayISO(), off = UI.calOff || 0, t = parseISO(today);
-  const m0 = new Date(t.getFullYear(), t.getMonth() + off, 1), ms = isoOf(m0), me = isoOf(new Date(m0.getFullYear(), m0.getMonth() + 1, 0));
-  const F = fitnessSeries(), fit = FIT();
-  let h = clipBar() + `<div class="rep-bar"><div class="rep-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button></div></div><div class="cal-tools">${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</div>`;
-  h += `<div class="cal"><div class="cal-h">${DOW.map(d => `<span>${d}</span>`).join("")}<span class="cal-wk-h">Week</span></div>`;
-  for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
-    let wMin = 0, wKm = 0, wTl = 0, wN = 0, cells = "";
-    for (let i = 0; i < 7; i++) {
-      const d = addDays(ws, i), inM = d >= ms && d <= me, its = daySessions(d), ls = its.map(x => x.w), missed = its.some(x => x.st === "missed") && !its.some(x => x.st === "done");
-      for (const x of its) if (x.st !== "missed") { const w = x.w; wMin += +w.min || 0; if (w.sport === fit.runSport) wKm += +w.km || 0; wTl += tlOf(w); wN++; }
-      cells += `<button class="cal-d ${inM ? "" : "out"} ${d === today ? "now" : ""} ${d > today ? "fut" : ""}" data-act="${UI.clip ? "cal-paste" : "open-checkin"}" data-date="${d}" data-sdrop="${d}" aria-label="${fmtDM(d)}: ${esc(ls.map(sessionLabel).join(", ") || "rest")}">
-        ${(S.train.races || []).filter(r => r.date === d).map(r => `<span class="cal-race" data-act="rc-edit" data-id="${r.id}" role="button">${ic("flag", "sm")}${esc(r.name)}</span>`).join("")}<span class="cal-n">${+d.slice(8)}${F.rows[d]?.tl ? `<em>${r0(F.rows[d].tl)}</em>` : ""}</span>
-        ${ls.map((w, wi) => `<span class="cal-s ${its[wi].st === "done" ? "" : its[wi].st === "missed" ? "pl miss" : "pl"}" data-act="wo-open" ${dsAttr(d, its[wi], wi)}${dragAttr(its[wi])} role="button" tabindex="0" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})"><b>${esc(shortSport(w.sport))}</b><i>${w.min ? r0(w.min) + "′" : ""}${w.km ? ` ${r1(w.km)}k` : ""}</i></span>`).join("")}${missed ? `<span class="cal-miss">Missed</span>` : ""}</button>`;
-    }
-    const fe = F.rows[addDays(ws, 6)];
-    h += `<div class="cal-w">${cells}<div class="cal-sum"><span><b>${Math.floor(wMin / 60)}h${String(r0(wMin % 60)).padStart(2, "0")}</b><small>${wN} sessions</small></span><span><b>${r0(wTl)}</b><small>load</small></span>${wKm ? `<span><b>${r1(wKm)}</b><small>km</small></span>` : ""}${fe ? `<span><b style="color:var(--c-fit)">${r0(fe.ctl)}</b><small>fitness</small></span>` : ""}</div></div>`;
-  }
-  return h + `</div><div class="faint" style="font-size:12.5px">Tap a workout to read its script or start it; tap the day to log it. Drag a workout to another day, past or future, to move it (long-press on phone; hold Alt while dropping to copy), or use Copy in the workout to paste it on other days. Dashed = planned · number next to the date = training load.</div>`;
+/* ================= training calendar: month grid or agenda, one day open below with what's on it ================= */
+const hmOf = m => `${Math.floor(m / 60)}h${String(r0(m % 60)).padStart(2, "0")}`;
+function calWeekTotals(ws, fit) { let min = 0, km = 0, tl = 0, n = 0, done = 0, plan = 0;
+  for (let i = 0; i < 7; i++) for (const x of daySessions(addDays(ws, i))) { if (x.st === "missed") { plan++; continue; } const w = x.w; min += +w.min || 0; if (w.sport === fit.runSport) km += +w.km || 0; tl += tlOf(w); n++; if (x.st === "done") done++; plan += x.p || x.st !== "done" ? 1 : 0; }
+  return { min, km, tl, n, done, plan }; }
+const calColor = (x) => `var(--${x.st === "missed" ? "bad" : INT_COLOR[x.w.int || sessionIntensity(x.w)] || "fat"})`;
+function calItem(d, x, k, narrow) {
+  const w = x.w, drag = dragAttr(x);
+  if (narrow) return `<span class="cv-bar ${x.st}" style="--c:${calColor(x)}"${drag}></span>`;
+  return `<span class="cv-s ${x.st}" data-act="wo-open" ${dsAttr(d, x, k)}${drag} role="button" tabindex="0" style="--c:${calColor(x)}"><b>${esc(shortSport(w.sport))}</b><i>${w.min ? r0(w.min) + "′" : ""}${w.km ? ` ${r1(w.km)}k` : ""}</i></span>`;
 }
+function calDayPanel(d) {
+  const today = todayISO(), its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d), L = logGet(d) || {};
+  const rows = its.map((x, k) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null;
+    const meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", w.load ? "load " + r0(w.load) : w.int || ""].filter(Boolean).join(" · ");
+    return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(t?.name || x.p?.note || w.note || w.sport)}</b><small>${esc(meta)}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") + "Done" : x.st === "missed" ? "Missed" : "Planned"}</span></button>`; }).join("");
+  const body = [L.weight ? `${r1(L.weight)} kg` : "", L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : ""].filter(Boolean).join(" · ");
+  return `<section class="card cv-day" aria-live="polite"><div class="cv-day-h"><div><b>${d === today ? "Today" : DOWL[dow(d)]}</b><small>${fmtDM(d)}${body ? " · " + esc(body) : ""}</small></div>
+      <div class="row" style="gap:6px">${d >= today ? `<button class="btn tonal sm" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}">${ic(UI.clip ? "copy" : "plus", "sm")}${UI.clip ? "Paste" : "Plan"}</button>` : ""}<button class="btn soft sm" data-act="open-checkin" data-date="${d}">${ic("edit", "sm")}${d <= today ? "Log" : "Edit"}</button></div></div>
+    ${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${esc(r.sport || "Race")}${r.km ? ` · ${r1(r.km)} km` : ""}${r.goal ? ` · goal ${esc(r.goal)}` : ""}</small></span><span class="cv-st">${r.pri || ""}-race</span></button>`).join("")}
+    ${rows || `<div class="cv-empty">${d < today ? "Nothing logged · rest day" : "Rest day"}</div>`}
+    <button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
+}
+function trainCalendar() {
+  const today = todayISO(), off = UI.calOff || 0, t = parseISO(today), view = UI.calView || "month", narrow = innerWidth < 640;
+  const m0 = new Date(t.getFullYear(), t.getMonth() + off, 1), ms = isoOf(m0), me = isoOf(new Date(m0.getFullYear(), m0.getMonth() + 1, 0));
+  let sel = UI.calSel; if (!sel || sel < ms || sel > me) sel = today >= ms && today <= me ? today : ms;
+  const F = fitnessSeries(), fit = FIT();
+  // month totals
+  let mMin = 0, mKm = 0, mTl = 0, mDone = 0, mPlan = 0;
+  for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
+  let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
+    <div class="seg sm cv-view">${[["month", "Month"], ["agenda", "Agenda"]].map(([k, l]) => `<button data-act="cal-view" data-k="${k}" aria-pressed="${view === k}">${l}</button>`).join("")}</div></div>
+    <div class="cv-kpi"><span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span><span class="cv-tools">${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
+  if (view === "agenda") {
+    h += `<div class="cv-agenda" data-calswipe>`;
+    for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
+      const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)]; let days = "";
+      for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d < ms || d > me) continue; const its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d);
+        if (!its.length && !rs.length && d !== today) continue;
+        days += `<div class="cv-ad ${d === today ? "now" : ""}" data-sdrop="${d}"><button class="cv-ad-d" data-act="cal-sel" data-date="${d}"><b>${+d.slice(8)}</b><small>${DOW[dow(d)]}</small></button><div class="cv-ad-s">${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${r.km ? r1(r.km) + " km" : esc(r.sport || "")}</small></span></button>`).join("")}${its.map((x, k) => { const w = x.w; return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(x.p?.note || w.note || w.sport)}</b><small>${esc([shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · "))}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") : x.st === "missed" ? "Missed" : ""}</span></button>`; }).join("") || `<span class="cv-empty">Rest</span>`}${d >= today ? `<button class="cv-add" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div></div>`; }
+      h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</b><small>${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}${fe ? ` · fitness ${r0(fe.ctl)}` : ""}</small></div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
+    }
+    return h + `</div>`;
+  }
+  h += `<div class="cv" data-calswipe><div class="cv-h">${DOW.map(d => `<span>${narrow ? d[0] : d}</span>`).join("")}${narrow ? "" : `<span>Week</span>`}</div>`;
+  for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
+    let cells = "";
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(ws, i), inM = d >= ms && d <= me, its = daySessions(d), race = (S.train.races || []).some(r => r.date === d), max = narrow ? 3 : 3;
+      cells += `<button class="cv-d ${inM ? "" : "out"} ${d === today ? "now" : ""} ${d === sel ? "sel" : ""} ${d < today ? "past" : ""}" data-act="${UI.clip && d >= today ? "cal-paste" : "cal-sel"}" data-date="${d}" data-sdrop="${d}" aria-pressed="${d === sel}" aria-label="${fmtDM(d)}: ${esc(its.map(x => sessionLabel(x.w)).join(", ") || "rest")}${race ? ", race" : ""}">
+        <span class="cv-n"><span>${+d.slice(8)}</span>${race ? ic("flag", "sm") : ""}</span><span class="cv-ss">${its.slice(0, max).map((x, k) => calItem(d, x, k, narrow)).join("")}${its.length > max ? `<span class="cv-more">+${its.length - max}</span>` : ""}</span></button>`;
+    }
+    const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
+    h += `<div class="cv-w">${cells}<div class="cv-sum"><b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
+  }
+  h += `</div>` + calDayPanel(sel);
+  return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
+    <div class="faint" style="font-size:12.5px">Tap a day to see it below. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
+}
+ACT["cal-sel"] = el => { UI.calSel = el.dataset.date; if (UI.calView === "agenda") { UI.calView = "month"; } scheduleRender(); };
+ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
+ACT["cal-today"] = () => { UI.calOff = 0; UI.calSel = todayISO(); scheduleRender(); };
+/* swipe the month sideways */
+(() => { let sx = 0, sy = 0, on = false;
+  document.addEventListener("touchstart", e => { on = !!e.target.closest?.("[data-calswipe]") && !SDRAG.on; if (on) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } }, { passive: true });
+  document.addEventListener("touchend", e => { if (!on || SDRAG.on || UI.sheet) return; on = false; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) { UI.calOff = (UI.calOff || 0) + (dx < 0 ? 1 : -1); UI.calSel = null; haptic(8); scheduleRender(); } }, { passive: true });
+})();
 function trainFitness() {
   const n = UI.pmcDays || 120;
   return `${fitnessCards()}<div class="section-h"><h2>Fitness curve</h2><div class="chips">${[[60, "2 mo"], [120, "4 mo"], [365, "1 yr"]].map(([k, l]) => `<button class="chip" data-act="pmc-days" data-k="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div></div><div class="card pad">${pmcChart(n)}</div>
@@ -6233,7 +6316,7 @@ function sportTable30() {
   return `<div class="section-h"><h2>Last 30 days by sport</h2></div>${tbl(["Sport", "Sessions", "Minutes", "Load", "kcal", "km"], [...rows.map(([k, a]) => `<tr><td>${esc(k)}</td><td class="n">${a.n}</td><td class="n">${fmtN(a.min)}</td><td class="n">${fmtN(r0(a.tl))}</td><td class="n">${fmtN(a.kcal)}</td><td class="n">${a.km ? r1(a.km) : "—"}</td></tr>`), `<tr class="tot"><td>Total</td><td class="n">${tot.n}</td><td class="n">${fmtN(tot.min)}</td><td class="n">${fmtN(r0(tot.tl))}</td><td class="n">${fmtN(tot.kcal)}</td><td class="n">${r1(tot.km)}</td></tr>`], "", { noCols: true })}`;
 }
 ACT["pmc-days"] = el => { UI.pmcDays = +el.dataset.k; scheduleRender(); };
-ACT["cal-off"] = el => { UI.calOff = (UI.calOff || 0) + +el.dataset.d; scheduleRender(); };
+ACT["cal-off"] = el => { UI.calOff = (UI.calOff || 0) + +el.dataset.d; UI.calSel = null; scheduleRender(); };
 /* ================= import planned workouts from intervals.icu =================
    Three ways in: the API (athlete 0 + API key, basic auth), the JSON the same API URL returns in a browser, or the calendar export (.ics). */
 function icuSport(t) {
