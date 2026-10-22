@@ -218,6 +218,8 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pa-food>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pa-food small{color:var(--md-primary);font-weight:600;font-size:12.5px}
 .pa-food img,.pa-fi{width:40px;height:40px;border-radius:12px;object-fit:cover;flex:none;display:grid;place-items:center;background:var(--v-card,var(--surface));color:var(--md-primary)}
 .sc-ai{display:flex;flex-direction:column;gap:8px}
+.pan-tag{display:inline-grid;place-items:center;color:var(--md-primary);margin-right:4px;vertical-align:-2px}.pan-tag .ic{width:15px;height:15px}
+.pan-use{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -4396,7 +4398,7 @@ function parseMulti(q) {
   return out.filter(o => o.hit).length >= 2 ? out : null;
 }
 /* ---------- add food ---------- */
-const addRowsFor = sh => {
+let addRowsFor = sh => {
   const q = (sh.q || "").trim(), seg = sh.seg || "recent"; sh._multi = null; sh._typedQty = false;
   const row = (kind, x, qty, sub) => `<div class="lrow add-r"><button data-act="pick" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" style="text-align:left;min-width:0"><span class="t">${kind === "recipe" ? ic("book", "sm") + " " : ""}${x.fav ? "★ " : ""}${esc(x.name)} ${kind === "food" ? sourceTag(x) : ""}</span><span class="s">${sub}</span></button>
     <span class="end"><button class="plus-btn" data-act="quick-add" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" aria-label="Add ${esc(x.name)} now">${ic("plus")}</button></span></div>`;
@@ -4446,7 +4448,7 @@ SHEETS.add = sh => {
     body: `<div class="add-top">${mealChips(sh.meal)}
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
       <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("camera")}<span>Photo / text</span></button>` : ""}</div>
-      <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["fav", "Favourites"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
+      <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["pantry", "Pantry"], ["fav", "Starred"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       <div id="add-ctx">${addCtxFor(sh)}</div></div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
       <div class="card" id="add-list">${addRowsFor(sh)}</div>`
@@ -9475,7 +9477,7 @@ function spendCard() {
 /* ================= pantry: what's at home, leftovers included, editable ================= */
 VIEWS.pantry = function () {
   const today = todayISO(), ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
-  const need = shoppingNeeds(today, 7).need;
+  const need = panLinked(today, 14); // only food planned from the pantry is set aside
   ids.sort((a, b) => (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
   const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
   let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
@@ -9483,15 +9485,15 @@ VIEWS.pantry = function () {
     <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open" aria-label="What can I cook?">${ic("plate", "sm")}<span class="hide-xs">What can I cook?</span><span class="show-xs">Cook</span></button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
   h += expiryCard("pantry");
   if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
-  if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
+  if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping. Food you plan from here (Add › Pantry) is set aside and comes off when you eat it; the rest of the plan goes on the shopping list.</p></div>`;
   return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
-    return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} planned` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
+    return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} set aside for the plan` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
       <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q => `<b>${q.v}<small>${q.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
 };
 ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
   const U = pantryUnits(f, p), fac = paFac(U, p.u), step = p.u && p.u !== "base" && fac > 1 ? (["kg", "l"].includes(p.u) ? fac / 10 : fac) : f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
-function pantrySpare(days = 7) { const need = shoppingNeeds(todayISO(), days).need; return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
+function pantrySpare(days = 7) { const need = panLinked(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
 /* settings: leftovers and budget */
 function shopSettingsCard() {
@@ -11531,6 +11533,70 @@ SHEETS.pantry = sh => { const o = _pantrySheet(sh), f = sh.food ? getFood(sh.foo
   const P = f.per || {}, info = `<button class="pa-food" data-act="pa-food-edit">${f.img ? `<img data-blob="${esc(f.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="pa-fi">${ic("plate", "sm")}</span>`}<span><b>${fmtN(r0(P.kcal || 0))} kcal</b> per 100 ${f.unit || "g"} · ${r1(P.p || 0)}P ${r1(P.c || 0)}C ${r1(P.f || 0)}F${f.pack ? ` · pack ${fmtN(f.pack)} ${f.unit || "g"}` : ""}${f.est ? " · estimated" : ""}<small>Edit values, pack and portions</small></span>${ic("chevR", "sm")}</button>`;
   o.body = info + o.body; return o; };
 ACT["pa-food-edit"] = () => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; UI.dest = "pantry"; openSheet("food", { draft: clone(f), isNew: false, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = "pantry"; };
+/* ================= pantry ↔ plan: only what you take from the pantry comes off it =================
+   A planned food is either "from the pantry" (it.pan) or something to buy. From the pantry: set aside as soon as
+   it's planned (the pantry shows what's still free) and taken off the stock when you eat it. Everything else in the
+   plan never touches the pantry and goes on the shopping list. Links are made when you add from Add › Pantry,
+   when a shopping trip is finished (what you bought for the plan is linked to it), by the planner when it plans
+   from the pantry, with "Use what's at home" on the list, or by hand in the food's sheet. */
+let NEW_PAN = false;
+{ const _ni = newItem; newItem = function (kind, ref, qty, extra = {}) { const it = _ni(kind, ref, qty, extra); if (NEW_PAN && kind === "food" && S.shop.pantry[ref]) it.pan = true; return it; }; }
+function panLinked(start = todayISO(), n = 14) { const o = {};
+  for (let i = 0; i < n; i++) { const d = S.days[addDays(start, i)]; if (!d) continue; for (const [, it] of dayItems(d)) if (it.pan && !it.eaten && it.kind === "food") o[it.ref] = (o[it.ref] || 0) + (+it.qty || 0); }
+  return o; }
+const panFree = (id, L = panLinked()) => Math.max(0, r0((S.shop.pantry[id]?.g || 0) - (L[id] || 0)));
+/* the stock moves only for food taken from the pantry */
+{ const _pa = pantryAdjust; pantryAdjust = function (it, sign) { if (!it?.pan) return; return _pa(it, sign); }; }
+/* the list: plan food to buy in full; from the pantry only what's missing */
+shoppingNeeds = function (start, n) {
+  const need = {}, src = {}, linked = {}, add = (id, g, why) => { if (!(g > 0)) return; need[id] = (need[id] || 0) + g; (src[id] = src[id] || new Set()).add(why); };
+  for (let i = 0; i < n; i++) { const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; const dd = DOW[dow(dt)];
+    for (const [m, it] of dayItems(d)) { if (it.eaten || it.kind === "quick") continue; const why = `${d.dish?.[m] || mealName(m)} ${dd}`;
+      if (it.kind === "food") { if (it.pan) (linked[it.ref] = linked[it.ref] || { g: 0, why: new Set() }), linked[it.ref].g += +it.qty || 0, linked[it.ref].why.add(why); else add(it.ref, it.qty, why); }
+      else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1), `${r.name} ${dd}`); } } }
+  for (const [id, L] of Object.entries(linked)) { const short = L.g - (S.shop.pantry[id]?.g || 0); if (short > 0) for (const w of L.why) add(id, short / L.why.size, w + " (pantry short)"); }
+  return { need, src };
+};
+{ const _sr = shoppingRows; shoppingRows = function (start, n) { const L = panLinked(start, n);
+  return _sr(start, n).map(r => { const free = panFree(r.id, L), buy = r0(r.need), packs = r.f.pack && buy > 0 ? Math.ceil(buy / r.f.pack - 0.02) : 0;
+    return { ...r, have: free, free, buy, packs, left: packs ? r0(packs * r.f.pack - buy) : 0 }; }); }; }
+/* link unlinked plan food to what's free at home, earliest days first (ids: only these foods) */
+function linkFromPantry(start = todayISO(), n = 7, ids = null, budget = null) { const L = panLinked(); let k = 0;
+  const free = {}; for (const id of Object.keys(S.shop.pantry || {})) free[id] = budget?.[id] ?? panFree(id, L);
+  for (let i = 0; i < n; i++) { const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; let ch = false;
+    const next = clone(d); for (const [, it] of dayItems(next)) { if (it.kind !== "food" || it.pan || it.eaten || (ids && !ids.includes(it.ref)) || !(free[it.ref] >= (+it.qty || 0) - 0.5)) continue; it.pan = true; free[it.ref] -= +it.qty || 0; ch = true; k++; }
+    if (ch) put("days", dt, next); }
+  return k; }
+/* finishing a trip: what you bought for the plan is linked to it */
+{ const _sd = ACT["shop-done"]; ACT["shop-done"] = (...a) => { const ids = Object.entries(S.shop.checked || {}).filter(([, c]) => c).map(([id]) => id), st = UI.shopStart, n = S.shop.range || 7; const out = _sd(...a); if (ids.length) linkFromPantry(st, n, ids); scheduleRender(); return out; }; }
+/* the planner, when it plans from the pantry */
+{ const _rp = runPlanner; runPlanner = async function (...a) { const sh = UI.sheet; const out = await _rp(...a); if (sh?.pantry) { const k = linkFromPantry(todayISO(), 7); if (k) toast(`${k} planned food${k > 1 ? "s" : ""} set aside from the pantry`); } return out; }; }
+/* once: the plans made before this keep using what's at home */
+function panMigrate() { if (S.shop.panV) return; S.shop.panV = 1; const k = linkFromPantry(addDays(todayISO(), -1), 15); put("shop", "", S.shop); if (k) console.info(`pantry: linked ${k} planned foods to the stock`); }
+/* Add › Pantry: what's free at home; adding from here sets it aside */
+function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m";
+  const xs = Object.entries(S.shop.pantry || {}).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], p, free: panFree(id, L) })).filter(x => x.f && x.free > 0 && getFood(x.id))
+    .sort((a, b) => ((b.f.meals || ["m"]).includes(mk) - (a.f.meals || ["m"]).includes(mk)) || (a.p.exp || "9999").localeCompare(b.p.exp || "9999"));
+  if (!xs.length) return `<div class="lrow"><span><span class="t">Nothing free at home</span><span class="s">Finish a shopping trip or add what you have in Groceries › Pantry.</span></span></div>`;
+  return xs.map(({ id, f, p, free }) => { const q = Math.min(free, defaultQty(f) * (f.countable ? 1 : 1.5)), m = addM(ZERO(), f.per, q / 100), dl = p.exp ? daysBetween(todayISO(), p.exp) : null;
+    return `<div class="lrow add-r"><button data-act="pick" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" style="text-align:left;min-width:0"><span class="t">${ic("jar", "sm")} ${esc(f.name)}</span><span class="s">${fmtN(free)} ${f.unit || "g"} free${dl != null && dl <= 3 ? ` · <b style="color:var(--warn)">use by ${fmtDM(p.exp)}</b>` : ""} · ${fmtQ(q)} ${f.unit || "g"} = ${fmtN(m.kcal)} kcal</span></button>
+      <span class="end"><button class="plus-btn" data-act="quick-add" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" aria-label="Add ${esc(f.name)} from the pantry">${ic("plus")}</button></span></div>`; }).join(""); }
+{ const _ar = addRowsFor; addRowsFor = sh => (sh.seg === "pantry" && !(sh.q || "").trim()) ? pantryAddRows(sh) : _ar(sh); }
+{ const _qa = ACT["quick-add"]; ACT["quick-add"] = el => { NEW_PAN = el?.dataset?.pan === "1"; try { return _qa(el); } finally { NEW_PAN = false; } }; }
+{ const _pk = ACT.pick; ACT.pick = el => { const r = _pk(el); if (el?.dataset?.pan === "1" && UI.sheet?.type === "qty") UI.sheet.pan = true; return r; }; }
+{ const _qs = ACT["qty-save"]; ACT["qty-save"] = (...a) => { const sh = S_(); NEW_PAN = !!sh?.pan && !sh.itemId; try { return _qs(...a); } finally { NEW_PAN = false; } }; }
+/* the item: a jar when it comes from the pantry; its sheet can link or unlink it */
+{ const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId); return it.pan ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="From the pantry">${ic("jar", "sm")}</span>`) : h; }; }
+{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (!sh.itemId || sh.kind !== "food" || !S.shop.pantry[sh.ref]) return o; const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return o;
+  o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? "Set aside at home, taken off when you eat it" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; return o; }; }
+ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
+/* the list: what's free at home for food you'd otherwise buy */
+{ const _sh = SHEETS.shopq; if (_sh) SHEETS.shopq = sh => { const o = _sh(sh), R = shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0 && r.free > 0); if (!R.length) return o;
+  o.body = `<div class="note accent pan-use"><span><b>${R.length} at home already</b> · ${esc(R.slice(0, 4).map(r => r.f.name).join(", "))}${R.length > 4 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use what's at home</button></div>` + o.body; return o; }; }
+ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
+{ const _vs = VIEWS.shop; VIEWS.shop = function () { const h = _vs(), R = shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0 && r.free > 0); if (!R.length) return h;
+  const i = h.indexOf("</header>"); return i < 0 ? h : h.slice(0, i + 9) + `<div class="note accent pan-use"><span><b>${R.length} at home already</b> · ${esc(R.slice(0, 4).map(r => `${r.f.name} ${fmtN(r.free)} ${r.f.unit || "g"}`).join(", "))}${R.length > 4 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use what's at home</button></div>` + h.slice(i + 9); }; }
+{ const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && (!Sync.db || Sync.ready)) panMigrate(); }; }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
