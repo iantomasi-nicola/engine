@@ -3415,7 +3415,7 @@ VIEWS.plan = function () {
       <span class="weigh-in"><span class="unit-inp"><input id="qw-in" class="inp" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Weight in kg"><span>kg</span></span><span class="unit-inp bf"><input id="qw-bf" class="inp" inputmode="decimal" placeholder="${lastBf() ? r1(lastBf()[1]) : "BF"}" aria-label="Body fat percent, optional"><span>%</span></span><button class="btn ink sm" type="submit">Save</button></span></form>`;
   }
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
-    <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button><button class="btn ghost sm" data-act="eat-out" data-date="${date}">${ic("plate", "sm")}Eaten out</button>
+    <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button>${FEAT("eatout") ? `<button class="btn ghost sm" data-act="eat-out" data-date="${date}">${ic("plate", "sm")}Eaten out</button>` : ""}
     ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
   if (eat.manual) {
@@ -3743,8 +3743,8 @@ VIEWS.train = function () {
   const seg = UI.trainSeg;
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Training</div><div class="top-sub hide-sm">${seg === "races" ? "Races, countdowns and results" : seg === "wk" ? "Programs, workouts and history" : seg === "cal" ? "Your training calendar" : seg === "season" ? "Blocks, deloads and the plan to your races" : seg === "fitness" ? "Fitness, fatigue and form" : seg === "week" ? (icuPlanMode() ? "Your intervals.icu plan, week by week" : "Plan, pattern and calories of your sessions") : seg === "running" ? "Zones, paces and predictions from your tests" : "Personal bests and tests"}</div></div>
     <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Timer">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
-    <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ["season", "Season"], ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
-  return h + (seg === "season" ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
+    <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ...(FEAT("period") ? [["season", "Season"]] : []), ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
+  return h + (seg === "season" && FEAT("period") ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
 };
 /* ================= Train › Plan: the next two weeks from your calendar, what's done, what it costs in fuel ================= */
 function icuSyncBar() {
@@ -3884,8 +3884,8 @@ function trainRecords() {
 VIEWS.progress = function () {
   const seg = UI.progSeg;
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : seg === "training" ? "Maxes, circuits and running over time" : seg === "goals" ? "Targets, milestones and when you'll get there" : seg === "energy" ? "BMR, TDEE and how they're estimated" : "One row per week"}</div></div>${settingsBtn()}</div>
-    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ["goals", "Goals"], ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
-  if (seg === "goals") return h + goalsView();
+    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
+  if (seg === "goals" && FEAT("goals")) return h + goalsView();
   if (seg === "nutrition") return h + VIEWS.stats(true);
   if (seg === "training") return h + trainingProgressView();
   if (seg === "energy") return h + energyView();
@@ -6369,7 +6369,7 @@ function calDayPanel(d) {
     return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(t?.name || x.p?.note || w.note || w.sport)}</b><small>${esc(meta)}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") + "Done" : x.st === "missed" ? "Missed" : "Planned"}</span></button>`; }).join("");
   const body = [L.weight ? `${r1(L.weight)} kg` : "", L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : ""].filter(Boolean).join(" · ");
   return `<section class="card cv-day" aria-live="polite"><div class="cv-day-h"><div><b>${d === today ? "Today" : DOWL[dow(d)]}</b><small>${fmtDM(d)}${body ? " · " + esc(body) : ""}</small></div>
-      <div class="row" style="gap:6px">${d >= today ? `<button class="btn tonal sm" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}">${ic(UI.clip ? "copy" : "plus", "sm")}${UI.clip ? "Paste" : "Plan"}</button>` : ""}<button class="btn soft sm" data-act="open-checkin" data-date="${d}">${ic("edit", "sm")}${d <= today ? "Log" : "Edit"}</button></div></div>
+      <div class="row" style="gap:6px">${d >= today ? `<button class="btn tonal sm" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}">${ic(UI.clip ? "copy" : "plus", "sm")}${UI.clip ? "Paste" : "Plan"}</button>` : ""}${d > today ? `<button class="btn soft sm" data-act="rc-new" data-date="${d}">${ic("flag", "sm")}Race</button>` : ""}<button class="btn soft sm" data-act="open-checkin" data-date="${d}">${ic("edit", "sm")}${d <= today ? "Log" : "Edit"}</button></div></div>
     ${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${esc(r.sport || "Race")}${r.km ? ` · ${r1(r.km)} km` : ""}${r.goal ? ` · goal ${esc(r.goal)}` : ""}</small></span><span class="cv-st">${r.pri || ""}-race</span></button>`).join("")}
     ${rows || `<div class="cv-empty">${d < today ? "Nothing logged · rest day" : "Rest day"}</div>`}
     <button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
@@ -7591,7 +7591,7 @@ CHG["rc-date"] = v => { S_().draft.date = v; renderSheet(); };
 ACT["rc-pri"] = el => { S_().draft.pri = el.dataset.k; renderSheet(); };
 ACT["rc-sport"] = el => { const d = S_().draft; d.sport = el.dataset.k; if (!isRunRace(d)) d.km = null; renderSheet(); };
 ACT["rc-km"] = el => { S_().draft.km = +el.dataset.k; renderSheet(); };
-ACT["rc-new"] = () => openSheet("race", { isNew: true, draft: { id: puid("rc"), name: "", date: addDays(todayISO(), 42), sport: FIT().runSport, km: 10, pri: "A", goal: "", loc: "", notes: "" } });
+ACT["rc-new"] = el => openSheet("race", { isNew: true, draft: { id: puid("rc"), name: "", date: el?.dataset?.date || addDays(todayISO(), 42), sport: FIT().runSport, km: 10, pri: "A", goal: "", loc: "", notes: "" } });
 ACT["rc-edit"] = el => { const r = races().find(x => x.id === el.dataset.id); if (r) openSheet("race", { isNew: false, draft: clone(r) }); };
 ACT["race-save"] = () => { const d = S_().draft; if (!d.date) { toast("Pick the date."); return; } d.name = (d.name || "").trim() || `${d.sport} race`;
   if (d.result && (d.result.time || d.result.place)) d.result.done = true;
@@ -7861,7 +7861,7 @@ VIEWS.today = function () {
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
-  const quick = `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button><button class="td-q" data-act="gps-run">${ic("pulse", "sm")}GPS run</button><button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
+  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}${FEAT("gps") && GPSP().on ? `<button class="td-q" data-act="gps-run">${ic("run", "sm")}GPS run</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`;
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
@@ -8287,7 +8287,7 @@ SHEETS.freewo = sh => {
       <div class="field"><label for="fw-name">Name</label><input id="fw-name" class="inp" value="${esc(sh.name || "")}" placeholder="${esc(sh.sport)} · free" data-in="fw" data-k="name"></div></div>
     <div class="field"><div class="row" style="justify-content:space-between"><label for="fw-script">Script from intervals.icu <span class="faint">· optional</span></label>${sc ? `<button class="link" data-act="fw-clear">Clear</button>` : `<button class="link" data-act="fw-paste">${ic("copy", "sm")} Paste</button>`}</div>
       <textarea id="fw-script" class="inp mono" rows="${sc ? 8 : 3}" spellcheck="false" data-in="fw" data-k="script" placeholder="${auto ? "Warmup&#10;- 10m Z2 Pace&#10;&#10;Main set 5x&#10;- 3m Z4 Pace&#10;- 2m Z1" : "EMOM 10m&#10;- 1m 3 Muscle-up&#10;&#10;A1/A2 3x&#10;- 6 Pull-up +10kg&#10;- 10 Dip&#10;- 90s Rest"}">${esc(sh.script || "")}</textarea>
-      ${auto && !sc && GPS_SPORT(sh.sport) ? `<button class="btn tonal" data-act="gps-run" data-sport="${esc(sh.sport)}">${ic("pulse", "sm")}Start with GPS · ${esc(sh.sport)}</button>` : ""}<div class="faint" id="fw-pv" style="font-size:12.5px">${sc ? esc(pv) : auto ? "Leave it empty for an open session: a stopwatch with voice every 5 minutes, laps, and Finish when you're done." : "Leave it empty to build the session as you go: sets, EMOM, AMRAP, Tabata, For time and timers, all logged."}</div></div>`,
+      ${auto && !sc && GPS_SPORT(sh.sport) && FEAT("gps") ? `<button class="btn tonal" data-act="gps-run" data-sport="${esc(sh.sport)}">${ic("pulse", "sm")}Start with GPS · ${esc(sh.sport)}</button>` : ""}<div class="faint" id="fw-pv" style="font-size:12.5px">${sc ? esc(pv) : auto ? "Leave it empty for an open session: a stopwatch with voice every 5 minutes, laps, and Finish when you're done." : "Leave it empty to build the session as you go: sets, EMOM, AMRAP, Tabata, For time and timers, all logged."}</div></div>`,
     foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="fw-go">${ic("play", "sm")}${sc ? "Start" : auto ? "Start open session" : "Start free session"}</button>` };
 };
 ACT["free-open"] = () => { if (LV()) { ACT["lv-resume"](); return; } const last = WK().freeLast || {}; openSheet("freewo", { kind: last.kind || "str", sport: last.sport || null, script: "", name: "" }); };
@@ -9120,7 +9120,7 @@ VIEWS.pantry = function () {
   const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
   let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
-    <div class="row"><button class="btn tonal sm" data-act="cook-open">${ic("plate", "sm")}What can I cook?</button><button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
+    <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open">${ic("plate", "sm")}What can I cook?</button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
   h += expiryCard("pantry");
   if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
   if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
@@ -9780,7 +9780,7 @@ function weekTarget(ws) {
   });
 }
 function weekDone(ws) { const fit = FIT(); let l = 0, km = 0; for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d > todayISO()) break; l += dayLoad(d); km += (logGet(d)?.workouts || []).filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); } return { l, km }; }
-const phPill = (ph, sm) => `<span class="ph-pill ${sm ? "sm" : ""}" style="--c:var(--${PH[ph][1]})">${PH[ph][0]}</span>`;
+let phPill = (ph, sm) => `<span class="ph-pill ${sm ? "sm" : ""}" style="--c:var(--${PH[ph][1]})">${PH[ph][0]}</span>`;
 /* the long run of a running race plan, by weeks to go */
 function longRunFor(r, n) { if (!r || !(r.km > 0) || !isRunRace(r)) return null; const top = r.km >= 40 ? 32 : r.km >= 20 ? 19 : r.km >= 9 ? 14 : 10, ph = weekPhase(addDays(weekStartOf(r.date), -7 * n)).ph;
   if (n === 0) return null; if (ph === "taper") return r1(top * (n >= 2 ? .65 : .45)); if (ph === "deload") return r1(top * .55); const k = clamp(1 - (n - 3) * .06, .5, 1); return r1(top * k); }
@@ -10539,6 +10539,31 @@ document.addEventListener("focusin", e => { const el = e.target; if (!el.matches
 /* the food just added flashes in the meal strip at the top of the add sheet */
 const _refreshAddKb = refreshAdd;
 refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[data-id]").map(b => b.dataset.id)); _refreshAddKb(); for (const b of $$("#add-ctx .add-tag button[data-id]")) if (!before.has(b.dataset.id)) b.closest(".add-tag").classList.add("new"); const w = $("#add-ctx .add-in"); if (w) w.scrollLeft = w.scrollWidth; };
+/* ================= features you can switch off: the app stays simple if you don't need them ================= */
+const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
+  ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
+  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["gps", "GPS runs", "Distance, splits and alerts from the phone"]];
+const FEAT = k => (S.settings?.feat || {})[k] !== false;
+function featCard() { const F = S.settings.feat || {};
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
+    ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false && (k !== "gps" || GPSP().on)}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
+SETTINGS_CARDS.push({ o: -1, fn: featCard });
+ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !(k === "gps" ? FEAT(k) && GPSP().on : FEAT(k)); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
+  if (k === "gps") { const f = FIT(); f.player = f.player || {}; f.player.gps = { ...(f.player.gps || {}), on }; }
+  if (k === "period" && !on && UI.trainSeg === "season") UI.trainSeg = "cal"; if (k === "goals" && !on && UI.progSeg === "goals") UI.progSeg = "overview"; saveSettings(); };
+/* where each switch acts */
+{
+  const _phPill = phPill; phPill = (ph, sm) => FEAT("period") ? _phPill(ph, sm) : "";
+  const _nwt = nextWeekTips; nextWeekTips = R => { const t = _nwt(R); return FEAT("period") ? t : t.filter(x => !/^Next week is|^Deload done/.test(x)); };
+  const _gt = goalsToday; goalsToday = () => FEAT("goals") ? _gt() : "";
+  const _ps = photosSection; photosSection = () => FEAT("photos") ? _ps() : "";
+  const _sc = sleepCard; sleepCard = () => FEAT("sleep") ? _sc() : "";
+  const _wc = weeklyCard; weeklyCard = () => FEAT("report") ? _wc() : "";
+  const _fi = fuelInit; fuelInit = (L, force) => { const F = _fi(L, force); if (!FEAT("fuel")) F.on = false; return F; };
+  const _fp = fuelPreview; fuelPreview = L => FEAT("fuel") ? _fp(L) : "";
+  const _rf = raceFuelHTML; raceFuelHTML = r => FEAT("fuel") ? _rf(r) : "";
+}
+for (const c of TODAY_CARDS) { if (c.fn.name === "weeklyCard") c.fn = () => weeklyCard(); if (c.fn.name === "sleepCard") c.fn = () => sleepCard(); if (c.fn.name === "goalsToday") c.fn = () => goalsToday(); }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
