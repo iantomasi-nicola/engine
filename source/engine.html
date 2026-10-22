@@ -208,6 +208,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rc-next{display:flex;flex-direction:column;gap:6px}.rc-next>div{display:flex;flex-direction:column;gap:1px;font-size:13.5px}.rc-next>div span{color:var(--muted)}
 .lv-tally em{font-style:normal;color:var(--warn);font-weight:600}.sl-i.skip .sl-ck,.lv-li.skip .lv-ck{color:var(--warn)}.lv-li.skip{box-shadow:inset 3px 0 0 var(--warn)!important}.lv-li.skip small{color:var(--warn)}.sl-i.skip .sl-t{opacity:.6;text-decoration:line-through}
 .rc-last{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:10px 12px;border-radius:14px;background:var(--v-fill,var(--surface-2));font-size:13.5px}.rc-last .ic{vertical-align:-3px}
+.lv-setup{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:13.5px;color:var(--muted)}.lv-setup b{min-width:44px;text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}
 .am-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .am-list{display:flex;flex-direction:column;gap:8px}
 .am-ex{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
@@ -7161,7 +7162,7 @@ const holdParts = (e, x) => { const base = e.holdScheme || [e.dur]; const add = 
    Every cue (3-2-1 ticks, go, end, spoken call-outs) is derived from the clock, then scheduled on the
    AudioContext clock a few hundred ms ahead, so it lands exactly when the display changes second. */
 let AC = null, WL = null, VOICE_OK = false;
-const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !!w.mute, voice: p.voice !== "off", lang: p.voice === "en" ? "en" : "it", prep: Math.max(3, Math.min(30, +p.prep || 5)), calls: p.calls !== "off" }; };
+const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !!w.mute, voice: p.voice !== "off", lang: p.voice === "en" ? "en" : "it", prep: p.prep == null || p.prep === "" || isNaN(+p.prep) ? 5 : Math.max(0, Math.min(30, +p.prep)), calls: p.calls !== "off" }; };
 const VT = (it, en) => PLAYER().lang === "en" ? en : it;
 /* one output chain: a limiter in front of the speakers, so overlapping beeps never clip; a larger buffer ("playback") so a busy screen can't make the audio crackle */
 let AOUT = null, SPEAKING = 0;
@@ -7439,7 +7440,7 @@ function liveTask(L, t, r) {
       ${clockRing(L.clk ? fmtDur(prep ? -el : t.every - (el - k * t.every)) : fmtDur(t.every), 0, prep ? "get ready" : "this minute", "emom")}
       ${t.steps.length > 1 ? `<div class="lv-up"><small>Next minute</small><b>${esc(nx.exs.map(e => (e.reps ? e.reps + " " : "") + e.name).join(" + "))}</b></div>` : ""}
       <div class="mins">${r.mins.map((m, i) => `<button class="min ${i === k && L.clk ? "now" : ""} ${m.ok === false ? "miss" : m.ok ? "ok" : ""}" data-act="lv-min" data-i="${i}" aria-label="Minute ${i + 1}${m.ok === false ? " missed" : ""}">${i + 1}<small>${m.reps.join("+")}</small></button>`).join("")}</div>
-      <div class="faint lv-hint">Tap a minute you missed. ${pauseBtn ? "" : `Starts after a ${PLAYER().prep} s countdown.`}</div><div class="row lv-adj">${pauseBtn}</div>`,
+      <div class="faint lv-hint">Tap a minute you missed. ${pauseBtn ? "" : `${PLAYER().prep ? `Starts after ${PLAYER().prep} s of setup.` : "Starts right away."}`}</div><div class="row lv-adj">${pauseBtn}</div>`,
       dock: L.clk ? dock(`<button class="btn primary grow" data-act="lv-done">${ic("check", "sm")}Finish EMOM</button>`) : startDock(`Start EMOM ${fmtDurShort(t.dur)}`) };
   }
   if (t.t === "amrap") {
@@ -7612,7 +7613,7 @@ ACT["lv-mini"] = el => { audioOn(); const [L, t, r] = LR(); const xi = +el.datas
   else if (t.exs.every((e2, k) => !(e2.scheme && e2.scheme.length > 1) || r.ex[k].mini >= r.ex[k].reps.length) && !t.exs.some((e2, k) => (e2.timed || e2.holdScheme) && r.ex[k].hold.length < holdParts(e2, r.ex[k]).length)) finishSet(); else { saveWK(); scheduleRender(); } };
 ACT["lv-sub-skip"] = () => { const [L] = LR(); if (L.sub) L.sub.end = nowMs(); };
 ACT["lv-hold"] = el => { audioOn(); const [L, t, r] = LR(); const xi = +el.dataset.x, e = t.exs[xi], x = r.ex[xi]; const d = holdParts(e, x)[x.hold.length];
-  L.sub = { kind: "hold", end: nowMs() + 3000 + d * 1000, dur: d, xi, prep: 3 }; TICK_LAST.sub = null; saveWK(); scheduleRender(); };
+  const P = PLAYER().prep; L.sub = { kind: "hold", end: nowMs() + P * 1000 + d * 1000, dur: d, xi, prep: P }; TICK_LAST.sub = null; saveWK(); scheduleRender(); };
 ACT["lv-hold-stop"] = el => { const [L, t, r] = LR(); const s = L.sub; if (!s) return; const x = r.ex[+el.dataset.x]; if (s.kind === "hold") { const held = Math.round(s.dur - (s.end - nowMs()) / 1000); if (held > 0) x.hold.push(Math.min(s.dur, held)); } L.sub = null; saveWK(); scheduleRender(); };
 ACT["lv-min"] = el => { const [L, t, r] = LR(); const m = r.mins[+el.dataset.i]; m.ok = m.ok === false ? true : false; haptic(10); saveWK(); scheduleRender(); };
 ACT["lv-round"] = () => { const [L, t, r] = LR(); const el = clkEl(L.clk); if (el < 0) return; r.rounds++; const prev = r.splits.reduce((a, b) => a + b, 0); r.splits.push(Math.round(el - prev)); playCue("round");
@@ -8851,7 +8852,10 @@ ACT["snd-test"] = () => { audioOn(); [0, 1, 2].forEach(i => playCue("tick", .3 +
 ACT["fd-unhide"] = el => { del("foods", el.dataset.id); toast(`${BUILTIN[el.dataset.id]?.name || "Food"} restored`); if (!hiddenFoods().filter(f => f.id !== el.dataset.id).length) UI.foodsSeg = "all"; };
 ACT["fd-unhide-all"] = () => { const ids = hiddenFoods().map(f => f.id); openSheet("confirm", { title: `Restore ${ids.length} foods?`, text: "All the built-in foods you deleted come back.", yes: "Restore all", run: () => { ids.forEach(id => del("foods", id)); UI.foodsSeg = "all"; toast(`${ids.length} foods restored`); } }); };
 /* ================= visible countdown before live exercises and timers (5 / 10 / 15 s) ================= */
-const prepChips = () => `<div class="prep-ch"><span>Countdown</span>${[5, 10, 15].map(v => `<button class="chip sm" data-act="prep-set" data-v="${v}" aria-pressed="${PLAYER().prep === v}">${v} s</button>`).join("")}</div>`;
+const prepChips = () => `<div class="prep-ch"><span>Setup before timed work</span>${[0, 3, 5, 10, 15].map(v => `<button class="chip sm" data-act="prep-set" data-v="${v}" aria-pressed="${PLAYER().prep === v}">${v ? v + " s" : "Off"}</button>`).join("")}</div>`;
+/* the same setup time, adjustable on the live screen before a hold or a timed block starts */
+const setupCtl = () => { const P = PLAYER().prep; return `<div class="lv-setup" role="group" aria-label="Setup time before the count starts"><span>Setup</span><button class="icon-btn sm" data-act="prep-adj" data-d="-1" aria-label="One second less" ${P <= 0 ? "disabled" : ""}>${ic("minus", "sm")}</button><b>${P ? P + " s" : "off"}</b><button class="icon-btn sm" data-act="prep-adj" data-d="1" aria-label="One second more" ${P >= 30 ? "disabled" : ""}>${ic("plus", "sm")}</button></div>`; };
+ACT["prep-adj"] = el => { const f = FIT(); f.player = { ...(f.player || {}), prep: Math.max(0, Math.min(30, PLAYER().prep + +el.dataset.d)) }; haptic(6); saveSettings(); scheduleRender(); };
 ACT["prep-set"] = el => { const f = FIT(); f.player = { ...(f.player || {}), prep: +el.dataset.v }; saveSettings(); scheduleRender(); if (UI.sheet) renderSheet(); };
 function prepCard(left, what, extra = "") {
   return `<div class="cd-card"><span class="eyebrow">Get ready</span><b class="cd-n" data-tick="cd" data-tm="cd">${Math.max(1, Math.ceil(left - .001))}</b>${what ? `<div class="cd-next"><small>First</small><b>${esc(what)}</b></div>` : ""}${extra}
@@ -11470,6 +11474,11 @@ ACT["am-apply"] = () => { const sh = S_(), L = LV(), t = L?.tasks[L.cur], d = sh
   if (sh.save && L.tplId) { const tp = tplById(L.tplId), i = tp ? amScriptLine(tp.script, old) : -1; if (i >= 0) { const A = tp.script.split("\n"); A[i] = line; tp.script = A.join("\n"); tp.updated = todayISO(); L.baseScript = tp.script; } }
   lvJ(L, "amrap-edit", { from: amLine({ min: Math.round(old.dur / 60), exs: old.exs }).slice(2), to: line.slice(2) });
   saveWK(); closeSheet(); toast(sh.save ? "AMRAP changed · saved in the workout too" : "AMRAP changed for today"); scheduleRender(); };
+/* setup time on the live screen: before a hold, and before a timed block (AMRAP, EMOM, Tabata, For time, timer) */
+{ const _lt = liveTask; liveTask = function (L, t, r) { const o = _lt(L, t, r); if (!o?.body || !t) return o;
+    const holdNext = t.t === "set" && !L.sub && t.exs.some((e, xi) => (e.timed || e.holdScheme) && (r?.ex?.[xi]?.hold?.length || 0) < holdParts(e, r?.ex?.[xi]).length);
+    const blockNext = ["amrap", "emom", "tabata", "fortime", "timer"].includes(t.t) && !L.clk;
+    if (holdNext || blockNext) o.body += setupCtl(); return o; }; }
 /* the button, on the AMRAP screen until it starts */
 { const _lt = liveTask; liveTask = function (L, t, r) { const o = _lt(L, t, r); if (t?.t === "amrap" && !L.clk && o?.body) o.body += `<div class="row lv-adj"><button class="btn tonal sm" data-act="am-edit">${ic("edit", "sm")}Edit AMRAP</button></div>`; return o; }; }
 /* ================= boot ================= */
