@@ -28,9 +28,9 @@
   ],
   "shortcuts": [
     {
-      "name": "GPS run",
-      "short_name": "Run",
-      "url": "./?a=gps-run",
+      "name": "Free workout",
+      "short_name": "Workout",
+      "url": "./?a=free-open",
       "icons": [
         {
           "src": "icons/icon-192.png",
