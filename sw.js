@@ -1,7 +1,7 @@
 /* Engine service worker: opens instantly and works offline.
    App files: network first with a short timeout (the newest version when online, the saved one when not).
    Libraries, the label reader and icons: kept in their own cache that survives updates. */
-const V = "engine-202610221837", HEAVY = "engine-heavy-1";
+const V = "engine-202610221921", HEAVY = "engine-heavy-1";
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png"];
 const WARM = ["vendor/zxing.min.js", "vendor/tesseract.min.js", "ocr/worker.min.js", "ocr/core/tesseract-core-simd-lstm.wasm.js", "ocr/core/tesseract-core-lstm.wasm.js", "ocr/lang/ita.wasm"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });

@@ -195,6 +195,19 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .gear-i .chk-c{width:24px;height:24px;border-radius:50%;border:2px solid var(--md-outline,var(--faint));display:grid;place-items:center;flex:none}
 .gear-i.ok .chk-c{background:var(--md-primary,var(--accent));border-color:transparent;color:var(--md-on-primary,#fff)}.gear-i.ok b{text-decoration:line-through;opacity:.65}
 .gear-pv{display:flex;flex-direction:column;gap:4px}.gear-pv .eyebrow{display:flex;align-items:center;gap:6px}
+.lv-tally{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:14px -4px 0;padding:2px 4px}.lv-tally::-webkit-scrollbar{display:none}
+.lv-tally>span{flex:none;display:flex;flex-direction:column;gap:1px;min-width:92px;max-width:150px;padding:8px 10px;border-radius:14px;background:var(--v-fill,var(--surface-2))}
+.lv-tally>span.on{background:color-mix(in srgb,var(--md-primary) 14%,var(--v-card,var(--surface)));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--md-primary) 45%,transparent)}
+.lv-tally>span.full b{color:var(--good)}
+.lv-tally b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.lv-tally b small{font-size:12px;font-weight:500;color:var(--muted)}
+.lv-tally i{font-style:normal;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lv-tally>span>small{font-size:11.5px;color:var(--muted)}
+.recap{display:flex;flex-direction:column;gap:10px}
+.rc-pct{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}.rc-pct.good{color:var(--good)}.rc-pct.warn{color:var(--warn)}
+.rc-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.rc-ai{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--md-primary) 10%,var(--v-card,var(--surface)))}.rc-ai b{display:flex;align-items:center;gap:6px}.rc-ai p{margin:0;font-size:13.5px}
+.rc-next{display:flex;flex-direction:column;gap:6px}.rc-next>div{display:flex;flex-direction:column;gap:1px;font-size:13.5px}.rc-next>div span{color:var(--muted)}
+.lv-tally em{font-style:normal;color:var(--warn);font-weight:600}.sl-i.skip .sl-ck,.lv-li.skip .lv-ck{color:var(--warn)}.lv-li.skip{box-shadow:inset 3px 0 0 var(--warn)!important}.lv-li.skip small{color:var(--warn)}.sl-i.skip .sl-t{opacity:.6;text-decoration:line-through}
+.rc-last{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:10px 12px;border-radius:14px;background:var(--v-fill,var(--surface-2));font-size:13.5px}.rc-last .ic{vertical-align:-3px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -6369,7 +6382,7 @@ function exportSheets() {
     for (const x of ws.sets || []) sets.push({ Date: xd(ws.date), Workout: ws.name, Block: x.block || "", Label: x.label || "", Exercise: x.ex, Set: x.round, "Final set": x.final ? "yes" : "", Reps: (x.reps || []).join("-"), "Total reps": setReps(x), "Load kg": x.load || null, RIR: x.rir ?? null, "Hold s": (x.hold || []).join("-"), Rings: x.ring || "", Target: x.target || "" });
     for (const a of ws.amrap || []) sets.push({ Date: xd(ws.date), Workout: ws.name, Block: a.title, Exercise: "AMRAP " + a.desc, Reps: `${a.rounds} rounds + ${a.partial}` }); }
   const raceRows = (S.train.races || []).map(r => ({ Date: xd(r.date), Race: r.name, Sport: r.sport, "Km": r.km || null, Category: r.cat || "", Priority: r.pri || "", Goal: r.goal || "", Result: r.result?.time || "", Place: r.result?.place || "", Notes: r.result?.notes || r.notes || "" }));
-  return [["Daily log", daily], ["Workouts", wk], ["Strength sessions", sess], ["Sets", sets], ["Races", raceRows], ["Planned sessions", planned], ["Meals", meals], ["Weekly", weekly], ["Running tests", tests], ["Running PBs", pbs], ["Zones", zones], ["Calisthenics", calis], ["Top sets", tops], ["Circuits", circ], ["Measurements", meas], ["My foods", foods]];
+  return [["Daily log", daily], ["Workouts", wk], ["Strength sessions", sess], ["Sets", sets], ["Races", raceRows], ["Planned sessions", planned], ["Meals", meals], ["Weekly", weekly], ["Running tests", tests], ["Running PBs", pbs], ["Zones", zones], ["Calisthenics", calis], ["Top sets", tops], ["Circuits", circ], ["AMRAP tests", (S.train.amrapLog || []).slice().sort((a, b) => a.date.localeCompare(b.date)).map(x => ({ Date: xd(x.date), Test: x.title, Minutes: x.min, Circuit: x.desc, Rounds: x.rounds, "Extra reps": x.partial, Workout: x.from || "" }))], ["Measurements", meas], ["My foods", foods]];
 }
 ACT["export-xlsx"] = async el => {
   const btn = el; btn.disabled = true; const old = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span>Preparing';
@@ -7381,7 +7394,8 @@ function liveSide(L) {
   let lastB = null;
   return `<section class="lv-card side-stats"><div class="ss"><span><b data-tick="tot">${fmtDur((nowMs() - L.t0) / 1000)}</b><small>elapsed</small></span><span><b>≈ ${Math.max(1, Math.round(left / 60))}′</b><small>left</small></span><span><b>${done}/${n}</b><small>steps</small></span><span><b>${reps}</b><small>reps</small></span></div><div class="lin"><i style="width:${done / n * 100}%"></i></div></section>
     <section class="lv-card flush side-list"><div class="lv-eb pad"><span class="eyebrow">Sequence</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div><div class="sl">${L.tasks.map((t, i) => { const r = L.res[i] || {}, hb = t.bi !== lastB ? (lastB = t.bi, `<div class="sl-b">${esc(t.block || (t.t === "rest" ? "Rest" : t.t === "timer" ? t.title : ""))}</div>`) : "";
-      return hb + `<button class="sl-i ${i === L.cur ? "now" : ""} ${r.done ? "ok" : ""}" data-act="lv-go" data-i="${i}"><span class="sl-ck">${r.done ? ic("check", "sm") : ""}</span><span class="sl-t">${esc(t.t === "set" ? `${t.label ? t.label + " · " : ""}${t.exs.map(e => e.name).join(" + ")}` : taskLine(t))}</span><small>${t.t === "set" ? (r.done ? esc(r.ex.map(x => (x.reps || []).join("-") + (x.load ? " +" + fmtKg(x.load) : "") + (x.rir != null ? " · RIR " + x.rir : "")).join(" / ")) : `${t.round}/${t.rounds}`) : t.dur ? fmtDurShort(t.dur) : ""}</small></button>`; }).join("")}</div></section>
+      const skp = t.t === "set" && !r.done && (i < L.cur || L.phase === "done");
+      return hb + `<button class="sl-i ${i === L.cur ? "now" : ""} ${r.done ? "ok" : ""} ${skp ? "skip" : ""}" data-act="lv-go" data-i="${i}"><span class="sl-ck">${r.done ? ic("check", "sm") : skp ? ic("close", "sm") : ""}</span><span class="sl-t">${esc(t.t === "set" ? `${t.label ? t.label + " · " : ""}${t.exs.map(e => e.name).join(" + ")}` : taskLine(t))}</span><small>${t.t === "set" ? (r.done ? esc(r.ex.map(x => (x.reps || []).join("-") + (x.load ? " +" + fmtKg(x.load) : "") + (x.rir != null ? " · RIR " + x.rir : "")).join(" / ")) : skp ? `skipped · ${t.round}/${t.rounds}` : `${t.round}/${t.rounds}`) : t.dur ? fmtDurShort(t.dur) : ""}</small></button>`; }).join("")}</div></section>
     <div class="kbd faint"><span><kbd>Space</kbd> done</span><span><kbd>←</kbd><kbd>→</kbd> steps</span><span><kbd>P</kbd> pause</span><span><kbd>E</kbd> edit</span><span><kbd>M</kbd> mute</span></div>`;
 }
 function livePreview(L) {
@@ -7472,7 +7486,8 @@ function liveTask(L, t, r) {
 function liveList(L) {
   let lastB = null;
   return `<div class="lv-list">${L.tasks.map((t, i) => { const r = L.res[i] || {}, hb = t.bi !== lastB ? (lastB = t.bi, `<div class="lv-lb">${esc(t.block || (t.t === "rest" ? "Rest" : ""))}</div>`) : "";
-    return hb + `<button class="lv-li ${i === L.cur ? "now" : ""} ${r.done ? "ok" : ""}" data-act="lv-go" data-i="${i}"><span class="lv-ck">${r.done ? ic("check", "sm") : i + 1}</span><span><b>${esc(taskLine(t))}</b><small>${t.t === "set" ? esc(t.exs.map(liveTarget).join(" + ")) + ` · set ${t.round}/${t.rounds}` : ""}${r.done && t.t === "set" ? ` · ${r.ex.map(x => (x.reps || []).join("-") + (x.load ? " +" + fmtKg(x.load) : "") + (x.rir != null ? " RIR" + x.rir : "")).join(" / ")}` : ""}</small></span></button>`; }).join("")}</div>
+    const skp = t.t === "set" && !r.done && i < L.cur;
+    return hb + `<button class="lv-li ${i === L.cur ? "now" : ""} ${r.done ? "ok" : ""} ${skp ? "skip" : ""}" data-act="lv-go" data-i="${i}"><span class="lv-ck">${r.done ? ic("check", "sm") : skp ? ic("close", "sm") : i + 1}</span><span><b>${esc(taskLine(t))}</b><small>${skp ? "Skipped · tap to do it · " : ""}${t.t === "set" ? esc(t.exs.map(liveTarget).join(" + ")) + ` · set ${t.round}/${t.rounds}` : ""}${r.done && t.t === "set" ? ` · ${r.ex.map(x => (x.reps || []).join("-") + (x.load ? " +" + fmtKg(x.load) : "") + (x.rir != null ? " RIR" + x.rir : "")).join(" / ")}` : ""}</small></span></button>`; }).join("")}</div>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-finish">Finish</button><button class="btn primary grow" data-act="lv-list">Back to workout</button></div>`;
 }
 /* ---------- review ---------- */
@@ -11291,6 +11306,131 @@ for (const [act, key] of [["train-seg", "trainSeg"], ["prog-seg", "progSeg"]]) {
   m.classList.toggle("ctx", on); if (on) { const st = $("#main .td-dot")?.getAttribute("style") || "", c = st.match(/var\(--(good|warn|bad)\)/); m.style.setProperty("--ctx", c ? `var(--${c[1]})` : "var(--md-primary)"); } }; }
 /* skeleton: the shape of an answer that's on its way */
 const skel = (label, rows = 3) => `<div class="skel" role="status" aria-live="polite">${Array.from({ length: rows }, () => `<i class="row"></i>`).join("")}<small>${esc(label)}</small></div>`;
+/* ================= workout recap: what you planned, what you did, what to change next time =================
+   While the workout runs: every set you close, every rep you change, every swap and skip goes in a small journal,
+   and each exercise keeps today's count (reps done / planned). At the end: a recap (completion, where you went
+   under or over, swaps, time vs plan, the same workout last time) and per exercise what to change next time:
+   reps or load from the final-set RIR, and sets (skipped ones → fewer; everything easy → one more). With an AI
+   service: a coach's take on top. The recap is saved with the session and shows again before the next one. */
+AI_FEATS.push(["coach", "Workout coach", "After a workout: how it went and what to change next time, from your sets and your last sessions."]);
+const lvJ = (L, k, o = {}) => { (L.journal = L.journal || []).push({ k, at: nowMs(), ...o }); };
+const exReps = (e, x) => { const a = x?.reps || []; return (e.scheme && e.scheme.length > 1 ? a : a.slice(0, 1)).reduce((s, v) => s + (+v || 0), 0); };
+const exPlan = (e, x) => x?.plan ? exReps(e, { reps: x.plan }) : e.scheme ? e.scheme.reduce((a, b) => a + b, 0) : (e.reps || (e.range ? e.range[0] : 0));
+const exTimed = e => !!(e.timed || e.holdScheme) && !e.reps && !e.scheme;
+/* the plan of every set, kept when the set opens (what you change afterwards is the difference) */
+{ const _it = initTask; initTask = function (i) { _it(i); const L = LV(), r = L?.res?.[i]; if (r?.ex) r.ex.forEach(x => { if (!x.plan) x.plan = [...(x.reps || [])]; }); }; }
+{ const _ct = completeTask; completeTask = function () { const L = LV(), i = L?.cur, t = L?.tasks?.[i]; _ct(); if (!L || !t) return; const r = L.res[i];
+    if (t.t === "set") { lvJ(L, "set", { i, sec: r?.sec || null, ex: t.exs.map((e, xi) => ({ n: e.name, did: exReps(e, r.ex[xi]), plan: exPlan(e, r.ex[xi]) })) }); smartNudge(L, i); } saveWK(); }; }
+{ const _sk = ACT["lv-skip"]; ACT["lv-skip"] = (...a) => { const L = LV(), i = L?.cur, t = L?.tasks?.[i]; const isSet = t?.t === "set" && !L.res[i]?.done;
+    if (isSet) lvJ(L, "skip", { i, ex: t.exs.map(e => e.name) }); const out = _sk(...a);
+    if (isSet) toast(`Set skipped · ${t.exs.map(e => e.name).join(" + ")} ${t.round}/${t.rounds}`, () => { const L2 = LV(); if (!L2) return; if (L2.phase === "done") L2.phase = "run"; L2.journal = (L2.journal || []).filter(j => !(j.k === "skip" && j.i === i)); goTask(i); });
+    return out; }; }
+{ const _sw = ACT["sw-pick"]; ACT["sw-pick"] = el => { const L = LV(), from = L?.tasks[L.cur]?.exs?.[S_()?.x]?.name; const r = _sw(el); if (L && from) lvJ(L, "swap", { from, to: el.dataset.n }); return r; }; }
+/* a word in the moment: two sets in a row under target on the same exercise */
+function smartNudge(L, i) { const t = L.tasks[i]; if (t.t !== "set") return; L.nudged = L.nudged || {};
+  for (const [xi, e] of t.exs.entries()) { if (exTimed(e) || L.nudged[e.name]) continue; const sets = (L.journal || []).filter(j => j.k === "set").map(j => j.ex.find(x => x.n === e.name)).filter(Boolean).slice(-2);
+    if (sets.length === 2 && sets.every(s => s.plan && s.did < s.plan)) { L.nudged[e.name] = 1; const left = L.tasks.slice(i + 1).filter(x => x.t === "set" && x.exs.some(y => y.name === e.name)).length;
+      toast(left ? `${e.name}: two sets under target. Take 30 s more rest, or drop ${left > 1 ? "the last set" : "a rep"}.` : `${e.name}: under target today: it's noted for next time.`); } } }
+/* today's count for each exercise */
+function liveTally(L) { const m = new Map();
+  L.tasks.forEach((t, i) => { if (t.t !== "set") return; const r = L.res[i]; t.exs.forEach((e, xi) => { const tm = exTimed(e), o = m.get(e.name) || { name: e.name, tm, done: 0, plan: 0, sets: 0, of: 0 }; o.of++;
+    const x = r?.ex?.[xi]; o.plan += tm ? holdParts(e, x).reduce((a, b) => a + b, 0) : exPlan(e, x); if (r?.done) { o.sets++; o.done += tm ? setHold(x || {}) : exReps(e, x); } else if (i < L.cur || L.phase === "done") o.skip = (o.skip || 0) + 1; m.set(e.name, o); }); });
+  return [...m.values()]; }
+function tallyStrip(L, t) { const T = liveTally(L), cur = new Set((t?.exs || []).map(e => e.name)); if (!T.some(x => x.sets) && T.length < 2) return "";
+  return `<div class="lv-tally" aria-label="Today so far">${T.map(x => `<span class="${cur.has(x.name) ? "on" : ""} ${x.sets === x.of ? "full" : ""}"><b>${x.done}${x.tm ? "s" : ""}<small>/${x.plan}${x.tm ? "s" : ""}</small></b><i>${esc(x.name)}</i><small>${x.sets}/${x.of} sets${x.skip ? ` · <em>${x.skip} skipped</em>` : ""}</small></span>`).join("")}</div>`; }
+{ const _lt = liveTask; liveTask = function (L, t, r) { const o = _lt(L, t, r); if (t?.t === "set" && o?.body) o.body += tallyStrip(L, t); return o; }; }
+/* the recap */
+function liveRecap(L) {
+  const T = liveTally(L), J = L.journal || [], est = Math.round(estimateScript(L.tasks) / 60), dur = L.minutes || Math.max(1, Math.round(((L.ended || nowMs()) - L.t0) / 60000));
+  const setsDone = L.tasks.filter((t, i) => t.t === "set" && L.res[i]?.done).length, setsPlan = L.tasks.filter(t => t.t === "set").length;
+  const reps = T.filter(x => !x.tm), done = reps.reduce((a, x) => a + x.done, 0), plan = reps.reduce((a, x) => a + x.plan, 0);
+  const R = liveResults(L), byEx = {}; for (const s of R.sets) (byEx[s.ex] = byEx[s.ex] || []).push(s);
+  const exDef = {}; L.tasks.forEach(t => (t.exs || []).forEach(e => { exDef[e.name] = exDef[e.name] || e; }));
+  const ex = T.map(x => { const e = exDef[x.name] || { name: x.name }, ss = byEx[x.name] || [], fin = ss.find(s => s.final) || ss[ss.length - 1];
+    const ch = J.filter(j => j.k === "set").map(j => j.ex.find(y => y.n === x.name)).filter(y => y && y.plan && y.did !== y.plan);
+    const nx = ss.length ? decideNext(e, ss, ss.find(s => s.load)?.load) : null, skipped = x.of - x.sets;
+    const sets = skipped >= 1 && x.sets ? { to: x.sets, text: `${skipped} set${skipped > 1 ? "s" : ""} skipped → ${x.sets} set${x.sets > 1 ? "s" : ""} next time, or rest longer` }
+      : x.sets === x.of && fin?.rir != null && fin.rir >= 4 && x.of >= 2 ? { to: x.of + 1, text: nx && nx.kind !== "none" ? "or one more set" : `RIR ${fin.rir} on the last set → room for one more set` } : null;
+    return { name: x.name, tm: x.tm, done: x.done, plan: x.plan, sets: x.sets, of: x.of, under: ch.filter(y => y.did < y.plan).length, over: ch.filter(y => y.did > y.plan).length, delta: ch.reduce((a, y) => a + y.did - y.plan, 0), rir: fin?.rir ?? null, load: ss.find(s => s.load)?.load || null, next: nx && nx.kind !== "none" ? nx.text : null, sets_: sets }; }); // only what changes something next time
+  const swaps = [...new Map(J.filter(j => j.k === "swap").map(j => [j.from + ">" + j.to, j])).values()].map(j => ({ from: j.from, to: j.to }));
+  const prev = lastRecap(L.tplId, L.date, L.name);
+  const lines = [`${setsDone} of ${setsPlan} sets${plan ? ` · ${fmtN(done)} of ${fmtN(plan)} reps (${r0(done / plan * 100)}%)` : ""} · ${dur}′${est ? ` (planned ≈ ${est}′)` : ""}`];
+  const und = ex.filter(x => x.under && !x.tm), ovr = ex.filter(x => x.over && !x.tm), skp = ex.filter(x => x.sets < x.of);
+  if (und.length) lines.push(`Under the plan: ${und.map(x => `${x.name} (${x.under} set${x.under > 1 ? "s" : ""}, ${x.delta > 0 ? "+" : ""}${x.delta})`).join(", ")}`);
+  if (ovr.length) lines.push(`Over the plan: ${ovr.map(x => `${x.name} (+${x.delta})`).join(", ")}`);
+  if (skp.length) lines.push(`Skipped: ${skp.map(x => `${x.of - x.sets} × ${x.name}`).join(", ")}`);
+  if (swaps.length) lines.push(`Swapped: ${swaps.map(s => `${s.from} → ${s.to}`).join(", ")}`);
+  if (prev) { const d = done - (prev.done || 0); lines.push(`vs ${fmtDM(prev.date)}: ${d === 0 ? "same reps" : `${d > 0 ? "+" : ""}${d} reps`}${prev.pct != null && plan ? `, ${r0(done / plan * 100) - prev.pct >= 0 ? "+" : ""}${r0(done / plan * 100) - prev.pct}% of the plan` : ""}`); }
+  return { v: 1, date: L.date, tpl: L.tplId || null, name: L.name, dur, est, setsDone, setsPlan, done, plan, pct: plan ? r0(done / plan * 100) : null, ex, swaps, lines, ai: L.recapAI || null };
+}
+function lastRecap(tpl, date, name) { let best = null;
+  for (const m of Object.values(S.logm || {})) for (const [d, day] of Object.entries(m.days || {})) if (d < date) for (const s of day.wsess || []) if (s.recap && ((tpl && s.tplId === tpl) || (!tpl && s.name === name)) && (!best || d > best.date)) best = { ...s.recap, date: d };
+  return best; }
+function recapHTML(R, live) { if (!R) return "";
+  const tips = R.ex.filter(x => x.next || x.sets_);
+  return `<section class="lv-card recap"><div class="lv-eb"><span class="eyebrow">How it went</span>${R.pct != null ? `<span class="rc-pct ${R.pct >= 95 ? "good" : R.pct >= 80 ? "" : "warn"}">${R.pct}%</span>` : ""}</div>
+    <ul class="rc-l">${R.lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+    ${R.ai ? `<div class="rc-ai"><b>${ic("spark", "sm")}${esc(R.ai.headline || "Coach")}</b>${(R.ai.well || []).length ? `<p>${esc(R.ai.well.join(" · "))}</p>` : ""}${(R.ai.watch || []).length ? `<p class="muted">${esc(R.ai.watch.join(" · "))}</p>` : ""}</div>`
+      : live && AIF("coach") ? `<div id="rc-ai-slot">${UI.rcBusy ? skel("Reading your sets…", 2) : `<button class="btn tonal sm" data-act="rc-ai">${ic("spark", "sm")}Coach's take</button>`}</div>` : ""}
+    ${tips.length ? `<div class="rc-next"><span class="flabel">Next time</span>${tips.map(x => `<div><b>${esc(x.name)}</b><span>${esc([x.next, x.sets_?.text, ...(R.ai?.next || []).filter(n => normEx(n.exercise || "") === normEx(x.name)).map(n => n.change)].filter(Boolean).join(" · "))}</span></div>`).join("")}</div>` : ""}</section>`; }
+/* the review screen: the recap on top, today vs plan in each exercise row */
+{ const _ls = liveSummary; liveSummary = function (L) { let h = _ls(L); const R = liveRecap(L); L._recap = R;
+  h = h.replace('<section class="lv-card flush"><div class="lv-eb pad"><span class="eyebrow">Exercises · notes for next time</span>', recapHTML(R, true) + '<section class="lv-card flush"><div class="lv-eb pad"><span class="eyebrow">Exercises · today vs plan</span>');
+  h = h.replace(/<span class="nx">[^<]*<\/span>/g, ""); // what to change is in the recap's Next time, once
+  for (const x of R.ex) h = h.replace(`<span class="t">${esc(x.name)}</span><span class="s" style="white-space:normal">`, `<span class="t">${esc(x.name)} <small class="faint">${x.done}${x.tm ? "s" : ""}/${x.plan}${x.tm ? "s" : ""} · ${x.sets}/${x.of} sets${x.of > x.sets ? ` · ${x.of - x.sets} skipped` : ""}</small></span><span class="s" style="white-space:normal">`);
+  return h; }; }
+ACT["rc-ai"] = async () => { const L = LV(); if (!L || UI.rcBusy) return; const R = liveRecap(L); UI.rcBusy = true; scheduleRender();
+  const hist = []; for (const m of Object.values(S.logm || {})) for (const [d, day] of Object.entries(m.days || {})) for (const s of day.wsess || []) if (s.recap && d < L.date && ((L.tplId && s.tplId === L.tplId) || s.name === L.name)) hist.push({ d, r: s.recap });
+  hist.sort((a, b) => b.d.localeCompare(a.d));
+  const prompt = `You coach a calisthenics/hybrid athlete. Today's workout "${L.name}" (${R.dur} min, planned ${R.est} min, session RPE ${L.rpe ?? "?"}${L.note ? `, note: "${String(L.note).slice(0, 200)}"` : ""}).
+Per exercise (reps done/planned, sets done/planned, sets under/over plan, final-set RIR, load kg):
+${R.ex.map(x => `- ${x.name}: ${x.done}/${x.plan}${x.tm ? "s" : ""}, ${x.sets}/${x.of} sets, under ${x.under}, over ${x.over}, RIR ${x.rir ?? "?"}, load ${x.load ?? 0}`).join("\n")}
+Swaps: ${R.swaps.map(s => s.from + " → " + s.to).join(", ") || "none"}.
+Previous sessions of this workout: ${hist.slice(0, 3).map(h => `${h.d}: ${h.r.pct ?? "?"}% of plan, ${h.r.done} reps`).join("; ") || "none"}.
+In plain, short English: what went well, what to watch, and for the exercises that need it a concrete change for next time (reps, sets, load or rest). Reply with only JSON: {"headline":"max 8 words","well":["..."],"watch":["..."],"next":[{"exercise":"name","change":"..."}]}`;
+  try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (LV() !== L) return; L.recapAI = { headline: String(j?.headline || "").slice(0, 80), well: (j?.well || []).slice(0, 3).map(String), watch: (j?.watch || []).slice(0, 3).map(String), next: (j?.next || []).slice(0, 8).map(n => ({ exercise: String(n.exercise || ""), change: String(n.change || "").slice(0, 140) })) }; saveWK(); }
+  catch (e) { toast(sampleErr(e)); }
+  UI.rcBusy = false; scheduleRender(); };
+/* AMRAPs at the end of a workout are test circuits: every result goes to Records › AMRAP tests */
+const amrapKey = a => normEx(`${a.title} ${a.desc} ${a.min}`);
+const amrapRoundReps = desc => String(desc || "").split("+").reduce((s, p) => s + (+(p.trim().match(/^(\d+)/) || [])[1] || 0), 0);
+const amrapScore = a => (a.rounds || 0) * (amrapRoundReps(a.desc) || 100) + (a.partial || 0);
+const amrapLog = () => S.train.amrapLog = S.train.amrapLog || [];
+function amrapHist(key, before) { return amrapLog().filter(x => x.key === key && (!before || x.date < before)).sort((a, b) => b.date.localeCompare(a.date)); }
+function amrapBest(key, before) { return amrapHist(key, before).reduce((b, x) => !b || amrapScore(x) > amrapScore(b) ? x : b, null); }
+const amrapTxt = a => `${a.rounds}+${a.partial || 0}`;
+function amrapRecapLines(L) { return liveResults(L).amrap.filter(a => a.rounds || a.partial).map(a => { const k = amrapKey(a), b = amrapBest(k, L.date), d = b ? amrapScore(a) - amrapScore(b) : null;
+  return `${a.title} AMRAP ${a.min}′: ${amrapTxt(a)}${b ? ` · best ${amrapTxt(b)} (${fmtDM(b.date)})${d > 0 ? ` · new best, +${d} reps` : d < 0 ? ` · ${d} reps` : " · equal best"}` : " · first test"}`; }); }
+{ const _lr = liveRecap; liveRecap = function (L) { const R = _lr(L), A = amrapRecapLines(L); if (A.length) R.lines.push(...A); return R; }; }
+function amrapSave(L) { const A = liveResults(L).amrap.filter(a => a.rounds || a.partial); if (!A.length) return;
+  let log = amrapLog(); for (const a of A) { const e = { date: L.date, key: amrapKey(a), title: a.title, desc: a.desc, min: a.min, rounds: a.rounds, partial: a.partial || 0, splits: a.splits || [], from: L.name };
+    log = [...log.filter(x => !(x.date === e.date && x.key === e.key)), e]; } S.train.amrapLog = log; }
+function amrapRecords() { const keys = [...new Set(amrapLog().map(x => x.key))]; if (!keys.length) return "";
+  return `<div class="section-h"><h2>AMRAP tests</h2><span class="faint" style="font-size:12px">from your workouts</span></div><div class="card">${keys.map(k => { const H = amrapHist(k), last = H[0], best = amrapBest(k), prev = H[1], d = prev ? amrapScore(last) - amrapScore(prev) : null;
+    return `<button class="lrow" data-act="amrap-open" data-k="${esc(k)}"><span style="min-width:0"><span class="t">${esc(last.title)} · ${last.min}′</span><span class="s" style="white-space:normal">${esc(last.desc)} · ${H.length} test${H.length > 1 ? "s" : ""}</span></span><span class="end"><b class="num">${amrapTxt(best)}</b><small class="${d > 0 ? "t-good" : d < 0 ? "t-warn" : "faint"}">${d == null ? fmtDM(last.date) : `${d > 0 ? "+" : ""}${d} reps`}</small></span></button>`; }).join("")}</div>`; }
+SHEETS.amrap = sh => { const H = amrapHist(sh.k); if (!H.length) return { title: "AMRAP", body: "", foot: "" }; const best = amrapBest(sh.k);
+  return { title: `${H[0].title} · AMRAP ${H[0].min}′`, body: `<div class="faint" style="font-size:13px">${esc(H[0].desc)}</div><div class="card">${H.map((x, i) => { const p = H[i + 1], d = p ? amrapScore(x) - amrapScore(p) : null;
+    return `<div class="lrow"><span><span class="t">${fmtDM(x.date)}${x === best ? ' <span class="tag">Best</span>' : ""}</span><span class="s">${esc(x.from || "")}${x.splits?.length ? " · rounds " + x.splits.map(fmtDurShort).join(" ") : ""}</span></span><span class="end"><b class="num">${amrapTxt(x)}</b>${d != null ? `<small class="${d > 0 ? "t-good" : d < 0 ? "t-warn" : "faint"}">${d > 0 ? "+" : ""}${d}</small>` : ""}</span></div>`; }).join("")}</div>`,
+    foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
+ACT["amrap-open"] = el => openSheet("amrap", { k: el.dataset.k });
+{ const _rec = trainRecords; trainRecords = function () { return amrapRecords() + _rec(); }; }
+/* the recaps over time: Train › Stats › Strength, newest first; tap one for the whole session */
+function recapList(n = 8) { const out = [];
+  for (const m of Object.values(S.logm || {})) for (const [d, day] of Object.entries(m.days || {})) for (const x of day.wsess || []) if (x.recap) out.push({ d, s: x });
+  return out.sort((a, b) => b.d.localeCompare(a.d)).slice(0, n); }
+function recapsCard() { const L = recapList(); if (!L.length) return "";
+  return `<div class="section-h"><h2>Workout recaps</h2></div><div class="card">${L.map(({ d, s }) => { const R = s.recap, prev = lastRecap(s.tplId, d, s.name), dd = prev && R.pct != null && prev.pct != null ? R.pct - prev.pct : null;
+    return `<button class="lrow" data-act="wh-open" data-date="${d}" data-id="${esc(s.id)}"><span style="min-width:0"><span class="t">${esc(s.name)} <small class="faint">${fmtDM(d)}</small></span><span class="s">${R.setsDone}/${R.setsPlan} sets · ${fmtN(R.done)} reps${R.swaps?.length ? ` · ${R.swaps.length} swap${R.swaps.length > 1 ? "s" : ""}` : ""}${R.ai?.headline ? " · " + esc(R.ai.headline) : ""}</span></span><span class="end"><b class="num">${R.pct ?? "—"}%</b>${dd != null && dd !== 0 ? `<small class="${dd > 0 ? "t-good" : "t-warn"}">${dd > 0 ? "+" : ""}${dd}</small>` : ""}</span></button>`; }).join("")}</div>`; }
+{ const _tp = trainingProgressView; trainingProgressView = function () { return recapsCard() + _tp(); }; }
+/* saved with the session; shown in its detail and before the next run of the same workout */
+{ const _sv = ACT["lv-save"]; ACT["lv-save"] = (...a) => { const L = LV(); const R = L ? liveRecap(L) : null, id = L?.id, d = L?.date; if (L) amrapSave(L); const out = _sv(...a);
+  if (R && id) mutateLog(d, day => { day.wsess = (day.wsess || []).map(s => s.id === id ? { ...s, recap: R, journal: (L.journal || []).slice(-200) } : s); });
+  saveWK(); return out; }; }
+{ const _sd = sessionDetailHTML; sessionDetailHTML = function (s, noFoot) { return (s.recap ? recapHTML(s.recap, false) : "") + _sd(s, noFoot); }; }
+{ const _lp = livePreview; livePreview = function (L) { const h = _lp(L), P = lastRecap(L.tplId, L.date, L.name); if (!P) return h;
+  const tips = P.ex.filter(x => x.sets_ || (x.under && !x.tm)).map(x => x.sets_ ? `${x.name}: ${x.sets_.text}` : `${x.name}: ${x.under} set${x.under > 1 ? "s" : ""} under target last time`);
+  const note = `<div class="rc-last"><b>${fmtDM(P.date)}</b><span>${esc(P.lines[0])}</span>${tips.length ? `<span class="muted">${esc(tips.slice(0, 3).join(" · "))}</span>` : ""}${P.ai?.headline ? `<span class="muted">${ic("spark", "sm")} ${esc(P.ai.headline)}</span>` : ""}</div>`;
+  return h.replace('<span class="eyebrow">Last time · your call</span>', '<span class="eyebrow">Last time · your call</span>').replace(/(<section class="lv-card"><div class="lv-eb"><span class="eyebrow">Last time · your call<\/span>[\s\S]*?<\/div>)/, `$1${note}`); }; }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
