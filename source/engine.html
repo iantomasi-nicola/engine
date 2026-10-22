@@ -1883,6 +1883,21 @@ body.kb-open .add-top #add-seg{display:none}
 .add-tag.new{animation:tagIn .9s ease}
 @keyframes tagIn{0%{transform:scale(.6);background:var(--accent);color:var(--accent-ink)}40%{transform:scale(1.06)}100%{transform:none}}
 body.kb-open .add-acts,body.kb-open .add-tip{display:none}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ci-main .inp{font-size:20px;font-weight:650;height:52px}
+.ci-calc{display:flex;align-items:flex-end;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface-2)}
+.ci-calc span{display:flex;flex-direction:column;min-width:0}.ci-calc small{font-size:11.5px;color:var(--muted)}.ci-calc b{font-size:18px;font-variant-numeric:tabular-nums}
+.ci-calc .op{color:var(--faint);font-weight:600;padding-bottom:2px}
+.ci-calc .ci-tdee{margin-left:auto;padding-left:12px;border-left:1px solid var(--line);text-align:right}
+.ci-more{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--surface-2);color:var(--ink)}
+.ci-more b{display:block;font-size:14px}.ci-more small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.ci-in{display:flex;flex-direction:column;gap:14px}
+@media (max-width:380px){.grid3{gap:6px}.ci-main .inp{font-size:17px}}
+.cc-pat,.cc-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cc-b,.cc-d{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:var(--surface-2);color:var(--ink);min-width:0}
+.cc-b b,.cc-d b{font-size:11.5px;color:var(--muted);font-weight:600}.cc-b span,.cc-d span{font-size:16px;font-weight:750}
+.cc-d small{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cc-H{background:color-mix(in srgb,var(--carb) 26%,var(--surface))}.cc-L{background:color-mix(in srgb,var(--fat) 16%,var(--surface))}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3389,7 +3404,7 @@ function trainChip(date) {
   const lvls = S.settings.intensity.map((_, i) => `<i class="${i <= tr.i ? "on" : ""}"></i>`).join("");
   return `<button class="train" data-act="open-training" data-date="${date}">
     <span class="dot" style="background:${colorVar(t.color)}"></span>${esc(t.name)}${t.id !== "rest" ? ` · ${esc(S.settings.intensity[tr.i]?.name || "")} <span class="lvl" aria-hidden="true">${lvls}</span>` : ""}
-    ${T.custom ? '<span class="tag">Custom</span>' : ""}${S.days[date]?.training ? '<span class="tag">Changed</span>' : ""}${ic("chevD", "sm")}</button>`;
+    ${T.custom ? '<span class="tag">Custom</span>' : ""}${T.cc ? `<span class="tag cc-${T.cc}">${CC_L[T.cc]}</span>` : ""}${S.days[date]?.training ? '<span class="tag">Changed</span>' : ""}${ic("chevD", "sm")}</button>`;
 }
 const VIEWS = {};
 VIEWS.plan = function () {
@@ -4333,25 +4348,30 @@ SHEETS.checkin = sh => {
   const fld = (k, l, u, step) => `<div class="field"><label for="ci-${k}">${l}</label><div class="unit-inp"><input id="ci-${k}" class="inp" inputmode="decimal" value="${L[k] ?? ""}" data-chg="ci" data-k="${k}"${step ? ` placeholder="${step}"` : ""}><span>${u}</span></div></div>`;
   const food = S.days[d] ? dayTotals(S.days[d], true) : ZERO();
   let body = "";
+  const wl = E.watchMode === "active" ? "Watch AEE" : E.watchMode === "neat" ? "Watch NEAT" : "Watch total";
   if (past) {
-    body += `<div class="field"><span class="flabel">Body · morning check-in</span><div class="grid4">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("rhr", "Resting HR", "bpm")}${fld("sleep", "Sleep", "h")}${fld("hrv", "HRV (rMSSD)", "ms")}</div>
-      <div class="grid2">${fld("watch", "Watch kcal (day)", "kcal")}<div class="field"><label for="ci-notes">Notes</label><input id="ci-notes" class="inp" value="${esc(L.notes || "")}" data-chg="ci-text" data-k="notes"></div></div>
-      <span class="faint" style="font-size:12px">Watch kcal = ${E.watchMode === "active" ? "active kcal of the whole day, workouts included" : E.watchMode === "neat" ? "non-exercise kcal only" : "total kcal (BMR + activity)"}. Values under ${E.minWatchNeat} kcal of NEAT are ignored (watch not worn).</span></div>`;
-  }
-  if (past) {
-    body += `<div class="field"><span class="flabel">${d === today ? "Done today" : "Workouts done"}</span><div class="card">${logged.map((w, i) => sessRow(w, d, "edit-session", "workouts", i)).join("") || `<div class="lrow"><span class="s">${plan.list.length ? `Planned: ${esc(plan.list.map(sessionLabel).join(" + "))}` : "Nothing logged."}</span></div>`}</div>
-      <div class="row">${left.length ? `<button class="btn ${logged.length ? "tonal" : "primary"} sm" data-act="done-as-planned" data-date="${d}">${ic("check", "sm")}${logged.length ? `Mark ${left.length > 1 ? "the rest" : esc(shortSport(left[0].w.sport))} done` : "Done as planned"}</button>` : ""}<button class="btn soft sm" data-act="add-session" data-list="workouts" data-date="${d}">${ic("plus", "sm")}Add workout</button></div></div>`;
+    // the three numbers you type; the rest comes from intervals.icu and the plan
+    body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
+      <div class="ci-calc">${L.watch > 0 && E.watchMode === "active" ? `<span><small>AEE</small><b>${fmtN(L.watch)}</b></span><span class="op">−</span>` : ""}<span><small>Training (EAT)</small><b>${fmtN(r.eat)}</b></span><span class="op">${L.watch > 0 && E.watchMode === "active" ? "=" : "+"}</span><span><small>NEAT${L.watch > 0 ? "" : " (7-day)"}</small><b>${fmtN(r.neat)}</b></span><span class="ci-tdee"><small>TDEE</small><b>${fmtN(r.tdee)}</b></span></div>
+      <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${L.watch > 0 ? E.watchMode === "active" ? ` · NEAT = ${fmtN(L.watch)} AEE − training seen by the watch` : "" : " · NEAT: your 7-day average until you type the watch number"}.</small>`;
+    const more = [L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : "", L.rhr ? `RHR ${L.rhr}` : "", L.steps ? `${fmtN(L.steps)} steps` : "", logged.length ? `${logged.length} workout${logged.length > 1 ? "s" : ""}` : "", food.kcal ? `${fmtN(food.kcal)} kcal eaten` : ""].filter(Boolean).join(" · ");
+    body += `<button class="ci-more" data-act="ci-more" aria-expanded="${!!sh.more}"><span><b>From intervals.icu and your plan</b><small>${esc(more || "Sleep, HRV, resting HR, steps, workouts, intake")}</small></span>${ic(sh.more ? "chevU" : "chevD", "sm")}</button>`;
+    if (sh.more) {
+      body += `<div class="ci-in"><div class="grid4">${fld("sleep", "Sleep", "h")}${fld("hrv", "HRV (rMSSD)", "ms")}${fld("rhr", "Resting HR", "bpm")}${fld("steps", "Steps", "steps")}</div>
+        <div class="field"><span class="flabel">${d === today ? "Done today" : "Workouts done"}</span><div class="card">${logged.map((w, i) => sessRow(w, d, "edit-session", "workouts", i)).join("") || `<div class="lrow"><span class="s">${plan.list.length ? `Planned: ${esc(plan.list.map(sessionLabel).join(" + "))}` : "Nothing logged."}</span></div>`}</div>
+        <div class="row">${left.length ? `<button class="btn ${logged.length ? "tonal" : "primary"} sm" data-act="done-as-planned" data-date="${d}">${ic("check", "sm")}${logged.length ? `Mark ${left.length > 1 ? "the rest" : esc(shortSport(left[0].w.sport))} done` : "Done as planned"}</button>` : ""}<button class="btn soft sm" data-act="add-session" data-list="workouts" data-date="${d}">${ic("plus", "sm")}Add workout</button></div></div>
+        <div class="field"><span class="flabel">Intake</span><div class="note">From your meal plan: <b>${fmtN(food.kcal)} kcal</b> eaten · ${r0(food.c)}C ${r0(food.p)}P ${r0(food.f)}F. Type totals only for days you didn't log foods: they replace the food log in the energy maths.</div>
+          <div class="grid4">${fld("kcal", "Calories", "kcal")}${fld("c", "Carbs", "g")}${fld("p", "Protein", "g")}${fld("f", "Fat", "g")}</div></div>
+        <div class="field"><label for="ci-notes">Notes</label><input id="ci-notes" class="inp" value="${esc(L.notes || "")}" data-chg="ci-text" data-k="notes"></div>
+        <span class="faint" style="font-size:12px">Watch kcal = ${E.watchMode === "active" ? "active kcal of the whole day, workouts included (AEE)" : E.watchMode === "neat" ? "non-exercise kcal only" : "total kcal (BMR + activity)"}; change it in Settings → Energy model. Values under ${E.minWatchNeat} kcal of NEAT are ignored (watch not worn).</span></div>`;
+    }
   }
   if (d >= today) {
     body += `<div class="field"><span class="flabel">Planned ${pm ? "· intervals.icu" : plan.src === "pattern" ? "· from the weekly pattern" : plan.src === "dated" || plan.src === "rest" ? "· for this date" : ""}</span><div class="card">${plan.list.map((w, i) => sessRow(w, d, "edit-session", "planned", i).replace('<span class="end">', doneExt.has(w.ext) ? '<span class="end"><span class="pill" style="--c:var(--good)">Done</span>' : '<span class="end">')).join("") || `<div class="lrow"><span class="s">Rest day</span></div>`}</div>
       <div class="row"><button class="btn soft sm" data-act="add-session" data-list="planned" data-date="${d}">${ic("plus", "sm")}Plan a session</button>${plan.list.length ? `<button class="btn ghost sm" data-act="plan-rest" data-date="${d}">${pm ? "Clear (rest day)" : "Rest day"}</button>` : ""}${!pm && Array.isArray(L.planned) ? `<button class="btn ghost sm" data-act="plan-pattern" data-date="${d}">Use weekly pattern</button>` : ""}</div>${pm ? `<span class="faint" style="font-size:12px">Changes here go to your intervals.icu calendar when you tap Sync.</span>` : ""}</div>`;
   }
-  if (past) {
-    body += `<div class="field"><span class="flabel">Intake</span><div class="note">From your food log: <b>${fmtN(food.kcal)} kcal</b> eaten · ${r0(food.c)}C ${r0(food.p)}P ${r0(food.f)}F. Type a total below only for days you didn't log foods; it replaces the food log in the energy maths.</div>
-      <div class="grid4">${fld("kcal", "Calories", "kcal")}${fld("c", "Carbs", "g")}${fld("p", "Protein", "g")}${fld("f", "Fat", "g")}</div></div>`;
-  }
   const row = (l, v, s = "") => `<div class="lrow" style="padding:8px 14px"><span><span class="t" style="font-weight:550">${l}</span>${s ? `<span class="s">${s}</span>` : ""}</span><span class="end num">${v}</span></div>`;
-  body += `<div class="field"><span class="flabel">Energy for this day</span>${deficitHTML(d)}<div class="card">
+  body += past && !sh.energy ? `<button class="ci-more" data-act="ci-energy" aria-expanded="false"><span><b>Energy for this day</b><small>TDEE ${fmtN(r.tdee)} · target ${fmtN(r.target)}${r.intake ? ` · balance ${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : ""}</small></span>${ic("chevD", "sm")}</button>` : `<div class="field"><span class="flabel">Energy for this day</span>${deficitHTML(d)}<div class="card">
     ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), L.watch > 0 ? "from your watch" : "average of the last 7 days")}
     ${row("Training", fmtN(r.eat), r.sess.list.length ? `${(SESS_SRC[r.sess.src] || "").toLowerCase()} · ${esc(r.sess.list.map(w => `${w.note || w.sport} ${fmtN(sessionKcal(w, d).kcal)}`).join(" + "))}` : "rest")}${row("Digestion (TEF)", fmtN(r.tef), `${r0(E.tef * 100)}% of the above`)}
     ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
@@ -5721,7 +5741,9 @@ INP["ss-script"] = v => { const sh = S_(); sh.draft.script = v; const g = workou
   const p = $("#ss-prev"); if (p) p.innerHTML = scriptPreview(v); const m = $("#ss-min"); if (m && g.min && !sh.draft.minTyped) { m.value = g.min; sh.draft.min = g.min; } };
 ACT["ss-move"] = el => { const sh = S_(); sh.moveTo = el.dataset.date; renderSheet(); };
 INP.rs = (v, el) => { S_().draft[el.dataset.k] = v; };
-CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); }); if (["weight", "rhr", "sleep", "hrv"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
+ACT["ci-more"] = () => { const sh = S_(); sh.more = !sh.more; renderSheet(); };
+ACT["ci-energy"] = () => { const sh = S_(); sh.energy = true; renderSheet(); };
+CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); }); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
 CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.dataset.k] = v.trim() || null; }); };
 function fitChange(el) {
   const t = el.dataset.t, p = el.dataset.fit; let v = el.value;
@@ -6007,7 +6029,7 @@ function exportSheets() {
   for (let d = s.start; d <= today; d = addDays(d, 1)) {
     const r = s.rows[d], L = logGet(d) || {}; if (!r) continue;
     const ws = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest");
-    daily.push({ Date: xd(d), Day: DOW[dow(d)], "Weight (kg)": rd(L.weight, 10), "Weight estimated": L.estW ? "yes" : "", "Trend (kg)": rd(r.trend, 100), "Body fat %": rd(L.bf, 10), "Resting HR": rd(L.rhr), "HRV ms": rd(L.hrv), "Sleep (h)": rd(L.sleep, 10), "Watch kcal": rd(L.watch),
+    daily.push({ Date: xd(d), Day: DOW[dow(d)], "Weight (kg)": rd(L.weight, 10), "Weight estimated": L.estW ? "yes" : "", "Trend (kg)": rd(r.trend, 100), "Body fat %": rd(L.bf, 10), "Resting HR": rd(L.rhr), "HRV ms": rd(L.hrv), "Sleep (h)": rd(L.sleep, 10), Steps: rd(L.steps), "Watch kcal": rd(L.watch),
       "Intake kcal": rd(r.intake?.kcal), "Protein g": rd(r.intake?.p), "Carbs g": rd(r.intake?.c), "Fat g": rd(r.intake?.f), "Intake source": r.intake ? ({ food: "foods", manual: "typed / imported", est: "estimated" }[r.intake.src] || "") : "",
       Workouts: ws.map(sessionLabel).join(" + "), "Training kcal": rd(r.eat), BMR: rd(r.bmr), NEAT: rd(r.neat), TEF: rd(r.tef), "TDEE watch": rd(r.tdeeW), Calibration: rd(r.factor, 1000), TDEE: rd(r.tdee),
       Phase: r.phase.phase, "Phase kcal": rd(r.phase.kcal), "Target kcal": rd(r.target), "Target protein g": rd(r.p), "Target carbs g": rd(r.c), "Target fat g": rd(r.f), "Balance kcal": rd(r.balance), "Est. change (g)": r.estKg == null ? null : rd(r.estKg * 1000), Notes: L.notes || "" });
@@ -7637,8 +7659,8 @@ function icuApplyWellness(rows) {
   for (const x of rows) {
     const d = String(x.id || x.date || "").slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
     const L = logGet(d) || {}, ch = {};
-    const wt = +x.weight, rhr = +(x.restingHR ?? x.resting_hr), sl = +(x.sleepSecs ?? x.sleep_secs);
-    if (wt > 20 && !(L.weight > 0)) ch.weight = r1(wt);
+    const rhr = +(x.restingHR ?? x.resting_hr), sl = +(x.sleepSecs ?? x.sleep_secs), st = +x.steps;
+    if (st > 0 && !(L.steps > 0)) ch.steps = r0(st); // weight is never taken from intervals.icu
     if (rhr > 20 && !(L.rhr > 0)) ch.rhr = r0(rhr);
     if (sl > 600 && !(L.sleep > 0)) ch.sleep = r1(sl / 3600);
     const hrv = +x.hrv; if (hrv > 5 && !(L.hrv > 0)) ch.hrv = r0(hrv);
@@ -7757,7 +7779,7 @@ function icuManual(txt, src) {
   if (j && !Array.isArray(j) && (j.error || j.status === 401)) { sh.err = "That's an error message from intervals.icu, not data."; renderSheet(); return; }
   const arr = Array.isArray(j) ? j : j?.events || [j], kind = icuKind(arr);
   if (kind === "activities") { const n = icuApplyActivities(arr); icuSet({ bridge: { ...(icuState().bridge || {}), last: new Date().toISOString(), res: `${n} activities imported manually` } }); closeSheet(); toast(`${n} activities added to your log`); return; }
-  if (kind === "wellness") { const n = icuApplyWellness(arr); closeSheet(); toast(`${n} days of sleep, resting HR and weight filled in`); return; }
+  if (kind === "wellness") { const n = icuApplyWellness(arr); closeSheet(); toast(`${n} days of sleep, resting HR, HRV and steps filled in`); return; }
   icuLoaded(sh, icuFromJson(arr), src);
 }
 ACT["icu-paste"] = () => icuManual($("#icu-txt")?.value, "pasted data");
@@ -10564,6 +10586,42 @@ ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !(k === "gps" ? FEAT(k
   const _rf = raceFuelHTML; raceFuelHTML = r => FEAT("fuel") ? _rf(r) : "";
 }
 for (const c of TODAY_CARDS) { if (c.fn.name === "weeklyCard") c.fn = () => weeklyCard(); if (c.fn.name === "sleepCard") c.fn = () => sleepCard(); if (c.fn.name === "goalsToday") c.fn = () => goalsToday(); }
+/* ================= carb cycling: more carbs on the days that need them, fewer on rest days =================
+   Off by default. "By training": high on hard, long (90′+) and race days, low on rest or light days, medium otherwise.
+   "Weekly pattern": you pick H/M/L per weekday. Calories either stay the same (fat moves the other way) or follow carbs. */
+const CCP = () => ({ on: false, mode: "training", high: 30, low: 35, kcal: "same", week: { mon: "M", tue: "H", wed: "L", thu: "H", fri: "M", sat: "H", sun: "L" }, ...(S.settings.carbCycle || {}) });
+const CC_L = { H: "High carb", M: "Medium carb", L: "Low carb" };
+function ccDay(date) { const P = CCP(); if (!P.on) return null;
+  if (P.mode === "week") return P.week[DOWK[dow(date)]] || "M";
+  if (races().some(r => r.date === date || r.date === addDays(date, 1) && (r.pri || "B") === "A")) return "H";
+  const ws = sessionsFor(date).list.filter(w => w.sport && w.sport !== "Rest");
+  if (!SMART() && !ws.length) { const tr = trainingFor(date); return tr.t === "rest" ? "L" : tr.i >= 2 ? "H" : "M"; } // targets by day type: its intensity decides
+  if (!ws.length) return "L";
+  if (ws.some(w => sessionIntensity(w) === "Hard" || +w.min >= 90) || ws.reduce((a, w) => a + (+w.min || 0), 0) >= 120) return "H";
+  if (ws.every(w => sessionIntensity(w) === "Light" || +w.min < 30)) return "L"; return "M"; }
+const _targetsBaseCC = targetsBase;
+targetsBase = function (date) { const T = _targetsBaseCC(date); if (T.custom) return T; const k = ccDay(date); if (!k || k === "M") return k ? { ...T, cc: k } : T;
+  const P = CCP(), f0 = k === "H" ? 1 + P.high / 100 : 1 - P.low / 100, minF = Math.max(30, (trendAt(date) || 70) * .6);
+  let c = Math.max(30, T.c * f0); if (P.kcal === "same" && k === "H") c = Math.min(c, T.c + Math.max(0, T.f - minF) * 9 / 4); // same kcal: carbs rise only as far as fat can drop
+  const f = P.kcal === "same" ? Math.max(minF, T.f - (c - T.c) * 4 / 9) : T.f;
+  return { ...T, c: r0(c), f: r0(f), kcal: r0(4 * T.p + 4 * c + 9 * f), cc: k }; };
+function ccSettings() { const P = CCP(), ws = weekStartOf(todayISO());
+  const sw = `<label class="row sw-row" style="justify-content:space-between"><span>Carb cycling<small class="faint" style="display:block;font-size:12px">More carbs on hard and long days, fewer on rest days</small></span><button type="button" class="switch" role="switch" aria-checked="${P.on}" data-act="cc-on" aria-label="Carb cycling"></button></label>`;
+  if (!P.on) return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Carb cycling</span>${sw}</section>`;
+  const days = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = addDays(ws, i), T = targetsFor(d), k = T.cc || ccDay(d) || "M"; return `<div class="cc-d cc-${k}"><b>${DOW[i]}</b><span>${k}</span><small>${r0(T.c)} C</small><small>${fmtN(T.kcal)}</small></div>`; }).join("");
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Carb cycling</span>${sw}
+    <div class="seg sm">${[["training", "By training"], ["week", "Weekly pattern"]].map(([k, l]) => `<button data-act="cc-mode" data-k="${k}" aria-pressed="${P.mode === k}">${l}</button>`).join("")}</div>
+    ${P.mode === "week" ? `<div class="cc-pat">${DOWK.map((k, i) => `<button class="cc-b cc-${P.week[k] || "M"}" data-act="cc-wd" data-k="${k}" aria-label="${DOWL[i]}: ${CC_L[P.week[k] || "M"]}"><b>${DOW[i]}</b><span>${P.week[k] || "M"}</span></button>`).join("")}</div><small class="faint">Tap a day to switch High → Medium → Low.</small>` : ""}
+    <div class="grid2"><div class="field"><span class="flabel">High days</span><div class="chips">${[20, 30, 40, 50].map(v => `<button class="chip sm" data-act="cc-set" data-k="high" data-v="${v}" aria-pressed="${P.high === v}">+${v}%</button>`).join("")}</div></div><div class="field"><span class="flabel">Low days</span><div class="chips">${[20, 35, 50].map(v => `<button class="chip sm" data-act="cc-set" data-k="low" data-v="${v}" aria-pressed="${P.low === v}">−${v}%</button>`).join("")}</div></div></div>
+    <div class="field"><span class="flabel">Calories</span><div class="seg sm">${[["same", "Stay the same (fat moves)"], ["follow", "Follow the carbs"]].map(([k, l]) => `<button data-act="cc-kcal" data-k="${k}" aria-pressed="${P.kcal === k}">${l}</button>`).join("")}</div></div>
+    <div class="cc-week">${days}</div><small class="faint">This week · carbs and kcal targets. Protein never changes; fat stays at least 0.6 g per kg.</small></section>`; }
+SETTINGS_CARDS.push({ o: 2, fn: ccSettings });
+const ccSave = o => { S.settings.carbCycle = { ...CCP(), ...o }; saveSettings(); };
+ACT["cc-on"] = () => ccSave({ on: !CCP().on });
+ACT["cc-mode"] = el => ccSave({ mode: el.dataset.k });
+ACT["cc-set"] = el => ccSave({ [el.dataset.k]: +el.dataset.v });
+ACT["cc-kcal"] = el => ccSave({ kcal: el.dataset.k });
+ACT["cc-wd"] = el => { const P = CCP(), k = el.dataset.k, n = { H: "M", M: "L", L: "H" }[P.week[k] || "M"]; ccSave({ week: { ...P.week, [k]: n } }); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
