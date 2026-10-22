@@ -168,9 +168,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 /* secondary tabs: a tonal track, the picked one fills (M3 connected button group) */
 .subseg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--md-sc-high);width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .subseg::-webkit-scrollbar{display:none}
-.subseg button{flex:0 0 auto;min-height:36px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);transition:background .2s,color .2s,border-radius .2s}
+.subseg button{flex:0 0 auto;min-height:36px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);transition:background .2s,color .2s,border-radius .2s}
 .subseg button:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)}
-.subseg button[aria-selected="true"]{background:var(--md-primary);color:var(--md-on-primary);border-radius:12px}
+.subseg button[aria-selected="true"]{background:var(--md-primary);color:var(--md-on-primary)}
 .groc-sub{padding:12px 0 2px}
 .hist-sub{margin:12px 0 4px}
 
@@ -182,6 +182,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
 
 
+
+.snap-pick{gap:8px;flex-wrap:wrap;align-items:center}.snap-pick .eo-ph{flex:1 1 100%}
+.lv-hrow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.lv-hrow .lv-swap{flex:none;margin-top:2px;color:var(--muted)}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2090,7 +2093,7 @@ select.inp{background:transparent!important}
 @media (min-width:600px) and (max-width:1023px){.td-nudges [data-act="shopq-open"]{display:none}}
 @media (max-width:599px){
   .td-cta{justify-content:flex-start}
-  .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center}
+  .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center;padding:0 10px!important}.plan-side .toolbar .btn:not(:first-child) .ic{display:none}
   .goal .stat small{font-size:11px}.goal .stat .faint{line-height:1.25}
   .ph-w small{font-size:9px}
   .st-ctl .seg{flex:1 1 auto}.st-ctl .seg button{padding:0 10px!important;flex:1 1 auto}
@@ -3633,7 +3636,7 @@ VIEWS.plan = function () {
     side += `<form class="weigh" data-form="quickweigh"><span class="weigh-l">${ic("weight", "sm")}<span><b>Morning weigh-in</b><small>${last ? `last ${r1(last[1])} kg · ${fmtDM(last[0])}` : "keeps your targets accurate"}</small></span></span>
       <span class="weigh-in"><span class="unit-inp"><input id="qw-in" class="inp" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Weight in kg"><span>kg</span></span><span class="unit-inp bf"><input id="qw-bf" class="inp" inputmode="decimal" placeholder="${lastBf() ? r1(lastBf()[1]) : "BF"}" aria-label="Body fat percent, optional"><span>%</span></span><button class="btn ink sm" type="submit">Save</button></span></form>`;
   }
-  side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
+  side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>${AIF("describe") ? `<button class="btn ghost sm" data-act="open-snap">${ic("camera", "sm")}<span class="hide-xs">Photo or describe</span><span class="show-xs">Snap</span></button>` : ""}
     <button class="btn ghost sm tb-more" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm tb-more" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button>${FEAT("eatout") ? `<button class="btn ghost sm" data-act="eat-out" data-date="${date}">${ic("plate", "sm")}Eaten out</button>` : ""}
     ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm tb-more" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
@@ -4310,7 +4313,7 @@ SHEETS.add = sh => {
     title: `Add to ${mealName(sh.meal)}`, focus: "add-q",
     body: `<div class="add-top">${mealChips(sh.meal)}
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
-      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
+      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("camera")}<span>Photo / text</span></button>` : ""}</div>
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["fav", "Favourites"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       <div id="add-ctx">${addCtxFor(sh)}</div></div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
@@ -7336,7 +7339,7 @@ function liveTask(L, t, r) {
   let primary = "";
   t.exs.forEach((e, xi) => {
     const x = r.ex[xi], last = lastFor(e, L.date), a = adjFor(L, e), note = WK().notes[normEx(e.name)], isRing = /ring|anell/i.test(e.name) || x.ring;
-    b += `<div class="lv-ex"><h2 class="lv-h">${esc(e.name)}</h2><div class="lv-tgt">${esc(liveTarget(e))}${a && a.kind !== "none" ? ` <span class="chip-s up">${ic("trend", "sm")}${a.kind === "load" ? `+${fmtKg(a.to - (last?.load || 0))} kg` : a.kind === "reps" ? `+${a.delta} rep${a.delta > 1 ? "s" : ""}` : "longer hold"}</span>` : ""}</div>${e.note ? `<div class="lv-note">${esc(e.note)}</div>` : ""}
+    b += `<div class="lv-ex"><div class="lv-hrow"><h2 class="lv-h">${esc(e.name)}</h2><button class="icon-btn sm lv-swap" data-act="lv-swap" data-x="${xi}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">${ic("sync", "sm")}</button></div><div class="lv-tgt">${esc(liveTarget(e))}${a && a.kind !== "none" ? ` <span class="chip-s up">${ic("trend", "sm")}${a.kind === "load" ? `+${fmtKg(a.to - (last?.load || 0))} kg` : a.kind === "reps" ? `+${a.delta} rep${a.delta > 1 ? "s" : ""}` : "longer hold"}</span>` : ""}</div>${e.note ? `<div class="lv-note">${esc(e.note)}</div>` : ""}
       ${last ? `<div class="lv-last">${ic("undo", "sm")}<span>Last ${fmtDM(last.date)}: ${esc(lastText(last))}${last.ring ? ` · rings ${esc(last.ring)}` : ""}</span></div>` : ""}`;
     if (e.timed || e.holdScheme) {
       const parts = holdParts(e, x), dn = x.hold.length;
@@ -10950,50 +10953,127 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && ic
 addEventListener("online", () => { ICU_AUTO.wait = 0; if (icuState().key && (icuStale(10) || icuPending().n)) icuAutoSoon(2e3); });
 setInterval(() => { if (!document.hidden && (icuStale(15) || (icuPending().n && !ICU_AUTO.t))) icuAutoSoon(500); }, 60e3);
 setTimeout(() => { if (icuState().key && (icuStale(5) || icuPending().n)) icuAutoSoon(0); }, 3500);
-/* ================= homemade or no label: a few words (or a photo) → values per 100 g → a food in your list =================
-   For what you cooked or bought loose. The AI estimates per 100 g and a typical portion; without AI, the closest
-   homemade classic. Either way it opens in the food editor to check, is saved to Foods (marked as estimated)
-   and then goes on to the pantry or the shopping trip like any other food. */
-AI_FEATS.push(["homemade", "Homemade and unlabelled food", "What you cooked or bought loose → values per 100 g, saved to your foods."]);
-const HOME_PRESETS = [ // name, kcal, protein, carbs, fat per 100 g, portion g
-  ["Lasagna", 165, 9, 14, 8, 300], ["Pasta al ragù", 160, 7, 22, 5, 320], ["Risotto", 150, 4, 22, 5, 300], ["Minestrone", 55, 2.5, 8, 1.5, 350],
-  ["Meatballs in sauce", 190, 13, 6, 12, 200], ["Frittata", 175, 11, 3, 13, 150], ["Roast chicken & potatoes", 160, 14, 10, 7, 350], ["Parmigiana", 180, 8, 8, 13, 250],
-  ["Homemade bread", 260, 8.5, 52, 2, 60], ["Pizza (home)", 250, 10, 33, 8, 350], ["Ciambellone / plain cake", 380, 6, 52, 16, 70], ["Cookies", 460, 6, 65, 19, 30],
-  ["Tiramisù", 290, 6, 28, 17, 120], ["Jam", 240, 0.4, 59, 0.1, 20], ["Granola", 450, 10, 60, 18, 50], ["Hummus", 230, 7, 14, 16, 50]];
+/* ================= homemade or no label: describe it, the AI gives values per 100 g, it's saved to Foods =================
+   For what you cooked or bought loose. One box, one tap. The result is saved as a food (marked as estimated)
+   and then goes on to the pantry or the shopping trip like any other food. Without AI: the food editor, values typed. */
+AI_FEATS.push(["homemade", "Homemade and unlabelled food", "A description → values per 100 g, saved to your foods."]);
 const homeRole = e => { const k = Math.max(1, e.kcal); return e.p * 4 / k > .3 ? "P" : e.f * 9 / k > .5 ? "F" : "C"; };
 SHEETS.homemade = sh => {
-  const E = sh.est, can = AIF("homemade") && !!Sync.sample, img = can && Sync.sampleImages;
-  return { title: "Homemade or no label", focus: sh.name ? null : "hm-name",
-    body: `<div class="field"><label for="hm-name">Name</label><input id="hm-name" class="inp" value="${esc(sh.name || "")}" placeholder="e.g. Grandma's lasagna, loose almonds, bakery focaccia" data-in="hm-name" autocomplete="off"></div>
-    ${can ? `<div class="field"><label for="hm-desc">What's in it</label><textarea id="hm-desc" class="inp" rows="3" placeholder="Ingredients and amounts if you know them: 250 g flour, 3 eggs, 150 g sugar, 100 ml oil… or just “bakery focaccia with oil and salt”" data-in="hm-desc">${esc(sh.desc || "")}</textarea></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn soft sm">${ic("camera", "sm")}Photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="hm-photo"></label>` : ""}<button class="btn primary sm" data-act="hm-est" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Estimating…' : ic("spark", "sm") + "Estimate"}</button></div>
-      ${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your food">` : ""}` : `<div class="note">With an AI service (Settings › AI) a description or a photo becomes values per 100 g. Meanwhile pick the closest, or type the values in the next step.</div>`}
-    <div class="field"><span class="flabel">${can ? "Or start from a classic" : "Start from a classic"}</span><div class="chips">${HOME_PRESETS.map(([n, k], i) => `<button class="chip sm" data-act="hm-pre" data-i="${i}" aria-pressed="${E?.pre === i}">${esc(n)} <span class="faint">${k}</span></button>`).join("")}</div><small class="faint">kcal per 100 g</small></div>
-    ${E ? `<div class="card pad eo-res"><div class="row" style="justify-content:space-between"><b>${esc(sh.name || E.name)}</b><b>${fmtN(r0(E.kcal))} kcal <small class="faint">/ 100 g</small></b></div><small class="faint">${r1(E.p)} g protein · ${r1(E.c)} g carbs · ${r1(E.f)} g fat${E.fib ? ` · ${r1(E.fib)} g fibre` : ""}${E.conf ? ` · ${esc(E.conf)} confidence` : ""}</small>${E.portion ? `<small class="faint">A portion: about ${fmtN(E.portion)} g · ${fmtN(r0(E.kcal * E.portion / 100))} kcal</small>` : ""}${E.notes ? `<small class="faint">${esc(E.notes)}</small>` : ""}</div>` : ""}`,
-    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="hm-next">${ic("chevR", "sm")}${E ? "Check and save" : "Type the values"}</button>` };
+  const E = sh.est, can = AIF("homemade") && !!Sync.sample;
+  if (!can) return { title: "Homemade or no label", body: `<div class="note">Add an AI service in Settings › AI and a description becomes values per 100 g. Without it, type the values yourself.</div>`,
+    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="hm-edit">Type the values</button>` };
+  return { title: "Homemade or no label", focus: E ? null : "hm-desc",
+    body: `<textarea id="hm-desc" class="inp" rows="3" placeholder="e.g. Grandma's lasagna with ragù and béchamel · ciambellone: 250 g flour, 3 eggs, 150 g sugar, 100 ml oil · loose almonds" data-in="hm-desc" aria-label="Describe the food">${esc(sh.desc || "")}</textarea>
+    ${sh.busy ? `<div class="result"><span class="spinner"></span><span>Estimating…</span></div>` : ""}
+    ${E ? `<div class="card pad eo-res"><input id="hm-name" class="inp" value="${esc(sh.name || E.name)}" data-in="hm-name" aria-label="Name">
+      <div class="row" style="justify-content:space-between;align-items:baseline"><b style="font-size:20px">${fmtN(r0(E.kcal))} <small class="faint" style="font-size:13px">kcal / 100 g</small></b>${E.portion ? `<small class="faint">portion ~${fmtN(E.portion)} g · ${fmtN(r0(E.kcal * E.portion / 100))} kcal</small>` : ""}</div>
+      <small class="faint">${r1(E.p)} g protein · ${r1(E.c)} g carbs · ${r1(E.f)} g fat${E.conf ? ` · ${esc(E.conf)} confidence` : ""}</small>
+      <button class="link" data-act="hm-edit" style="align-self:flex-start">Edit the values</button></div>` : ""}`,
+    foot: E ? `<button class="btn tonal" data-act="hm-est">Again</button><button class="btn primary" data-act="hm-save">${ic("check", "sm")}Save to foods</button>`
+      : `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="hm-est" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Estimate</button>` };
 };
 INP["hm-name"] = v => { S_().name = v; };
 INP["hm-desc"] = v => { S_().desc = v; };
-ACT["hm-pre"] = el => { const [n, kcal, p, c, f, portion] = HOME_PRESETS[+el.dataset.i], sh = S_(); sh.est = { name: n, kcal, p, c, f, portion, pre: +el.dataset.i }; if (!(sh.name || "").trim()) sh.name = n; renderSheet(); };
-CHG["hm-photo"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; try { sh.photo = await shrink(f, 1024); if (sh.photoURL) URL.revokeObjectURL(sh.photoURL); sh.photoURL = URL.createObjectURL(sh.photo); } catch (e) { toast("Couldn't read that picture."); return; } renderSheet(); ACT["hm-est"](); };
-ACT["hm-est"] = async () => { const sh = S_(), name = (sh.name || "").trim(), text = (sh.desc || "").trim(); if (!name && !text && !sh.photo) { toast("Give it a name or say what's in it."); return; }
-  sh.busy = true; renderSheet();
-  const prompt = `Estimate the nutrition values PER 100 g of this homemade or unlabelled food${sh.photo ? " (photo attached)" : ""}. Name: """${name.slice(0, 120)}""".${text ? ` Ingredients / description: """${text.slice(0, 800)}""".` : ""} If ingredient amounts are given, compute from them (account for water lost in cooking when it matters); otherwise use a typical Italian home recipe. Reply with only JSON: {"name":"short name","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"portion_g":number,"confidence":"low|medium|high","notes":"one short sentence on the assumption"}`;
-  try { const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : { modelTier: "quick" }); if (UI.sheet !== sh) return;
-    const k = +j?.kcal; if (k > 0 && k < 950) { sh.est = { name: String(j.name || name || "Homemade").slice(0, 60), kcal: r0(k), p: r1(+j.protein || 0), c: r1(+j.carbs || 0), f: r1(+j.fat || 0), fib: r1(+j.fibre || 0), portion: clamp(r0(+j.portion_g || 0), 0, 1500), conf: String(j.confidence || ""), notes: String(j.notes || "").slice(0, 160) }; if (!name) sh.name = sh.est.name; }
-    else toast("No estimate came back: add the ingredients, or start from a classic."); }
+ACT["hm-est"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if (!text) { toast("Describe the food first."); $("#hm-desc")?.focus(); return; }
+  sh.busy = true; sh.est = null; renderSheet();
+  const prompt = `Estimate the nutrition values PER 100 g of this homemade or unlabelled food: """${text.slice(0, 800)}""". If ingredient amounts are given, compute from them (account for water lost in cooking when it matters); otherwise assume a typical Italian home recipe. Reply with only JSON: {"name":"short name, in the language of the description","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"portion_g":number,"confidence":"low|medium|high"}`;
+  try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (UI.sheet !== sh) return;
+    const k = +j?.kcal; if (k > 0 && k < 950) { sh.est = { name: String(j.name || text).slice(0, 60), kcal: r0(k), p: r1(+j.protein || 0), c: r1(+j.carbs || 0), f: r1(+j.fat || 0), fib: r1(+j.fibre || 0), portion: clamp(r0(+j.portion_g || 0), 0, 1500), conf: String(j.confidence || "") }; sh.name = sh.est.name; }
+    else toast("No estimate came back: say a bit more about what's in it."); }
   catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
   sh.busy = false; if (UI.sheet === sh) renderSheet(); };
-/* into the usual food editor, values filled in: you check, save, and the pantry (or the trip) asks how much */
-ACT["hm-next"] = () => { const sh = S_(), E = sh.est, d = UI.dest, name = (sh.name || E?.name || "").trim();
-  const f = blankFood(name); f.source = "homemade"; f.est = !!E; f.cat = "other";
-  if (E) { f.per = { ...f.per, kcal: E.kcal, p: E.p, c: E.c, f: E.f, fib: E.fib || 0 }; f.role = homeRole(E); if (E.portion) f.servings = [{ l: "1 portion", g: E.portion }]; f.note = E.notes || ""; }
-  openSheet("food", { draft: f, isNew: true, then: d ? "qty" : null, date: UI.date, meal: suggestMeal() }); UI.dest = d; };
-ACT["pd-home"] = () => { const d = UI.dest; openSheet("homemade", { name: S_()?.q || "" }); UI.dest = d; };
-ACT["home-food"] = () => { UI.dest = null; openSheet("homemade", {}); };
+function homeFood(sh) { const E = sh.est, f = blankFood((sh.name || E?.name || "").trim() || "Homemade"); f.source = "homemade"; f.cat = "other";
+  if (E) { f.est = true; f.per = { ...f.per, kcal: E.kcal, p: E.p, c: E.c, f: E.f, fib: E.fib || 0 }; f.role = homeRole(E); if (E.portion) f.servings = [{ l: "1 portion", g: E.portion }]; f.note = (sh.desc || "").trim().slice(0, 300); }
+  return f; }
+ACT["hm-save"] = () => { const sh = S_(); if (!sh.est) return; const f = homeFood(sh); f.id = "f-" + uid(); put("foods", f.id, f); const d = UI.dest;
+  toast(`${f.name} saved to your foods`); if (d) { UI.dest = d; destPick(f); } else closeSheet(); };
+ACT["hm-edit"] = () => { const sh = S_(), d = UI.dest; openSheet("food", { draft: homeFood(sh), isNew: true, then: d ? "qty" : null, date: UI.date, meal: suggestMeal() }); UI.dest = d; };
+ACT["pd-home"] = () => { const d = UI.dest, q = S_()?.q || ""; openSheet("homemade", { desc: q }); UI.dest = d; };
 /* the button: next to New food, Label and Barcode when adding to the pantry or the trip */
 const _prodAdd = SHEETS.prodadd;
-SHEETS.prodadd = sh => { const o = _prodAdd(sh); o.body = o.body.replace('<button class="aa" data-act="pd-label">', `<button class="aa" data-act="pd-home">${ic("plate")}<span>Homemade</span></button><button class="aa" data-act="pd-label">`); return o; };
+SHEETS.prodadd = sh => { const o = _prodAdd(sh); o.body = o.body.replace('<button class="aa" data-act="pd-label">', `<button class="aa" data-act="pd-home">${ic("spark")}<span>Homemade</span></button><button class="aa" data-act="pd-label">`); return o; };
+/* ================= a photo or a few words → the meal, in your own foods =================
+   The AI gets your foods with the ones you actually eat first (marked), and must use those: "rice" is the rice
+   you buy, with its values, converted to dry weight when the plate shows it cooked. A local pass checks the answer
+   and swaps any generic pick for your usual food of the same kind. Amounts stay editable before adding. */
+const SNAP_SYN = { riso: "rice", rice: "rice", basmati: "rice", pasta: "pasta", spaghetti: "pasta", penne: "pasta", fusilli: "pasta", rigatoni: "pasta", pane: "bread", bread: "bread", pollo: "chicken", chicken: "chicken",
+  tacchino: "turkey", turkey: "turkey", uova: "egg", uovo: "egg", egg: "egg", eggs: "egg", tonno: "tuna", tuna: "tuna", salmone: "salmon", salmon: "salmon", manzo: "beef", beef: "beef", olio: "oil", oil: "oil",
+  patate: "potato", patata: "potato", potato: "potato", potatoes: "potato", avena: "oats", oats: "oats", fiocchi: "oats", yogurt: "yogurt", latte: "milk", milk: "milk", parmigiano: "parmesan", grana: "parmesan", parmesan: "parmesan",
+  mozzarella: "mozzarella", ceci: "chickpeas", chickpeas: "chickpeas", lenticchie: "lentils", lentils: "lentils", fagioli: "beans", beans: "beans", banana: "banana", mela: "apple", apple: "apple", gnocchi: "gnocchi", quinoa: "quinoa", farro: "farro", couscous: "couscous", whey: "whey", proteine: "whey" };
+const snapKind = name => { for (const w of String(name || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z]+/)) if (SNAP_SYN[w]) return SNAP_SYN[w]; return null; };
+const snapDry = name => /\b(dry|raw|uncooked|secc|crud)/i.test(name || ""), snapCooked = name => /\b(cooked|boiled|cott|lessat)/i.test(name || "");
+const SNAP_YIELD = { rice: 2.7, pasta: 2.2, quinoa: 2.8, farro: 2.5, couscous: 2.5, lentils: 2.5, chickpeas: 2.3, beans: 2.3, oats: 1 };
+/* staples where "the one you buy" is what you mean; for meat, fish and cheese the cut the AI names is kept */
+const SNAP_SWAP = new Set(["rice", "pasta", "bread", "oats", "potato", "quinoa", "farro", "couscous", "gnocchi", "oil", "milk", "yogurt", "whey", "lentils", "chickpeas", "beans"]);
+function usualFoods() { const h = buildHabits(); return allFoods().map(f => ({ f, n: h["*|" + f.id] || 0 })).sort((a, b) => b.n - a.n || a.f.name.localeCompare(b.f.name)); }
+/* your usual food of the same kind, grams converted between cooked and dry when the two differ */
+function snapPreferUsual(items, U) {
+  const usual = U.filter(x => x.n > 0);
+  return items.map(it => { const k = snapKind(it.name) || snapKind(it.food?.name); if (!k) return it; if (it.food && usual.some(x => x.f.id === it.food.id)) return { ...it, usual: true }; if (!SNAP_SWAP.has(k)) return it;
+    const u = usual.find(x => snapKind(x.f.name) === k); if (!u) return it;
+    const from = it.food?.name || it.name, y = SNAP_YIELD[k] || 1; let g = it.g;
+    if (y > 1 && snapCooked(from) && !snapCooked(u.f.name)) g = it.g / y; else if (y > 1 && !snapCooked(from) && snapCooked(u.f.name) && snapDry(from)) g = it.g * y;
+    return { ...it, name: u.f.name, food: u.f, isNew: false, g: r0(g), usual: true }; });
+}
+runDescribe = async function () {
+  const sh = UI.sheet, text = (sh.text || "").trim(); if (!text && !sh.photo) { toast("Take a photo or describe the meal."); return; }
+  sh.busy = true; sh.items = null; renderSheet();
+  const U = usualFoods(), foods = U.slice(0, 260).map(({ f, n }) => `${n ? "* " : ""}${f.id} | ${f.name}${f.brand ? " (" + f.brand + ")" : ""} | ${r0(f.per.kcal)}`).join("\n");
+  const prompt = `Turn this meal into food items with amounts in grams (ml for drinks).${sh.photo ? " The photo shows the plate: judge the portions from it." : ""}${text ? `\nDescription: """${text.slice(0, 1500)}"""` : ""}
+Their foods (id | name | kcal per 100). Lines starting with * are foods they actually eat, most used first:
+${foods}
+Rules: break dishes into their main ingredients (carbonara = pasta, eggs, guanciale, pecorino). When an ingredient is one of the * foods, ALWAYS use that id, even if another food also fits (e.g. "rice" = their usual rice). If that food is dry or raw (rice, pasta, legumes) and the dish is cooked, give the dry weight (cooked rice ≈ 2.7× dry, pasta ≈ 2.2×). Otherwise use a reasonable known id. Realistic Italian home portions unless the photo or text says otherwise; count oil and sauces. For an ingredient with no match, set "id" to null, give a short "name" and typical nutrition per 100 g.
+Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "grams": number, "per100": {"kcal": number, "protein": number, "carbs": number, "fat": number} or null}]}`;
+  try {
+    const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : {}); if (UI.sheet !== sh) return;
+    const raw = (j?.items || []).filter(x => x && x.grams > 0).slice(0, 15).map(x => {
+      const f = x.id && getFood(x.id); if (f) return { on: true, name: f.name, g: r0(x.grams), food: f };
+      const p = x.per100 || {}, per = { kcal: r0(num(p.kcal)), p: r1(num(p.protein)), c: r1(num(p.carbs)), f: r1(num(p.fat)), fib: 0 }, { role, meals } = guessRoleMeals(per, "pantry", x.name || "");
+      return { on: true, name: x.name || "Food", g: r0(x.grams), isNew: true, food: { id: "ai-" + uid(), name: x.name || "Food", brand: "", unit: "g", per, servings: [], pack: 0, cat: "other", role, meals, source: "ai", orig: clone(per) } }; });
+    sh.items = snapPreferUsual(raw, U);
+    if (!sh.items.length) { sh.items = null; toast("No foods came back: say a bit more, or try another photo."); }
+  } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
+  sh.busy = false; if (UI.sheet === sh) renderSheet();
+};
+const _describeSheet = SHEETS.describe;
+SHEETS.describe = sh => { const o = _describeSheet(sh), img = !!Sync.sampleImages;
+  o.title = "Photo or description";
+  const pick = img ? `<div class="row snap-pick">${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your meal">` : ""}<label class="btn tonal sm">${ic("camera", "sm")}${sh.photo ? "New photo" : "Take a photo"}<input type="file" accept="image/*" capture="environment" class="sr" data-chg="ds-photo"></label><label class="btn soft sm">${ic("image", "sm")}Gallery<input type="file" accept="image/*" class="sr" data-chg="ds-photo"></label></div>` : "";
+  o.body = o.body.replace('<div class="field"><label for="ds-text">What did you eat or plan to eat?</label>', pick + `<div class="field"><label for="ds-text">${img ? "Or describe it (or add details to the photo)" : "What did you eat or plan to eat?"}</label>`)
+    .replace("Claude is working out the portions…", sh.photo ? "Looking at the plate…" : "Working out the portions…")
+    .replace("Amounts are Claude's estimates.", "Amounts are estimates: check them. Your usual foods are used where they fit.");
+  o.foot = o.foot.replace("Work it out", "Estimate");
+  return o; };
+CHG["ds-photo"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; try { sh.photo = await shrink(f, 1024); if (sh.photoURL) URL.revokeObjectURL(sh.photoURL); sh.photoURL = URL.createObjectURL(sh.photo); } catch (e) { toast("Couldn't read that picture."); return; } renderSheet(); runDescribe(); };
+ACT["open-snap"] = () => { const today = UI.date === todayISO(); openSheet("describe", { date: UI.date, meal: today ? suggestMeal() : activeMeals()[0]?.id, text: "" }); };
+/* ================= swap an exercise in a workout that's running =================
+   The bar is taken, the rings are missing: tap ⇄ next to the name, pick (or type) another exercise, for this set
+   or for every set still to come. Sets already done keep the old name; targets and reps stay, the load is cleared. */
+const SWAP_COMMON = ["Pull-up", "Chin-up", "Lat pulldown", "Ring row", "Inverted row", "Barbell row", "Dumbbell row", "Muscle-up", "Dip", "Ring dip", "Bench dip", "Push-up", "Ring push-up", "Pike push-up", "HSPU", "Bench press", "Dumbbell bench press", "Overhead press",
+  "Squat", "Front squat", "Goblet squat", "Bulgarian split squat", "Lunge", "Pistol squat", "Deadlift", "Romanian deadlift", "Hip thrust", "Nordic curl", "Hanging leg raise", "Knee raise", "L-sit", "Plank", "Hollow hold", "Biceps curl", "Triceps extension", "Face pull", "Burpee", "Kettlebell swing"];
+function swapNames(cur) { const seen = new Set([normEx(cur)]), out = [], add = n => { const k = normEx(n); if (n && k && !seen.has(k)) { seen.add(k); out.push(String(n).trim()); } };
+  const L = LV(); (L?.tasks || []).forEach(t => (t.exs || []).forEach(e => add(e.name)));
+  (FIT().exercises || []).forEach(add); (S.train.topSets || []).forEach(s => add(s.ex)); (S.train.calis || []).forEach(c => add(c.ex)); SWAP_COMMON.forEach(add); return out; }
+SHEETS.lvswap = sh => { const L = LV(), t = L?.tasks[L.cur], e = t?.exs?.[sh.x]; if (!e) return { title: "Swap exercise", body: "", foot: "" };
+  const q = (sh.q || "").trim(), nq = normEx(q), list = swapNames(e.name).filter(n => !nq || normEx(n).includes(nq)).slice(0, 14);
+  const left = L.tasks.slice(L.cur).filter(x => (x.exs || []).some(y => normEx(y.name) === normEx(e.name))).length;
+  return { title: `Swap ${e.name}`, focus: "sw-q",
+    body: `${left > 1 ? `<div class="seg sm">${[["rest", `All ${left} sets left`], ["one", "This set only"]].map(([k, l]) => `<button data-act="sw-scope" data-k="${k}" aria-pressed="${(sh.scope || "rest") === k}">${l}</button>`).join("")}</div>` : ""}
+      <div class="search">${ic("search")}<input id="sw-q" type="search" placeholder="Search or type an exercise" value="${esc(sh.q || "")}" data-in="sw-q" autocomplete="off" enterkeyhint="done"></div>
+      <div class="card">${q && !list.some(n => normEx(n) === nq) ? `<button class="lrow" data-act="sw-pick" data-n="${esc(q)}"><span><span class="t">Use “${esc(q)}”</span><span class="s">New exercise</span></span><span class="end">${ic("check", "sm")}</span></button>` : ""}
+        ${list.map(n => `<button class="lrow" data-act="sw-pick" data-n="${esc(n)}"><span><span class="t">${esc(n)}</span>${lastFor({ name: n }, L.date) ? `<span class="s">Last: ${esc(lastText(lastFor({ name: n }, L.date)))}</span>` : ""}</span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type the name and pick “Use”.</span></div>`}</div>`, foot: "" };
+};
+INP["sw-q"] = v => { S_().q = v; renderSheet(); const i = $("#sw-q"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } };
+ACT["sw-scope"] = el => { S_().scope = el.dataset.k; renderSheet(); };
+ACT["sw-pick"] = el => { const sh = S_(), L = LV(), to = String(el.dataset.n || "").trim().slice(0, 60); if (!L || !to) return;
+  const from = L.tasks[L.cur].exs[sh.x].name, k = normEx(from), one = (sh.scope || "rest") === "one";
+  let n = 0; for (let i = L.cur; i < L.tasks.length; i++) { const t = L.tasks[i]; if (one && i > L.cur) break;
+    if (!(t.exs || []).some(e => normEx(e.name) === k)) continue;
+    t.exs = t.exs.map(e => ({ ...e })); // rounds share one list: copy it so sets already done keep their name
+    t.exs.forEach((e, xi) => { if (normEx(e.name) !== k) return; e.swappedFrom = e.swappedFrom || e.name; e.name = to; e.raw = String(e.raw || "").replace(from, to); n++;
+      const r = L.res[i]?.ex?.[xi]; if (r && !(r.done || (i === L.cur && r.mini))) r.load = null; }); }
+  L.swaps = [...(L.swaps || []), { from, to, at: L.cur, n }]; saveWK(); closeSheet(); haptic(10); toast(`${from} → ${to}${n > 1 ? ` · ${n} sets` : ""}`); scheduleRender(); };
+ACT["lv-swap"] = el => openSheet("lvswap", { x: +el.dataset.x || 0, q: "", live: true });
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
