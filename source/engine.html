@@ -1746,16 +1746,10 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .icon-btn .ic{width:24px!important;height:24px!important}
 .big-action .ic{width:36px!important;height:36px!important}
 
-/* GPS */
-.gps-strip{display:flex;flex-direction:column;gap:8px;width:100%;padding:10px 12px;border-radius:16px;background:var(--surface-2)}
-.gps-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.gps-k span{display:flex;flex-direction:column;align-items:center;min-width:0}
-.gps-k b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
-.gps-k small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.gps-sig{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)}
-.gps-sig i{width:8px;height:8px;border-radius:50%;background:var(--c)}
-.gps-pv{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
-.gps-al{font-size:12.5px;flex:1 1 140px;min-width:0}
+.pv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.pv-al{font-size:12.5px;flex:1 1 140px;min-width:0}
+.sig{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)}.sig i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+/* routes */
 .route{width:100%;height:auto;max-height:220px;display:block;background:var(--surface-2);border-radius:14px}
 .splits{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .sp-r{display:grid;grid-template-columns:34px minmax(0,1fr) 52px 52px;align-items:center;gap:8px;font-size:13.5px}
@@ -6838,7 +6832,7 @@ function initTask(i) {
   if (t.t === "amrap" && r.rounds == null) { r.rounds = 0; r.partial = 0; r.splits = []; }
   if (t.t === "fortime" && r.rounds == null) { r.rounds = 0; r.splits = []; }
   L.clk = t.t === "rest" ? { start: nowMs(), acc: 0, paused: false } : (t.t === "run" || t.t === "open") ? { start: L.nextStart || nowMs(), acc: 0, paused: false } : null;
-  L.nextStart = null; TICK_LAST = {}; CUE_DONE = new Set(); CUE_CACHE.key = ""; if (typeof GPS !== "undefined" && GPS.id === L.id) GPS.stepKm0 = GPS.km;
+  L.nextStart = null; TICK_LAST = {}; CUE_DONE = new Set(); CUE_CACHE.key = "";
 }
 function goTask(i) { const L = LV(); if (!L || i < 0 || i >= L.tasks.length) return; const cur = L.res[L.cur]; if (L.clk && cur) cur.sec = Math.round(clkEl(L.clk)); initTask(i); saveWK(); scheduleRender(); }
 function nextTask() { const L = LV(); const n = L.cur + 1; if (n >= L.tasks.length) { (L.res[L.cur] = L.res[L.cur] || {}).done = true; L.clk = null; L.sub = null; if (L.free) { L.cur = L.tasks.length; saveWK(); scheduleRender(); window.scrollTo(0, 0); return; } L.phase = "done"; saveWK(); scheduleRender(); window.scrollTo(0, 0); return; } goTask(n); }
@@ -6989,7 +6983,6 @@ function liveTick() {
       runCues(taskCues(L, t, r), el, "T" + L.cur + ":");
       if (el < 0) main = -el;
       else if (t.t === "rest" || t.t === "timer") { const left = t.dur - el; main = left; pct = el / t.dur; if (left <= 0) { completeTask(); return; } }
-      else if (t.t === "run" && gpsDistStep(L, t)) { const left = gpsStepLeft(L, t); pct = 1 - left / t.km; if (left <= 0) { completeTask(); return; } }
       else if (t.t === "run") { const left = t.dur - el; main = left; pct = el / t.dur; if (left <= 0) { L.nextStart = now - (el - t.dur) * 1000; completeTask(); return; } }
       else if (t.t === "emom") { const k = Math.floor(el / t.every), inMin = t.every - (el - k * t.every); main = inMin; pct = (el - k * t.every) / t.every;
         if (TICK_LAST.k !== k) { TICK_LAST.k = k; for (let j = 0; j < Math.min(k, r.mins.length); j++) if (r.mins[j].ok == null) r.mins[j].ok = true; scheduleRender(); }
@@ -7323,12 +7316,12 @@ ACT["sum-rir"] = el => { const L = LV(), name = el.dataset.ex; const ti = [...L.
   const t = L.tasks[ti], xi = t.exs.findIndex(e => e.name === name), x = L.res[ti].ex[xi]; x.rir = x.rir == null ? 2 : x.rir >= 5 ? 0 : x.rir + 1; saveWK(); scheduleRender(); };
 ACT["lv-save"] = () => {
   const L = LV(), R = liveResults(L), int = L.rpe >= 8 ? "Hard" : L.rpe >= 5 ? "Moderate" : "Light";
-  const rec = wClean({ id: L.id, name: L.name, tplId: L.tplId, prog: L.prog, week: L.week, start: L.started, min: L.minutes, rpe: L.rpe, note: L.note || null, sets: R.sets, amrap: R.amrap, emom: R.emom, other: R.other, run: R.run.length ? R.run : null, km: L.auto ? L.km : null, script: L.free ? L.script || null : null, gps: L.auto && GPS.id === L.id ? gpsRecord() : null });
+  const rec = wClean({ id: L.id, name: L.name, tplId: L.tplId, prog: L.prog, week: L.week, start: L.started, min: L.minutes, rpe: L.rpe, note: L.note || null, sets: R.sets, amrap: R.amrap, emom: R.emom, other: R.other, run: R.run.length ? R.run : null, km: L.auto ? L.km : null, script: L.free ? L.script || null : null });
   mutateLog(L.date, day => { day.wsess = [...(day.wsess || []).filter(x => x.id !== L.id), rec]; day.workouts = [...(day.workouts || []).filter(w => w.sid !== L.id), wClean({ sport: L.sport, min: L.minutes, km: L.auto ? L.km : null, int, rpe: L.rpe, sid: L.id, note: L.name, tpl: L.tplId })]; });
   if (L.toRecords !== false) { const T = S.train, best = {}; for (const s of R.sets) if ((+s.load || 0) > 0 && setReps(s) > 0) { const e = { date: L.date, ex: s.ex, kg: +s.load, reps: setReps(s), rir: s.rir || 0 }; if (!best[s.ex] || e.kg * (1 + e.reps / 30) > best[s.ex].kg * (1 + best[s.ex].reps / 30)) best[s.ex] = e; }
     for (const e of Object.values(best)) T.topSets = wUpsert(T.topSets || [], e, x => x.date === e.date && x.ex === e.ex); }
   if (L.toIcu !== true) mutateLog(L.date, day => { day.workouts = (day.workouts || []).map(w => w.sid === L.id ? { ...w, pushed: true } : w); });
-  WK().live = null; saveWK(); wakeOff(); gpsClear(); UI.tab = "today"; toast(`Saved · ${L.minutes} min · RPE ${L.rpe}`); scheduleRender();
+  WK().live = null; saveWK(); wakeOff(); UI.tab = "today"; toast(`Saved · ${L.minutes} min · RPE ${L.rpe}`); scheduleRender();
   if (typeof icuKick === "function") icuKick("workout finished", "soon");
 };
 /* swipe between steps on the live card */
@@ -7448,7 +7441,7 @@ SHEETS.wo = sh => {
 function sessionDetailHTML(s, noFoot) {
   const byEx = {}; for (const x of s.sets || []) (byEx[x.ex] = byEx[x.ex] || []).push(x);
   const G = s.gps;
-  return `${G ? `<div class="card pad">${routeSVG(trackOf(s))}<div class="sum-stats sm"><span><b>${(+G.km).toFixed(2)}</b><small>km · GPS</small></span><span><b>${fmtPace(G.sec / 60 / G.km)}</b><small>/km moving</small></span><span><b>${fmtDur(G.sec)}</b><small>moving</small></span>${G.elev ? `<span><b>${G.elev}</b><small>m climb</small></span>` : ""}</div>${gpsSplitsTable(G.splits)}</div>` : ""}<div class="card">${(s.emom || []).map(e => `<div class="lrow"><span class="t">${esc(e.title)}</span><b class="num">${e.done}/${e.of} min</b></div>`).join("")}
+  return `${G ? `<div class="card pad">${routeSVG(trackOf(s))}<div class="sum-stats sm"><span><b>${(+G.km).toFixed(2)}</b><small>km</small></span><span><b>${fmtPace(G.sec / 60 / G.km)}</b><small>/km moving</small></span><span><b>${fmtDur(G.sec)}</b><small>moving</small></span>${G.elev ? `<span><b>${G.elev}</b><small>m climb</small></span>` : ""}</div>${splitsTable(G.splits)}</div>` : ""}<div class="card">${(s.emom || []).map(e => `<div class="lrow"><span class="t">${esc(e.title)}</span><b class="num">${e.done}/${e.of} min</b></div>`).join("")}
     ${Object.entries(byEx).map(([k, ss]) => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(k)}</span><span class="s" style="white-space:normal">${esc(ss.map(x => (x.reps?.length ? x.reps.join("-") : "") + (x.hold ? " " + x.hold.join("-") + "s" : "") + (x.load ? ` @+${fmtKg(x.load)}` : "") + (x.rir != null ? ` RIR${x.rir}` : "")).join(" · "))}${ss[0].ring ? ` · rings ${esc(ss[0].ring)}` : ""}</span></span><b class="num">${ss.reduce((a, x) => a + setReps(x), 0) || ""}</b></div>`).join("")}
     ${(s.amrap || []).map(a => `<div class="lrow"><span><span class="t">${esc(a.title)}</span><span class="s">AMRAP ${a.min}′ · ${esc(a.desc)}${a.splits?.length ? " · " + a.splits.map(fmtDurShort).join(" ") : ""}</span></span><b class="num">${a.rounds}+${a.partial}</b></div>`).join("")}
     ${(s.other || []).map(o => `<div class="lrow"><span><span class="t">${esc(o.title)}</span><span class="s">${o.kind === "tabata" ? `Tabata ${o.rounds}× ${o.work}/${o.rest}s` : o.kind === "fortime" ? `For time${o.of > 1 ? ` · ${o.of} rounds` : ""}${o.desc ? " · " + esc(o.desc) : ""}` : "Timer"}</span></span><b class="num">${o.kind === "fortime" ? (o.cap ? `cap · ${o.rounds}/${o.of}` : fmtDur(o.sec || 0)) : o.sec ? fmtDurShort(o.sec) : ""}</b></div>`).join("")}
@@ -7900,7 +7893,7 @@ VIEWS.today = function () {
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
-  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}${FEAT("gps") && GPSP().on ? `<button class="td-q" data-act="gps-run">${ic("run", "sm")}GPS run</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
+  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`;
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
@@ -8250,8 +8243,7 @@ function runSay(t) {
 function cRun(L, t) {
   const nx = L.tasks[L.cur + 1], first = L.cur === 0 || !["run", "open"].includes(L.tasks[L.cur - 1]?.t);
   const o = first ? cPrep(VT("Via! ", "Go! ") + runSay(t)) : [{ at: .05, say: runSay(t) }];
-  if (t.t === "open") return [...o, ...(PLAYER().calls && !(gpsOn() && GPSP().every) ? cOpen().filter(c => c.at > 0) : [])];
-  if (gpsDistStep(L, t)) return o;
+  if (t.t === "open") return [...o, ...(PLAYER().calls ? cOpen().filter(c => c.at > 0) : [])];
   if (t.dur >= 45) o.push({ at: t.dur - 15, say: nx ? VT("Tra 15 secondi: ", "In 15 seconds: ") + (nx.t === "run" ? runSay(nx) : nextName(nx)) : VT("Ultimi 15 secondi", "Last 15 seconds") });
   if (t.dur >= 300 && PLAYER().calls) o.push({ at: Math.round(t.dur / 2), k: "round", say: VT("Metà", "Halfway") });
   return [...o, ...cCount(t.dur), { at: t.dur, k: nx ? "go" : "end", say: nx ? null : VT("Allenamento finito. Ottimo lavoro!", "Workout complete. Well done!") }];
@@ -8260,16 +8252,15 @@ function runEstKm(tasks) { return tasks.reduce((a, t) => a + (t.km || (t.paceMid
 
 /* live screen for an endurance step: nothing to press */
 function liveRunTask(L, t, r) {
-  const gd = gpsStepLeft(L, t), el = clkEl(L.clk), prep = L.clk && !L.clk.paused && el < 0, nx = L.tasks[L.cur + 1], g = { ...(t.tgt || {}), ...(t.t === "open" && L.paceTgt && !t.tgt?.pace ? { pace: L.paceTgt } : {}) };
+  const el = clkEl(L.clk), prep = L.clk && !L.clk.paused && el < 0, nx = L.tasks[L.cur + 1], g = { ...(t.tgt || {}), ...(t.t === "open" && L.paceTgt && !t.tgt?.pace ? { pace: L.paceTgt } : {}) };
   const rest = L.tasks.slice(L.cur).reduce((a, x) => a + (x.dur || 0), 0) - Math.max(0, el);
   const left = t.t === "open" ? Math.max(0, el) : t.dur - Math.max(0, el);
   const pauseBtn = L.clk ? `<button class="btn tonal grow" data-act="lv-pause">${L.clk.paused ? ic("play", "sm") + "Resume" : ic("pause", "sm") + "Pause"}</button>` : "";
   const body = `<div class="lv-eb"><span class="eyebrow">${esc(t.block || "Step")}${t.reps > 1 ? ` · ${t.rep}/${t.reps}` : ""}</span><span class="faint">Step ${t.si + 1} of ${t.n}</span></div>
     <h2 class="lv-h run-h">${esc(t.t === "open" ? (t.label || "Open step") : t.km && t.est ? (t.km >= 1 ? r1(t.km) + " km" : Math.round(t.km * 1000) + " m") : fmtDurShort(t.dur))}${t.t !== "open" && t.label && t.label !== t.block ? ` <span class="faint">${esc(t.label)}</span>` : ""}</h2>
     <div class="run-tgt">${g.zone ? `<span class="rt-z">${esc(g.zone)}</span>` : ""}${g.pace ? `<span><b>${fmtPaceR(g.pace).replace("/km", "")}</b><small>/km</small></span>` : ""}${g.hr ? `<span><b>${g.hr[0] || "<"}${g.hr[1] ? "–" + g.hr[1] : "+"}</b><small>bpm</small></span>` : ""}${g.pct && !g.pace && !g.hr ? `<span><b>${esc(g.pct)}</b></span>` : ""}${g.watts ? `<span><b>${esc(g.watts)}</b></span>` : ""}${!g.zone && !g.pace && !g.hr && !g.pct && !g.watts ? `<span class="faint">No target: by feel</span>` : ""}${t.ramp ? `<span class="faint">ramp</span>` : ""}</div>
-    ${gd != null && !prep ? clockRing(fmtKmLeft(gd), 1 - gd / t.km, "to go").replace('data-tick="main"', 'data-gps="left"') : clockRing(fmtDur(prep ? -el : left), t.t === "open" || prep ? 0 : Math.max(0, el) / t.dur, prep ? "get ready" : t.t === "open" ? "elapsed" : t.est ? "≈ left" : "left", t.t === "open" ? "rest" : "")}
-    ${gpsStrip(L)}
-    ${t.est && gd == null ? `<div class="faint lv-hint">Distance step: timed from ${g.pace ? "the target pace" : "your easy pace"} (≈ ${fmtDurShort(t.dur)})${GPSP().on && GPS_SPORT(L.sport) ? ". It ends on the GPS distance once there's a fix." : ". Turn GPS on in the player settings to end it on the real distance."}</div>` : ""}
+    ${clockRing(fmtDur(prep ? -el : left), t.t === "open" || prep ? 0 : Math.max(0, el) / t.dur, prep ? "get ready" : t.t === "open" ? "elapsed" : t.est ? "≈ left" : "left", t.t === "open" ? "rest" : "")}
+    ${t.est ? `<div class="faint lv-hint">Distance step: timed from ${g.pace ? "the target pace" : g.speed ? "the target speed" : "your easy pace"} (≈ ${fmtDurShort(t.dur)}). Your watch has the real distance.</div>` : ""}
     <div class="run-foot"><span><small>Session</small><b data-tick="tot">${fmtDur(Math.max(0, (nowMs() - L.t0) / 1000))}</b></span>${t.t === "open" ? "" : `<span><small>Left ≈</small><b data-tick="runleft">${fmtDur(rest)}</b></span>`}</div>
     ${nx ? `<div class="lv-up"><small>Next</small><b>${esc(nx.t === "run" || nx.t === "open" ? runLabel(nx) : taskLine(nx))}</b></div>` : `<div class="lv-up"><small>Next</small><b>Finish</b></div>`}`;
   const dk = t.t === "open" ? dock(`${pauseBtn}<button class="btn primary grow" data-act="lv-done">${ic("check", "sm")}${nx ? "Lap · next" : "Finish"}</button>`, { noNav: true }) : dock(pauseBtn, { noNav: false });
@@ -8281,7 +8272,7 @@ function runPreview(L) {
   h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-meta"><span>${ic("timer", "sm")}${fmtDurShort(tot)}</span>${km ? `<span>≈ ${r1(km)} km</span>` : ""}<span>${tasks.length} steps</span><span class="chip-s">${esc(L.sport)}</span></div>
     <p class="muted" style="margin:0;font-size:13.5px">Runs by itself: every step starts and ends on its own with a 3-2-1 countdown${PLAYER().voice ? " and spoken targets" : ""}. Put the phone away and run. Pause is there if you need it.</p></section>
-    <section class="lv-card">${prepChips()}${gpsPreview(L)}</section>
+    <section class="lv-card">${prepChips()}</section>
     <section class="lv-card flush"><div class="run-steps">${tasks.map((t, i) => `<div class="rs-row ${i && tasks[i - 1].bi !== t.bi ? "brk" : ""}"><span class="rs-n">${i + 1}</span><span class="rs-t"><b>${esc(runLabel(t))}</b>${t.block ? `<small>${esc(t.block)}${t.reps > 1 ? ` · ${t.rep}/${t.reps}` : ""}</small>` : ""}</span><span class="rs-d">${t.t === "open" ? "lap" : (t.est ? "≈" : "") + fmtDurShort(t.dur)}</span></div>`).join("")}</div></section>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-snd">${ic(PLAYER().mute ? "bellOff" : "bell", "sm")}${PLAYER().mute ? "Muted" : PLAYER().voice ? "Voice" : "Beeps"}</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start · ${PLAYER().prep}s countdown</button></div></div>
     <aside class="lv-side show"><section class="lv-card"><span class="eyebrow">Workout text</span><pre class="wo-script">${esc(L.script || "")}</pre></section></aside></div>`;
@@ -8290,19 +8281,15 @@ function runPreview(L) {
 function runSummary(L) {
   const R = liveResults(L), secs = R.run.reduce((a, s) => a + (s.sec || 0), 0), estKm = R.run.reduce((a, s) => a + (s.km || 0), 0);
   if (L.minutes == null) L.minutes = Math.max(1, Math.round((secs || ((L.ended || nowMs()) - L.t0) / 1000) / 60));
-  if (gpsOn() && GPS.id === L.id) gpsStop();
-  const G = gpsHas(L) ? GPS : null;
-  if (G && L.gpsKm == null) { L.gpsKm = Math.round(G.km * 100) / 100; L.km = L.gpsKm; }
   if (L.km == null) L.km = estKm ? r1(estKm) : null;
   if (L.rpe == null) { const hard = L.tasks.some(t => /Z[4-7]|Z5/i.test(t.tgt?.zone || "") || (t.tgt?.pace && runState().tPace && t.tgt.pace[1] <= runState().tPace * 1.02)); L.rpe = hard ? 8 : 5; }
   let h = topBar(`<button class="icon-btn" data-act="lv-resume-steps" aria-label="Back to the workout">${ic("chevL")}</button>`, "Workout complete", `${esc(L.name)} · ${fmtDM(L.date)}`, `<span></span>`);
-  h += `<div class="lv-wrap two"><div class="lv-main"><div class="sum-stats"><span><b>${L.minutes}</b><small>min</small></span><span><b>${L.km != null ? (G ? L.km.toFixed(2) : r1(L.km)) : "—"}</b><small>km${G ? " · GPS" : estKm ? " (est.)" : ""}</small></span>${G?.elev ? `<span><b>${r0(G.elev)}</b><small>m climb</small></span>` : `<span><b>${R.run.length}</b><small>steps</small></span>`}<span><b>${G ? fmtPace(G.sec / 60 / G.km) : L.km && L.minutes ? fmtPace(L.minutes / L.km) : "—"}</b><small>/km${G ? " moving" : ""}</small></span></div>
-    ${G ? `<section class="lv-card">${routeSVG(G.pts)}${G.splits.length ? `<div class="lv-eb" style="margin-top:6px"><span class="eyebrow">Splits</span><span class="faint">${fmtDur(G.sec)} moving</span></div>${gpsSplitsTable(G.splits)}` : ""}</section>` : ""}
+  h += `<div class="lv-wrap two"><div class="lv-main"><div class="sum-stats"><span><b>${L.minutes}</b><small>min</small></span><span><b>${L.km != null ? r1(L.km) : "—"}</b><small>km${estKm ? " (est.)" : ""}</small></span><span><b>${R.run.length}</b><small>steps</small></span><span><b>${L.km && L.minutes ? (isBike(L.sport) ? r1(L.km / (L.minutes / 60)) : fmtPace(L.minutes / L.km)) : "—"}</b><small>${isBike(L.sport) ? "km/h" : "/km"}</small></span></div>
     <section class="lv-card flush"><div class="lv-eb pad"><span class="eyebrow">Steps</span></div><div class="run-steps">${R.run.map((s, i) => `<div class="rs-row"><span class="rs-n">${i + 1}</span><span class="rs-t"><b>${esc(s.txt)}</b></span><span class="rs-d">${fmtDurShort(s.sec || 0)}</span></div>`).join("")}</div></section></div>
     <aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">Session RPE</span><span class="faint">${esc(RPE_TXT[L.rpe] || "")}</span></div><div class="rpe">${[3, 4, 5, 6, 7, 8, 9, 10].map(v => `<button data-act="lv-rpe" data-v="${v}" aria-pressed="${L.rpe === v}">${v}</button>`).join("")}</div>
     <div class="lv-row"><span class="lab">Time</span>${stepper("lv-min-adj", L.minutes, "", "min", 1)}</div>
     <div class="lv-row"><span class="lab">Km</span><div class="unit-inp" style="max-width:150px"><input class="inp" inputmode="decimal" value="${L.km ?? ""}" data-chg="lv-km" aria-label="Distance in km"><span>km</span></div></div>
-    <div class="faint" style="font-size:12.5px">${G ? "Distance from the phone's GPS. " : ""}The watch's real distance replaces this when intervals.icu syncs the activity.</div>
+    <div class="faint" style="font-size:12.5px">The watch's real distance replaces this when intervals.icu syncs the activity.</div>
     <textarea class="inp" rows="2" placeholder="How did it go?" data-chg="lv-snote" aria-label="Session notes">${esc(L.note || "")}</textarea>
     ${icuLinked() ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toIcu === true}" data-act="lv-toicu" aria-label="Send to intervals.icu"></button>Send to intervals.icu</label>` : ""}</section>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-resume-steps">Back</button><button class="btn primary grow" data-act="lv-save">${ic("check", "sm")}Save workout</button></div></aside></div>`;
@@ -8326,7 +8313,7 @@ SHEETS.freewo = sh => {
       <div class="field"><label for="fw-name">Name</label><input id="fw-name" class="inp" value="${esc(sh.name || "")}" placeholder="${esc(sh.sport)} · free" data-in="fw" data-k="name"></div></div>
     <div class="field"><div class="row" style="justify-content:space-between"><label for="fw-script">Script from intervals.icu <span class="faint">· optional</span></label>${sc ? `<button class="link" data-act="fw-clear">Clear</button>` : `<button class="link" data-act="fw-paste">${ic("copy", "sm")} Paste</button>`}</div>
       <textarea id="fw-script" class="inp mono" rows="${sc ? 8 : 3}" spellcheck="false" data-in="fw" data-k="script" placeholder="${auto ? "Warmup&#10;- 10m Z2 Pace&#10;&#10;Main set 5x&#10;- 3m Z4 Pace&#10;- 2m Z1" : "EMOM 10m&#10;- 1m 3 Muscle-up&#10;&#10;A1/A2 3x&#10;- 6 Pull-up +10kg&#10;- 10 Dip&#10;- 90s Rest"}">${esc(sh.script || "")}</textarea>
-      ${auto && !sc && GPS_SPORT(sh.sport) && FEAT("gps") ? `<button class="btn tonal" data-act="gps-run" data-sport="${esc(sh.sport)}">${ic("pulse", "sm")}Start with GPS · ${esc(sh.sport)}</button>` : ""}<div class="faint" id="fw-pv" style="font-size:12.5px">${sc ? esc(pv) : auto ? "Leave it empty for an open session: a stopwatch with voice every 5 minutes, laps, and Finish when you're done." : "Leave it empty to build the session as you go: sets, EMOM, AMRAP, Tabata, For time and timers, all logged."}</div></div>`,
+      <div class="faint" id="fw-pv" style="font-size:12.5px">${sc ? esc(pv) : auto ? "Leave it empty for an open session: a stopwatch with voice every 5 minutes, laps, and Finish when you're done." : "Leave it empty to build the session as you go: sets, EMOM, AMRAP, Tabata, For time and timers, all logged."}</div></div>`,
     foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="fw-go">${ic("play", "sm")}${sc ? "Start" : auto ? "Start open session" : "Start free session"}</button>` };
 };
 ACT["free-open"] = () => { if (LV()) { ACT["lv-resume"](); return; } const last = WK().freeLast || {}; openSheet("freewo", { kind: last.kind || "str", sport: last.sport || null, script: "", name: "" }); };
@@ -8532,7 +8519,6 @@ function playerSettings() {
   return `<div class="grid4">${fitSel("player.voice", "Voice call-outs", [["it", "Italiano"], ["en", "English"], ["off", "Off · beeps only"]])}${fitSel("player.calls", "Minute call-outs", [["on", "On"], ["off", "Off"]])}<div class="field"><span class="flabel">Countdown before starting</span>${prepChips().replace('<span>Countdown</span>', '')}</div>
     <div class="field"><span class="flabel">Sounds</span><button class="btn ${w.mute ? "soft" : "tonal"}" data-act="snd-mute">${ic(w.mute ? "bellOff" : "bell", "sm")}${w.mute ? "Muted · vibration" : "On"}</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="snd-test">${ic("play", "sm")}Test 3-2-1</button><button class="btn soft sm" data-act="timer-open">${ic("timer", "sm")}Open the timer</button></div>
-    <div class="set-sub"><span class="flabel">GPS · runs, walks and rides</span>${gpsSettings()}</div>
     <div class="faint" style="font-size:12.5px">Beeps are scheduled on the audio clock, so they land exactly on the second. AMRAP: the minute you're in, the last 30 s and a spoken 10-second countdown. Running: each step's target is spoken as it starts. Keep the phone unlocked during a session (the screen stays on by itself).</div>`;
 }
 ACT["snd-mute"] = () => { const w = WK(); w.mute = !w.mute; saveWK(); scheduleRender(); if (UI.sheet) renderSheet(); };
@@ -9563,115 +9549,10 @@ ACT["story-share"] = async () => { const sh = S_(); if (!sh.blob) return; const 
   if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: sh.data.title }); return; } catch (e) { if (e?.name === "AbortError") return; } }
   ACT["story-save"](); };
 
-/* ================= GPS from the phone: distance, pace, splits and spoken alerts on runs, walks and rides =================
-   watchPosition with high accuracy. Fixes worse than 35 m, GPS jitter and impossible jumps are dropped, and distance
-   only counts while the session runs (not in the countdown, not paused). Distance steps end when the distance is covered.
-   The track lives in memory (and in localStorage, so a reload mid-run keeps it); it's saved with the workout. */
-const GPS_SPORT = sp => sp === FIT().runSport || /run|corsa|trail|walk|cammin|hik|escurs|cycl|bici|bike|ride/i.test(sp || "");
-function GPSP() {
-  const g = FIT().player?.gps || {};
-  return { on: g.on !== false, split: +g.split || 1, voice: g.voice !== false, pace: g.pace !== false, tol: g.tol == null ? 10 : +g.tol, every: +g.every || 0, auto: g.auto !== false, dist: g.dist !== false, target: g.target || "" };
-}
-const GPS_KEY = "engine.gps";
-let GPS = gpsBlank(null);
-function gpsBlank(id) { return { id, wid: null, pts: [], km: 0, sec: 0, last: null, acc: null, splits: [], sAt: 0, elev: 0, alt: null, altB: null, still: false, stepKm0: 0, alertAt: 0, everyAt: 0, recent: [], err: null, jumps: 0 }; }
+/* ================= routes: the map of a run or ride (imported from a GPX, TCX or FIT file, or from intervals.icu) ================= */
+const isBike = sp => /cycl|bici|bike|ride|mtb|gravel/i.test(sp || "");
+const ENDUR = sp => sp === FIT().runSport || /run|corsa|trail|walk|cammin|hik|escurs|cycl|bici|bike|ride|swim|nuot|row|ski/i.test(sp || "");
 const hav = (a, b) => { const R = 6371000, r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r, x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
-const gpsOn = () => GPS.wid != null;
-const gpsHas = L => L && GPS.id === L.id && GPS.km > 0.02;
-function gpsSave() { try { const { wid, ...g } = GPS; localStorage.setItem(GPS_KEY, JSON.stringify(g)); } catch (e) {} }
-function gpsStart(L) {
-  if (!L || !GPSP().on || !GPS_SPORT(L.sport) || !navigator.geolocation) return;
-  if (GPS.id !== L.id) { let g = null; try { g = JSON.parse(localStorage.getItem(GPS_KEY) || "null"); } catch (e) {} GPS = g && g.id === L.id ? { ...gpsBlank(L.id), ...g, wid: null, last: null } : gpsBlank(L.id); }
-  if (gpsOn()) return;
-  try { GPS.wid = navigator.geolocation.watchPosition(gpsFix, gpsErr, { enableHighAccuracy: true, maximumAge: 1000, timeout: 30000 }); } catch (e) { GPS.err = "unavailable"; }
-}
-function gpsStop() { if (gpsOn()) { try { navigator.geolocation.clearWatch(GPS.wid); } catch (e) {} } GPS.wid = null; GPS.last = null; gpsSave(); }
-function gpsClear() { gpsStop(); GPS = gpsBlank(null); try { localStorage.removeItem(GPS_KEY); } catch (e) {} }
-function gpsErr(e) { GPS.err = e && e.code === 1 ? "denied" : "nofix"; gpsDraw(); if (e && e.code === 1) { gpsStop(); toast("Location blocked: allow it for this site to track distance."); scheduleRender(); } }
-/* distance counts only while the clock runs */
-const gpsCounting = L => !!(L && L.phase === "run" && !L.prepEnd && L.clk && !L.clk.paused && clkEl(L.clk) >= 0);
-function gpsFix(p) {
-  const L = LV(); if (!L || L.id !== GPS.id) { gpsStop(); return; }
-  const c = p.coords, now = p.timestamp || Date.now(); GPS.acc = c.accuracy; GPS.err = null;
-  if (!(c.accuracy <= 35)) { gpsDraw(); return; }
-  const pt = [c.latitude, c.longitude], run = gpsCounting(L), P = GPSP();
-  if (!GPS.last || !run) { GPS.last = { pt, t: now }; GPS.still = false; gpsDraw(); return; }
-  const dt = (now - GPS.last.t) / 1000; if (dt <= 0) return;
-  const d = hav(GPS.last.pt, pt);
-  // a jump faster than 12 m/s is a bad fix; three in a row means we really moved (tunnel, car): start again from here
-  if (d / dt > 12) { if (++GPS.jumps >= 3) { GPS.last = { pt, t: now }; GPS.jumps = 0; } return; }
-  GPS.jumps = 0;
-  if (d < Math.max(3, c.accuracy * .4)) {
-    if (P.auto && !GPS.still && dt > 12) { GPS.still = true; if (P.voice) say(VT("Pausa automatica", "Auto-paused")); gpsDraw(); }
-    return;
-  }
-  if (GPS.still) { GPS.still = false; GPS.last = { pt, t: now }; if (P.voice) say(VT("Ripreso", "Resumed")); gpsDraw(); return; }
-  const k0 = GPS.km, s0 = GPS.sec;
-  GPS.km += d / 1000; GPS.sec += dt; GPS.last = { pt, t: now };
-  if (c.altitude != null && (c.altitudeAccuracy == null || c.altitudeAccuracy < 20)) {
-    GPS.alt = GPS.alt == null ? c.altitude : GPS.alt * .75 + c.altitude * .25;
-    if (GPS.altB == null) GPS.altB = GPS.alt; else if (GPS.alt - GPS.altB > 3) { GPS.elev += GPS.alt - GPS.altB; GPS.altB = GPS.alt; } else if (GPS.altB - GPS.alt > 3) GPS.altB = GPS.alt;
-  }
-  GPS.pts.push([Math.round(pt[0] * 1e5) / 1e5, Math.round(pt[1] * 1e5) / 1e5, Math.round(GPS.sec), Math.round(GPS.km * 1000)]);
-  if (GPS.pts.length > 5000) GPS.pts = GPS.pts.filter((x, i) => i % 2 === 0 || i === GPS.pts.length - 1);
-  GPS.recent.push([GPS.sec, GPS.km]); while (GPS.recent.length > 2 && GPS.sec - GPS.recent[0][0] > 40) GPS.recent.shift();
-  gpsEvents(L, k0, s0);
-  if (GPS.pts.length % 10 === 0) gpsSave();
-  gpsDraw();
-}
-/* pace now: the last ~30 s (min/km) */
-function gpsPaceNow() { const r = GPS.recent; if (r.length < 2) return null; const a = r[0], b = r[r.length - 1], dk = b[1] - a[1], ds = b[0] - a[0]; return ds >= 15 && dk >= .04 ? ds / 60 / dk : null; }
-const gpsPaceAvg = () => GPS.km > .05 ? GPS.sec / 60 / GPS.km : null;
-function gpsTarget(L) {
-  const t = L.tasks[L.cur];
-  if (t && t.t === "run" && t.tgt?.pace) return [Math.min(...t.tgt.pace), Math.max(...t.tgt.pace)];
-  if (L.paceTgt) return L.paceTgt;
-  const P = GPSP(); if (!P.target) return null;
-  const v = String(P.target).split(/[-–]/).map(x => parseClock(x.trim())).filter(Boolean).map(s => s / 60);
-  return v.length ? [Math.min(...v), Math.max(...v)] : null;
-}
-const kmSay = k => Number.isInteger(k) ? VT(k === 1 ? "Primo chilometro" : `Chilometro ${k}`, `Kilometre ${k}`) : VT(`${String(k).replace(".", ",")} chilometri`, `${k} kilometres`);
-function gpsEvents(L, k0, s0) {
-  const P = GPSP();
-  // splits, timed at the exact crossing
-  while (GPS.km >= (GPS.splits.length + 1) * P.split - 1e-9) {
-    const at = (GPS.splits.length + 1) * P.split, f = (at - k0) / Math.max(1e-9, GPS.km - k0), s = s0 + (GPS.sec - s0) * clamp(f, 0, 1);
-    const sec = Math.round(s - GPS.sAt); GPS.sAt = s; const km = Math.round(at * 10) / 10;
-    GPS.splits.push({ km, sec, len: P.split });
-    playCue("round");
-    if (P.voice) { const pace = sec / 60 / P.split, prev = GPS.splits[GPS.splits.length - 2]; say(`${kmSay(km)}. ${paceSay(pace)}${VT(" al chilometro", " per kilometre")}${prev ? (prev.sec > sec + 3 ? VT(", più veloce", ", faster") : prev.sec < sec - 3 ? VT(", più lento", ", slower") : "") : ""}`); }
-  }
-  // pace alerts: outside the target (the step's, or the one in settings), at most once a minute, not in the first 45 s of a step
-  const tg = P.pace ? gpsTarget(L) : null, cur = gpsPaceNow(), tSec = Date.now() / 1000, el = clkEl(L.clk);
-  if (tg && cur && el > 45 && tSec - GPS.alertAt > 60) {
-    const tol = P.tol / 60;
-    if (cur > tg[1] + tol) { GPS.alertAt = tSec; playCue("half"); say(VT(`Più veloce. Sei a ${paceSay(cur)}`, `Speed up. You're at ${paceSay(cur)}`)); }
-    else if (cur < tg[0] - tol) { GPS.alertAt = tSec; playCue("half"); say(VT(`Rallenta. Sei a ${paceSay(cur)}`, `Ease off. You're at ${paceSay(cur)}`)); }
-  }
-  // a summary every N minutes of moving time
-  if (P.every && GPS.sec - GPS.everyAt >= P.every * 60) { GPS.everyAt += P.every * 60; if (P.voice) say(`${sayMin(Math.round(GPS.everyAt / 60))}, ${r1(GPS.km).toString().replace(".", VT(",", "."))} km, ${VT("media", "average")} ${paceSay(gpsPaceAvg() || 0)}`); }
-}
-/* distance steps end on the GPS distance (when it's on and has a fix) */
-const gpsDistStep = (L, t) => !!(t && t.t === "run" && t.km && t.est && GPSP().dist && gpsOn() && GPS.id === L.id && !GPS.err);
-function gpsStepLeft(L, t) { return gpsDistStep(L, t) ? Math.max(0, t.km - (GPS.km - GPS.stepKm0)) : null; }
-const fmtKmLeft = km => km >= 1 ? r1(km).toFixed(2).replace(/0$/, "") + " km" : Math.round(km * 1000) + " m";
-function gpsSignal() { return GPS.err === "denied" ? ["bad", "Location blocked"] : GPS.err ? ["warn", "Searching for GPS"] : GPS.acc == null ? ["warn", "Waiting for GPS"] : GPS.acc <= 15 ? ["good", `GPS ±${r0(GPS.acc)} m`] : GPS.acc <= 35 ? ["warn", `GPS ±${r0(GPS.acc)} m`] : ["bad", `Weak GPS ±${r0(GPS.acc)} m`]; }
-/* the live strip: distance, pace now, average pace, last split */
-function gpsStrip(L) {
-  if (!gpsOn() && !gpsHas(L)) return "";
-  const [c, txt] = gpsSignal(), sp = GPS.splits[GPS.splits.length - 1];
-  return `<div class="gps-strip"><span class="gps-sig" style="--c:var(--${c})" data-gps="sig"><i></i>${esc(GPS.still ? "Auto-paused" : txt)}</span>
-    <div class="gps-k"><span><b data-gps="km">${r1(GPS.km).toFixed(2)}</b><small>km</small></span><span><b data-gps="now">${fmtPace(gpsPaceNow())}</b><small>pace now</small></span><span><b data-gps="avg">${fmtPace(gpsPaceAvg())}</b><small>avg /km</small></span><span><b data-gps="split">${sp ? fmtPace(sp.sec / 60 / sp.len) : "—"}</b><small>${sp ? `split ${sp.km}` : "last split"}</small></span></div></div>`;
-}
-function gpsDraw() {
-  if (UI.tab !== "live") return; const L = LV(); if (!L || L.id !== GPS.id) return;
-  const sp = GPS.splits[GPS.splits.length - 1], [c, txt] = gpsSignal();
-  const set = (k, v) => document.querySelectorAll(`[data-gps="${k}"]`).forEach(n => { n.textContent = v; });
-  set("km", r1(GPS.km).toFixed(2)); set("now", fmtPace(gpsPaceNow())); set("avg", fmtPace(gpsPaceAvg())); if (sp) set("split", fmtPace(sp.sec / 60 / sp.len));
-  document.querySelectorAll('[data-gps="sig"]').forEach(n => { n.style.setProperty("--c", `var(--${c})`); n.lastChild.textContent = GPS.still ? "Auto-paused" : txt; });
-  const t = L.tasks[L.cur], left = gpsStepLeft(L, t); if (left != null) set("left", fmtKmLeft(left));
-  if (!document.querySelector(".gps-strip") && (gpsHas(L) || GPS.acc != null)) scheduleRender();
-}
 /* the route as a small SVG (summary and history) */
 function routeSVG(track, w = 320, h = 180) {
   if (!track || track.length < 3) return "";
@@ -9686,57 +9567,10 @@ function polyEnc(pts) { let out = "", pa = 0, po = 0; const e = v => { v = v < 0
 function polyDec(s) { const out = []; let i = 0, a = 0, o = 0; const d = () => { let r = 0, sh = 0, b; do { b = s.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20 && i <= s.length); return r & 1 ? ~(r >> 1) : r >> 1; };
   while (i < s.length) { a += d(); o += d(); out.push([a / 1e5, o / 1e5]); } return out; }
 function trackOf(s) { if (!s) return null; if (Array.isArray(s.track)) return s.track; if (s.gps?.poly) { try { return polyDec(s.gps.poly); } catch (e) {} } return null; }
-function gpsRecord() {
-  if (GPS.km < .05) return null; const n = GPS.pts.length, step = Math.max(1, Math.ceil(n / 400)), pts = GPS.pts.filter((p, i) => i % step === 0 || i === n - 1);
-  return { km: Math.round(GPS.km * 1000) / 1000, sec: Math.round(GPS.sec), elev: GPS.elev ? Math.round(GPS.elev) : null, splits: GPS.splits, poly: polyEnc(pts) };
-}
-function gpsSplitsTable(splits) {
+function splitsTable(splits) {
   if (!splits?.length) return ""; const best = Math.min(...splits.map(s => s.sec / s.len)), worst = Math.max(...splits.map(s => s.sec / s.len));
   return `<div class="splits">${splits.map(s => { const p = s.sec / 60 / s.len, w = worst > best ? .35 + .65 * (worst - s.sec / s.len) / (worst - best) : 1;
     return `<div class="sp-r"><span class="sp-k">${s.km}</span><span class="sp-bar"><i style="width:${r0(w * 100)}%"></i></span><b>${fmtPace(p)}</b><small>${fmtDurShort(s.sec)}</small></div>`; }).join("")}</div>`;
-}
-/* settings: GPS card inside the workout player settings, also shown in the run preview */
-function gpsSettings(compact) {
-  const P = GPSP(), sw = (k, l, sub) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}${sub ? `<small class="faint" style="display:block;font-size:12px">${sub}</small>` : ""}</span><button type="button" class="switch" role="switch" aria-checked="${P[k]}" data-act="gps-opt" data-k="${k}" aria-label="${esc(l)}"></button></label>`;
-  const chips = (k, opts, lab) => `<div class="field"><span class="flabel">${lab}</span><div class="chips">${opts.map(([v, l]) => `<button class="chip sm" data-act="gps-set" data-k="${k}" data-v="${v}" aria-pressed="${String(P[k]) === String(v)}">${l}</button>`).join("")}</div></div>`;
-  if (!P.on) return sw("on", "GPS tracking", "Distance, pace and splits from the phone on runs, walks and rides");
-  return `${sw("on", "GPS tracking", "Distance, pace and splits from the phone on runs, walks and rides")}
-    ${chips("split", [[0.5, "500 m"], [1, "1 km"], [2, "2 km"], [5, "5 km"]], "Split every")}
-    ${sw("voice", "Spoken splits and summaries")}
-    ${sw("pace", "Pace alerts", "When you're outside the step's target pace, or the one below")}
-    ${P.pace ? `<div class="grid2"><div class="field"><label for="gps-target">Target pace (open runs)</label><input id="gps-target" class="inp" value="${esc(P.target)}" placeholder="e.g. 5:10 or 5:00-5:20" data-chg="gps-target"></div>${chips("tol", [[5, "±5 s"], [10, "±10 s"], [20, "±20 s"]], "Tolerance per km")}</div>` : ""}
-    ${chips("every", [[0, "Off"], [5, "5 min"], [10, "10 min"], [15, "15 min"]], "Summary every")}
-    ${sw("auto", "Auto-pause", "Stops counting when you stand still")}
-    ${sw("dist", "Distance steps end by GPS", "\"- 1km 4:30/km\" ends at 1 km, not at the estimated time")}
-    ${compact ? "" : `<div class="faint" style="font-size:12.5px">Keep the app open with the screen on (it stays on by itself during a session): browsers pause the GPS when the phone is locked.</div>`}`;
-}
-ACT["gps-opt"] = el => { const f = FIT(), k = el.dataset.k; f.player = f.player || {}; const g = f.player.gps = { ...(f.player.gps || {}) }; g[k] = !GPSP()[k]; saveSettings(); const L = LV(); if (k === "on" && L && L.auto) { if (g.on) gpsStart(L); else gpsStop(); } scheduleRender(); if (UI.sheet) renderSheet(); };
-ACT["gps-set"] = el => { const f = FIT(); f.player = f.player || {}; f.player.gps = { ...(f.player.gps || {}), [el.dataset.k]: +el.dataset.v }; saveSettings(); scheduleRender(); if (UI.sheet) renderSheet(); };
-CHG["gps-target"] = v => { const f = FIT(); f.player = f.player || {}; const t = v.trim(); if (t && !t.split(/[-–]/).every(x => parseClock(x.trim()))) { toast("Write the pace as 5:10 or 5:00-5:20"); return; } f.player.gps = { ...(f.player.gps || {}), target: t }; saveSettings(); };
-ACT["gps-sheet"] = () => openSheet("gpsopt", {});
-SHEETS.gpsopt = () => ({ title: "GPS and alerts", body: gpsSettings(), foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
-/* a GPS run from anywhere: an open session that tracks distance */
-ACT["gps-run"] = el => { if (LV()) { ACT["lv-resume"](); return; } const sport = el?.dataset?.sport || FIT().runSport; UI.liveFrom = UI.tab; audioOn(); closeSheet();
-  if (!GPSP().on) { const f = FIT(); f.player = f.player || {}; f.player.gps = { ...(f.player.gps || {}), on: true }; saveSettings(); }
-  startWorkout({ open: VT("Corsa", "Run"), name: sport === FIT().runSport ? "Run" : sport, sport, date: todayISO(), script: "" }); };
-/* hooks: start with the session (or already in the preview, to get a fix while warming up), stop when it ends */
-(() => {
-  const wrap = (k, before) => { const f = ACT[k]; ACT[k] = (...a) => { before(...a); return f(...a); }; };
-  wrap("lv-begin", () => { const L = LV(); if (L && L.auto) gpsStart(L); });
-  wrap("lv-resume-steps", () => { const L = LV(); if (L && L.auto) { L.gpsKm = null; gpsStart(L); } });
-  wrap("lv-resume", () => { const L = LV(); if (L && L.auto && L.phase !== "done") gpsStart(L); });
-  wrap("lv-cancel", () => gpsClear());
-  wrap("lv-finish", () => gpsStop());
-  const disc = ACT["lv-discard"]; ACT["lv-discard"] = () => { disc(); const run = UI.sheet?.run; if (run) UI.sheet.run = () => { gpsClear(); run(); }; };
-})();
-/* in the run preview: GPS status (the fix starts now, while you warm up) and the alerts at a glance */
-function gpsPreview(L) {
-  if (!GPS_SPORT(L.sport)) return "";
-  const P = GPSP();
-  if (!P.on) return `<div class="gps-pv"><span class="faint">GPS off</span><button class="btn text sm" data-act="gps-opt" data-k="on">Turn on</button></div>`;
-  gpsStart(L); const [c, txt] = gpsSignal();
-  const al = [P.split !== 1 ? `split ${P.split} km` : "split 1 km", P.pace ? "pace alerts" : "", P.every ? `summary ${P.every}′` : "", P.auto ? "auto-pause" : ""].filter(Boolean).join(" · ");
-  return `<div class="gps-pv"><span class="gps-sig" style="--c:var(--${c})" data-gps="sig"><i></i>${esc(txt)}</span><span class="faint gps-al">${esc(al)}</span><button class="btn text sm" data-act="gps-sheet">${ic("sliders", "sm")}Alerts</button></div>`;
 }
 /* ================= Today: cards added by the modules below, in two columns ================= */
 const TODAY_CARDS = [];
@@ -10365,7 +10199,7 @@ ICONS.drop = `<path d="M480-100q-130 0-217-89t-87-223q0-94 73-204t231-244q158 13
 /* ================= race mode and fuelling: when to take gels, water and salt during long sessions =================
    A schedule from the session's length (or the predicted race time): carbs per hour split into gels, sips every
    N minutes, salt every N minutes. Spoken and shown in the live player, with a tap to tick each one. Races can be
-   started from their card: GPS on, goal pace as the target, fuelling on. */
+   started from their card: goal pace as the target, fuelling on. */
 const FUELP = () => ({ auto: true, minMin: 75, cph: 60, gel: 25, first: 20, water: 15, salt: 45, ...(FIT().player?.fuel || {}) });
 function fuelPlan(sec, P = FUELP()) {
   const out = [], end = Math.max(sec || 0, 0) || 6 * 3600, gelEvery = Math.max(10, Math.round(60 * P.gel / Math.max(20, P.cph))) * 60;
@@ -10376,7 +10210,7 @@ function fuelPlan(sec, P = FUELP()) {
 }
 const FUEL_L = { gel: ["Gel", "Prendi un gel, con acqua", "Gel now, with water"], water: ["Water", "Bevi qualche sorso", "Drink a few sips"], salt: ["Salt", "Sale: una capsula", "Salt: one capsule"] };
 function fuelSessionSec(L) { if (L.race) { const r = races().find(x => x.id === L.race); const I = r ? raceInsight(r) : {}; return I.goalSec || I.pred || 0; } return L.tasks.reduce((a, t) => a + (t.dur || 0), 0); }
-function fuelInit(L, force) { const P = FUELP(), sec = fuelSessionSec(L), on = force ?? (!!L.race || (P.auto && GPS_SPORT(L.sport) && sec >= P.minMin * 60));
+function fuelInit(L, force) { const P = FUELP(), sec = fuelSessionSec(L), on = force ?? (!!L.race || (P.auto && ENDUR(L.sport) && sec >= P.minMin * 60));
   L.fuel = { on: !!on, plan: fuelPlan(L.tasks.some(t => t.t === "open") && !L.race ? 0 : sec, P), done: {} }; return L.fuel; }
 const fuelEl = L => Math.max(0, (nowMs() - L.t0) / 1000);
 function fuelNext(L) { const F = L.fuel; if (!F?.on) return null; const el = fuelEl(L); return F.plan.map((x, i) => ({ ...x, i })).find(x => !F.done[x.i] && x.at >= el - 120) || null; }
@@ -10393,8 +10227,8 @@ function fuelStrip(L) { const F = L.fuel; if (!F?.on) return ""; const n = fuelN
 ACT["fu-take"] = el => { const L = LV(); if (!L?.fuel) return; L.fuel.done[+el.dataset.i] = Math.round(fuelEl(L)); haptic(10); saveWK(); scheduleRender(); };
 ACT["fu-toggle"] = () => { const L = LV(); if (!L) return; if (!L.fuel) fuelInit(L, true); else L.fuel.on = !L.fuel.on; saveWK(); scheduleRender(); };
 function fuelSummary(plan, P = FUELP()) { const g = plan.filter(x => x.k === "gel").length, w = plan.filter(x => x.k === "water").length, s = plan.filter(x => x.k === "salt").length; return `${g} gel${g === 1 ? "" : "s"} (${g * P.gel} g carbs)${w ? ` · ${w} drinks` : ""}${s ? ` · ${s} salt` : ""}`; }
-function fuelPreview(L) { if (!GPS_SPORT(L.sport) && !L.race) return ""; const F = L.fuel || fuelInit(L);
-  return `<div class="gps-pv"><span class="gps-sig" style="--c:var(--${F.on ? "good" : "faint"})"><i></i>Fuelling ${F.on ? "on" : "off"}</span><span class="faint gps-al">${F.on ? esc(fuelSummary(F.plan.filter(x => x.at < (fuelSessionSec(L) || 6 * 3600)))) : "for sessions from " + FUELP().minMin + "′"}</span><button class="btn text sm" data-act="fu-toggle">${F.on ? "Turn off" : "Turn on"}</button><button class="btn text sm" data-act="fu-sheet">${ic("sliders", "sm")}Plan</button></div>`; }
+function fuelPreview(L) { if (!ENDUR(L.sport) && !L.race) return ""; const F = L.fuel || fuelInit(L);
+  return `<div class="pv-row"><span class="sig" style="--c:var(--${F.on ? "good" : "faint"})"><i></i>Fuelling ${F.on ? "on" : "off"}</span><span class="faint pv-al">${F.on ? esc(fuelSummary(F.plan.filter(x => x.at < (fuelSessionSec(L) || 6 * 3600)))) : "for sessions from " + FUELP().minMin + "′"}</span><button class="btn text sm" data-act="fu-toggle">${F.on ? "Turn off" : "Turn on"}</button><button class="btn text sm" data-act="fu-sheet">${ic("sliders", "sm")}Plan</button></div>`; }
 function fuelSettings() { const P = FUELP(), ch = (k, opts, lab, u = "") => `<div class="field"><span class="flabel">${lab}</span><div class="chips">${opts.map(v => `<button class="chip sm" data-act="fu-set" data-k="${k}" data-v="${v}" aria-pressed="${+P[k] === v}">${v ? v + u : "Off"}</button>`).join("")}</div></div>`;
   return `${ch("cph", [30, 45, 60, 75, 90], "Carbs per hour", " g")}${ch("gel", [20, 25, 30, 40], "One gel has", " g")}${ch("first", [15, 20, 30, 45], "First gel after", "′")}${ch("water", [0, 10, 15, 20], "Drink every", "′")}${ch("salt", [0, 30, 45, 60], "Salt every", "′")}${ch("minMin", [60, 75, 90, 120], "Turn on by itself from", "′")}
     <div class="faint" style="font-size:12.5px">30–60 g of carbs an hour for 1–2.5 h efforts, up to 90 g when longer and trained to it (ACSM, Jeukendrup). Practise the race plan in long runs first.</div>`; }
@@ -10553,14 +10387,14 @@ exportSheets = function () {
   const L = _exportSheets(), today = todayISO(), water = [], runs = [];
   for (const d of allLogDates()) { const x = logGet(d) || {};
     if (x.water || x.caff?.length) water.push({ Date: xd(d), "Water ml": x.water || null, "Goal ml": HYD().on ? waterGoal(d) : null, "Caffeine mg": (x.caff || []).reduce((a, c) => a + c[1], 0) || null, Drinks: (x.caff || []).map(c => `${c[0]} ${c[2] || ""} ${c[1]} mg`).join(" · "), "Sleep h": x.sleep || null });
-    for (const s of x.wsess || []) if (s.gps) runs.push({ Date: xd(d), Session: s.name, "Km (GPS)": s.gps.km, "Moving time": fmtDur(s.gps.sec), "Pace /km": fmtPace(s.gps.sec / 60 / s.gps.km), "Climb m": s.gps.elev || null, Splits: (s.gps.splits || []).map(p => `${p.km}: ${fmtPace(p.sec / 60 / (p.len || 1))}`).join(" · "), RPE: s.rpe ?? null }); }
+    for (const s of x.wsess || []) if (s.gps) runs.push({ Date: xd(d), Session: s.name, "Km": s.gps.km, "Moving time": fmtDur(s.gps.sec), "Pace /km": fmtPace(s.gps.sec / 60 / s.gps.km), "Climb m": s.gps.elev || null, Splits: (s.gps.splits || []).map(p => `${p.km}: ${fmtPace(p.sec / 60 / (p.len || 1))}`).join(" · "), RPE: s.rpe ?? null }); }
   const goals = GOALS().map(g => { const G = goalProg(g); return { Goal: g.name || goalLabel(g), Kind: GOAL_KINDS.find(k => k[0] === g.kind)?.[1] || g.kind, Started: g.start ? xd(g.start) : null, Start: goalFmt(g, G.s0), Now: goalFmt(g, G.cur), Target: g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv), "Progress %": r0(G.prog * 100), Forecast: G.eta ? xd(G.eta) : null, By: g.due ? xd(g.due) : null, Reached: G.done ? "yes" : "" }; });
   const season = []; const cur = weekStartOf(today); for (let k = -12; k <= 20; k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), dn = ws <= today ? weekDone(ws) : null; season.push({ "Week of": xd(ws), Phase: PH[p.ph][0], Why: p.why || "", "Set by hand": p.manual ? "yes" : "", "Target load": t.base ? r0(t.load) : null, "Done load": dn ? r0(dn.l) : null, "Target km": t.baseKm ? r1(t.km) : null, "Done km": dn ? r1(dn.km) : null, Note: PER().weeks[ws]?.note || "" }); }
   const pantry = Object.entries(S.shop.pantry || {}).map(([id, p]) => { const f = getFood(id) || BUILTIN[id]; if (!f) return null; const q = pantryQty(f, p); return { Food: f.name, Amount: q.v, Unit: q.u, [`In ${f.unit || "g"}`]: p.g, "Use by": p.exp ? xd(p.exp) : null }; }).filter(Boolean);
   const buys = (S.shop.buys || []).map(b => ({ Date: xd(b.d), Item: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", Amount: b.g || null, "€": b.eur ?? null, Estimated: b.est ? "yes" : "" }));
   const supp = (S.settings.supps || []).map(x => ({ Supplement: x.name, Dose: x.dose || "", Times: (x.times || []).join(", "), Days: x.days?.length && x.days.length < 7 ? x.days.map(d => DOW[d]).join(" ") : "every day", Stock: x.stock ?? null, Active: x.on === false ? "paused" : "yes" }));
   const photos = (S.body.photos || []).map(p => ({ Date: xd(p.date), Pose: p.pose, "Weight kg": bodyAt(p.date).w ? r1(bodyAt(p.date).w) : null, "In the cloud": p.cloud ? "yes" : "no" }));
-  return [...L, ["GPS runs", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
+  return [...L, ["Routes", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
 };
 /* ================= on-screen keyboard: sheets and the field you type in stay above it =================
    Android resizes the page with the keyboard (viewport meta); where it doesn't (iOS, older browsers) the visual
@@ -10580,14 +10414,13 @@ refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[d
 /* ================= features you can switch off: the app stays simple if you don't need them ================= */
 const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
   ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
-  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["gps", "GPS runs", "Distance, splits and alerts from the phone"]];
+  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"]];
 const FEAT = k => (S.settings?.feat || {})[k] !== false;
 function featCard() { const F = S.settings.feat || {};
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
-    ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false && (k !== "gps" || GPSP().on)}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
+    ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
 SETTINGS_CARDS.push({ o: -1, fn: featCard });
-ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !(k === "gps" ? FEAT(k) && GPSP().on : FEAT(k)); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
-  if (k === "gps") { const f = FIT(); f.player = f.player || {}; f.player.gps = { ...(f.player.gps || {}), on }; }
+ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !FEAT(k); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
   if (k === "period" && !on && UI.trainSeg === "season") UI.trainSeg = "cal"; if (k === "goals" && !on && UI.progSeg === "goals") UI.progSeg = "overview"; saveSettings(); };
 /* where each switch acts */
 {
@@ -10644,7 +10477,7 @@ ACT["cc-wd"] = el => { const P = CCP(), k = el.dataset.k, n = { H: "M", M: "L", 
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
   try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
   /* home-screen shortcuts: ?a=<action> runs once the app is up */
-  try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["gps-run", "open-add", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 900); } catch (e) {}
+  try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 900); } catch (e) {}
   if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(null, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
