@@ -10939,12 +10939,12 @@ function hexHsl(hex) { const n = parseInt(String(hex).replace("#", ""), 16); let
   let h = 0, s = 0; if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; } return [h, s]; }
 const hsl = (h, s, l) => `hsl(${Math.round(h)} ${Math.round(clamp(s, 0, 1) * 100)}% ${Math.round(l * 10) / 10}%)`;
 function mdPalette(hex) { const [h, s0] = hexHsl(hex), s = Math.min(s0, .85), n = Math.min(s, .5) * .32, e = 4; // n: how much the seed tints neutrals
-  const light = { primary: hsl(h, s * .95, 34), "on-primary": "#fff", "primary-container": hsl(h, s * .85 + .05, 88), "on-primary-container": hsl(h, s, 13),
+  const light = { primary: hsl(h, s * .95, 31), "on-primary": "#fff", "primary-container": hsl(h, s * .85 + .05, 88), "on-primary-container": hsl(h, s, 13),
     secondary: hsl(h, s * .3, 38), "secondary-container": hsl(h, s * .35 + .06, 89), "on-secondary-container": hsl(h, s * .4, 15),
     tertiary: hsl((h + 60) % 360, s * .45, 36), "tertiary-container": hsl((h + 60) % 360, s * .5, 88), "on-tertiary-container": hsl((h + 60) % 360, s * .5, 14),
     error: "#B3261E", "error-container": "#F9DEDC", "on-error-container": "#410E0B",
     surface: hsl(h, n, 98.2), "sc-lowest": "#fff", "sc-low": hsl(h, n, 96.4), sc: hsl(h, n, 94.4), "sc-high": hsl(h, n, 92.2), "sc-highest": hsl(h, n, 89.8),
-    "on-surface": hsl(h, n * 1.2, 11), "on-surface-variant": hsl(h, n, 27), outline: hsl(h, n * .8, 46), "outline-variant": hsl(h, n, 80),
+    "on-surface": hsl(h, n * 1.2, 11), "on-surface-variant": hsl(h, n, 27), outline: hsl(h, n * .8, 39), "outline-variant": hsl(h, n, 80),
     "inverse-surface": hsl(h, n, 19), "inverse-on-surface": hsl(h, n, 95), "inverse-primary": hsl(h, s * .8, 78) };
   const dark = { primary: hsl(h, s * .75 + .1, 78), "on-primary": hsl(h, s, 17), "primary-container": hsl(h, s * .8, 27), "on-primary-container": hsl(h, s * .8 + .1, 89),
     secondary: hsl(h, s * .3, 76), "secondary-container": hsl(h, s * .3 + .04, 25), "on-secondary-container": hsl(h, s * .35 + .1, 88),
