@@ -12592,6 +12592,16 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   const x = d => L + (W - L - R) * daysBetween(d0, d) / span, y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   const hp = series.filter(s => s.pts.length).flatMap(s => s.pts.map(p => `<circle class="hp" cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="0"><title>${fmtDM(p[0])} · ${esc(s.name || "")} ${(o.fmt || r1)(p[1])}</title></circle>`)).join("");
   return h.replace("</svg>", hp + "</svg>"); }; }
+/* ================= ticking an item in the list puts it in the pantry right away: the list for the range drops it ================= */
+{ const _ck = ACT["shop-check"]; ACT["shop-check"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id), c = S.shop.checked?.[id];
+  if (!r || (c && c !== true && !c.g && false)) return _ck(el);
+  if (c) return _ck(el);
+  const g = r0(buyG(r)); if (!(g > 0)) return _ck(el); const before = clone(S.shop.pantry[id] || null), nb = (S.shop.buys || []).length;
+  const p = S.shop.pantry[id] || { g: 0 }; S.shop.pantry[id] = { ...p, g: r0((p.g || 0) + g), exp: p.g > 0 ? p.exp || null : null };
+  const k = eurPerG(id); S.shop.buys = [...(S.shop.buys || []), { d: todayISO(), id, n: r.f.name, g, eur: k != null ? Math.round(k * g * 100) / 100 : null, est: true }];
+  put("shop", "", S.shop); try { linkFromPantry(UI.shopStart, S.shop.range || 7, [id]); } catch (e) {} haptic(10);
+  toast(`${r.f.name} · ${fmtN(g)} ${r.f.unit || "g"} in the pantry`, () => { if (before) S.shop.pantry[id] = before; else delete S.shop.pantry[id]; S.shop.buys = (S.shop.buys || []).slice(0, nb); put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); });
+  scheduleRender(); if (UI.sheet) renderSheet(); }; }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
