@@ -165,6 +165,21 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 
 .story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px}
 .story-pv img{max-height:52vh;width:auto;border-radius:12px;box-shadow:var(--md-elev2,0 2px 8px rgba(0,0,0,.2))}
+/* secondary tabs: a tonal track, the picked one fills (M3 connected button group) */
+.subseg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--md-sc-high);width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.subseg::-webkit-scrollbar{display:none}
+.subseg button{flex:0 0 auto;min-height:36px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);transition:background .2s,color .2s,border-radius .2s}
+.subseg button:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)}
+.subseg button[aria-selected="true"]{background:var(--md-primary);color:var(--md-on-primary);border-radius:12px}
+.groc-sub{padding:12px 0 2px}
+.hist-sub{margin:12px 0 4px}
+@media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
+/* expanded (computer): calendar and the open day side by side */
+.cv-split{display:flex;flex-direction:column;gap:14px}
+@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-split .cv-day{position:sticky;top:16px}}
+/* expanded: settings groups in two columns */
+@media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
+
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -827,10 +842,10 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .cv-nav{display:flex;align-items:center;gap:4px}
 .cv-nav b{font-size:17px;font-weight:700;min-width:142px;text-align:center}
-.cv-view{min-width:0}
 .cv-kpi{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted)}
 .cv-kpi b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .cv-tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+@media (max-width:370px){.cv-tools{flex-wrap:wrap;justify-content:flex-end;max-width:100%}}
 .cv{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;touch-action:pan-y}
 .cv-h,.cv-w{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 104px}
 .cv-h span{font-size:11.5px;font-weight:650;color:var(--faint);padding:10px 8px 6px;text-align:left}
@@ -1058,7 +1073,7 @@ body{font-family:var(--body);letter-spacing:.1px}
 
 .chip-a.busy{opacity:.65}
 .chip-a svg{width:16px;height:16px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}.dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}.dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
 .chip-s{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:6px;background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:600;white-space:nowrap}
 .chip-s.strong{background:var(--accent);color:var(--accent-ink)}
 .chip-s.up{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
@@ -1348,11 +1363,7 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 /* ===== Today (v3): one surface per topic, type does the work ===== */
 .td-top .top-sub{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .td-top .top-title{font-size:30px;margin-top:2px}
-.td-sync{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
-.td-sync:hover{background:var(--surface-2);color:var(--ink)}
-.td-sync i{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--faint);box-shadow:0 0 0 2px var(--bg,var(--surface))}
-.td-sync i.ok{background:var(--good)}.td-sync i.warn{background:var(--warn)}.td-sync i.bad{background:var(--bad)}.sync-bar .dot.bad{background:var(--bad)}
-.td-sync.busy svg{animation:td-spin 1.2s linear infinite}@keyframes td-spin{to{transform:rotate(360deg)}}
+.sync-bar .dot.bad{background:var(--bad)}
 .td-nudges{display:flex;gap:8px;margin:0 0 12px}
 .td-nudge{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;background:var(--ink);color:var(--surface);font-size:13.5px;font-weight:600}
 .td-nudge+.td-nudge{background:var(--surface-2);color:var(--ink)}
@@ -2049,7 +2060,7 @@ select.inp{background:transparent!important}
 .today-grid.one{display:flex;flex-direction:column;gap:14px}
 .bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;background:var(--md-sc);color:var(--md-on-surface-variant);font-size:13px}
 .bk-due>span{flex:1;min-width:0}
-.cv-view{flex:0 0 auto}.cv-view button{flex:0 0 auto!important;padding:0 16px!important}
+
 #add-seg button{padding:0 6px!important;font-size:13px!important}
 .td-bar i{background:var(--c,var(--md-primary))!important}
 .wd.done{background:var(--md-primary)!important;color:var(--md-on-primary)!important}.wd.done small{color:var(--md-on-primary)!important}
@@ -3474,7 +3485,7 @@ const colorVar = c => `var(--${COLOR_TOKENS.includes(c) ? c : "accent"})`;
 /* ================= navigation ================= */
 const TABS = [["today", "Today", "home"], ["train", "Train", "fitness"], ["plan", "Fuel", "plate"], ["progress", "Progress", "chart"], ["dash", "Dashboard", "dash"]];
 const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
-const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const xp = k === "pantry" ? (E => E.expired.length + E.soon.length)(expiryList()) : 0; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`; }).join("")}</nav>`;
+let fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const xp = k === "pantry" ? (E => E.expired.length + E.soon.length)(expiryList()) : 0; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`; }).join("")}</nav>`;
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
   return (side ? [...TABS, ["timer", "Timer", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
@@ -3923,8 +3934,8 @@ function icuSyncBar() {
   if (!s.key) return `<div class="card pad sync-bar"><span class="dot"></span><div class="sb-t"><b>Connect intervals.icu</b><small>Your calendar there becomes the plan, synced both ways.</small></div><button class="btn tonal sm" data-act="tab" data-tab="settings">Connect</button></div>`;
   const P = icuPending(), busy = ICU_KICK_STATE === "sent";
   const F = icuFail();
-  return `<div class="card pad sync-bar"><span class="dot ${F ? "bad" : s.bridge ? "ok" : "warn"}"></span><div class="sb-t"><b>intervals.icu</b><small>${busy ? "Sync started · results in about a minute" : F ? `Last sync failed: ${esc(String(F.error || "unknown").slice(0, 90))}` : s.bridge ? icuAgo() : "Waiting for the first sync"}${P.n ? ` · ${P.n} change${P.n > 1 ? "s" : ""} to send` : ""}</small></div>
-    <button class="btn ${P.n ? "primary" : "tonal"} sm" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}${busy ? "Syncing…" : "Sync now"}</button></div>`;
+  return `<div class="card pad sync-bar"><span class="dot ${F ? "bad" : s.bridge ? "ok" : "warn"}"></span><div class="sb-t"><b>intervals.icu</b><small>${busy ? "Syncing…" : F ? `Sync failed: ${esc(String(F.error || "unknown").slice(0, 90))}` : s.bridge ? `${icuAgo()} · syncs by itself` : "First sync in a moment"}${P.n && !busy ? ` · ${P.n} change${P.n > 1 ? "s" : ""} on the way` : ""}</small></div>
+    ${F ? `<button class="btn tonal sm" data-act="icu-now">Retry</button>` : ""}</div>`;
 }
 function planWeekTotals(ws) {
   const P = { n: 0, min: 0, load: 0, km: 0 }, D = { n: 0, min: 0, load: 0, km: 0 }, run = FIT().runSport;
@@ -3953,7 +3964,7 @@ function trainWeek() {
       <button class="pl-k" data-act="open-checkin" data-date="${d}"><b class="num">${fmtN(T.kcal)}</b><small>${r.eat ? `+${fmtN(trainAdded(r))} training` : "kcal"}</small></button></div>`;
   }).join("");
   h += `<div class="section-h"><h2>Days</h2><span class="faint" style="font-size:12.5px">Target kcal · training included</span></div><div class="card pl-week">${days}</div>`;
-  h += `<div class="faint" style="font-size:12.5px">${pm ? "From your intervals.icu calendar. Tap a session to read or start it, a day to change it: new, edited and deleted sessions go back to intervals.icu when you tap Sync. " : ""}Week fuel: ${fmtN(kT)} kcal of targets, ${fmtN(kE)} of them for training.</div>`;
+  h += `<div class="faint" style="font-size:12.5px">${pm ? "From your intervals.icu calendar. Tap a session to read or start it, a day to change it: new, edited and deleted sessions go back to intervals.icu by themselves. " : ""}Week fuel: ${fmtN(kT)} kcal of targets, ${fmtN(kE)} of them for training.</div>`;
   if (!pm) {
     h += `<div class="section-h"><h2>Weekly pattern</h2><span class="row" style="gap:8px;font-size:13px">Use it <button class="switch" role="switch" aria-checked="${fit.usePattern}" data-act="fit-toggle" data-path="usePattern" aria-label="Use the weekly pattern"></button></span></div>
     <div class="card">${DOWK.map((k, i) => { const p = fit.pattern[k] || []; const kc = p.reduce((a, w) => a + sessionKcal(w, today).kcal, 0);
@@ -4318,7 +4329,7 @@ SHEETS.food = sh => {
   return {
     title: sh.isNew ? (d.source === "off" ? "Imported product" : d.source === "label" ? "Check the label values" : "New food") : "Edit food",
     focus: sh.isNew && !d.name ? "fd-name" : null,
-    body: `${d.source === "off" ? `<div class="note off-note">${d.img ? `<img src="${esc(d.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span>From Open Food Facts${d.barcode ? " · " + esc(d.barcode) : ""}${d.nutri ? ` · Nutri-Score ${nutriTag(d)}` : ""}${d.nova ? ` · NOVA ${d.nova}` : ""}. Change any value; your version is what gets used.${d.barcode && !sh.isNew ? ` <button class="link" data-act="off-refresh">Update from Open Food Facts</button>` : ""}</span></div>` : ""}
+    body: `${d.source === "off" ? `<div class="note off-note">${d.img ? `<img data-blob="${esc(d.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span>From Open Food Facts${d.barcode ? " · " + esc(d.barcode) : ""}${d.nutri ? ` · Nutri-Score ${nutriTag(d)}` : ""}${d.nova ? ` · NOVA ${d.nova}` : ""}. Change any value; your version is what gets used.${d.barcode && !sh.isNew ? ` <button class="link" data-act="off-refresh">Update from Open Food Facts</button>` : ""}</span></div>` : ""}
       ${d.source === "label" ? `<div class="note accent">Claude read these from your photo. Compare them with the label before saving.</div>` : ""}
       ${d.source === "ocr" ? `<div class="note accent">Read from the label on this device. Compare the numbers with the pack and give the food a name before saving.${d.ocrText ? `<details class="ocr-t"><summary>Text that was read</summary><pre>${esc(d.ocrText)}</pre></details>` : ""}</div>` : ""}
       ${d.source === "ai" ? `<div class="note accent">Values estimated by Claude. Check them against the pack if you have it.</div>` : ""}
@@ -4556,7 +4567,7 @@ SHEETS.session = sh => {
   return {
     title: sh.idx == null ? (isLog ? "Add workout" : "Plan a session") : (isLog ? "Edit workout" : "Edit before you start"),
     body: `${isPlan && sh.idx != null && !sh.pick ? `<div class="field"><span class="flabel">Day</span><div class="chips scroll">${[...Array(15)].map((_, i) => { const d = addDays(t0, i - 1); return `<button class="chip" data-act="ss-move" data-date="${d}" aria-pressed="${(sh.moveTo || sh.date) === d}">${d === t0 ? "Today" : d === addDays(t0, 1) ? "Tomorrow" : DOW[dow(d)] + " " + fmtDM(d)}</button>`; }).join("")}</div></div>` : ""}${sh.pick ? (() => { const t = todayISO(); return `<div class="field"><span class="flabel">Day</span><div class="chips scroll">${[...Array(14)].map((_, i) => { const d = addDays(t, i); return `<button class="chip" data-act="ss-date" data-date="${d}" aria-pressed="${sh.date === d}">${i === 0 ? "Today" : i === 1 ? "Tomorrow" : DOW[dow(d)] + " " + fmtDM(d)}</button>`; }).join("")}</div>
-      ${typeof icuPlanMode === "function" && icuPlanMode() ? `<span class="faint" style="font-size:12.5px">It's added to your intervals.icu calendar when you tap Sync.</span>` : `<label class="row" style="gap:10px;font-size:14px;margin-top:4px"><button type="button" class="switch" role="switch" aria-checked="${sh.list === "pattern"}" data-act="ss-repeat" aria-label="Repeat every week"></button>Repeat every ${DOWL[dow(sh.date)]}</label>`}
+      ${typeof icuPlanMode === "function" && icuPlanMode() ? `<span class="faint" style="font-size:12.5px">It goes to your intervals.icu calendar by itself.</span>` : `<label class="row" style="gap:10px;font-size:14px;margin-top:4px"><button type="button" class="switch" role="switch" aria-checked="${sh.list === "pattern"}" data-act="ss-repeat" aria-label="Repeat every week"></button>Repeat every ${DOWL[dow(sh.date)]}</label>`}
       ${(() => { const ex = plannedFor(sh.date).list.filter(w => w.sport && w.sport !== "Rest"); return ex.length && sh.list !== "pattern" ? `<span class="faint" style="font-size:12.5px">Already planned that day: ${esc(ex.map(sessionLabel).join(" + "))}. This one is added.</span>` : ""; })()}</div>`; })() : ""}<div class="field"><span class="flabel">Sport</span><div class="chips">${sports.map(s => `<button class="chip" data-act="ss-sport" data-k="${esc(s)}" aria-pressed="${w.sport === s}">${esc(s)}</button>`).join("")}</div></div>
       ${w.sport === "Rest" ? `<div class="note">A planned rest day: no training calories are added to the target.</div>` : `
       <div class="grid2"><div class="field"><label for="ss-min">Minutes</label><input id="ss-min" class="inp" inputmode="decimal" value="${w.min ?? ""}" placeholder="45 or 1:05" data-in="ss" data-k="min"></div>
@@ -4787,7 +4798,7 @@ function labelStage(sh) {
 }
 SHEETS.scan = sh => {
   const st = sh.stage || "start";
-  const thumb = sh.url ? `<img class="thumb" src="${sh.url}" alt="">` : `<span class="thumb" style="display:grid;place-items:center">${ic("scan", "lg")}</span>`;
+  const thumb = sh.url ? `<img class="thumb" data-blob="${sh.url}" alt="">` : `<span class="thumb" style="display:grid;place-items:center">${ic("scan", "lg")}</span>`;
   const manual = `<form data-form="scan-code" class="row" style="flex-wrap:nowrap"><input id="scan-code" class="inp" inputmode="numeric" placeholder="Or type the barcode number" value="${esc(sh.code || "")}" autocomplete="off"><button class="btn soft" type="submit">Look up</button></form>`;
   let body = "";
   if (st === "start") body = `<button class="big-action" data-act="cam-barcode">${ic("scan")}<span>Scan with the camera</span><small>Point at the barcode: it's read by itself, no photo to take</small></button>
@@ -6326,13 +6337,6 @@ function reportText() {
     `Trend weight: ${R.trendA ? r1(R.trendA) : "—"} → ${R.trendB ? r1(R.trendB) : "—"} kg`, `Training: ${R.sess} sessions, ${fmtN(R.mins)} min, ${r1(R.km)} km run`, `Sleep: ${R.sleep ? r1(R.sleep) + " h" : "—"} · Resting HR: ${R.rhr ? r0(R.rhr) : "—"}`);
   return L.join("\n");
 }
-ACT["dash-seg"] = el => { UI.dashSeg = el.dataset.k; UI.repOff = 0; scheduleRender(); window.scrollTo(0, 0); };
-VIEWS.dash = function () {
-  const seg = UI.dashSeg || "all";
-  const h = `<header class="top"><div class="top-row"><div><div class="top-title">Dashboard</div><div class="top-sub">${seg === "all" ? "Your whole journey at a glance" : seg === "week" ? "Weekly report" : "Monthly report"}</div></div>${settingsBtn()}</div>
-    <div style="padding:10px 0 12px">${segBar("dash-seg", seg, [["all", "All-time"], ["week", "Week"], ["month", "Month"]])}</div></header>`;
-  return h + (seg === "all" ? recapView() : reportsView());
-};
 ACT["rep-off"] = el => { UI.repOff = Math.min(0, (UI.repOff || 0) + +el.dataset.d); scheduleRender(); };
 ACT["rep-copy"] = async () => { const t = reportText(); try { await navigator.clipboard.writeText(t); toast("Report copied: paste it to your coach or notes"); } catch (e) { openSheet("confirm", { title: "Copy this report", text: t, yes: "Done", run: () => {} }); } };
 /* ================= Dashboard: the whole journey on one screen ================= */
@@ -6387,7 +6391,7 @@ function recapView() {
     <button class="dt" data-act="tab" data-tab="train"><small>VDOT</small><b class="num">${rs.vdot ? r1(rs.vdot) : "—"}</b><span class="faint">${rs.tPace ? "T " + fmtPace(rs.tPace) + "/km" : "add a test"}</span></button></div>`;
   // lifetime numbers
   const hrs = D.mins / 60;
-  h += `<div class="section-h"><h2>All-time</h2><button class="link" data-act="dash-seg" data-k="week">Weekly report</button></div>
+  h += `<div class="section-h"><h2>All-time</h2><button class="link" data-act="rep-seg" data-k="week">Weekly report</button></div>
   <div class="stat-grid four">
     ${kpi(`${D.logged}`, "days logged", D.logged ? `${r0(D.onT / D.logged * 100)}% within ±10% of target` : "")}
     ${kpi(D.avgI ? fmtN(D.avgI) : "—", "avg kcal a day", D.avgP ? `${r0(D.avgP)} g protein · ${r1(D.avgPkg)} g/kg` : "")}
@@ -6561,7 +6565,7 @@ function trainCalendar() {
   let mMin = 0, mKm = 0, mTl = 0, mDone = 0, mPlan = 0;
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
   let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
-    <div class="seg sm cv-view">${[["month", "Month"], ["agenda", "Agenda"]].map(([k, l]) => `<button data-act="cal-view" data-k="${k}" aria-pressed="${view === k}">${l}</button>`).join("")}</div></div>
+    ${subBar("cal-view", view, [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>
     <div class="cv-kpi"><span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span><span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
@@ -6574,7 +6578,7 @@ function trainCalendar() {
     }
     return h + `</div>`;
   }
-  h += `<div class="cv" data-calswipe><div class="cv-h">${DOW.map(d => `<span>${narrow ? d[0] : d}</span>`).join("")}${narrow ? "" : `<span>Week</span>`}</div>`;
+  h += `<div class="cv-split"><div class="cv" data-calswipe><div class="cv-h">${DOW.map(d => `<span>${narrow ? d[0] : d}</span>`).join("")}${narrow ? "" : `<span>Week</span>`}</div>`;
   for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
     let cells = "";
     for (let i = 0; i < 7; i++) {
@@ -6585,7 +6589,7 @@ function trainCalendar() {
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
     h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
-  h += `</div>` + calDayPanel(sel);
+  h += `</div>` + calDayPanel(sel) + `</div>`;
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
     <div class="faint" style="font-size:12.5px">Tap a day to see it below. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
@@ -7779,7 +7783,7 @@ ACT["race-save"] = () => { const d = S_().draft; if (!d.date) { toast("Pick the 
 ACT["race-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this race?", text: "Its result is removed too.", yes: "Delete", danger: true, run: () => { const gone = races().find(r => r.id === id); if (gone?.ext) S.train.racesDel = [...new Set([...(S.train.racesDel || []), gone.ext])]; S.train.races = races().filter(r => r.id !== id); if (icuLinked()) icuKick("race deleted", "soon"); S.train.tests = (S.train.tests || []).filter(t => t.race !== id); saveWK(); } }); };
 /* ================= intervals.icu: connection, two-way sync, manual import ================= */
 /* The page can't call intervals.icu itself (browser sandbox, and the API takes the key only from apps):
-   the sync runs in a scheduled Claude task, both ways, and the page starts it on demand (Sync now). */
+   the web build calls it directly (icu-direct.js); the sync runs by itself, see icuRun. */
 function icuState() { const s = S.settings?.intervals || {}; return { aid: s.aid || "", key: s.key || "", bridge: s.bridge || null, athlete: s.athlete || s.bridge?.athlete || "", push: s.push !== false }; }
 function icuSet(o) { S.settings.intervals = { ...(S.settings.intervals || {}), ...o }; saveSettings(); }
 function icuDisconnect() { const { key, bridge, athlete, ...rest } = S.settings.intervals || {}; S.settings.intervals = rest; saveSettings(); toast("Disconnected from intervals.icu"); scheduleRender(); }
@@ -7840,7 +7844,6 @@ function icuPending() {
   }
   return { plan, done, n: plan + done };
 }
-/* Sync now: straight from this app to intervals.icu (edits just wait in the "to send" count until you tap it) */
 async function icuKick(reason, mode = false) {
   if (!icuState().key) return;
   if (mode !== true) { scheduleRender(); return; }
@@ -7863,17 +7866,17 @@ function planDiff(day, next) {
 function icuChip() { const s = icuState();
   if (!s.key) return `<button class="chip-a" data-act="tab" data-tab="settings"><span class="dot"></span>Connect intervals.icu</button>`;
   const p = icuPending().n;
-  return `<button class="chip-a" data-act="icu-now" aria-label="Sync with intervals.icu now"><span class="dot ${s.bridge ? "ok" : "warn"}"></span>intervals.icu · ${ICU_KICK_STATE === "sent" ? "syncing…" : s.bridge ? icuAgo() : "waiting for first sync"}${p ? ` · ${p} to send` : ""}</button>`; }
+  return `<button class="chip-a" data-act="icu-sheet" aria-label="intervals.icu sync status"><span class="dot ${icuFail() ? "bad" : s.bridge ? "ok" : "warn"}"></span>intervals.icu · ${ICU_KICK_STATE === "sent" ? "syncing…" : icuFail() ? "sync failed" : s.bridge ? icuAgo() : "first sync soon"}${p ? ` · ${p} on the way` : ""}</button>`; }
 function icuSettingsCard() {
   const s = icuState(), b = s.bridge, P = icuPending(), busy = ICU_KICK_STATE === "sent", F = icuFail();
   const sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
   if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, activities, sleep, resting HR, HRV, steps and body fat (weight only from what you type).</div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="API key (intervals.icu → Settings → Developer)" style="flex:1;min-width:200px"><input id="icu-aid" class="inp" style="max-width:150px" placeholder="Athlete ID (i123456)" data-chg="icu-aid"><button class="btn primary" data-act="icu-save-key">Save</button></div>
-    <div class="faint" style="font-size:12.5px">The key stays in your account. Sync runs when you tap it, straight from this app.</div></section>`;
+    <div class="faint" style="font-size:12.5px">The key stays in your account. Syncs by itself, both ways, straight from this app.</div></section>`;
   return `<section class="card pad icu-card">
-    <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · tap Sync now"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
+    <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · first sync in a moment"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
     ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}${busy ? "Syncing…" : "Sync now"}</button><span class="faint" style="font-size:13px">${P.n ? `${P.n} change${P.n > 1 ? "s" : ""} waiting to be sent` : "Everything is up to date"}</span></div>
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><span class="faint" style="font-size:13px;flex:1">${busy ? "Syncing…" : P.n ? `${P.n} change${P.n > 1 ? "s" : ""} on the way` : "Up to date · syncs by itself when you open the app and after each change"}</span><button class="btn text sm" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}Sync now</button></div>
     <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}</div>
     <details class="icu-acc"><summary>Account and import</summary>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><label for="icu-aid" class="faint" style="font-size:13px">Athlete ID</label><input id="icu-aid" class="inp" style="max-width:150px" value="${esc(s.aid || "")}" placeholder="i123456" data-chg="icu-aid"></div>
@@ -7882,6 +7885,7 @@ function icuSettingsCard() {
 }
 
 SHEETS.icuset = () => ({ title: "intervals.icu", body: icuSettingsCard(), foot: "" });
+ACT["icu-sheet"] = () => openSheet("icuset");
 ACT["icu-now"] = () => icuKick("Sync now", true);
 ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
@@ -7972,7 +7976,7 @@ VIEWS.today = function () {
   const kcalTrain = trainAdded(er), ready = L.ready, rTone = ready === "green" ? "good" : ready === "yellow" ? "warn" : ready === "red" ? "bad" : "faint";
 
   let h = `<header class="top td-top"><div class="top-row"><div><div class="top-sub">${fmtLong(today)}${SMART() ? ` · ${esc(phaseFor(today).phase)}` : ""}</div><div class="top-title">${greeting()}</div></div>
-    <div class="row">${icu.key ? icuDot() : ""}${shopBtn()}${settingsBtn()}</div></div></header>`;
+    <div class="row">${shopBtn()}${settingsBtn()}</div></div></header>`;
   h += liveBanner();
   const nudges = [
     !(Lg.weight > 0) ? `<button class="td-nudge" data-act="weigh-open">${ic("weight", "sm")}Weigh in</button>` : "",
@@ -8044,8 +8048,6 @@ VIEWS.today = function () {
     ? `<div class="today-grid one">${todayCards("a")}${tr}${fuel}${body}${todayCards("b")}${suppCard()}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
     : `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${body}${suppCard()}${expiryCard("today")}${todayCards("z")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`);
 };
-function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
-  return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
 /* ---- Today helpers ---- */
 function readyWhy(L) { const r = []; if (L.sleepLast && L.sleepLast < 6.5) r.push(`slept ${r1(L.sleepLast)} h`); if (L.hrvOk && L.hrvZ < -0.75) r.push(`HRV ${r0(L.hrv7)} vs ${r0(L.hrvBase)}`); if (L.rhr7 && L.base && L.rhr7 - L.base >= 3) r.push(`resting HR +${r0(L.rhr7 - L.base)}`); return r.join(", ") || "recent load"; }
 function compliance(p, w) { const q = (+w.min || 0) / (+p.min || 1); return q >= 0.9 && q <= 1.15 ? "As planned" : q < 0.9 ? `${r0(q * 100)}% of the planned ${r0(p.min)} min` : `${r0(w.min - p.min)} min longer than planned`; }
@@ -8188,7 +8190,7 @@ async function searchOFF(q) {
   const res = { items: (items || []).map(p => offToFood(p.code, p)).filter(f => f.per.kcal > 0).slice(0, 24) };
   OFF_CACHE[key] = res; return res;
 }
-const offThumb = f => `<span class="off-img">${f.img ? `<img src="${esc(f.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ic("plate", "sm")}</span>`;
+const offThumb = f => `<span class="off-img">${f.img ? `<img data-blob="${esc(f.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ic("plate", "sm")}</span>`;
 const offRow = (f, i, act) => `<button class="lrow off-r" data-act="${act}" data-i="${i}">${offThumb(f)}<span style="min-width:0"><span class="t">${esc(f.name)}${nutriTag(f)}</span><span class="s">${esc([f.brand, f.qtyText].filter(Boolean).join(" · "))}${f.brand || f.qtyText ? " · " : ""}${fmtN(f.per.kcal)} kcal · ${r1(f.per.c)}C ${r1(f.per.p)}P ${r1(f.per.f)}F /100 ${f.unit}</span></span><span class="end">${ic("plus", "sm")}</span></button>`;
 const OFF_HINT = `Check the connection and try again in a moment.`;
 /* inline: after a short pause, if your own foods don't cover it, show the best Open Food Facts matches right in the list */
@@ -9459,7 +9461,7 @@ function runningProgress() {
       <div class="card pad"><div class="flabel" style="margin-bottom:6px">${k} times</div>${seriesChart([{ name: "Time", color: "var(--carb)", pts }], { invert: true, legend: true, fmt: fmtClock, l: 54, label: `${k} times`, minPad: 10 })}</div>`; }
   return h;
 }
-ACT["go-tprog"] = () => { UI.tab = "progress"; UI.progSeg = "training"; scheduleRender(); scrollTo(0, 0); };
+ACT["go-tprog"] = () => { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "strength"; scheduleRender(); scrollTo(0, 0); };
 ACT["tp-ex"] = el => { UI.tpEx = el.dataset.k; scheduleRender(); };
 ACT["tp-circ"] = el => { UI.tpCirc = el.dataset.k; scheduleRender(); };
 ACT["tp-dist"] = el => { UI.tpDist = el.dataset.k; scheduleRender(); };
@@ -9701,7 +9703,7 @@ async function storyCanvas(D, photo, layout, O) {
 SHEETS.story = sh => { const O = storyOpt(sh), D = sh.data;
   const seg = (act, cur, opts) => `<div class="seg sm">${opts.map(([k, l]) => `<button data-act="${act}" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
   const tog = (k, l) => `<button class="chip sm" data-act="story-tog" data-k="${k}" aria-pressed="${!!O[k]}">${l}</button>`;
-  return { title: "Share the workout", body: `<div class="story-pv">${sh.url ? `<img src="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
+  return { title: "Share the workout", body: `<div class="story-pv">${sh.url ? `<img data-blob="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
     ${!(D.track?.length > 3) && D.run ? `<label class="btn soft sm" style="align-self:flex-start">${ic("download", "sm")}Add the route for the map (GPX, TCX, FIT)${routeInput(`data-story="1"`)}</label>` : ""}
     <div class="field"><span class="flabel">Background</span>${seg("story-bg", O.bg, [...(D.track?.length > 3 ? [["map", "Map"]] : []), ["photo", "Photo"], ["none", "Plain"]])}
       ${O.bg === "map" ? `<div class="row" style="gap:8px;margin-top:8px">${seg("story-map", O.map, [["dark", "Dark map"], ["light", "Light map"]])}</div>` : ""}</div>
@@ -10068,9 +10070,11 @@ ACT["pp-share"] = async () => {
 const _bodyView = bodyView;
 bodyView = function () { const h = _bodyView(); setTimeout(photosHydrate, 30); return photosSection() + h; };
 const _afterRenderPh = afterRender;
-afterRender = function () { _afterRenderPh(); if ($("img[data-ph]")) photosHydrate(); };
+/* images set after render: a literal src="${…}" inside a template would be fetched by the preload scanner */
+const blobHydrate = () => { for (const i of $$("img[data-blob]")) if (i.getAttribute("src") !== i.dataset.blob) i.src = i.dataset.blob; };
+afterRender = function () { _afterRenderPh(); blobHydrate(); if ($("img[data-ph]")) photosHydrate(); };
 const _renderSheetPh = renderSheet;
-renderSheet = function () { _renderSheetPh(); if (document.querySelector(".sheet img[data-ph], #sheet img[data-ph]") || $("img[data-ph]")) photosHydrate(); };
+renderSheet = function () { _renderSheetPh(); blobHydrate(); if (document.querySelector(".sheet img[data-ph], #sheet img[data-ph]") || $("img[data-ph]")) photosHydrate(); };
 /* ================= water and caffeine: a tap per glass or coffee, reminders, what's still in you at bedtime =================
    Off until switched on in Settings. Water goal: 35 ml per kg of trend weight + 500 ml per hour of training (or your own).
    Caffeine: half-life 5 h, so the card shows what's left at bedtime; a warning past your cut-off time or the daily max. */
@@ -10294,7 +10298,7 @@ SHEETS.eatout = sh => {
   const E = sh.est, por = sh.por || 1, can = AIF("restaurant") && !!Sync.sample, img = can && Sync.sampleImages;
   return { title: "Eaten out", body: `<div class="field"><span class="flabel">Meal</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${mealChips(sh.meal, "eo-meal")}<input id="eo-date" class="inp sm" type="date" value="${sh.date}" max="${todayISO()}" data-chg="eo-date" aria-label="Day" style="max-width:160px"></div></div>
     ${can ? `<div class="field"><span class="flabel">What did you have?</span><div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn tonal sm">${ic("camera", "sm")}Photo of the plate<input type="file" accept="image/*" capture="environment" class="sr" data-chg="eo-photo"></label><label class="btn soft sm">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-chg="eo-photo"></label>` : ""}</div>
-      ${sh.photoURL ? `<img class="eo-ph" src="${sh.photoURL}" alt="Your plate">` : ""}
+      ${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your plate">` : ""}
       <textarea id="eo-desc" class="inp" rows="2" placeholder="e.g. carbonara, half a margherita, a beer and a tiramisù" data-in="eo-desc">${esc(sh.desc || "")}</textarea>
       <button class="btn primary" data-act="eo-est" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Estimating…' : ic("spark", "sm") + "Estimate"}</button></div>` : `<div class="note">Add an AI service in Settings to estimate from a photo or a description. Meanwhile pick the closest dish:</div>`}
     <div class="field"><span class="flabel">${can ? "Or pick the closest" : "Typical portions"}</span><div class="chips">${OUT_PRESETS.map(([n, k], i) => `<button class="chip sm" data-act="eo-pre" data-i="${i}" aria-pressed="${E?.pre === i}">${esc(n)} <span class="faint">~${fmtN(k)}</span></button>`).join("")}</div></div>
@@ -10822,6 +10826,88 @@ SETTINGS_CARDS.push({ o: -2, fn: lookCard });
 ACT["look-theme"] = el => { S.settings.look = { ...LOOK(), theme: el.dataset.k }; saveSettings(); };
 ACT["look-acc"] = el => { S.settings.look = { ...LOOK(), accent: el.dataset.k }; saveSettings(); };
 CHG["look-custom"] = v => { if (/^#[0-9a-f]{6}$/i.test(v)) { S.settings.look = { ...LOOK(), accent: v }; saveSettings(); } };
+/* ================= the map of the app: four places, few tabs, the rest one tap below =================
+   Today · Train (Calendar, Workouts, Season, Performance) · Fuel (Meals, Foods, Groceries) · Progress (Overview,
+   Goals, Body, Nutrition, Training, Reports). Dashboard and reports live in Progress › Reports. Old routes
+   (week, races, fitness, running, records, energy, days, weeks, dash) still land in the right place. */
+{ const i = TABS.findIndex(t => t[0] === "dash"); if (i >= 0) TABS.splice(i, 1); }
+const subBar = (act, cur, opts) => `<div class="subseg" role="tablist">${opts.map(([k, l]) => `<button role="tab" data-act="${act}" data-k="${k}" aria-selected="${cur === k}">${l}</button>`).join("")}</div>`;
+function navFix() {
+  const T = UI.trainSeg; if (T === "week") { UI.trainSeg = "cal"; UI.calView = "week"; } else if (T === "races") UI.trainSeg = "season"; else if (["fitness", "running", "records"].includes(T)) { UI.perfSeg = T; UI.trainSeg = "perf"; }
+  const P = UI.progSeg; if (P === "energy" || P === "nutrition") { UI.foodSeg = P === "energy" ? "energy" : "intake"; UI.progSeg = "food"; } else if (P === "days" || P === "weeks") { UI.repSeg = "hist"; UI.histSeg = P; UI.progSeg = "reports"; }
+  if (P === "training") { UI.progSeg = "overview"; if (UI.tab === "progress") { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "strength"; } }
+  if (UI.repSeg === "days" || UI.repSeg === "weeks") { UI.histSeg = UI.repSeg; UI.repSeg = "hist"; }
+  if (UI.tab === "dash") { UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = UI.dashSeg === "month" ? "month" : UI.dashSeg === "all" ? "all" : "week"; }
+  if (UI.trainSeg === "season" && !FEAT("period")) UI.trainSeg = "season"; // the tab then shows the races only
+}
+const trainHead = (sub) => `<header class="top"><div class="top-row"><div><div class="top-title">Training</div>${sub ? `<div class="top-sub hide-sm">${sub}</div>` : ""}</div>
+    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Timer">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
+    <div style="padding:10px 0 12px">${segBar("train-seg", UI.trainSeg, [["cal", "Calendar"], ["wk", "Workouts"], ["season", FEAT("period") ? "Season" : "Races"], ["perf", "Stats"]])}</div></header>`;
+VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
+  if (seg === "wk") return trainHead("Programs, workouts and history") + trainWorkouts();
+  if (seg === "season") return trainHead(FEAT("period") ? "Blocks, deloads, races and the plan to them" : "Races, countdowns and results") + (FEAT("period") ? trainSeason() + `<div class="section-h"><h2>Races</h2></div>` : "") + trainRaces();
+  if (seg === "perf") { const p = UI.perfSeg || "fitness"; return trainHead("Fitness, running, strength and records") + subBar("perf-seg", p, [["fitness", "Fitness"], ["running", "Running"], ["strength", "Strength"], ["records", "Records"]]) + (p === "running" ? trainRunning() : p === "strength" ? trainingProgressView() : p === "records" ? trainRecords() : trainFitness()); }
+  const v = UI.calView || "month";
+  return trainHead("Your training calendar") + (v === "week" ? `<div class="cv-top">${subBar("cal-view", "week", [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>` + trainWeek() : trainCalendar());
+};
+ACT["perf-seg"] = el => { UI.perfSeg = el.dataset.k; scheduleRender(); };
+VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
+  const segs = [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["body", "Body"], ["food", "Nutrition"], ["reports", "Reports"]];
+  const sub = { overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", food: "What you ate, and the energy behind it", reports: "Week, month, all-time and every day" }[seg] || "";
+  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${sub}</div></div>${settingsBtn()}</div><div style="padding:10px 0 12px">${segBar("prog-seg", seg, segs)}</div></header>`;
+  if (seg === "goals" && FEAT("goals")) return h + goalsView();
+  if (seg === "body") return h + bodyView();
+  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"]]) + (f === "energy" ? energyView() : VIEWS.stats(true)); }
+  if (seg === "reports") { const r = UI.repSeg || "week"; UI.dashSeg = r === "month" ? "month" : "week";
+    if (r === "hist") { const hs = UI.histSeg || "days"; return h + subBar("rep-seg", r, REP_SEGS) + `<div class="hist-sub chips">${[["days", "Days"], ["weeks", "Weeks"]].map(([k, l]) => `<button class="chip" data-act="hist-seg" data-k="${k}" aria-pressed="${hs === k}">${l}</button>`).join("")}</div>` + (hs === "weeks" ? weeksView() : daysView()); }
+    return h + subBar("rep-seg", r, REP_SEGS) + (r === "all" ? recapView() : reportsView()); }
+  return h + overviewView();
+};
+ACT["food-seg"] = el => { UI.foodSeg = el.dataset.k; scheduleRender(); };
+const REP_SEGS = [["week", "Week"], ["month", "Month"], ["all", "All-time"], ["hist", "History"]];
+ACT["rep-seg"] = el => { UI.repSeg = el.dataset.k; UI.repOff = 0; scheduleRender(); };
+ACT["hist-seg"] = el => { UI.histSeg = el.dataset.k; scheduleRender(); };
+ACT["rep-open"] = () => { UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = "week"; UI.dashSeg = "week"; UI.repOff = -1; scheduleRender(); window.scrollTo(0, 0); };
+ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
+/* Fuel: shopping list and pantry under one tab */
+fuelNav = () => { const groc = UI.tab === "shop" || UI.tab === "pantry", xp = (E => E.expired.length + E.soon.length)(expiryList());
+  return `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], [UI.groc || "shop", "Groceries"]].map(([k, l]) => `<button data-act="fuel-tab" data-k="${k}" ${(k === "shop" || k === "pantry" ? groc : UI.tab === k) ? 'aria-current="page"' : ""}>${l}${l === "Groceries" && xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`).join("")}</nav>${groc ? `<div class="groc-sub">${subBar("groc-seg", UI.tab, [["shop", "Shopping list"], ["pantry", `Pantry${xp ? ` · ${xp}` : ""}`]])}</div>` : ""}`; };
+ACT["groc-seg"] = el => { UI.tab = UI.fuelTab = UI.groc = el.dataset.k; scheduleRender(); window.scrollTo(0, 0); };
+{ const f = ACT["fuel-tab"]; ACT["fuel-tab"] = el => { if (el.dataset.k === "shop" || el.dataset.k === "pantry") UI.groc = el.dataset.k; return f(el); }; }
+if (location.hash === "#dash") { UI.tab = "progress"; UI.progSeg = "reports"; }
+/* on a phone the tab rows scroll: keep the open one in view */
+{ const _ar = afterRender; afterRender = function () { _ar(); document.querySelectorAll(".seg.many, .subseg").forEach(g => { const b = g.querySelector('[aria-pressed="true"],[aria-selected="true"]'); if (b && g.scrollWidth > g.clientWidth + 2) { const l = b.offsetLeft - g.offsetLeft, r = l + b.offsetWidth; if (l < g.scrollLeft + 24 || r > g.scrollLeft + g.clientWidth - 28) g.scrollLeft = Math.max(0, l - 24); } }); }; }
+/* ================= intervals.icu on its own: both ways, no button =================
+   A change here (plan, workout, check-in) is sent a few seconds later; the calendar, activities and wellness
+   come in when the app opens or comes back to the front, and every 15 minutes while it stays open.
+   Quiet when it works, one toast when it stops working. Not while a live workout runs, and not offline. */
+const ICU_AUTO = { t: 0, again: false, wait: 0, fails: 0 };
+const icuLastMs = () => { const l = icuState().bridge?.last; return l ? new Date(l).getTime() : 0; };
+const icuBusyLive = () => UI.tab === "live" && LV()?.phase === "run";
+function icuAutoSoon(ms) { clearTimeout(ICU_AUTO.t); ICU_AUTO.t = setTimeout(() => icuRun(false), ms); }
+async function icuRun(manual) {
+  if (!icuState().key) return;
+  if (ICU_KICK_STATE === "sent") { ICU_AUTO.again = true; if (manual) toast("Already syncing"); return; }
+  if (!manual && (!navigator.onLine || document.hidden || icuBusyLive() || Date.now() < ICU_AUTO.wait)) { icuAutoSoon(60e3); return; }
+  clearTimeout(ICU_AUTO.t); ICU_KICK_STATE = "sent"; ICU_AUTO.again = false; scheduleRender(); if (UI.sheet) renderSheet();
+  try { const r = await icuSyncDirect(); UI.syncstat = { at: new Date().toISOString(), ok: true, summary: r }; ICU_AUTO.fails = 0; ICU_AUTO.wait = 0;
+    if (manual) toast(`intervals.icu synced · ${r.planned} planned, ${r.acts} activities, ${r.well} wellness${r.pushed || r.sent_plan || r.sent_well ? ` · sent ${r.pushed + r.sent_plan + r.sent_well}` : ""}`); }
+  catch (e) { console.warn(e); const msg = String(e?.message || e); UI.syncstat = { at: new Date().toISOString(), ok: false, error: msg };
+    ICU_AUTO.fails++; ICU_AUTO.wait = Date.now() + Math.min(60, 2 ** ICU_AUTO.fails) * 60e3;
+    if (manual || (ICU_AUTO.fails === 1 && navigator.onLine)) toast("intervals.icu sync failed: " + msg.slice(0, 90)); }
+  finally { ICU_KICK_STATE = ""; scheduleRender(); if (UI.sheet) renderSheet(); if (ICU_AUTO.again) icuAutoSoon(3e3); }
+}
+/* every caller already says how urgent it is: true = now (the user asked), "soon" = a plan change, false = a check-in or a log */
+icuKick = async function (reason, mode = false) {
+  if (!icuState().key) return;
+  if (mode === true) return icuRun(true);
+  scheduleRender(); icuAutoSoon(mode === "soon" ? 6e3 : 25e3);
+};
+function icuStale(min) { return icuState().key && Date.now() - icuLastMs() > min * 60e3; }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && icuStale(10)) icuAutoSoon(1500); });
+addEventListener("online", () => { ICU_AUTO.wait = 0; if (icuState().key && (icuStale(10) || icuPending().n)) icuAutoSoon(2e3); });
+setInterval(() => { if (!document.hidden && (icuStale(15) || (icuPending().n && !ICU_AUTO.t))) icuAutoSoon(500); }, 60e3);
+setTimeout(() => { if (icuState().key && (icuStale(5) || icuPending().n)) icuAutoSoon(0); }, 3500);
 /* ================= boot ================= */
 (function boot() {
   loadLocal();

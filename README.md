@@ -17,7 +17,7 @@ Optional Web Push through your own Supabase project: `supabase/push.sql`, the `s
 and a public key in `config.js`. Steps in `supabase/PUSH.md`.
 
 ## Integrations
-- intervals.icu: direct from the browser with your API key (Settings → intervals.icu → Sync now).
+- intervals.icu: direct from the browser with your API key — it syncs by itself, both ways, when the app opens and after each change.
 - Open Food Facts: barcode and name search.
 - AI (optional): your own free key for Google Gemini, Groq or OpenRouter (Settings → AI).
 - Nutrition labels are also read on the device (Tesseract, Italian model in `ocr/`).
