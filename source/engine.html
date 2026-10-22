@@ -6417,7 +6417,7 @@ function trainCalendar() {
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
   let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
     <div class="seg sm cv-view">${[["month", "Month"], ["agenda", "Agenda"]].map(([k, l]) => `<button data-act="cal-view" data-k="${k}" aria-pressed="${view === k}">${l}</button>`).join("")}</div></div>
-    <div class="cv-kpi"><span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span><span class="cv-tools">${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
+    <div class="cv-kpi"><span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span><span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
     for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
@@ -7428,8 +7428,8 @@ SHEETS.wo = sh => {
   if (w) body += `<div class="wo-meta"><span class="pill" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})">${esc(w.int || sessionIntensity(w))}</span><span>${esc(w.sport)}${w.min ? ` · ${r0(w.min)} min` : ""}${w.km ? ` · ${r1(w.km)} km` : ""}${w.load ? ` · load ${w.load}` : ""}${R.logged && sessionKcal(w, R.date).kcal ? ` · ${fmtN(sessionKcal(w, R.date).kcal)} kcal` : ""}</span>${R.logged ? `<span class="pill" style="--c:var(--good)">Done</span>` : ""}${isIcu(R.p || w) ? `<span class="faint">intervals.icu</span>` : ""}</div>`;
   if (R.script && !isStrength(R.sport)) { const g = runGist(R.script); if (g.text) body += `<div class="wo-gist">${esc(g.text)}</div>`; }
   if (R.prog) { const P = progById(R.prog); if (P) body += `<div class="note">${esc(P.name)} · week ${R.week} of ${P.weeks} · ${esc(progRuleText(P, R.week))}</div>`; }
-  if (sess) body += `<div class="field"><div class="row" style="justify-content:space-between"><span class="flabel">Result</span><button class="link" data-act="story-open" data-date="${R.date}" data-id="${sess.id}">${ic("image", "sm")} Share as a story</button></div>${sessionDetailHTML(sess)}</div>`;
-  else if (R.logged && w) body += `<button class="btn soft sm" data-act="story-open" data-date="${R.date}" data-id="" style="align-self:flex-start">${ic("image", "sm")}Share as a story</button>`;
+  if (sess) body += `<div class="field"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="flabel">Result</span><span class="row" style="gap:12px">${ENDUR(w.sport) && !sess.gps ? `<label class="link">${ic("download", "sm")} Route${routeInput(`data-date="${R.date}" data-wi="${(logGet(R.date)?.workouts || []).indexOf(w)}"`)}</label>` : ""}<button class="link" data-act="story-open" data-date="${R.date}" data-id="${sess.id}">${ic("image", "sm")} Share as a story</button></span></div>${sessionDetailHTML(sess)}</div>`;
+  else if (R.logged && w) { const wi = (logGet(R.date)?.workouts || []).indexOf(w); body += `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="story-open" data-date="${R.date}" data-wi="${wi}">${ic("image", "sm")}Share as a story</button>${ENDUR(w.sport) ? `<label class="btn text sm">${ic("download", "sm")}Add the route (GPX, FIT)${routeInput(`data-date="${R.date}" data-wi="${wi}"`)}</label>` : ""}</div>`; }
   if (R.script) body += `<div class="field"><div class="row" style="justify-content:space-between"><span class="flabel">Script</span><button class="link" data-act="wo-copy">${ic("copy", "sm")} Copy</button></div><pre class="wo-script">${esc(R.script)}</pre></div>
     ${isStrength(R.sport) || /emom|amrap|cluster|\dx\s*$/im.test(R.script) ? `<details class="card wo-pv"><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad">${scriptPreview(R.script)}</div></details>` : ""}`;
   else if (!sess) body += `<div class="note">${isStrength(R.sport) ? "No script on this session yet. Start it with one of your workouts, or write a new one." : "No workout text on this session."}</div>`;
@@ -9482,7 +9482,23 @@ function roundRect(x, X, Y, W, H, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcT
 /* the text over the picture is yours to shape: which numbers, title, a caption, where it sits, colours and size */
 const STORY_ACC = { lime: "#B5E36B", orange: "#FF9F43", cyan: "#4FD1E8", pink: "#FF6FAE", white: "#FFFFFF" };
 const STORY_ACC_D = { lime: "#4F7A16", orange: "#C2560A", cyan: "#0E7C93", pink: "#C2185B", white: "#111111" };
-const storyOpt = sh => ({ hide: {}, title: sh.data.title, caption: "", pos: "bottom", ink: "white", acc: "lime", size: "m", route: true, lines: true, date: true, sport: true, ...(sh.opt || {}) });
+const storyOpt = sh => { const o = { hide: {}, title: sh.data.title, caption: "", pos: "bottom", ink: "white", acc: "lime", size: "m", route: true, lines: true, date: true, sport: true, map: "dark", ...(sh.opt || {}) };
+  o.bg = sh.bg || (sh.photo ? "photo" : sh.data.track?.length > 3 ? "map" : "none"); return o; };
+/* map tiles (OpenStreetMap data, CARTO style) behind the route, Web Mercator; the route is fitted into the free area */
+const MAP_T = 512;
+const mX = (lon, z) => (lon + 180) / 360 * MAP_T * 2 ** z, mY = (lat, z) => { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * MAP_T * 2 ** z; };
+async function drawMap(x, T, W, H, area, style) {
+  const la = T.map(p => p[0]), lo = T.map(p => p[1]), a0 = Math.min(...la), a1 = Math.max(...la), o0 = Math.min(...lo), o1 = Math.max(...lo);
+  let z = 17; while (z > 3 && (mX(o1, z) - mX(o0, z) > area.w * .82 || mY(a0, z) - mY(a1, z) > area.h * .82)) z--;
+  const cx = (mX(o0, z) + mX(o1, z)) / 2, cy = (mY(a0, z) + mY(a1, z)) / 2, ox = cx - (area.x + area.w / 2), oy = cy - (area.y + area.h / 2);
+  const tx0 = Math.floor(ox / MAP_T), ty0 = Math.floor(oy / MAP_T), tx1 = Math.floor((ox + W) / MAP_T), ty1 = Math.floor((oy + H) / MAP_T), n = 2 ** z, sub = "abcd";
+  const jobs = []; for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { if (ty < 0 || ty >= n) continue; const X = ((tx % n) + n) % n;
+    jobs.push(new Promise(ok => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => { x.drawImage(im, tx * MAP_T - ox, ty * MAP_T - oy, MAP_T, MAP_T); ok(1); }; im.onerror = () => ok(0);
+      im.src = `https://${sub[(X + ty) % 4]}.basemaps.cartocdn.com/${style === "light" ? "light_all" : "dark_all"}/${z}/${X}/${ty}@2x.png`; setTimeout(() => ok(0), 8000); })); }
+  const got = (await Promise.all(jobs)).filter(Boolean).length;
+  const P = p => [mX(p[1], z) - ox, mY(p[0], z) - oy];
+  return { ok: got > 0, P };
+}
 async function storyCanvas(D, photo, layout, O) {
   const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   const font = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif", F = (w, s) => `${w} ${Math.round(s)}px ${font}`;
@@ -9490,8 +9506,9 @@ async function storyCanvas(D, photo, layout, O) {
   let img = null; if (photo) { try { img = await createImageBitmap(photo); } catch (e) { img = null; } }
   const cover = (X, Y, w, h) => { const q = Math.max(w / img.width, h / img.height), iw = img.width * q, ih = img.height * q; x.save(); x.beginPath(); x.rect(X, Y, w, h); x.clip(); x.drawImage(img, X + (w - iw) / 2, Y + (h - ih) / 2, iw, ih); x.restore(); };
   const g = x.createLinearGradient(0, 0, W, H); if (dark) { g.addColorStop(0, "#f4f4ef"); g.addColorStop(1, "#e4e6dc"); } else { g.addColorStop(0, "#151a10"); g.addColorStop(1, "#0b0d09"); } x.fillStyle = g; x.fillRect(0, 0, W, H);
-  const bg = img && layout === "bg", below = img && layout === "below";
-  if (bg) cover(0, 0, W, H); if (below) cover(0, H * .5, W, H * .5);
+  const mapOn = O.bg === "map" && D.track && D.track.length > 3; if (O.bg !== "photo") img = null;
+  const bg = mapOn || (img && layout === "bg"), below = img && layout === "below";
+  if (img && layout === "bg") cover(0, 0, W, H); if (below) cover(0, H * .5, W, H * .5);
   // the text block, measured first so it can sit at the top, middle or bottom
   const M = 72, stats = D.stats.filter(([l]) => !O.hide[l]), cols = stats.length === 4 ? 2 : 3, cw = (W - 2 * M) / cols;
   x.font = F(800, 92 * k); const tl = []; let line = "";
@@ -9499,12 +9516,22 @@ async function storyCanvas(D, photo, layout, O) {
   x.font = F(500, 42 * k); const cl = []; line = "";
   for (const wd of String(O.caption || "").split(/\s+/).filter(Boolean)) { const t = line ? line + " " + wd : wd; if (x.measureText(t).width > W - 2 * M && line) { cl.push(line); line = wd; } else line = t; } if (line) cl.push(line);
   /* Instagram covers the top ~260 px (progress bar, your name) and the bottom ~380 px (reply box): text stays out of both */
-  const areaTop = 270, areaBot = below ? H * .5 - 50 : H - 390, track = O.route && D.track && D.track.length > 3, lines = O.lines ? D.lines : [];
+  const areaTop = 270, areaBot = below ? H * .5 - 50 : H - 390, track = !mapOn && O.route && D.track && D.track.length > 3, lines = O.lines ? D.lines : [];
   const showSport = O.sport && norm(D.sport) !== norm(O.title), hDate = O.date ? 54 : 0, hSport = showSport ? 52 * k : 0, hTitle = tl.length * 100 * k + (tl.length ? 24 : 0), hCap = cl.length * 54 * k + (cl.length ? 24 : 0), hStats = Math.ceil(stats.length / cols) * 150 * k;
   let hRoute = track ? Math.min(560, (areaBot - areaTop) - hDate - hSport - hTitle - hCap - hStats - 40) : 0; if (hRoute < 220) hRoute = 0;
   const lh = 64 * k; let nLines = Math.max(0, Math.floor(((areaBot - areaTop) - hDate - hSport - hTitle - hCap - hStats - (hRoute ? hRoute + 30 : 0) - 20) / lh)); nLines = Math.min(nLines, lines.length);
+  if (mapOn) { const fixed = hDate + hSport + hTitle + hCap + hStats; nLines = clamp(Math.floor(((areaBot - areaTop) - fixed - 760 - 20) / lh), 0, Math.min(nLines, 4)); } // the map keeps room to breathe
   const total = hDate + hSport + hTitle + hCap + hStats + (hRoute ? hRoute + 30 : 0) + (nLines ? nLines * lh + 20 : 0);
   let y = O.pos === "top" ? areaTop : O.pos === "center" ? areaTop + Math.max(0, (areaBot - areaTop - total) / 2) : Math.max(areaTop, areaBot - total);
+  // the map: whole picture, route fitted into what the text leaves free
+  if (mapOn) { const top = O.pos === "top" ? y + total + 40 : 290, bot = O.pos === "top" ? H - 400 : O.pos === "center" ? H - 400 : y - 40, area = O.pos === "center" ? { x: 60, y: 290, w: W - 120, h: Math.max(300, y - 330) } : { x: 60, y: top, w: W - 120, h: Math.max(300, bot - top) };
+    const lightMap = O.map === "light"; x.fillStyle = lightMap ? "#eef0ea" : "#1b1d1a"; x.fillRect(0, 0, W, H);
+    const m = await drawMap(x, D.track, W, H, area, O.map);
+    const pts = D.track.map(m.P); x.lineJoin = x.lineCap = "round";
+    x.strokeStyle = lightMap ? "rgba(255,255,255,.95)" : "rgba(0,0,0,.55)"; x.lineWidth = 18; x.beginPath(); pts.forEach(([X, Y], i) => i ? x.lineTo(X, Y) : x.moveTo(X, Y)); x.stroke();
+    x.strokeStyle = accent; x.lineWidth = 10; x.beginPath(); pts.forEach(([X, Y], i) => i ? x.lineTo(X, Y) : x.moveTo(X, Y)); x.stroke();
+    for (const [[X, Y], c2] of [[pts[0], "#3fbf6b"], [pts[pts.length - 1], "#e5484d"]]) { x.fillStyle = "#fff"; x.beginPath(); x.arc(X, Y, 16, 0, 7); x.fill(); x.fillStyle = c2; x.beginPath(); x.arc(X, Y, 10, 0, 7); x.fill(); }
+    if (m.ok) { x.font = F(500, 20); x.fillStyle = lightMap ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.6)"; x.textBaseline = "alphabetic"; const at = "© OpenStreetMap contributors © CARTO"; x.fillText(at, W - 24 - x.measureText(at).width, H - 24); } }
   // a shade behind the text so it reads on any photo
   if (bg) { const y0 = Math.max(0, y - 260), y1 = Math.min(H, y + total + 200), sh = x.createLinearGradient(0, y0, 0, y1), col = dark ? "255,255,255" : "0,0,0";
     sh.addColorStop(0, `rgba(${col},0)`); sh.addColorStop(.3, `rgba(${col},.62)`); sh.addColorStop(.75, `rgba(${col},.62)`); sh.addColorStop(1, `rgba(${col},0)`); x.fillStyle = sh; x.fillRect(0, y0, W, y1 - y0); }
@@ -9527,12 +9554,15 @@ SHEETS.story = sh => { const O = storyOpt(sh), D = sh.data;
   const seg = (act, cur, opts) => `<div class="seg sm">${opts.map(([k, l]) => `<button data-act="${act}" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
   const tog = (k, l) => `<button class="chip sm" data-act="story-tog" data-k="${k}" aria-pressed="${!!O[k]}">${l}</button>`;
   return { title: "Share the workout", body: `<div class="story-pv">${sh.url ? `<img src="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
-    <div class="field"><span class="flabel">Photo</span><div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn tonal sm">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="story-photo"></label><label class="btn soft sm">${ic("image", "sm")}${sh.photo ? "Change" : "From gallery"}<input type="file" accept="image/*" class="sr" data-chg="story-photo"></label>${sh.photo ? `<button class="btn text sm" data-act="story-nophoto">Remove</button>` : ""}</div>
-      ${sh.photo ? `<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><span class="faint" style="font-size:12.5px">Photo</span>${seg("story-layout", sh.layout || "bg", [["bg", "Under the text"], ["below", "Bottom half"]])}</div>` : ""}</div>
+    ${!(D.track?.length > 3) && D.run ? `<label class="btn soft sm" style="align-self:flex-start">${ic("download", "sm")}Add the route for the map (GPX, TCX, FIT)${routeInput(`data-story="1"`)}</label>` : ""}
+    <div class="field"><span class="flabel">Background</span>${seg("story-bg", O.bg, [...(D.track?.length > 3 ? [["map", "Map"]] : []), ["photo", "Photo"], ["none", "Plain"]])}
+      ${O.bg === "map" ? `<div class="row" style="gap:8px;margin-top:8px">${seg("story-map", O.map, [["dark", "Dark map"], ["light", "Light map"]])}</div>` : ""}</div>
+    ${O.bg === "photo" ? `<div class="field"><span class="flabel">Photo</span><div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn tonal sm">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="story-photo"></label><label class="btn soft sm">${ic("image", "sm")}${sh.photo ? "Change" : "From gallery"}<input type="file" accept="image/*" class="sr" data-chg="story-photo"></label>${sh.photo ? `<button class="btn text sm" data-act="story-nophoto">Remove</button>` : ""}</div>
+      ${sh.photo ? `<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><span class="faint" style="font-size:12.5px">Photo</span>${seg("story-layout", sh.layout || "bg", [["bg", "Under the text"], ["below", "Bottom half"]])}</div>` : ""}</div>` : ""}
     <div class="field"><label for="st-title">Title</label><input id="st-title" class="inp" value="${esc(O.title)}" data-in="story" data-k="title" maxlength="60"></div>
     <div class="field"><label for="st-cap">Caption</label><input id="st-cap" class="inp" value="${esc(O.caption)}" placeholder="e.g. Rainy long run, felt great" data-in="story" data-k="caption" maxlength="120"></div>
     <div class="field"><span class="flabel">Numbers to show</span><div class="chips">${D.stats.map(([l]) => `<button class="chip sm" data-act="story-stat" data-k="${esc(l)}" aria-pressed="${!O.hide[l]}">${esc(l)}</button>`).join("")}</div></div>
-    <div class="field"><span class="flabel">Also show</span><div class="chips">${tog("sport", "Sport")}${tog("date", "Date")}${D.lines.length ? tog("lines", D.run ? "Splits" : "Exercises") : ""}${D.track?.length ? tog("route", "Route") : ""}</div></div>
+    <div class="field"><span class="flabel">Also show</span><div class="chips">${tog("sport", "Sport")}${tog("date", "Date")}${D.lines.length ? tog("lines", D.run ? "Splits" : "Exercises") : ""}${D.track?.length && O.bg !== "map" ? tog("route", "Route") : ""}</div></div>
     <div class="field"><span class="flabel">Text</span><div class="st-opts">${seg("story-pos", O.pos, [["top", "Top"], ["center", "Middle"], ["bottom", "Bottom"]])}${seg("story-size", O.size, [["s", "S"], ["m", "M"], ["l", "L"]])}${seg("story-ink", O.ink, [["white", "White"], ["black", "Black"]])}</div>
       <div class="chips st-acc">${Object.entries(STORY_ACC).map(([k, v]) => `<button class="chip sm" data-act="story-acc" data-k="${k}" aria-pressed="${O.acc === k}" aria-label="Accent ${k}"><i style="background:${v}"></i></button>`).join("")}</div></div>`,
   foot: `<button class="btn tonal" data-act="story-save" style="flex:0 0 auto">${ic("download", "sm")}Save</button><button class="btn primary" data-act="story-share">${ic("copy", "sm")}Share</button>` }; };
@@ -9540,11 +9570,12 @@ let STORY_T = 0;
 async function storyDraw() { const sh = S_(); if (!sh || sh.type !== "story") return; const c = await storyCanvas(sh.data, sh.photo, sh.layout || "bg", storyOpt(sh)); const blob = await new Promise(r => c.toBlob(r, "image/png")); if (UI.sheet !== sh) return; if (sh.url) URL.revokeObjectURL(sh.url); sh.blob = blob; sh.url = URL.createObjectURL(blob); renderSheet(); }
 const storySet = (k, v, now) => { const sh = S_(); sh.opt = { ...storyOpt(sh), [k]: v }; try { localStorage.setItem("engine.story", JSON.stringify((({ title, caption, hide, ...o }) => o)(sh.opt))); } catch (e) {} clearTimeout(STORY_T); STORY_T = setTimeout(storyDraw, now ? 0 : 350); };
 function storyOpen(date, w, s) { let saved = {}; try { saved = JSON.parse(localStorage.getItem("engine.story") || "{}"); } catch (e) {} openSheet("story", { data: storyData(date, w, s), layout: "bg", opt: saved }); setTimeout(storyDraw, 30); }
-ACT["story-open"] = el => { const d = el.dataset.date, L = logGet(d) || {}, s = (L.wsess || []).find(x => x.id === el.dataset.id) || null, w = (L.workouts || []).find(x => s ? x.sid === s.id : true) || null; storyOpen(d, w, s); };
-CHG["story-photo"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const sh = S_(); sh.photo = f; el.value = ""; storyDraw(); };
+CHG["story-photo"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const sh = S_(); sh.photo = f; sh.bg = "photo"; el.value = ""; storyDraw(); };
+ACT["story-bg"] = el => { const sh = S_(); sh.bg = el.dataset.k; renderSheet(); storyDraw(); };
+ACT["story-map"] = el => storySet("map", el.dataset.k, true);
 INP.story = (v, el) => storySet(el.dataset.k, v);
 ACT["story-layout"] = el => { const sh = S_(); sh.layout = el.dataset.k; storyDraw(); };
-ACT["story-nophoto"] = () => { const sh = S_(); sh.photo = null; storyDraw(); };
+ACT["story-nophoto"] = () => { const sh = S_(); sh.photo = null; sh.bg = null; storyDraw(); };
 ACT["story-stat"] = el => { const O = storyOpt(S_()); storySet("hide", { ...O.hide, [el.dataset.k]: !O.hide[el.dataset.k] }, true); };
 ACT["story-tog"] = el => { const O = storyOpt(S_()); storySet(el.dataset.k, !O[el.dataset.k], true); };
 for (const k of ["pos", "size", "ink", "acc"]) ACT["story-" + k] = el => storySet(k, el.dataset.k, true);
@@ -10479,6 +10510,115 @@ ACT["cc-mode"] = el => ccSave({ mode: el.dataset.k });
 ACT["cc-set"] = el => ccSave({ [el.dataset.k]: +el.dataset.v });
 ACT["cc-kcal"] = el => ccSave({ kcal: el.dataset.k });
 ACT["cc-wd"] = el => { const P = CCP(), k = el.dataset.k, n = { H: "M", M: "L", L: "H" }[P.week[k] || "M"]; ccSave({ week: { ...P.week, [k]: n } }); };
+/* ================= routes in: GPX, TCX and FIT files from any watch or app, and the intervals.icu track =================
+   A file becomes a session with its map, distance, moving time, climb, heart rate and km splits, attached to the
+   workout of that day (or a new one). For workouts synced from intervals.icu the track is fetched from there. */
+function parseGPX(txt) { const d = new DOMParser().parseFromString(txt, "application/xml"); if (d.querySelector("parsererror")) throw new Error("bad xml");
+  const pts = [...d.getElementsByTagName("trkpt"), ...d.getElementsByTagName("rtept")].map(p => { const g = n => p.getElementsByTagName(n)[0]?.textContent, hr = [...p.getElementsByTagName("*")].find(e => /(^|:)hr$/i.test(e.tagName))?.textContent;
+    return { lat: +p.getAttribute("lat"), lon: +p.getAttribute("lon"), ele: g("ele") != null ? +g("ele") : null, t: g("time") ? Date.parse(g("time")) : null, hr: hr ? +hr : null }; }).filter(p => isFinite(p.lat) && isFinite(p.lon) && (p.lat || p.lon));
+  const type = d.getElementsByTagName("type")[0]?.textContent || "", name = d.querySelector("trk > name, metadata > name")?.textContent || "";
+  return { pts, sport: type, name }; }
+function parseTCX(txt) { const d = new DOMParser().parseFromString(txt, "application/xml"); if (d.querySelector("parsererror")) throw new Error("bad xml");
+  const pts = [...d.getElementsByTagName("Trackpoint")].map(p => { const g = n => p.getElementsByTagName(n)[0]?.textContent; return { lat: +g("LatitudeDegrees"), lon: +g("LongitudeDegrees"), ele: g("AltitudeMeters") != null ? +g("AltitudeMeters") : null, t: g("Time") ? Date.parse(g("Time")) : null, hr: p.getElementsByTagName("HeartRateBpm")[0] ? +p.getElementsByTagName("HeartRateBpm")[0].getElementsByTagName("Value")[0]?.textContent : null, dist: g("DistanceMeters") != null ? +g("DistanceMeters") : null }; })
+    .filter(p => isFinite(p.lat) && isFinite(p.lon) && (p.lat || p.lon));
+  return { pts, sport: d.getElementsByTagName("Activity")[0]?.getAttribute("Sport") || "", name: "" }; }
+/* FIT: the binary format of Garmin, Coros, Zepp/Amazfit, Wahoo… Only what a route needs: record (20) and session (18) messages */
+function parseFIT(buf) {
+  const v = new DataView(buf), hl = v.getUint8(0); if (String.fromCharCode(v.getUint8(8), v.getUint8(9), v.getUint8(10), v.getUint8(11)) !== ".FIT") throw new Error("not FIT");
+  const end = Math.min(buf.byteLength, hl + v.getUint32(4, true)), defs = {}, pts = []; let o = hl, lastTs = 0, sport = null;
+  const read = (t, size, at, le) => { const base = t & 0x1f; switch (base) {
+      case 0: case 2: case 10: case 13: return size === 1 ? v.getUint8(at) : null;
+      case 1: return v.getInt8(at); case 3: return size >= 2 ? v.getInt16(at, le) : null; case 4: case 11: return size >= 2 ? v.getUint16(at, le) : null;
+      case 5: return size >= 4 ? v.getInt32(at, le) : null; case 6: case 12: return size >= 4 ? v.getUint32(at, le) : null; default: return null; } };
+  while (o < end) { const h = v.getUint8(o++);
+    if (h & 0x80) { // compressed timestamp header
+      const lt = (h >> 5) & 3, off = h & 0x1f, d = defs[lt]; if (!d) break; let ts = (lastTs & ~0x1f) + off; if (off < (lastTs & 0x1f)) ts += 0x20; lastTs = ts;
+      const r = {}; let at = o; for (const f of d.f) { r[f.n] = read(f.t, f.s, at, d.le); at += f.s; } o += d.len; if (d.g === 20) pts.push({ ...r, 253: ts }); continue; }
+    const lt = h & 0x0f;
+    if (h & 0x40) { const le = v.getUint8(o + 1) === 0, g = le ? v.getUint16(o + 2, true) : v.getUint16(o + 2, false), n = v.getUint8(o + 4); o += 5; const f = []; let len = 0;
+      for (let i = 0; i < n; i++) { const fd = { n: v.getUint8(o), s: v.getUint8(o + 1), t: v.getUint8(o + 2) }; f.push(fd); len += fd.s; o += 3; }
+      if (h & 0x20) { const nd = v.getUint8(o++); for (let i = 0; i < nd; i++) { const s = v.getUint8(o + 1); f.push({ n: -1, s, t: 13 }); len += s; o += 3; } }
+      defs[lt] = { g, f, len, le }; continue; }
+    const d = defs[lt]; if (!d) break; const r = {}; let at = o; for (const f of d.f) { if (f.n >= 0) r[f.n] = read(f.t, f.s, at, d.le); at += f.s; } o += d.len;
+    if (r[253] != null) lastTs = r[253];
+    if (d.g === 20) pts.push(r); else if (d.g === 18 && r[5] != null) sport = r[5]; }
+  const SC = 180 / 2 ** 31, FIT_EPOCH = 631065600;
+  const out = pts.filter(r => r[0] != null && r[1] != null && r[0] !== 0x7fffffff && r[1] !== 0x7fffffff).map(r => ({ lat: r[0] * SC, lon: r[1] * SC, t: r[253] != null ? (r[253] + FIT_EPOCH) * 1000 : null, ele: r[2] != null && r[2] !== 0xffff ? r[2] / 5 - 500 : null, hr: r[3] != null && r[3] !== 0xff ? r[3] : null, dist: r[5] != null && r[5] !== 0xffffffff ? r[5] / 100 : null }));
+  return { pts: out, sport: { 1: "Running", 2: "Cycling", 5: "Swimming", 11: "Walking", 17: "Hiking", 21: "Cycling" }[sport] || "", name: "" };
+}
+/* points → the session numbers: distance, moving time (stops of 10 s+ left out), climb, average HR, splits */
+function trackStats(pts, bike) {
+  const len = bike ? 5 : 1, minV = bike ? 1 : .5; let km = 0, sec = 0, elev = 0, alt = null, altB = null, hrS = 0, hrN = 0, sAt = 0, next = len, prev = null; const splits = [], track = [];
+  for (const p of pts) {
+    if (prev) { const d = p.dist != null && prev.dist != null && p.dist >= prev.dist ? p.dist - prev.dist : hav([prev.lat, prev.lon], [p.lat, p.lon]), dt = p.t && prev.t ? (p.t - prev.t) / 1000 : 0;
+      if (dt <= 0 ? d < 200 : d / dt < 30) { const k0 = km, s0 = sec; km += d / 1000; if (dt > 0 && dt < 600 && d / dt > minV) sec += dt;
+        while (km >= next) { const at = s0 + (sec - s0) * (next - k0) / Math.max(1e-9, km - k0); splits.push({ km: next, sec: Math.round(at - sAt), len }); sAt = at; next += len; } } }
+    if (p.ele != null) { alt = alt == null ? p.ele : alt * .7 + p.ele * .3; if (altB == null) altB = alt; else if (alt - altB > 2) { elev += alt - altB; altB = alt; } else if (altB - alt > 2) altB = alt; }
+    if (p.hr > 30) { hrS += p.hr; hrN++; }
+    track.push([p.lat, p.lon]); prev = p; }
+  if (!sec && pts[0]?.t && pts[pts.length - 1]?.t) sec = (pts[pts.length - 1].t - pts[0].t) / 1000;
+  const n = track.length, step = Math.max(1, Math.ceil(n / 400)), slim = track.filter((x, i) => i % step === 0 || i === n - 1);
+  return { km: Math.round(km * 1000) / 1000, sec: Math.round(sec), elev: elev ? Math.round(elev) : null, hr: hrN ? Math.round(hrS / hrN) : null, splits, poly: polyEnc(slim), start: pts[0]?.t || null };
+}
+function guessSport(f, st) { const s = String(f.sport || f.name || ""), fit = FIT();
+  if (/bik|cycl|ride|bici/i.test(s)) return fit.sports.find(x => isBike(x.name))?.name || "Cycling";
+  if (/walk|cammin/i.test(s)) return fit.sports.find(x => /walk/i.test(x.name))?.name || "Walking";
+  if (/run|corsa/i.test(s)) return fit.runSport;
+  return st.sec > 0 && st.km / (st.sec / 3600) > 16 ? (fit.sports.find(x => isBike(x.name))?.name || "Cycling") : fit.runSport; }
+async function routeFile(file) {
+  const name = file.name || "", ext = (name.match(/\.(\w+)$/) || [])[1]?.toLowerCase();
+  let f; if (ext === "fit") f = parseFIT(await file.arrayBuffer()); else { const t = await file.text(); f = /<TrainingCenterDatabase/i.test(t) ? parseTCX(t) : parseGPX(t); }
+  if (!f.pts.length) throw new Error("no points");
+  const st0 = trackStats(f.pts, false), sport = guessSport(f, st0), st = isBike(sport) ? trackStats(f.pts, true) : st0;
+  const date = st.start ? isoOf(new Date(st.start)) : todayISO();
+  return { ...st, sport, date, name: f.name || name.replace(/\.\w+$/, "").slice(0, 60) };
+}
+/* where it goes: the workout of that day of the same kind, or a new one */
+function routeTargets(date, sport) { const L = logGet(date) || {}; return (L.workouts || []).map((w, i) => ({ w, i })).filter(x => x.w.sport && x.w.sport !== "Rest" && ENDUR(x.w.sport)).sort((a, b) => (b.w.sport === sport) - (a.w.sport === sport)); }
+function routeAttach(date, wi, R, name) {
+  let sid = null;
+  mutateLog(date, day => { const ws = [...(day.workouts || [])], gps = { km: R.km, sec: R.sec, elev: R.elev, splits: R.splits, poly: R.poly };
+    let w = wi != null && wi >= 0 ? { ...ws[wi] } : null;
+    if (!w) { w = wClean({ sport: R.sport, min: Math.max(1, Math.round(R.sec / 60)), km: Math.round(R.km * 100) / 100, hr: R.hr, int: "Moderate", note: name || null }); ws.push(w); wi = ws.length - 1; }
+    else { if (!(+w.km > 0)) w.km = Math.round(R.km * 100) / 100; if (!(+w.min > 0)) w.min = Math.max(1, Math.round(R.sec / 60)); if (!w.hr && R.hr) w.hr = R.hr; }
+    sid = w.sid || puid("ws"); w.sid = sid; ws[wi] = w; day.workouts = ws;
+    const old = (day.wsess || []).find(x => x.id === sid);
+    day.wsess = [...(day.wsess || []).filter(x => x.id !== sid), wClean({ ...(old || {}), id: sid, name: old?.name || name || w.note || w.sport, min: old?.min || w.min, km: w.km, rpe: old?.rpe || w.rpe || null, gps })]; });
+  return sid;
+}
+SHEETS.routeimp = sh => { const R = sh.R, T = routeTargets(sh.date, R.sport), bike = isBike(R.sport);
+  return { title: "Imported route", body: `${routeSVG(trackOf({ gps: R }))}
+    <div class="sum-stats sm"><span><b>${R.km.toFixed(2)}</b><small>km</small></span><span><b>${fmtDur(R.sec)}</b><small>moving</small></span><span><b>${bike ? r1(R.km / (R.sec / 3600)) : fmtPace(R.sec / 60 / R.km)}</b><small>${bike ? "km/h" : "/km"}</small></span>${R.elev ? `<span><b>${R.elev}</b><small>m climb</small></span>` : ""}${R.hr ? `<span><b>${R.hr}</b><small>avg HR</small></span>` : ""}</div>
+    <div class="grid2"><div class="field"><label for="ri-date">Day</label><input id="ri-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="ri-date"></div><div class="field"><label for="ri-sport">Sport</label><select id="ri-sport" class="inp" data-chg="ri-sport">${FIT().sports.map(s => s.name).filter(n => n !== "Rest").map(n => `<option ${n === R.sport ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></div></div>
+    <div class="field"><span class="flabel">Attach to</span><div class="card">${T.map(x => `<button class="lrow" data-act="ri-pick" data-i="${x.i}" aria-pressed="${sh.wi === x.i}"><span><span class="t">${esc(x.w.note || x.w.sport)}</span><span class="s">${esc(sessionLabel(x.w))}${x.w.sid && (logGet(sh.date)?.wsess || []).find(s => s.id === x.w.sid)?.gps ? " · has a route" : ""}</span></span><span class="end">${sh.wi === x.i ? ic("check", "sm") : ""}</span></button>`).join("")}<button class="lrow" data-act="ri-pick" data-i="-1" aria-pressed="${sh.wi === -1}"><span><span class="t">A new workout</span><span class="s">${esc(R.sport)} · ${Math.round(R.sec / 60)} min · ${r1(R.km)} km</span></span><span class="end">${sh.wi === -1 ? ic("check", "sm") : ""}</span></button></div></div>`,
+    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="ri-save">${ic("check", "sm")}Save${sh.story ? " and share" : ""}</button>` }; };
+CHG["ri-date"] = v => { const sh = S_(); sh.date = v || sh.date; const T = routeTargets(sh.date, sh.R.sport); sh.wi = T[0]?.i ?? -1; renderSheet(); };
+CHG["ri-sport"] = v => { S_().R.sport = v; renderSheet(); };
+ACT["ri-pick"] = el => { S_().wi = +el.dataset.i; renderSheet(); };
+ACT["ri-save"] = () => { const sh = S_(), sid = routeAttach(sh.date, sh.wi, sh.R, sh.R.name); closeSheet(); toast("Route saved");
+  if (sh.story) { const L = logGet(sh.date), s = L.wsess.find(x => x.id === sid), w = L.workouts.find(x => x.sid === sid); storyOpen(sh.date, w, s); } };
+CHG["route-file"] = async (v, el) => { const f = el.files?.[0]; if (!f) return; el.value = ""; const story = !!el.dataset.story;
+  try { const R = await routeFile(f); if (R.km < .1) { toast("That file has almost no distance."); return; } const T = routeTargets(R.date, R.sport);
+    openSheet("routeimp", { R, date: R.date, wi: el.dataset.wi != null && el.dataset.date === R.date ? +el.dataset.wi : T[0]?.i ?? -1, story }); }
+  catch (e) { toast("Couldn't read that file: use a .gpx, .tcx or .fit export."); } };
+const routeInput = (extra = "") => `<input type="file" accept=".gpx,.tcx,.fit,application/gpx+xml,application/vnd.garmin.tcx+xml" class="sr" data-chg="route-file" ${extra}>`;
+/* the track of an activity synced from intervals.icu */
+async function icuRoute(w) {
+  const id = String(w?.ext || "").match(/^icu-a-(.+)$/)?.[1], key = (S.settings.intervals?.key || "").trim(); if (!id || !key) return null;
+  const r = await fetch(`${ICU_API}/activity/${encodeURIComponent(id)}/streams.json?types=latlng,time,distance,altitude,heartrate`, { headers: { Authorization: "Basic " + btoa("API_KEY:" + key), Accept: "application/json" } });
+  if (!r.ok) return null; const S2 = await r.json(), by = Object.fromEntries((Array.isArray(S2) ? S2 : []).map(x => [x.type, x])), ll = by.latlng; if (!ll?.data?.length) return null;
+  const lat = ll.data2 ? ll.data : ll.data.map(p => p?.[0]), lon = ll.data2 || ll.data.map(p => p?.[1]), t = by.time?.data, dist = by.distance?.data, alt = by.altitude?.data, hr = by.heartrate?.data;
+  const pts = lat.map((a, i) => ({ lat: a, lon: lon[i], t: t ? t[i] * 1000 : null, dist: dist ? dist[i] : null, ele: alt ? alt[i] : null, hr: hr ? hr[i] : null })).filter(p => p.lat != null && p.lon != null && (p.lat || p.lon));
+  if (pts.length < 3) return null; const st = trackStats(pts, isBike(w.sport)); return { ...st, sport: w.sport };
+}
+/* the story: fetch the route first when the workout came from intervals.icu and has none yet */
+ACT["story-open"] = async el => { const d = el.dataset.date, L = logGet(d) || {}, wi = el.dataset.wi != null && el.dataset.wi !== "" ? +el.dataset.wi : null;
+  let s = (L.wsess || []).find(x => x.id === el.dataset.id) || null, w = wi != null ? (L.workouts || [])[wi] : (L.workouts || []).find(x => s ? x.sid === s.id : true) || null;
+  if (!s && w?.sid) s = (L.wsess || []).find(x => x.id === w.sid) || null;
+  if (w && !trackOf(s) && ENDUR(w.sport) && String(w.ext || "").startsWith("icu-a-") && S.settings.intervals?.key) {
+    toast("Getting the route from intervals.icu…");
+    try { const R = await icuRoute(w); if (R) { const i = (L.workouts || []).indexOf(w), sid = routeAttach(d, i, R, w.note); const L2 = logGet(d); s = L2.wsess.find(x => x.id === sid); w = L2.workouts.find(x => x.sid === sid); } } catch (e) {} }
+  storyOpen(d, w, s); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
