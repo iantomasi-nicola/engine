@@ -24,4 +24,4 @@ The source of the app lives outside this repository; `index.html` here is the bu
 ## Source
 `source/` keeps the readable source: `engine.html` (the app), `web/` (the web runtime: Supabase layer, direct
 intervals.icu sync, settings for account and AI, service worker) and `build-web.js`, which minifies and assembles
-the files at the root (needs `npm i terser lightningcss`; paths to node_modules at the top of the script).
+the files at the root: `npm i terser lightningcss` somewhere, then `NODE_MODULES=<that>/node_modules node source/build-web.js`.
