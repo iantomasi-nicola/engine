@@ -12,11 +12,12 @@
   /* the cards in groups that fold away; which ones are open is remembered on this device */
   function grp(k, title, sub, inner) { const open = (UI.setOpen || {})[k]; return `<details class="set-grp" data-grp="${k}" ${open ? "open" : ""}><summary><span><b>${title}</b><small>${sub}</small></span>${ic("chevD", "sm")}</summary><div class="set-grp-in">${inner}</div></details>`; }
   function groups() { const ai = (S.settings.ai?.services || []).filter(x => x.on !== false && (x.key || x.base)).length, R = S.settings.reminders || {};
-    return grp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + SETTINGS_CARDS.filter(c => c.o === 0).map(c => c.fn()).join(""))
+    return grp("look", "Look", `${{ system: "System", light: "Light", dark: "Dark" }[LOOK().theme]} theme · accent ${(ACCENTS.find(a => a[0].toLowerCase() === LOOK().accent.toLowerCase()) || [0, "custom"])[1]}`, SETTINGS_CARDS.filter(c => c.o === -2).map(c => c.fn()).join(""))
+      + grp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + SETTINGS_CARDS.filter(c => c.o === 0).map(c => c.fn()).join(""))
       + grp("rem", "Reminders", `${R.on ? "On" : "Off"} · supplements, water, pantry, weekly report`, suppSettingsCard() + reminderCard() + SETTINGS_CARDS.filter(c => c.o === 1).map(c => c.fn()).join(""))
       + grp("ai", "AI", ai ? `${ai} service${ai > 1 ? "s" : ""} on` : "Not set up", aiCard() + aiFeatCard())
       + grp("nut", "Nutrition extras", "Pro nutrients, shopping and pantry, carb cycling", proSettingsCard() + shopSettingsCard() + SETTINGS_CARDS.filter(c => c.o === 2).map(c => c.fn()).join(""))
-      + grp("feat", "Features", "Switch off what you don't use", SETTINGS_CARDS.filter(c => c.o < 0 || c.o > 2).map(c => c.fn()).join(""));
+      + grp("feat", "Features", "Switch off what you don't use", SETTINGS_CARDS.filter(c => c.o === -1 || c.o > 2).map(c => c.fn()).join(""));
   }
   document.addEventListener("toggle", e => { const d = e.target; if (!d.matches?.("details.set-grp")) return; UI.setOpen = { ...(UI.setOpen || {}), [d.dataset.grp]: d.open }; try { localStorage.setItem("engine.setOpen", JSON.stringify(UI.setOpen)); } catch (x) {} }, true);
   try { UI.setOpen = JSON.parse(localStorage.getItem("engine.setOpen") || "{}"); } catch (e) { UI.setOpen = {}; }

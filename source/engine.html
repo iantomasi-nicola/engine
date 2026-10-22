@@ -171,6 +171,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,300..900&family=Roboto:wght@400;500;700&display=swap">
+<script id="look-boot">/* the saved palette before the first paint: no flash of the default colours */try{var l=JSON.parse(localStorage.getItem("engine.look")||"null");if(l&&l.css){var st=document.createElement("style");st.id="md-dyn";st.textContent=l.css;document.head.appendChild(st);if(l.theme&&l.theme!=="system")document.documentElement.setAttribute("data-theme",l.theme)}}catch(e){}</script>
 <style>
 /* Layout: mobile app shell — sticky week strip, day hero, meal cards, bottom tab bar; desktop gets a side rail and a wider column. */
 :root{
@@ -1909,6 +1910,146 @@ body.kb-open .add-acts,body.kb-open .add-tip{display:none}
 /* Today: quick actions in one row that scrolls sideways on phones */
 @media (max-width:640px){.td-nudges{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.td-nudges::-webkit-scrollbar{display:none}.td-nudges>*{flex:none}}
 .seg>button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.acc-sw{display:flex;flex-wrap:wrap;gap:12px}
+.acc-b{width:40px;height:40px;border-radius:50%;background:var(--sw);border:0;position:relative;display:grid;place-items:center;color:#fff;cursor:pointer;transition:border-radius .2s}
+.acc-b[aria-pressed="true"]{border-radius:14px}
+.acc-b.custom{background:conic-gradient(#e5484d,#f5a524,#3fbf6b,#2563eb,#7c3aed,#e5484d)}
+.acc-b.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* ===================================================================================================
+   Design v2 · Material 3 with dynamic colour. The accent you pick in Settings › Look is the seed of the
+   whole palette (primary, containers, tinted surfaces, outlines), computed for light and dark and written
+   as --md-* tokens (see applyLook). Tonal cards without borders or shadows, pill buttons, M3 chips,
+   segmented buttons and navigation, outlined fields, Roboto Flex. Comes last: it sets the look.
+   =================================================================================================== */
+:root{--font:"Google Sans","Google Sans Text","Roboto Flex","Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;--head:"Google Sans Display","Google Sans","Roboto Flex","Roboto",system-ui,sans-serif;
+  --r-card:24px;--r-in:16px;--r-field:12px}
+:root,:root[data-theme],:root:not([data-theme]){
+  --bg:var(--md-surface);--surface:var(--md-sc);--surface-2:var(--md-sc-high);--surface-3:var(--md-sc-highest);
+  --ink:var(--md-on-surface);--muted:var(--md-on-surface-variant);--faint:var(--md-outline);--line:var(--md-outline-variant);
+  --accent:var(--md-primary);--accent-ink:var(--md-on-primary);--accent-soft:var(--md-secondary-container);--sec-c:var(--md-secondary-container);--on-sec-c:var(--md-on-secondary-container);
+  --volt:var(--md-primary);--volt-ink:var(--md-on-primary);--sheet:var(--md-sc-low);--nav:var(--md-sc);--c-fit:var(--md-primary);
+  --hero:var(--md-primary-container);--hero-ink:var(--md-on-primary-container);--hero-muted:color-mix(in srgb,var(--md-on-primary-container) 72%,transparent);--hero-line:color-mix(in srgb,var(--md-on-primary-container) 16%,transparent);
+  --shadow:none;--md-elev1:none}
+
+/* type: Google Sans where installed, Roboto Flex otherwise */
+body{font-family:var(--font)!important;letter-spacing:0!important;background:var(--bg)!important;color:var(--ink)}
+button,input,select,textarea{font-family:inherit}
+.num,.kring .big,.stat b,.ffw-c b,.meal-name,.day-pill b,.brand,.lv-h,.lv-h1,.cv-sum b,.sum-stats b,.hy-v b,.sl-k b,.wk-k b,.gl-k b,.ph-big{font-family:var(--head)!important;font-stretch:105%!important}
+.top-title{font-family:var(--head)!important;font-size:28px!important;font-weight:450!important;letter-spacing:0!important;line-height:36px!important;font-stretch:105%}
+.top-sub{font-size:14px!important;color:var(--muted)!important;letter-spacing:.1px!important}
+.section-h h2{font-family:var(--head)!important;font-size:16px!important;font-weight:500!important;letter-spacing:.1px!important;color:var(--ink)!important}
+.eyebrow,.flabel,.field>label{font-size:12px!important;font-weight:500!important;letter-spacing:.4px!important;color:var(--muted)!important;text-transform:none!important}
+.sheet-h h3{font-family:var(--head)!important;font-size:22px!important;font-weight:450!important;line-height:28px!important;letter-spacing:0!important}
+.meal-name{font-weight:500!important;font-size:16px!important}
+.stat b,.ffw-c b{font-weight:500!important}
+
+/* surfaces: tonal containers on a tinted background, large corners, no borders or shadows */
+.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card,.cv,.cv-wk,.gl-c,.pp-day,.set-grp,.td-s{background:var(--md-sc-low)!important;border:0!important;border-radius:var(--r-card)!important;box-shadow:none!important}
+.stat,.ffw-c{border-radius:var(--r-in)!important;background:var(--md-sc)!important}
+.sheet-b .card,.set-grp-in>.card,section .gl-c,.set-grp-in>section{background:var(--md-sc)!important;border:0!important;border-radius:var(--r-in)!important}
+.sheet-b .card .card{background:transparent!important}
+.note{background:var(--md-sc-high)!important;color:var(--md-on-surface-variant)!important;border-radius:var(--r-in)!important;border:0!important}
+.note.accent{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
+.note.warn{background:color-mix(in srgb,var(--warn) 16%,var(--md-sc-high))!important;color:var(--ink)!important}
+.lrow{border-top-color:color-mix(in srgb,var(--md-outline-variant) 70%,transparent)!important}
+button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)!important}
+button.lrow:active{background:color-mix(in srgb,var(--md-on-surface) 10%,transparent)!important}
+
+/* buttons: full pill, 40 dp, label large */
+.btn{min-height:40px!important;border-radius:20px!important;font-weight:500!important;font-size:14px!important;letter-spacing:.1px!important;padding:0 24px;transition:background .2s,box-shadow .2s,border-radius .2s;box-shadow:none!important}
+.btn.sm{min-height:32px!important;border-radius:16px!important;font-size:13px!important;padding:0 14px!important}
+.btn:active:not([disabled]){border-radius:12px!important}
+.btn.primary,.btn.ink,.btn.volt{background:var(--md-primary)!important;color:var(--md-on-primary)!important;border:0!important}
+.btn.primary:hover{box-shadow:0 1px 2px rgba(0,0,0,.2),0 1px 3px 1px rgba(0,0,0,.1)!important}
+.btn.tonal{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border:0!important}
+.btn.soft{background:var(--md-sc-highest)!important;color:var(--md-on-surface)!important;border:0!important}
+.btn.ghost{background:transparent!important;border:1px solid var(--md-outline)!important;color:var(--md-primary)!important}
+.btn.text,.link{background:transparent!important;color:var(--md-primary)!important;font-weight:500!important}
+.btn.text{padding:0 12px!important}
+.btn.danger{background:var(--md-error-container,#ffdad6)!important;color:var(--md-on-error-container,#410002)!important}
+.btn[disabled]{opacity:.38}
+.icon-btn{width:40px;height:40px;border-radius:20px!important;color:var(--md-on-surface-variant)!important}
+.icon-btn:hover{background:color-mix(in srgb,var(--md-on-surface) 8%,transparent)!important}
+.icon-btn.tonal{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
+.fab{border-radius:16px!important;background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important;box-shadow:0 3px 6px rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.1)!important}
+
+/* chips: 8 dp, outlined; selected = secondary container */
+.chip{min-height:32px!important;border-radius:8px!important;border:1px solid var(--md-outline-variant)!important;background:transparent!important;color:var(--md-on-surface-variant)!important;font-weight:500!important;font-size:13.5px!important;padding:0 14px!important;letter-spacing:.1px}
+.chip.sm{min-height:30px!important;font-size:13px!important;padding:0 12px!important}
+.chip[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-color:transparent!important}
+.chip:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)!important}
+.chip[aria-pressed="true"]:hover{background:color-mix(in srgb,var(--md-on-secondary-container) 8%,var(--md-secondary-container))!important}
+
+/* segmented buttons: one outlined pill; the picked segment fills */
+.seg{background:transparent!important;border:1px solid var(--md-outline)!important;border-radius:20px!important;padding:0!important;gap:0!important;overflow:hidden}
+.seg button{min-height:38px!important;border:0!important;border-right:1px solid var(--md-outline)!important;border-radius:0!important;font-weight:500!important;font-size:13.5px!important;color:var(--md-on-surface)!important;background:transparent!important;box-shadow:none!important;padding:0 12px!important}
+.seg button:last-child{border-right:0!important}
+.seg button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
+.seg.sm button{min-height:32px!important;font-size:12.5px!important}
+/* the section tabs at the top of a screen: chips that scroll */
+header.top .seg{border:0!important;border-radius:0!important;gap:8px!important;overflow-x:auto}
+header.top .seg button{flex:0 0 auto;border:1px solid var(--md-outline-variant)!important;border-radius:8px!important;min-height:32px!important;color:var(--md-on-surface-variant)!important;padding:0 14px!important}
+header.top .seg button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-color:transparent!important}
+
+/* fields: outlined, 12 dp; focus is a 2 dp primary outline */
+.inp{background:transparent!important;border:1px solid var(--md-outline)!important;border-radius:var(--r-field)!important;min-height:48px;color:var(--md-on-surface)!important;transition:border-color .15s,box-shadow .15s}
+.inp:hover{border-color:var(--md-on-surface)!important}
+.inp:focus{border-color:var(--md-primary)!important;box-shadow:inset 0 0 0 1px var(--md-primary)!important}
+select.inp{background:transparent!important}
+.unit-inp>span{color:var(--md-on-surface-variant)}
+.search{background:var(--md-sc-highest)!important;border:0!important;border-radius:28px!important;min-height:52px}
+.search input{background:transparent!important;border:0!important;box-shadow:none!important}
+.search:focus-within{box-shadow:inset 0 0 0 2px var(--md-primary)!important}
+.ci-main .inp{font-family:var(--head)}
+
+/* switch: the M3 track and thumb come from the layer above, recoloured by the palette */
+.switch{background:var(--md-sc-highest)!important;border-color:var(--md-outline)!important}
+.switch[aria-checked="true"]{background:var(--md-primary)!important;border-color:var(--md-primary)!important}
+.switch[aria-checked="true"]::after{background:var(--md-on-primary)!important}
+
+/* pills and tags */
+.pill{border-radius:8px!important;font-weight:500!important;text-transform:none!important;letter-spacing:.1px!important;font-size:12px!important}
+.tag{border-radius:6px!important;letter-spacing:.3px!important;font-weight:500!important}
+
+/* navigation bar and rail */
+.bnav{background:var(--md-sc)!important;border-top:0!important;box-shadow:none!important;backdrop-filter:none!important}
+.bnav button{color:var(--md-on-surface-variant)!important;font-weight:500!important;font-size:12px!important;letter-spacing:.4px}
+.bnav button[aria-current="page"]{color:var(--md-on-surface)!important;font-weight:600!important}
+.bnav .nav-ic{width:64px!important;height:32px!important;border-radius:16px!important;display:grid;place-items:center}
+.bnav button[aria-current="page"] .nav-ic{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
+.side-btn{border-radius:28px!important;color:var(--md-on-surface-variant)!important;font-weight:500!important;min-height:56px;padding:0 16px!important}
+.side-btn[aria-current="page"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;box-shadow:none!important}
+.side{background:var(--md-surface)!important}
+.subnav button{font-weight:500!important}
+.subnav button[aria-current="page"]{color:var(--md-primary)!important;border-color:var(--md-primary)!important}
+
+/* sheets: bottom sheet / dialog */
+.sheet{background:var(--md-sc-low)!important;border-radius:28px 28px 0 0!important;box-shadow:0 -2px 12px rgba(0,0,0,.12)!important}
+@media (min-width:720px){.sheet{border-radius:28px!important;box-shadow:0 8px 32px rgba(0,0,0,.24)!important}}
+.sheet-f{background:var(--md-sc-low)!important;border-top:0!important}
+.add-top{background:var(--md-sc-low)!important;border-bottom:0!important}
+.scrim{background:var(--scrim)!important}
+
+/* snackbar */
+#toast>.toast,.toast{background:var(--md-inverse-surface)!important;color:var(--md-inverse-on-surface)!important;border-radius:8px!important;box-shadow:0 3px 8px rgba(0,0,0,.22)!important}
+#toast .toast button,.toast button{color:var(--md-inverse-primary)!important}
+
+/* rings, bars and other colours follow the palette */
+.kring .fg,.lv-clock .fg{stroke:var(--md-primary)}
+.fu-strip,.ci-calc,.ci-more,.cv-row,.ck-c,.hy-bar,.gl-bar,.sp-bar{background:var(--md-sc-high)!important}
+.ci-more{border:0!important}
+.cv-d.sel{background:color-mix(in srgb,var(--md-primary) 10%,transparent)!important}
+.cv-d.sel::after{border-color:var(--md-primary)!important;border-radius:12px!important}
+.cv-d.now .cv-n>span{background:var(--md-primary)!important;color:var(--md-on-primary)!important}
+::selection{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+
+#main{gap:16px}
+.section-h{margin-top:8px}
+@media (max-width:520px){.top-title{font-size:24px!important;line-height:32px!important}}
+.today-grid.one{display:flex;flex-direction:column;gap:14px}
+.bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;background:var(--md-sc);color:var(--md-on-surface-variant);font-size:13px}
+.bk-due>span{flex:1;min-width:0}
+.cv-view{flex:0 0 auto}.cv-view button{flex:0 0 auto!important;padding:0 16px!important}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -7894,7 +8035,10 @@ VIEWS.today = function () {
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
   const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
-  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`;
+  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
+    // phone: one column in the order you use it: today's training, food, body, then the rest
+    ? `<div class="today-grid one">${todayCards("a")}${tr}${fuel}${body}${todayCards("b")}${suppCard()}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
+    : `<div class="today-grid"><div class="tg-col">${todayCards("a")}${tr}${body}${suppCard()}${expiryCard("today")}${todayCards("z")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`);
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
   return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
@@ -9872,16 +10016,26 @@ function photosSection() {
   h += `<div class="pp-list">${[...D].reverse().map(x => `<div class="pp-day"><div class="pp-dh"><b>${fmtDM(x.d)} ${x.d.slice(0, 4)}</b><small>${(w => w ? r1(w) + " kg" : "")(bodyAt(x.d).w)}</small></div><div class="pp-th">${x.ps.map(p => `<button class="pp-t" data-act="pp-open" data-id="${p.id}" aria-label="${esc(p.pose)} ${fmtDM(p.date)}"><span class="pp-img"><img data-ph="${p.id}" alt=""></span><small>${esc(POSES.find(q => q[0] === p.pose)?.[1] || p.pose)}</small></button>`).join("")}</div></div>`).join("")}</div>`;
   return h;
 }
-SHEETS.ppnew = sh => ({ title: "Progress photo", body: `<div class="grid2"><div class="field"><label for="pp-date">Date</label><input id="pp-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="pp-date"></div>
+SHEETS.ppnew = sh => ({ title: "Progress photo", body: `<div class="grid2"><div class="field"><label for="pp-date">Day of the photo</label><input id="pp-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="pp-date"></div>
     <div class="field"><span class="flabel">Pose</span><div class="chips">${POSES.map(([k, l]) => `<button class="chip" data-act="pp-npose" data-k="${k}" aria-pressed="${sh.pose === k}">${l}${PHOTOS().some(p => p.date === sh.date && p.pose === k) ? " ✓" : ""}</button>`).join("")}</div></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn primary">${ic("camera", "sm")}Take the photo<input type="file" accept="image/*" capture="user" class="sr" data-chg="pp-file"></label><label class="btn soft">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-chg="pp-file"></label></div>
     ${sh.busy ? `<div class="result"><span class="spinner"></span><span>Saving…</span></div>` : ""}
-    <div class="faint" style="font-size:12.5px">Tip: phone at chest height, 2 m away, same light every time, relaxed. ${cloudOK() ? "Saved on this device and in your private cloud folder." : "Saved on this device; sign in to keep them in the cloud too."}</div>`,
+    <div class="faint" style="font-size:12.5px">Tip: phone at chest height, 2 m away, same light every time, relaxed. ${cloudOK() ? "Saved on this device and in your private cloud folder." : "Saved on this device; sign in to keep them in the cloud too."} Older photos from the gallery take the day they were shot; you can also pick any past day above.</div>`,
   foot: `<button class="btn tonal" data-act="close-sheet">Done</button>` });
 ACT["pp-new"] = () => openSheet("ppnew", { date: todayISO(), pose: "front" });
-CHG["pp-date"] = v => { S_().date = v || todayISO(); renderSheet(); };
+CHG["pp-date"] = v => { const sh = S_(); sh.date = v || todayISO(); sh.dateSet = true; renderSheet(); };
 ACT["pp-npose"] = el => { S_().pose = el.dataset.k; renderSheet(); };
-CHG["pp-file"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; sh.busy = true; renderSheet();
+/* the day a photo was taken: EXIF DateTimeOriginal of a JPEG, else the file's date */
+async function photoTakenOn(f) { try { const b = new DataView(await f.slice(0, 196608).arrayBuffer()); if (b.getUint16(0) !== 0xFFD8) throw 0; let o = 2;
+    while (o < b.byteLength - 4) { const m = b.getUint16(o), len = b.getUint16(o + 2); if (m === 0xFFE1 && b.getUint32(o + 4) === 0x45786966) { const t = o + 10, le = b.getUint16(t) === 0x4949, u16 = x => b.getUint16(t + x, le), u32 = x => b.getUint32(t + x, le);
+        const ifd = (off, tag) => { const n = u16(off); for (let i = 0; i < n; i++) { const e = off + 2 + i * 12; if (u16(e) === tag) return u32(e + 8); } return null; };
+        const ex = ifd(u32(4), 0x8769), at = ex != null ? ifd(ex, 0x9003) ?? ifd(ex, 0x9004) : null, at2 = at ?? ifd(u32(4), 0x0132);
+        if (at2 != null) { let str = ""; for (let i = 0; i < 10; i++) str += String.fromCharCode(b.getUint8(t + at2 + i)); const m2 = str.match(/^(\d{4}):(\d{2}):(\d{2})/); if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`; } break; }
+      if ((m & 0xFF00) !== 0xFF00) break; o += 2 + len; } } catch (e) {}
+  return f.lastModified && daysBetween(isoOf(new Date(f.lastModified)), todayISO()) > 0 ? isoOf(new Date(f.lastModified)) : null; }
+CHG["pp-file"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = "";
+  if (!el.hasAttribute("capture") && !sh.dateSet) { const d = await photoTakenOn(f); if (d && d !== sh.date && d <= todayISO()) { sh.date = d; toast(`Dated ${fmtDM(d)} ${d.slice(0, 4)} from the photo: change it above if needed`); } }
+  sh.busy = true; renderSheet();
   try { const old = PHOTOS().find(p => p.date === sh.date && p.pose === sh.pose); await photoAdd(f, sh.date, sh.pose); if (old) await photoDel(old.id); const i = POSES.findIndex(p => p[0] === sh.pose); toast(`${POSES[i][1]} photo saved`); if (i < 2) sh.pose = POSES[i + 1][0]; }
   catch (e) { toast("Couldn't read that picture."); } sh.busy = false; if (UI.sheet === sh) renderSheet(); scheduleRender(); };
 ACT["pp-pose"] = el => { UI.ppPose = el.dataset.k; scheduleRender(); };
@@ -10323,8 +10477,8 @@ async function bkSaveNow(auto) {
 function bkMark() { S.settings.backup = { ...(S.settings.backup || {}), last: new Date().toISOString() }; saveSettings(); }
 setTimeout(async () => { await dailyPoint(); if (bkDue() && fsOK()) bkSaveNow(true); }, 6000);
 function backupToday() { if (!bkDue() || !BKP().every || (S.settings.backup?.snooze || "") >= todayISO()) return ""; const l = bkLast();
-  return `<section class="card pad bk-due"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>Backup due</b><small class="faint" style="display:block;font-size:12.5px">${l ? `Last one ${daysBetween(l.slice(0, 10), todayISO())} days ago` : "No backup file yet"} · one file with everything</small></span><span class="row" style="gap:6px"><button class="btn text sm" data-act="bk-snooze">Later</button><button class="btn primary sm" data-act="bk-save">${ic("download", "sm")}Save</button></span></div></section>`; }
-TODAY_CARDS.push({ col: "a", o: 1, fn: backupToday });
+  return `<div class="bk-due">${ic("download", "sm")}<span>${l ? `Backup: last one ${daysBetween(l.slice(0, 10), todayISO())} days ago` : "No backup file yet"}</span><button class="btn text sm" data-act="bk-snooze">Later</button><button class="btn tonal sm" data-act="bk-save">Save</button></div>`; }
+TODAY_CARDS.push({ col: "z", o: 1, fn: backupToday });
 ACT["bk-save"] = () => bkSaveNow(false);
 ACT["bk-snooze"] = () => { S.settings.backup = { ...(S.settings.backup || {}), snooze: addDays(todayISO(), 2) }; saveSettings(); };
 ACT["bk-folder"] = async () => { if (!fsOK()) return; try { const dir = await window.showDirectoryPicker({ mode: "readwrite", id: "engine-backup" }); await BKDB.put("kv", "dir", dir); S.settings.backup = { ...(S.settings.backup || {}), folder: dir.name }; saveSettings(); await bkSaveNow(false); } catch (e) { if (e?.name !== "AbortError") toast("Couldn't use that folder."); } };
@@ -10619,6 +10773,51 @@ ACT["story-open"] = async el => { const d = el.dataset.date, L = logGet(d) || {}
     toast("Getting the route from intervals.icu…");
     try { const R = await icuRoute(w); if (R) { const i = (L.workouts || []).indexOf(w), sid = routeAttach(d, i, R, w.note); const L2 = logGet(d); s = L2.wsess.find(x => x.id === sid); w = L2.workouts.find(x => x.sid === sid); } } catch (e) {} }
   storyOpen(d, w, s); };
+/* ================= look: theme and a seed colour; the whole Material palette is derived from the seed =================
+   Tones from HSL (close to Material's tonal palettes): primary 40/80, containers 90/30, surfaces tinted with the
+   seed's hue. Written as --md-* tokens in a style element, kept in localStorage for the next start (no flash). */
+const ACCENTS = [["#56702A", "Olive"], ["#3D5AFE", "Blue"], ["#0B57D0", "Google blue"], ["#006A6A", "Teal"], ["#1E8E3E", "Green"], ["#C26401", "Orange"], ["#B3261E", "Red"], ["#B4267A", "Pink"], ["#6750A4", "Violet"], ["#5F6368", "Grey"]];
+const LOOK = () => ({ theme: "system", accent: "#56702A", ...(S.settings?.look || {}) });
+function hexHsl(hex) { const n = parseInt(String(hex).replace("#", ""), 16); let r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0, s = 0; if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; } return [h, s]; }
+const hsl = (h, s, l) => `hsl(${Math.round(h)} ${Math.round(clamp(s, 0, 1) * 100)}% ${Math.round(l * 10) / 10}%)`;
+function mdPalette(hex) { const [h, s0] = hexHsl(hex), s = Math.min(s0, .85), n = Math.min(s, .5) * .32, e = 4; // n: how much the seed tints neutrals
+  const light = { primary: hsl(h, s * .95, 34), "on-primary": "#fff", "primary-container": hsl(h, s * .85 + .05, 88), "on-primary-container": hsl(h, s, 13),
+    secondary: hsl(h, s * .3, 38), "secondary-container": hsl(h, s * .35 + .06, 89), "on-secondary-container": hsl(h, s * .4, 15),
+    tertiary: hsl((h + 60) % 360, s * .45, 36), "tertiary-container": hsl((h + 60) % 360, s * .5, 88), "on-tertiary-container": hsl((h + 60) % 360, s * .5, 14),
+    error: "#B3261E", "error-container": "#F9DEDC", "on-error-container": "#410E0B",
+    surface: hsl(h, n, 98.2), "sc-lowest": "#fff", "sc-low": hsl(h, n, 96.4), sc: hsl(h, n, 94.4), "sc-high": hsl(h, n, 92.2), "sc-highest": hsl(h, n, 89.8),
+    "on-surface": hsl(h, n * 1.2, 11), "on-surface-variant": hsl(h, n, 30), outline: hsl(h, n * .8, 47), "outline-variant": hsl(h, n, 80),
+    "inverse-surface": hsl(h, n, 19), "inverse-on-surface": hsl(h, n, 95), "inverse-primary": hsl(h, s * .8, 78) };
+  const dark = { primary: hsl(h, s * .75 + .1, 78), "on-primary": hsl(h, s, 17), "primary-container": hsl(h, s * .8, 27), "on-primary-container": hsl(h, s * .8 + .1, 89),
+    secondary: hsl(h, s * .3, 76), "secondary-container": hsl(h, s * .3 + .04, 25), "on-secondary-container": hsl(h, s * .35 + .1, 88),
+    tertiary: hsl((h + 60) % 360, s * .45, 76), "tertiary-container": hsl((h + 60) % 360, s * .4, 25), "on-tertiary-container": hsl((h + 60) % 360, s * .5, 88),
+    error: "#F2B8B5", "error-container": "#8C1D18", "on-error-container": "#F9DEDC",
+    surface: hsl(h, n, 6.5), "sc-lowest": hsl(h, n, 4), "sc-low": hsl(h, n, 9.5), sc: hsl(h, n, 11.5), "sc-high": hsl(h, n, 15.5), "sc-highest": hsl(h, n, 19.5),
+    "on-surface": hsl(h, n * .6, 89), "on-surface-variant": hsl(h, n, 76), outline: hsl(h, n * .8, 56), "outline-variant": hsl(h, n, 27),
+    "inverse-surface": hsl(h, n, 89), "inverse-on-surface": hsl(h, n, 19), "inverse-primary": hsl(h, s * .95, 34) };
+  const css = o => Object.entries(o).map(([k, v]) => `--md-${k}:${v}`).join(";");
+  const D = `${css(dark)};--good:#8BD69B;--warn:#EBC06A;--bad:#F2B8B5;--pro:#FFB59E;--carb:#E4C46A;--fat:#80D5C8;--scrim:rgba(0,0,0,.5);color-scheme:dark`;
+  const Lt = `${css(light)};--good:#1E7A3B;--warn:#8A5A00;--bad:#B3261E;--pro:#A5492F;--carb:#8E6C00;--fat:#21756A;--scrim:rgba(0,0,0,.32);color-scheme:light`;
+  return `:root,:root[data-theme="light"]{${Lt}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${D}}}:root[data-theme="dark"]{${D}}`; }
+let LOOK_KEY = "";
+function applyLook() { const P = LOOK(), k = P.theme + P.accent; if (k === LOOK_KEY) return; LOOK_KEY = k; const R = document.documentElement, css = mdPalette(P.accent);
+  let st = document.getElementById("md-dyn"); if (!st) { st = document.createElement("style"); st.id = "md-dyn"; document.head.appendChild(st); } st.textContent = css;
+  if (P.theme === "system") R.removeAttribute("data-theme"); else R.setAttribute("data-theme", P.theme);
+  const darkNow = P.theme === "dark" || (P.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches), [h, s] = hexHsl(P.accent);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", darkNow ? hsl(h, Math.min(s, .5) * .32, 11.5).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)") : hsl(h, Math.min(s, .5) * .32, 94.4).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)"));
+  try { localStorage.setItem("engine.look", JSON.stringify({ css, theme: P.theme })); } catch (e) {} }
+const _renderLook = render; render = function () { applyLook(); _renderLook(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { LOOK_KEY = ""; applyLook(); });
+function lookCard() { const P = LOOK();
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:14px"><span class="flabel">Look</span>
+    <div class="field"><span class="flabel">Theme</span><div class="seg">${[["system", "System"], ["light", "Light"], ["dark", "Dark"]].map(([k, l]) => `<button data-act="look-theme" data-k="${k}" aria-pressed="${P.theme === k}">${l}</button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">Colour</span><div class="acc-sw">${ACCENTS.map(([h, l]) => `<button class="acc-b" data-act="look-acc" data-k="${h}" aria-pressed="${P.accent.toLowerCase() === h.toLowerCase()}" aria-label="${l}" title="${l}" style="--sw:${h}">${P.accent.toLowerCase() === h.toLowerCase() ? ic("check", "sm") : ""}</button>`).join("")}<label class="acc-b custom" title="Your own colour">${ic("edit", "sm")}<input type="color" value="${esc(P.accent)}" data-chg="look-custom" aria-label="Your own colour"></label></div>
+      <small class="faint">The whole palette (buttons, cards, backgrounds) is derived from this colour, in light and dark.</small></div></section>`; }
+SETTINGS_CARDS.push({ o: -2, fn: lookCard });
+ACT["look-theme"] = el => { S.settings.look = { ...LOOK(), theme: el.dataset.k }; saveSettings(); };
+ACT["look-acc"] = el => { S.settings.look = { ...LOOK(), accent: el.dataset.k }; saveSettings(); };
+CHG["look-custom"] = v => { if (/^#[0-9a-f]{6}$/i.test(v)) { S.settings.look = { ...LOOK(), accent: v }; saveSettings(); } };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
@@ -10641,7 +10840,7 @@ ACT["story-open"] = async el => { const d = el.dataset.date, L = logGet(d) || {}
     Sync.ready = true; scheduleRender();
     if (!Sync.db) setTimeout(maybeOnboard, 300);
   });
-  let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (["stats", "progress", "dash", "train"].includes(UI.tab)) scheduleRender(); }, 200); });
+  let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (["stats", "progress", "dash", "train", "today"].includes(UI.tab)) scheduleRender(); }, 200); });
   // keep "today" correct if the page stays open overnight
   let lastToday = todayISO();
   setInterval(() => { const t = todayISO(); if (t !== lastToday) { if (UI.date === lastToday) UI.date = t; lastToday = t; scheduleRender(); } }, 60000);
