@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 /* sheet footers: buttons share the row and wrap instead of spilling out */
 .sheet-f{flex-wrap:wrap}
 .sheet-f .btn{flex:1 1 auto;min-width:0;padding:0 14px;gap:6px}
@@ -1869,6 +1869,20 @@ section .gl-bar{background:var(--surface)}
 @keyframes fuDue{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 50%,transparent)}50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--warn) 0%,transparent)}}
 .fu-strip.due{animation:fuDue 1.6s infinite}
 .run-foot:has(>span:only-child)>span{grid-column:1/-1}
+/* keyboard */
+.sheet{bottom:var(--kb,0px)}
+body.kb-open .sheet{max-height:calc(var(--vvh,100dvh) - 12px - env(safe-area-inset-top,0px))}
+body.kb-open .bnav,body.kb-open #fab{display:none!important}
+body.kb-open .sheet-f{padding-bottom:8px}
+#toast{transform:translateY(calc(-1 * var(--kb,0px)))}
+@media (min-width:720px){.sheet{bottom:auto}}
+.add-in{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important;margin-top:6px}
+body.kb-open .add-top{gap:8px;padding:6px 0}
+body.kb-open .add-top #add-seg{display:none}
+.add-in .add-tag{flex:none}
+.add-tag.new{animation:tagIn .9s ease}
+@keyframes tagIn{0%{transform:scale(.6);background:var(--accent);color:var(--accent-ink)}40%{transform:scale(1.06)}100%{transform:none}}
+body.kb-open .add-acts,body.kb-open .add-tip{display:none}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -4076,7 +4090,7 @@ SHEETS.add = sh => {
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
       <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["fav", "Favourites"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
-      </div><div id="add-ctx">${addCtxFor(sh)}</div>
+      <div id="add-ctx">${addCtxFor(sh)}</div></div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
       <div class="card" id="add-list">${addRowsFor(sh)}</div>`
   };
@@ -6801,11 +6815,17 @@ const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !
 const VT = (it, en) => PLAYER().lang === "en" ? en : it;
 /* one output chain: a limiter in front of the speakers, so overlapping beeps never clip; a larger buffer ("playback") so a busy screen can't make the audio crackle */
 let AOUT = null, SPEAKING = 0;
-function audioOut() { if (AOUT) return AOUT; const g = AC.createGain(); g.gain.value = .85; try { const c = AC.createDynamicsCompressor(); c.threshold.value = -12; c.knee.value = 6; c.ratio.value = 12; c.attack.value = .002; c.release.value = .12; g.connect(c).connect(AC.destination); } catch (e) { g.connect(AC.destination); } return AOUT = g; }
+/* one quiet master gain and no compressor: a fast compressor pumping on every beep is itself a source of grit.
+   Levels are set low enough that overlapping beeps never clip. */
+function audioOut() { if (AOUT) return AOUT; const g = AC.createGain(); g.gain.value = .7; g.connect(AC.destination); return AOUT = g; }
+/* the context sleeps when nothing is scheduled: an always-running context mixed with the speech voice makes Android resample both, which crackles */
+let AC_IDLE = 0;
+function acWake(sec) { try { if (AC.state === "suspended") AC.resume(); clearTimeout(AC_IDLE); AC_IDLE = setTimeout(() => { try { if (AC && AC.state === "running") AC.suspend(); } catch (e) {} }, (sec + 2.5) * 1000); } catch (e) {} }
 function audioOn() { try { if (!AC) { const A = window.AudioContext || window.webkitAudioContext; try { AC = new A({ latencyHint: "playback" }); } catch (e) { AC = new A(); } } if (AC.state === "suspended") AC.resume(); const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) {} voiceUnlock(); }
 function haptic(p = 30) { try { navigator.vibrate?.(p); } catch (e) {} }
 function tone(f, d, at, vol = .28) {
-  if (SPEAKING) vol *= .45; // softer while the voice talks: the two never fight over the speaker
+  vol *= .8; if (SPEAKING) vol *= .4; // softer while the voice talks: the two never fight over the speaker
+  acWake(Math.max(0, at - AC.currentTime) + d);
   const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f; o.type = "sine";
   g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + .012); g.gain.setValueAtTime(vol, at + Math.max(.016, d - .06)); g.gain.exponentialRampToValueAtTime(.0001, at + d);
   o.connect(g).connect(audioOut()); o.start(at); o.stop(at + d + .05);
@@ -6824,7 +6844,7 @@ function pickVoice(lang) { if (VOICE_PICK[lang]) return VOICE_PICK[lang]; try { 
   const v = loc.find(v => /enhanced|premium|natural|siri|neural/i.test(v.name)) || loc.find(v => !/compact|espeak/i.test(v.name)) || loc[0] || mine.find(v => /enhanced|premium|natural/i.test(v.name)) || mine[0] || null; if (v) VOICE_PICK[lang] = v; return v; } catch (e) { return null; } }
 function say(text, o = {}) {
   const P = PLAYER(); if (P.mute || !P.voice || !text || !window.speechSynthesis) return;
-  try { if (o.flush && speechSynthesis.speaking) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = P.lang === "en" ? "en-GB" : "it-IT"; const v = pickVoice(P.lang); if (v) u.voice = v; u.rate = o.rate || 1; u.pitch = 1; u.volume = 1;
+  try { if (o.flush && speechSynthesis.speaking) { if (o.drop) return; speechSynthesis.cancel(); } const u = new SpeechSynthesisUtterance(String(text)); u.lang = P.lang === "en" ? "en-GB" : "it-IT"; const v = pickVoice(P.lang); if (v) u.voice = v; u.rate = o.rate || 1; u.pitch = 1; u.volume = 1;
     u.onstart = () => { SPEAKING++; }; u.onend = u.onerror = () => { SPEAKING = Math.max(0, SPEAKING - 1); }; speechSynthesis.speak(u); } catch (e) {}
 }
 function voiceUnlock() { try { if (VOICE_OK || !window.speechSynthesis) return; VOICE_OK = true; const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } catch (e) {} }
@@ -6855,7 +6875,7 @@ function cPrep(txt) { return [...cCount(0), { at: 0, k: "go", say: txt === undef
 function cFinal(D, endSay) {
   const o = [];
   if (D >= 50) o.push({ at: D - 30, k: "half", say: VT("Ultimi 30 secondi", "Last 30 seconds") });
-  if (PLAYER().voice) { for (let i = 10; i >= 1; i--) if (D - i > 1) o.push({ at: D - i, say: String(i), flush: true, rate: 1.15 }); }
+  if (PLAYER().voice) { for (let i = 10; i >= 1; i--) if (D - i > 1) o.push({ at: D - i, say: String(i), flush: true, drop: true, rate: 1.05 }); }
   else if (D >= 15) o.push({ at: D - 10, k: "half" });
   o.push(...cCount(D), { at: D, k: "end", say: endSay });
   return o;
@@ -7176,7 +7196,7 @@ function liveSummary(L) {
     <div class="lv-row"><span class="lab">Time</span>${stepper("lv-min-adj", L.minutes, "", "min", 5)}<span class="faint" style="font-size:12.5px">load ${fmtN(L.minutes * L.rpe / TL_SCALE)}</span></div>
     <textarea class="inp" rows="2" placeholder="How did it go?" data-chg="lv-snote" aria-label="Session notes">${esc(L.note || "")}</textarea>
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toRecords !== false}" data-act="lv-torec" aria-label="Add weighted top sets to records"></button>Add weighted top sets to Records</label>
-    ${icuLinked() ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toIcu !== false}" data-act="lv-toicu" aria-label="Send to intervals.icu"></button>Send to intervals.icu</label>` : ""}</section>`;
+    ${icuLinked() ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toIcu === true}" data-act="lv-toicu" aria-label="Send to intervals.icu"></button>Send to intervals.icu</label>` : ""}</section>`;
   h += `<div class="lv-dock"><button class="btn tonal" data-act="lv-resume-steps">Back</button><button class="btn primary grow" data-act="lv-save">${ic("check", "sm")}Save workout</button></div></aside></div>`;
   return h;
 }
@@ -7259,7 +7279,7 @@ ACT["lv-rpe"] = el => { LV().rpe = +el.dataset.v; haptic(10); saveWK(); schedule
 ACT["lv-min-adj"] = el => { const L = LV(); L.minutes = Math.max(1, (L.minutes || 0) + +el.dataset.d); saveWK(); scheduleRender(); };
 CHG["lv-snote"] = v => { LV().note = v.trim(); saveWK(); };
 ACT["lv-torec"] = () => { const L = LV(); L.toRecords = L.toRecords === false; saveWK(); scheduleRender(); };
-ACT["lv-toicu"] = () => { const L = LV(); L.toIcu = L.toIcu === false; saveWK(); scheduleRender(); };
+ACT["lv-toicu"] = () => { const L = LV(); L.toIcu = L.toIcu !== true; saveWK(); scheduleRender(); };
 ACT["sum-rir"] = el => { const L = LV(), name = el.dataset.ex; const ti = [...L.tasks.keys()].reverse().find(i => L.tasks[i].t === "set" && L.res[i]?.done && L.tasks[i].exs.some(e => e.name === name)); if (ti == null) return;
   const t = L.tasks[ti], xi = t.exs.findIndex(e => e.name === name), x = L.res[ti].ex[xi]; x.rir = x.rir == null ? 2 : x.rir >= 5 ? 0 : x.rir + 1; saveWK(); scheduleRender(); };
 ACT["lv-save"] = () => {
@@ -7268,7 +7288,7 @@ ACT["lv-save"] = () => {
   mutateLog(L.date, day => { day.wsess = [...(day.wsess || []).filter(x => x.id !== L.id), rec]; day.workouts = [...(day.workouts || []).filter(w => w.sid !== L.id), wClean({ sport: L.sport, min: L.minutes, km: L.auto ? L.km : null, int, rpe: L.rpe, sid: L.id, note: L.name, tpl: L.tplId })]; });
   if (L.toRecords !== false) { const T = S.train, best = {}; for (const s of R.sets) if ((+s.load || 0) > 0 && setReps(s) > 0) { const e = { date: L.date, ex: s.ex, kg: +s.load, reps: setReps(s), rir: s.rir || 0 }; if (!best[s.ex] || e.kg * (1 + e.reps / 30) > best[s.ex].kg * (1 + best[s.ex].reps / 30)) best[s.ex] = e; }
     for (const e of Object.values(best)) T.topSets = wUpsert(T.topSets || [], e, x => x.date === e.date && x.ex === e.ex); }
-  if (L.toIcu === false) mutateLog(L.date, day => { day.workouts = (day.workouts || []).map(w => w.sid === L.id ? { ...w, pushed: true } : w); });
+  if (L.toIcu !== true) mutateLog(L.date, day => { day.workouts = (day.workouts || []).map(w => w.sid === L.id ? { ...w, pushed: true } : w); });
   WK().live = null; saveWK(); wakeOff(); gpsClear(); UI.tab = "today"; toast(`Saved · ${L.minutes} min · RPE ${L.rpe}`); scheduleRender();
   if (typeof icuKick === "function") icuKick("workout finished", "soon");
 };
@@ -8245,7 +8265,7 @@ function runSummary(L) {
     <div class="lv-row"><span class="lab">Km</span><div class="unit-inp" style="max-width:150px"><input class="inp" inputmode="decimal" value="${L.km ?? ""}" data-chg="lv-km" aria-label="Distance in km"><span>km</span></div></div>
     <div class="faint" style="font-size:12.5px">${G ? "Distance from the phone's GPS. " : ""}The watch's real distance replaces this when intervals.icu syncs the activity.</div>
     <textarea class="inp" rows="2" placeholder="How did it go?" data-chg="lv-snote" aria-label="Session notes">${esc(L.note || "")}</textarea>
-    ${icuLinked() ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toIcu !== false}" data-act="lv-toicu" aria-label="Send to intervals.icu"></button>Send to intervals.icu</label>` : ""}</section>
+    ${icuLinked() ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${L.toIcu === true}" data-act="lv-toicu" aria-label="Send to intervals.icu"></button>Send to intervals.icu</label>` : ""}</section>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-resume-steps">Back</button><button class="btn primary grow" data-act="lv-save">${ic("check", "sm")}Save workout</button></div></aside></div>`;
   return h;
 }
@@ -10504,6 +10524,21 @@ exportSheets = function () {
   const photos = (S.body.photos || []).map(p => ({ Date: xd(p.date), Pose: p.pose, "Weight kg": bodyAt(p.date).w ? r1(bodyAt(p.date).w) : null, "In the cloud": p.cloud ? "yes" : "no" }));
   return [...L, ["GPS runs", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
 };
+/* ================= on-screen keyboard: sheets and the field you type in stay above it =================
+   Android resizes the page with the keyboard (viewport meta); where it doesn't (iOS, older browsers) the visual
+   viewport tells how much the keyboard covers, and sheets, toasts and the focused field move up by that much. */
+(() => { const vv = window.visualViewport; if (!vv) return; let raf = 0;
+  const upd = () => { raf = 0; const cover = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)), open = cover > 80;
+    document.documentElement.style.setProperty("--kb", (open ? cover : 0) + "px"); document.documentElement.style.setProperty("--vvh", Math.round(vv.height) + "px");
+    document.body.classList.toggle("kb-open", open || (innerHeight < screen.height * .62 && matchMedia("(pointer:coarse)").matches && !!document.activeElement?.matches?.("input,textarea"))); };
+  const q = () => { if (!raf) raf = requestAnimationFrame(upd); };
+  vv.addEventListener("resize", q); vv.addEventListener("scroll", q); addEventListener("resize", q); upd(); })();
+/* the field you tap scrolls to the middle of what's visible, once the keyboard is up */
+document.addEventListener("focusin", e => { const el = e.target; if (!el.matches?.("input:not([type=checkbox]):not([type=file]),textarea,select") || !matchMedia("(pointer:coarse)").matches) return;
+  setTimeout(() => { if (document.activeElement !== el) return; const r = el.getBoundingClientRect(), vh = window.visualViewport?.height || innerHeight; if (r.top < 60 || r.bottom > vh - 20) el.scrollIntoView({ block: el.id === "add-q" ? "start" : "center", behavior: "smooth" }); }, 320); });
+/* the food just added flashes in the meal strip at the top of the add sheet */
+const _refreshAddKb = refreshAdd;
+refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[data-id]").map(b => b.dataset.id)); _refreshAddKb(); for (const b of $$("#add-ctx .add-tag button[data-id]")) if (!before.has(b.dataset.id)) b.closest(".add-tag").classList.add("new"); const w = $("#add-ctx .add-in"); if (w) w.scrollLeft = w.scrollWidth; };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
