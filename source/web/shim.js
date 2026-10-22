@@ -127,10 +127,19 @@
   };
   E.geminiModels = async key => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": key } }); const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "HTTP " + r.status); e.status = r.status; e.body = j; throw e; } return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); };
   const retired = e => (e?.status === 404 || e?.status === 400) && /no longer available|not found|is not supported|deprecated/i.test(String(e?.message || ""));
+  const busy = e => [500, 502, 503, 504].includes(e?.status) || /overloaded|high demand|unavailable/i.test(String(e?.message || ""));
+  const wait = ms => new Promise(r => setTimeout(r, ms));
   async function ask(input, opts = {}, json = false, over = null, retry = true) {
     try { return await ask1(input, opts, json, over); }
     catch (e) {
       const cfg = over || E.aiCfg();
+      if (retry && cfg && busy(e)) {
+        // Google's model is busy: wait a moment and retry, then try a lighter model
+        for (const ms of [1500, 3500]) { await wait(ms); try { return await ask1(input, opts, json, over); } catch (x) { if (!busy(x)) throw x; } }
+        if (cfg.provider === "gemini") { let alt = null; try { const ms = (await E.geminiModels(cfg.key)).filter(m => m !== cfg.model); alt = ms.find(m => /^gemini-[\d.]+-flash-lite$/.test(m)) || E.bestGemini(ms); } catch (x) {}
+          if (alt) { try { opts.onBusyModel?.(alt); } catch (x) {} return ask(input, opts, json, { ...cfg, model: alt }, false); } }
+        throw e;
+      }
       if (!retry || !cfg || cfg.provider !== "gemini" || !retired(e)) throw e;
       let next = (String(e.message).match(/use models\/([\w.-]+)/) || [])[1];
       if (!next) { try { next = E.bestGemini(await E.geminiModels(cfg.key)); } catch (x) {} }

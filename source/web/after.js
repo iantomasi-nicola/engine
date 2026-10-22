@@ -62,6 +62,7 @@
       if (st === 400 && /API_KEY_INVALID|API key not valid/i.test(m + r)) return "The key isn't valid: copy it again from aistudio.google.com (Get API key).";
       if (st === 401) return "The key isn't valid or was revoked.";
       if (st === 403) return /SERVICE_DISABLED|has not been used|disabled/i.test(m + r) ? "The Generative Language API is off for this key's project: create the key from aistudio.google.com, or enable the API in Google Cloud." : /referer|referrer|HTTP_REFERRER/i.test(m + r) ? "The key is restricted to other websites: allow iantomasi-nicola.github.io in its restrictions, or remove them." : "This key isn't allowed to use the API (" + (r || st) + ")" + (m ? ": " + String(m).slice(0, 200) : ".");
+      if ([500, 502, 503, 504].includes(st)) return "The key works, but Google's model is overloaded right now (" + st + "). It's saved: the app retries by itself and switches to a lighter model if needed.";
       if (st === 429) return "The key works but the free quota is used up for now: try again later (limits reset every minute and every day).";
       return `Error ${st}${m ? ": " + String(m).slice(0, 140) : ""}`; };
     let models = [], listErr = "";
@@ -79,10 +80,11 @@
       return { ok: false, models, suggest: best, msg: `The key is valid, but the model “${model}” isn't available to it. Try “${best}”.` };
     }
     const t0 = performance.now();
-    try { const used = { ...cfg, model, base }; const j = await E.sample.json('Reply with {"ok": true, "kcal_100g_banana": number}', { onModel: m => { used.model = m; } }, used); const ms = Math.round(performance.now() - t0);
-      if (used.model !== model) return { ok: true, models, model: used.model, msg: `Key valid · “${model}” is retired for new keys, using ${used.model}: answered in ${(ms / 1000).toFixed(1)} s. Label reading, meal descriptions and restaurant estimates are on.` };
+    try { const used = { ...cfg, model, base }; const j = await E.sample.json('Reply with {"ok": true, "kcal_100g_banana": number}', { onModel: m => { used.model = m; used.why = "retired"; }, onBusyModel: m => { used.model = m; used.why = "busy"; } }, used); const ms = Math.round(performance.now() - t0);
+      if (used.model !== model) return { ok: true, models, model: used.why === "busy" ? undefined : used.model, msg: used.why === "busy" ? `Key valid · ${model} is overloaded right now, ${used.model} answered instead in ${(ms / 1000).toFixed(1)} s. The app falls back like this by itself when needed.` : `Key valid · “${model}” is retired for new keys, using ${used.model}: answered in ${(ms / 1000).toFixed(1)} s. Label reading, meal descriptions and restaurant estimates are on.` };
       return { ok: true, models, msg: `Key valid · ${model} answered in ${(ms / 1000).toFixed(1)} s (banana ${j?.kcal_100g_banana ?? "?"} kcal/100 g). Label reading, meal descriptions and restaurant estimates are on.` }; }
-    catch (e) { const st = e?.status || 0; return { ok: false, models, msg: (st ? why(st, e.body) : "The test request failed: " + String(e?.message || e).slice(0, 140)) + (listErr && listErr !== why(st, e.body) ? " · Model list: " + listErr : "") }; }
+    catch (e) { const st = e?.status || 0; if ([500, 502, 503, 504].includes(st)) return { ok: true, busy: true, models, msg: why(st, e.body) };
+      return { ok: false, models, msg: (st ? why(st, e.body) : "The test request failed: " + String(e?.message || e).slice(0, 140)) + (listErr && listErr !== why(st, e.body) ? " · Model list: " + listErr : "") }; }
   }
   async function runVerify(cfg, save) {
     AIV.busy = true; scheduleRender();
