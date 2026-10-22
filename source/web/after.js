@@ -61,13 +61,13 @@
     const why = (st, j) => { const m = j?.error?.message || j?.error || ""; const r = j?.error?.details?.find?.(d => d.reason)?.reason || j?.error?.status || "";
       if (st === 400 && /API_KEY_INVALID|API key not valid/i.test(m + r)) return "The key isn't valid: copy it again from aistudio.google.com (Get API key).";
       if (st === 401) return "The key isn't valid or was revoked.";
-      if (st === 403) return /SERVICE_DISABLED|has not been used|disabled/i.test(m + r) ? "The Generative Language API is off for this key's project: create the key from aistudio.google.com, or enable the API in Google Cloud." : /referer|referrer|HTTP_REFERRER/i.test(m + r) ? "The key is restricted to other websites: allow iantomasi-nicola.github.io in its restrictions, or remove them." : "This key isn't allowed to use the API (" + (r || st) + ").";
+      if (st === 403) return /SERVICE_DISABLED|has not been used|disabled/i.test(m + r) ? "The Generative Language API is off for this key's project: create the key from aistudio.google.com, or enable the API in Google Cloud." : /referer|referrer|HTTP_REFERRER/i.test(m + r) ? "The key is restricted to other websites: allow iantomasi-nicola.github.io in its restrictions, or remove them." : "This key isn't allowed to use the API (" + (r || st) + ")" + (m ? ": " + String(m).slice(0, 200) : ".");
       if (st === 429) return "The key works but the free quota is used up for now: try again later (limits reset every minute and every day).";
       return `Error ${st}${m ? ": " + String(m).slice(0, 140) : ""}`; };
-    let models = [];
+    let models = [], listErr = "";
     try {
       if (cfg.provider === "gemini") {
-        try { models = await E.geminiModels(cfg.key); } catch (e) { if (e.status) return { ok: false, msg: why(e.status, e.body) }; throw e; }
+        try { models = await E.geminiModels(cfg.key); } catch (e) { if (!e.status) throw e; if (e.status === 400 || e.status === 429) return { ok: false, msg: why(e.status, e.body) }; listErr = why(e.status, e.body); }
       } else {
         const r = await fetch(base.replace(/\/$/, "") + "/models", { headers: { Authorization: "Bearer " + cfg.key } }); const j = await r.json().catch(() => ({}));
         if (!r.ok) return { ok: false, msg: why(r.status, j) };
@@ -82,7 +82,7 @@
     try { const used = { ...cfg, model, base }; const j = await E.sample.json('Reply with {"ok": true, "kcal_100g_banana": number}', { onModel: m => { used.model = m; } }, used); const ms = Math.round(performance.now() - t0);
       if (used.model !== model) return { ok: true, models, model: used.model, msg: `Key valid · “${model}” is retired for new keys, using ${used.model}: answered in ${(ms / 1000).toFixed(1)} s. Label reading, meal descriptions and restaurant estimates are on.` };
       return { ok: true, models, msg: `Key valid · ${model} answered in ${(ms / 1000).toFixed(1)} s (banana ${j?.kcal_100g_banana ?? "?"} kcal/100 g). Label reading, meal descriptions and restaurant estimates are on.` }; }
-    catch (e) { const st = e?.status || 0; return { ok: false, models, msg: st ? why(st, e.body) : "The key is valid but the test request failed: " + String(e?.message || e).slice(0, 140) }; }
+    catch (e) { const st = e?.status || 0; return { ok: false, models, msg: (st ? why(st, e.body) : "The test request failed: " + String(e?.message || e).slice(0, 140)) + (listErr && listErr !== why(st, e.body) ? " · Model list: " + listErr : "") }; }
   }
   async function runVerify(cfg, save) {
     AIV.busy = true; scheduleRender();

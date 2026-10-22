@@ -125,7 +125,7 @@
     const flash = ok.filter(m => ver(m) >= 0).sort((a, b) => ver(b) - ver(a) || a.length - b.length);
     return flash[0] || ok.find(m => /flash/.test(m)) || models.find(m => /flash-lite/.test(m)) || models[0] || null;
   };
-  E.geminiModels = async key => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${encodeURIComponent(key)}`); const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "HTTP " + r.status); e.status = r.status; e.body = j; throw e; } return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); };
+  E.geminiModels = async key => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": key } }); const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "HTTP " + r.status); e.status = r.status; e.body = j; throw e; } return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); };
   const retired = e => (e?.status === 404 || e?.status === 400) && /no longer available|not found|is not supported|deprecated/i.test(String(e?.message || ""));
   async function ask(input, opts = {}, json = false, over = null, retry = true) {
     try { return await ask1(input, opts, json, over); }
@@ -148,7 +148,7 @@
     let text = "";
     if (cfg.provider === "gemini") {
       const contents = msgs.map((m, i) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }, ...(i === msgs.length - 1 ? imgs.map(x => ({ inline_data: { mime_type: x.mime, data: x.data } })) : [])] }));
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent?key=${encodeURIComponent(cfg.key)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents, ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}), generationConfig: { temperature: .2, ...(json ? { responseMimeType: "application/json" } : {}) } }), signal: opts.signal });
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.key }, body: JSON.stringify({ contents, ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}), generationConfig: { temperature: .2, ...(json ? { responseMimeType: "application/json" } : {}) } }), signal: opts.signal });
       const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; e.status = r.status; e.body = j; throw e; }
       text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
     } else {
