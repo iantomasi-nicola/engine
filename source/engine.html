@@ -1839,6 +1839,9 @@ tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .sl{display:flex;flex-direction:column;gap:8px}
 .sl-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .sl-k span{display:flex;flex-direction:column}.sl-k b{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums}.sl-k small{font-size:11.5px;color:var(--muted)}
+.px-pv{white-space:pre-wrap;font:12.5px/1.45 ui-monospace,Menlo,monospace;background:var(--surface-2);border-radius:12px;padding:10px 12px;max-height:40vh;overflow:auto;color:var(--muted)}
+.ck-c{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:14px;background:var(--surface-2)}
+.ck-h{display:flex;justify-content:space-between;gap:8px;align-items:center}.ck-h b{font-size:14.5px}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3370,7 +3373,7 @@ VIEWS.plan = function () {
       <span class="weigh-in"><span class="unit-inp"><input id="qw-in" class="inp" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Weight in kg"><span>kg</span></span><span class="unit-inp bf"><input id="qw-bf" class="inp" inputmode="decimal" placeholder="${lastBf() ? r1(lastBf()[1]) : "BF"}" aria-label="Body fat percent, optional"><span>%</span></span><button class="btn ink sm" type="submit">Save</button></span></form>`;
   }
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
-    <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button>
+    <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button>
     ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
   if (eat.manual) {
@@ -9067,7 +9070,7 @@ VIEWS.pantry = function () {
   const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
   let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
-    <div class="row"><button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
+    <div class="row"><button class="btn tonal sm" data-act="cook-open">${ic("plate", "sm")}What can I cook?</button><button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
   h += expiryCard("pantry");
   if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
   if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
@@ -10045,11 +10048,129 @@ SHEETS.sleep = () => { const K = sleepLinks(), P = sleepTonight(), S2 = SLP();
     <div class="faint" style="font-size:12.5px">Log sleep in the morning check-in (or let intervals.icu bring it from the watch). Short sleep raises hunger hormones and lowers how hard training feels doable; the target adds 30′ after heavy days, before hard or long sessions and when you owe sleep.</div>`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
 ACT["sl-open"] = () => openSheet("sleep", { live: true });
 CHG["sl-set"] = (v, el) => { const k = el.dataset.k; S.settings.sleep = { ...SLP(), [k]: k === "target" ? clamp(num(v) || 7.5, 5, 10) : v || "07:00" }; saveSettings(); renderSheet(); };
+/* ================= what can I cook with what I have: recipes and quick plates from the pantry =================
+   Recipes are ranked by how much of them is at home (spices, oil and other small amounts count as there), food
+   that's about to expire first. Quick plates pair a protein, a carb and a vegetable you have, sized for the meal.
+   With an AI service the AI can also invent dishes, using only what's in the pantry. */
+const pantryHave = () => { const t = todayISO(), out = {}; for (const [id, p] of Object.entries(S.shop.pantry || {})) { const f = getFood(id) || BUILTIN[id]; if (f && p.g > 0 && !(p.exp && p.exp < t)) out[id] = { f, g: p.g, dl: p.exp ? daysBetween(t, p.exp) : null }; } return out; };
+const isStaple = (f, g) => g <= 12 || /oil|olio|salt|sale|pepper|pepe|spice|spezie|vinegar|aceto|herb|garlic|aglio|honey|miele|stock|brodo/i.test(f.name + " " + (f.id || ""));
+function cookRecipes(H = pantryHave()) {
+  return allRecipes().filter(r => r.ingredients?.length).map(r => {
+    const sv = r.servings || 1; let have = 0, tot = 0, urgent = 0; const miss = [], use = [];
+    for (const ing of r.ingredients) { const f = getFood(ing.food) || BUILTIN[ing.food]; if (!f) continue; const g = ing.g / sv; tot += g; const h = H[ing.food];
+      if (h && h.g >= g * .6) { have += g; use.push(f.name); if (h.dl != null && h.dl <= 3) urgent++; } else if (isStaple(f, g)) have += g; else miss.push(f.name); }
+    return { r, pct: tot ? have / tot : 0, miss, use, urgent };
+  }).filter(x => x.use.length && x.pct >= .5).sort((a, b) => (b.miss.length === 0) - (a.miss.length === 0) || b.urgent - a.urgent || b.pct - a.pct).slice(0, 12);
+}
+/* quick plates: protein + carb + veg (+ fat), portions for this meal's targets */
+function cookPlates(meal, H = pantryHave()) {
+  const T = targetsFor(todayISO()), sh = mealShare(meal) || .3, tgt = { p: T.p * sh, c: T.c * sh, f: T.f * sh, kcal: T.kcal * sh };
+  const by = role => Object.values(H).filter(x => x.f.role === role && (x.f.meals || []).some(m => m !== "b" && m !== "s") && x.f.per?.kcal > 0).sort((a, b) => (a.dl ?? 99) - (b.dl ?? 99));
+  const P = by("P"), C = by("C"), V = by("V"), F = Object.values(H).filter(x => x.f.role === "F");
+  const out = [];
+  for (let i = 0; i < Math.min(3, P.length); i++) { const p = P[i], c = C[i % Math.max(1, C.length)], v = V[i % Math.max(1, V.length)], fat = F[0];
+    const gp = clamp(r5(tgt.p * .8 / Math.max(.05, p.f.per.p / 100)), 60, Math.min(p.g, 300));
+    const gc = c ? clamp(r5(Math.max(0, tgt.c - (p.f.per.c * gp / 100)) / Math.max(.1, c.f.per.c / 100)), 30, Math.min(c.g, 400)) : 0;
+    const gv = v ? Math.min(v.g, 200) : 0, gf = fat ? clamp(r0(Math.max(0, tgt.f - p.f.per.f * gp / 100 - (c ? c.f.per.f * gc / 100 : 0)) / Math.max(.5, fat.f.per.f / 100)), 0, 15) : 0;
+    const items = [[p.f, gp], ...(c ? [[c.f, gc]] : []), ...(v ? [[v.f, gv]] : []), ...(fat && gf >= 3 ? [[fat.f, gf]] : [])];
+    const m = items.reduce((a, [f, g]) => addM(a, f.per, g / 100), ZERO());
+    out.push({ items, m, urgent: items.some(([f]) => (H[f.id]?.dl ?? 99) <= 3) });
+  }
+  return out;
+}
+SHEETS.cook = sh => {
+  const H = pantryHave(), n = Object.keys(H).length, meal = sh.meal || suggestMeal(), R = cookRecipes(H), Pl = cookPlates(meal, H);
+  const mealSel = `<div class="chips">${activeMeals().map(m => `<button class="chip sm" data-act="ck-meal" data-k="${m.id}" aria-pressed="${meal === m.id}">${esc(m.name)}</button>`).join("")}</div>`;
+  if (!n) return { title: "What can I cook?", body: `<div class="empty slim"><p>The pantry is empty. Finish a shopping trip or add what you have at home, then ask again.</p><button class="btn tonal" data-act="pantry-prod">${ic("plus", "sm")}Add to the pantry</button></div>`, foot: "" };
+  const plate = (x, i) => `<div class="ck-c"><div class="ck-h"><b>${esc(x.items.map(([f]) => f.name).slice(0, 3).join(" · "))}</b>${x.urgent ? `<span class="pill" style="--c:var(--warn)">uses expiring food</span>` : ""}</div>
+    <small class="faint">${esc(x.items.map(([f, g]) => `${f.name} ${fmtN(g)} ${f.unit || "g"}`).join(" + "))}</small><small><b>${fmtN(x.m.kcal)} kcal</b> · ${r0(x.m.c)}C ${r0(x.m.p)}P ${r0(x.m.f)}F</small>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn tonal sm" data-act="ck-plate" data-i="${i}">${ic("plus", "sm")}Add to ${esc(mealName(meal))}</button><button class="btn text sm" data-act="ck-plate-save" data-i="${i}">Save as recipe</button></div></div>`;
+  const rec = x => `<div class="ck-c"><div class="ck-h"><b>${esc(x.r.name)}</b>${x.miss.length ? `<span class="faint" style="font-size:12px">${r0(x.pct * 100)}%</span>` : `<span class="pill" style="--c:var(--good)">all at home</span>`}</div>
+    <small class="faint">${x.miss.length ? `Missing: ${esc(x.miss.join(", "))}` : `Uses ${esc(x.use.join(", "))}`}${x.urgent ? " · uses expiring food" : ""}</small>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn tonal sm" data-act="ck-rec" data-id="${x.r.id}">${ic("plus", "sm")}Add to ${esc(mealName(meal))}</button>${x.miss.length ? `<button class="btn text sm" data-act="ck-miss" data-id="${x.r.id}">${ic("cart", "sm")}Missing to the list</button>` : ""}</div></div>`;
+  const ai = sh.ai || [];
+  return { title: "What can I cook?", body: `${mealSel}
+    ${Pl.length ? `<span class="flabel">Quick plates for ${esc(mealName(meal))}</span>${Pl.map(plate).join("")}` : ""}
+    <span class="flabel">Your recipes</span>${R.length ? R.map(rec).join("") : `<div class="faint" style="font-size:13px">None of your recipes is mostly at home yet.</div>`}
+    ${AIF("plan") ? `<span class="flabel">Ideas from the AI</span>${ai.map((x, i) => `<div class="ck-c"><div class="ck-h"><b>${esc(x.name)}</b><small class="faint">${fmtN(x.m.kcal)} kcal</small></div><small class="faint">${esc(x.items.map(([f, g]) => `${f.name} ${fmtN(g)} ${f.unit || "g"}`).join(" + "))}</small>${x.how ? `<small>${esc(x.how)}</small>` : ""}
+      <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn tonal sm" data-act="ck-ai-add" data-i="${i}">${ic("plus", "sm")}Add to ${esc(mealName(meal))}</button><button class="btn text sm" data-act="ck-ai-save" data-i="${i}">Save as recipe</button></div></div>`).join("")}
+      ${sh.busy ? `<div class="result"><span class="spinner"></span><span>Thinking about your pantry…</span></div>` : `<button class="btn soft" data-act="ck-ai">${ic("spark", "sm")}${ai.length ? "More ideas" : "Ask the AI for dishes"}</button>`}${sh.err ? `<div class="note warn">${esc(sh.err)}</div>` : ""}` : ""}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` };
+};
+const mainMeal = () => { const m = suggestMeal(), A = activeMeals(), k = A.find(x => x.id === m)?.kind || m; if (!/snack|^s$|^b$|break/i.test(k + m)) return m; const h = new Date().getHours(); return (A.find(x => /lunch/i.test(x.id + x.kind)) && h < 15 ? A.find(x => /lunch/i.test(x.id + x.kind)) : A.find(x => /dinner/i.test(x.id + x.kind)) || A[0]).id; };
+ACT["cook-open"] = () => openSheet("cook", { meal: mainMeal() });
+ACT["ck-meal"] = el => { S_().meal = el.dataset.k; renderSheet(); };
+const ckAdd = (items, label) => { const sh = S_(), meal = sh.meal || suggestMeal(), d = todayISO(); mutateDay(d, day => { for (const [f, g] of items) (day.meals[meal] = day.meals[meal] || []).push(newItem("food", f.id, g)); }); toast(`${label} added to ${mealName(meal)} · today`); };
+const ckSave = (name, items) => { closeSheet(); openSheet("recipe", { draft: { id: "", name, servings: 1, meals: [S_()?.meal || "lunch"], ingredients: items.map(([f, g]) => ({ food: f.id, g })), note: "", fav: false, source: "custom" }, isNew: true }); };
+ACT["ck-plate"] = el => { const x = cookPlates(S_().meal || suggestMeal())[+el.dataset.i]; if (x) ckAdd(x.items, x.items[0][0].name + " plate"); };
+ACT["ck-plate-save"] = el => { const x = cookPlates(S_().meal || suggestMeal())[+el.dataset.i]; if (x) ckSave(x.items.map(([f]) => f.name).slice(0, 2).join(" & "), x.items); };
+ACT["ck-rec"] = el => { const sh = S_(), r = getRecipe(el.dataset.id); if (!r) return; mutateDay(todayISO(), day => { (day.meals[sh.meal || suggestMeal()] = day.meals[sh.meal || suggestMeal()] || []).push(newItem("recipe", r.id, 1)); }); toast(`${r.name} added to ${mealName(sh.meal || suggestMeal())} · today`); };
+ACT["ck-miss"] = el => { const r = getRecipe(el.dataset.id), H = pantryHave(); if (!r) return; const sv = r.servings || 1; let n = 0;
+  for (const ing of r.ingredients) { const f = getFood(ing.food) || BUILTIN[ing.food]; if (!f || isStaple(f, ing.g / sv) || (H[ing.food]?.g || 0) >= ing.g / sv * .6) continue; const t = `${f.name} · ${fmtN(r0(ing.g / sv))} ${f.unit || "g"}`; if (!(S.shop.extras || []).some(x => !x.done && x.text === t)) { S.shop.extras = [...(S.shop.extras || []), { id: uid(), text: t, done: false }]; n++; } }
+  put("shop", "", S.shop); toast(`${n} item${n === 1 ? "" : "s"} added to the shopping list`); };
+ACT["ck-ai"] = async () => { const sh = S_(); if (!Sync.sample) return; sh.busy = true; sh.err = null; renderSheet();
+  const H = pantryHave(), meal = sh.meal || suggestMeal(), T = targetsFor(todayISO()), k = mealShare(meal) || .3;
+  const list = Object.entries(H).slice(0, 60).map(([id, x]) => `${id}: ${x.f.name}, ${fmtN(x.g)} ${x.f.unit || "g"}${x.dl != null && x.dl <= 3 ? " (use first)" : ""}`).join("\n");
+  const prompt = `Pantry (id: name, amount):\n${list}\n\nSuggest 3 different home-cooked dishes for ${mealName(meal)}, Italian/Mediterranean style, using ONLY these ingredients (salt, pepper, herbs and water are free). Prefer the items marked "use first". Each dish about ${fmtN(r0(T.kcal * k))} kcal and ${r0(T.p * k)} g protein. Amounts in grams or ml for one portion, never above what's available.${sh.ai?.length ? ` Not these: ${sh.ai.map(x => x.name).join(", ")}.` : ""}\nReply with only JSON: {"dishes":[{"name":"...","how":"one sentence on how to cook it","items":[{"id":"pantry id","g":number}]}]}`;
+  try { const j = await Sync.sample.json(prompt); if (UI.sheet !== sh) return;
+    const add = (j?.dishes || []).map(d => { const items = (d.items || []).map(x => { const f = H[x.id]?.f; return f && +x.g > 0 ? [f, Math.min(r0(+x.g), H[x.id].g)] : null; }).filter(Boolean); return items.length ? { name: String(d.name || "Dish").slice(0, 60), how: String(d.how || "").slice(0, 200), items, m: items.reduce((a, [f, g]) => addM(a, f.per, g / 100), ZERO()) } : null; }).filter(Boolean);
+    sh.ai = [...(sh.ai || []), ...add]; if (!add.length) sh.err = "No usable dish came back: try again."; }
+  catch (e) { sh.err = (typeof sampleErr === "function" ? sampleErr(e) : null) || "The AI didn't answer: try again in a moment."; }
+  sh.busy = false; if (UI.sheet === sh) renderSheet(); };
+ACT["ck-ai-add"] = el => { const x = S_().ai?.[+el.dataset.i]; if (x) ckAdd(x.items, x.name); };
+ACT["ck-ai-save"] = el => { const x = S_().ai?.[+el.dataset.i]; if (x) ckSave(x.name, x.items); };
+/* ================= share the meal plan: a picture, a PDF (print → Save as PDF) or plain text ================= */
+const planShop = (start, n) => shoppingRows(start, n).filter(r => r.buy > 0);
+function planRows(start, n) { const out = []; for (let i = 0; i < n; i++) { const d = addDays(start, i), day = S.days[d]; if (!day) { out.push({ d, meals: [], t: null }); continue; }
+  const meals = activeMeals().map(m => ({ m, items: (day.meals?.[m.id] || []).map(it => ({ n: itemName(it), q: itemQty(it), k: itemMacros(it).kcal })) })).filter(x => x.items.length);
+  out.push({ d, meals, t: dayTotals(day), T: targetsFor(d) }); } return out; }
+function planText(rows, o) { const L = [`Meal plan · ${fmtDM(rows[0].d)}${rows.length > 1 ? " – " + fmtDM(rows[rows.length - 1].d) : ""}`];
+  for (const r of rows) { L.push("", `${DOWL[dow(r.d)]} ${fmtDM(r.d)}${o.macros && r.t ? ` · ${fmtN(r.t.kcal)} kcal · C${r0(r.t.c)} P${r0(r.t.p)} F${r0(r.t.f)}` : ""}`); if (!r.meals.length) L.push("  (nothing planned)");
+    for (const x of r.meals) { L.push(`  ${x.m.name}`); for (const it of x.items) L.push(`   - ${it.n} · ${it.q}`); } }
+  if (o.shop) { const s = planShop(rows[0].d, rows.length); if (s.length) { L.push("", "Shopping list"); for (const r of s) L.push(`  - ${r.f.name}: ${fmtN(r.buy)} ${r.f.unit || "g"}`); } }
+  return L.join("\n"); }
+async function planImage(rows, o) {
+  const W = 1080, font = getComputedStyle(document.body).fontFamily || "system-ui", P = 56, lh = 40;
+  let H = 200; for (const r of rows) { H += 90; for (const x of r.meals) H += 50 + x.items.length * lh; if (!r.meals.length) H += 40; H += 20; } if (o.shop) H += 80 + planShop(rows[0].d, rows.length).length * 36; H += 60;
+  const c = document.createElement("canvas"); c.width = W; c.height = Math.min(H, 16000); const x = c.getContext("2d"), F = (w, s) => `${w} ${s}px ${font}`;
+  x.fillStyle = "#fafaf5"; x.fillRect(0, 0, W, c.height); x.textBaseline = "top"; let y = P;
+  x.fillStyle = "#1b1c17"; x.font = F(800, 56); x.fillText("Meal plan", P, y); y += 72; x.font = F(500, 30); x.fillStyle = "#5c5f52"; x.fillText(`${fmtDM(rows[0].d)}${rows.length > 1 ? " – " + fmtDM(rows[rows.length - 1].d) : ""}`, P, y); y += 70;
+  for (const r of rows) {
+    x.fillStyle = "#e9ebdd"; roundRect(x, P - 16, y - 10, W - 2 * P + 32, 64, 16); x.fill(); x.fillStyle = "#1b1c17"; x.font = F(750, 36); x.fillText(`${DOWL[dow(r.d)]} ${fmtDM(r.d)}`, P, y);
+    if (o.macros && r.t) { x.font = F(600, 28); const t = `${fmtN(r.t.kcal)} kcal · C${r0(r.t.c)} P${r0(r.t.p)} F${r0(r.t.f)}`; x.fillStyle = "#5c5f52"; x.fillText(t, W - P - x.measureText(t).width, y + 6); }
+    y += 80; if (!r.meals.length) { x.font = F(500, 28); x.fillStyle = "#8a8d7f"; x.fillText("Nothing planned", P, y); y += 40; }
+    for (const m of r.meals) { x.fillStyle = "#4e6a1f"; x.font = F(700, 30); x.fillText(m.m.name, P, y); y += 46;
+      for (const it of m.items) { x.fillStyle = "#1b1c17"; x.font = F(500, 29); x.fillText(it.n, P + 20, y, W * .55); x.fillStyle = "#5c5f52"; x.font = F(500, 26); const q = it.q.length > 34 ? it.q.slice(0, 33) + "…" : it.q; x.fillText(q, W - P - x.measureText(q).width, y + 2); y += lh; } y += 4; }
+    y += 20; }
+  if (o.shop) { const s = planShop(rows[0].d, rows.length); x.fillStyle = "#1b1c17"; x.font = F(750, 36); x.fillText("Shopping list", P, y); y += 56; x.font = F(500, 27); for (const r of s) { x.fillText(`• ${r.f.name}`, P, y, W * .6); const q = `${fmtN(r.buy)} ${r.f.unit || "g"}`; x.fillText(q, W - P - x.measureText(q).width, y); y += 36; } }
+  const out = document.createElement("canvas"); out.width = W; out.height = Math.min(c.height, Math.ceil(y + P)); out.getContext("2d").drawImage(c, 0, 0);
+  return new Promise(r => out.toBlob(r, "image/png")); }
+function planPrint(rows, o) {
+  const css = `body{font:13px/1.45 system-ui,-apple-system,sans-serif;color:#1b1c17;margin:24px}h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:18px 0 6px;padding:6px 10px;background:#eef0e4;border-radius:8px;display:flex;justify-content:space-between}h2 small{font-weight:500;color:#555}h3{font-size:13px;margin:8px 0 2px;color:#4e6a1f}table{width:100%;border-collapse:collapse}td{padding:2px 0;border-bottom:1px solid #eee}td+td{text-align:right;color:#555;white-space:nowrap}.day{break-inside:avoid}@page{margin:14mm}`;
+  const body = rows.map(r => `<div class="day"><h2>${DOWL[dow(r.d)]} ${fmtDM(r.d)}${o.macros && r.t ? `<small>${fmtN(r.t.kcal)} kcal · C${r0(r.t.c)} P${r0(r.t.p)} F${r0(r.t.f)}</small>` : ""}</h2>${r.meals.map(m => `<h3>${esc(m.m.name)}</h3><table>${m.items.map(it => `<tr><td>${esc(it.n)}</td><td>${esc(it.q)}</td></tr>`).join("")}</table>`).join("") || "<p>Nothing planned</p>"}</div>`).join("");
+  const shop = o.shop ? `<div class="day"><h2>Shopping list</h2><table>${planShop(rows[0].d, rows.length).map(r => `<tr><td>${esc(r.f.name)}</td><td>${fmtN(r.buy)} ${r.f.unit || "g"}</td></tr>`).join("")}</table></div>` : "";
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Meal plan ${rows[0].d}</title><style>${css}</style></head><body><h1>Meal plan</h1><div>${fmtDM(rows[0].d)}${rows.length > 1 ? " – " + fmtDM(rows[rows.length - 1].d) : ""}</div>${body}${shop}</body></html>`;
+  const f = document.createElement("iframe"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0"; document.body.appendChild(f);
+  f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
+  setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast("Printing isn't available here: use the picture."); } setTimeout(() => f.remove(), 60000); }, 250); }
+SHEETS.planexp = sh => { const rows = planRows(sh.start, sh.n), planned = rows.filter(r => r.meals.length).length;
+  return { title: "Share the meal plan", body: `<div class="field"><span class="flabel">Days</span><div class="chips">${[[1, "This day"], [3, "3 days"], [7, "7 days"]].map(([n, l]) => `<button class="chip" data-act="px-n" data-n="${n}" aria-pressed="${sh.n === n}">${l}</button>`).join("")}</div><small class="faint">From ${fmtLong(sh.start)} · ${planned} of ${sh.n} day${sh.n > 1 ? "s" : ""} planned</small></div>
+    <div class="chips">${[["macros", "Calories and macros"], ["shop", "Shopping list"]].map(([k, l]) => `<button class="chip sm" data-act="px-tog" data-k="${k}" aria-pressed="${!!sh[k]}">${l}</button>`).join("")}</div>
+    <div class="px-pv">${esc(planText(rows, sh)).slice(0, 1400)}${planText(rows, sh).length > 1400 ? "…" : ""}</div>`,
+    foot: `<button class="btn tonal" data-act="px-text">${ic("copy", "sm")}Text</button><button class="btn tonal" data-act="px-pdf">${ic("download", "sm")}PDF</button><button class="btn primary" data-act="px-img">${ic("image", "sm")}Picture</button>` }; };
+ACT["plan-share"] = el => openSheet("planexp", { start: el?.dataset?.date || UI.date, n: 7, macros: true, shop: false });
+ACT["px-n"] = el => { S_().n = +el.dataset.n; renderSheet(); };
+ACT["px-tog"] = el => { const sh = S_(); sh[el.dataset.k] = !sh[el.dataset.k]; renderSheet(); };
+ACT["px-text"] = async () => { const sh = S_(), t = planText(planRows(sh.start, sh.n), sh); if (navigator.share) { try { await navigator.share({ title: "Meal plan", text: t }); return; } catch (e) { if (e?.name === "AbortError") return; } } try { await navigator.clipboard.writeText(t); toast("Plan copied"); } catch (e) { await saveFile(`meal-plan-${sh.start}.txt`, t, "Plan saved"); } };
+ACT["px-pdf"] = () => { const sh = S_(); planPrint(planRows(sh.start, sh.n), sh); };
+ACT["px-img"] = async () => { const sh = S_(), b = await planImage(planRows(sh.start, sh.n), sh), file = new File([b], `meal-plan-${sh.start}.png`, { type: "image/png" });
+  if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: "Meal plan" }); return; } catch (e) { if (e?.name === "AbortError") return; } } await saveFile(file.name, b, "Picture saved"); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
   try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
+  /* home-screen shortcuts: ?a=<action> runs once the app is up */
+  try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["gps-run", "open-add", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 900); } catch (e) {}
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
