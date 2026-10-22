@@ -1806,6 +1806,39 @@ tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .rp-w small,.rp-n small{display:block;font-size:11px;color:var(--muted);white-space:nowrap}
 .rp-n{text-align:right}
 @media (max-width:420px){.rp-r{grid-template-columns:minmax(0,1.2fr) 68px repeat(3,minmax(0,.75fr));gap:5px;padding:8px 10px}.rp-w b,.rp-n b{font-size:12.5px}}
+.pp-cmp{display:flex;flex-direction:column;gap:12px}
+.pp-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pp-two>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pp-img{display:block;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--surface-2);position:relative}
+.pp-img img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .2s}
+.pp-img img.ok{opacity:1}
+.pp-img.miss::after{content:"Not on this device";position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--faint);text-align:center;padding:8px}
+.pp-img.big{aspect-ratio:auto;max-height:62vh}.pp-img.big img{height:auto;max-height:62vh;object-fit:contain}
+.pp-tab{display:flex;flex-direction:column}
+.pp-r{display:grid;grid-template-columns:minmax(0,1.2fr) 1fr 1fr 64px;gap:8px;padding:7px 2px;border-top:1px solid var(--line);font-size:13.5px;align-items:baseline}
+.pp-r.head{border-top:0;color:var(--muted);font-size:12px}.pp-r.head b{font-weight:600}
+.pp-r b{font-variant-numeric:tabular-nums;font-weight:650}
+.pp-r em{font-style:normal;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.pp-r em.up{color:var(--good)}.pp-r em.down{color:var(--bad)}
+.pp-list{display:flex;flex-direction:column;gap:10px}
+.pp-day{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:10px 12px}
+.pp-dh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.pp-dh small{color:var(--muted)}
+.pp-th{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pp-t{display:flex;flex-direction:column;gap:4px;padding:0;color:var(--muted);font-size:12px;text-align:center}
+.inp.sm{height:36px;padding:0 10px;font-size:13.5px}
+.hy{display:flex;flex-direction:column;gap:12px}
+.hy-row{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.hy-w{flex:1 1 160px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.hy-v b{font-size:28px;font-weight:750;font-variant-numeric:tabular-nums}.hy-v small{color:var(--muted);margin-left:4px}
+.hy-bar{position:relative;height:8px;border-radius:99px;background:var(--surface-2);overflow:visible}
+.hy-bar i{display:block;height:100%;border-radius:99px;background:var(--fat)}
+.hy-bar u{position:absolute;top:-3px;width:2px;height:14px;background:var(--muted);border-radius:1px}
+.hy-btns{display:flex;gap:6px;align-items:center}
+.hy-c{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.hy-warn{color:var(--warn);font-size:12.5px;font-weight:600}.hy-ok{color:var(--good);font-size:12.5px;font-weight:600}
+.sl{display:flex;flex-direction:column;gap:8px}
+.sl-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sl-k span{display:flex;flex-direction:column}.sl-k b{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums}.sl-k small{font-size:11.5px;color:var(--muted)}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -9615,6 +9648,9 @@ function gpsPreview(L) {
 /* ================= Today: cards added by the modules below, in two columns ================= */
 const TODAY_CARDS = [];
 function todayCards(col) { return TODAY_CARDS.filter(c => c.col === col).sort((a, b) => a.o - b.o).map(c => { try { return c.fn() || ""; } catch (e) { console.warn(e); return ""; } }).join(""); }
+/* Settings: cards added by the modules below (after the built-in ones) */
+const SETTINGS_CARDS = [];
+function settingsCards() { return SETTINGS_CARDS.sort((a, b) => a.o - b.o).map(c => { try { return c.fn() || ""; } catch (e) { console.warn(e); return ""; } }).join(""); }
 /* ================= periodization: blocks, deloads and a backward plan to your races =================
    Every week gets a phase. With an A/B race ahead the plan is built backwards from race day (race week, taper, peak,
    build blocks with a deload every N weeks, base before that, recovery after). Without one it's a rolling cycle.
@@ -9819,6 +9855,196 @@ reminderPrefs = function () { const RP = S.settings.report || {};
     <button class="btn soft sm" data-act="rem-ics"`); };
 CHG["rep-at"] = v => { S.settings.report = { ...(S.settings.report || {}), at: v || "08:30" }; saveSettings(); };
 ACT["rep-today"] = () => { const RP = S.settings.report || {}; S.settings.report = { ...RP, today: RP.today === false }; saveSettings(); };
+/* ================= progress photos: front, side, back; two dates side by side with weight and measurements =================
+   The pictures (resized to 1280 px, JPEG) live in this device's IndexedDB; signed in, they also go to your private
+   Supabase Storage folder, so the other devices download them when needed. The list of photos syncs with the rest. */
+const POSES = [["front", "Front"], ["side", "Side"], ["back", "Back"]];
+const PHOTOS = () => (S.body.photos = S.body.photos || []);
+const IDB = (() => { let p = null; const open = () => p || (p = new Promise((ok, no) => { const r = indexedDB.open("engine-photos", 1); r.onupgradeneeded = () => r.result.createObjectStore("p"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+  const tx = async (mode, f) => { const db = await open(); return new Promise((ok, no) => { const t = db.transaction("p", mode), s = t.objectStore("p"), r = f(s); t.oncomplete = () => ok(r?.result); t.onerror = () => no(t.error); }); };
+  return { get: k => tx("readonly", s => s.get(k)), put: (k, v) => tx("readwrite", s => s.put(v, k)), del: k => tx("readwrite", s => s.delete(k)) }; })();
+const PH_URL = {};
+const cloudOK = () => !!(window.ENGINE?.sb && window.ENGINE?.uid);
+async function photoBlob(x) {
+  let b = null; try { b = await IDB.get(x.id); } catch (e) {}
+  if (!b && x.cloud && cloudOK()) { try { const { data } = await ENGINE.sb.storage.from("progress").download(x.cloud); if (data) { b = data; IDB.put(x.id, b).catch(() => {}); } } catch (e) {} }
+  return b;
+}
+async function photoURL(x) { if (PH_URL[x.id]) return PH_URL[x.id]; const b = await photoBlob(x); if (!b) return null; return PH_URL[x.id] = URL.createObjectURL(b); }
+/* fills every <img data-ph="id"> once the picture is at hand */
+function photosHydrate() { for (const el of $$("img[data-ph]")) { if (el.dataset.done) continue; el.dataset.done = 1; const x = PHOTOS().find(p => p.id === el.dataset.ph); if (!x) continue;
+  photoURL(x).then(u => { if (u) { el.src = u; el.classList.add("ok"); } else el.closest(".pp-img")?.classList.add("miss"); }); } }
+async function shrink(file, max = 1280) { const bm = await createImageBitmap(file), k = Math.min(1, max / Math.max(bm.width, bm.height)), c = document.createElement("canvas"); c.width = Math.round(bm.width * k); c.height = Math.round(bm.height * k); c.getContext("2d").drawImage(bm, 0, 0, c.width, c.height); return new Promise(r => c.toBlob(r, "image/jpeg", .84)); }
+async function photoAdd(file, date, pose) {
+  const blob = await shrink(file), id = puid("ph"), x = { id, date, pose, w: logGet(date)?.weight || null };
+  await IDB.put(id, blob);
+  if (cloudOK()) { try { const path = `${ENGINE.uid}/${id}.jpg`, { error } = await ENGINE.sb.storage.from("progress").upload(path, blob, { contentType: "image/jpeg", upsert: true }); if (!error) x.cloud = path; else if (!PHOTOS().some(p => p.cloud)) toast("Photo kept on this device (cloud folder not set up: see Settings)"); } catch (e) {} }
+  PHOTOS().push(x); put("body", "", S.body); return x;
+}
+async function photoDel(id) { const x = PHOTOS().find(p => p.id === id); S.body.photos = PHOTOS().filter(p => p.id !== id); put("body", "", S.body); try { await IDB.del(id); } catch (e) {} if (x?.cloud && cloudOK()) { try { await ENGINE.sb.storage.from("progress").remove([x.cloud]); } catch (e) {} } }
+/* the numbers next to a photo: weight (trend), body fat and the measurements nearest to that date */
+function bodyAt(date) {
+  const M = S.body.m || {}, md = Object.keys(M).filter(d => d <= addDays(date, 7)).sort().pop(), L = logGet(date) || {};
+  let bf = null; for (let i = 0; i < 14 && !bf; i++) bf = +logGet(addDays(date, -i))?.bf || null;
+  return { w: L.weight || trendAt(date) || null, trend: trendAt(date), bf, m: md && daysBetween(md, date) <= 21 ? M[md] : null, md };
+}
+function photoDates() { const by = {}; for (const p of PHOTOS()) (by[p.date] = by[p.date] || []).push(p); return Object.keys(by).sort().map(d => ({ d, ps: by[d] })); }
+function photosSection() {
+  const D = photoDates(), sel = UI.ppCmp || {}, pose = UI.ppPose || "front";
+  const withPose = D.filter(x => x.ps.some(p => p.pose === pose)), a = sel.a && withPose.some(x => x.d === sel.a) ? sel.a : withPose[0]?.d, b = sel.b && withPose.some(x => x.d === sel.b) ? sel.b : withPose[withPose.length - 1]?.d;
+  let h = `<div class="section-h"><h2>Progress photos</h2><button class="link" data-act="pp-new">${ic("camera", "sm")} Add</button></div>`;
+  if (!D.length) return h + `<div class="empty slim"><p>Same light, same place, same time of day: front, side and back every 2–4 weeks. Compare any two dates side by side, with weight and measurements.</p><button class="btn tonal" data-act="pp-new">${ic("camera", "sm")}Take the first photos</button></div>`;
+  const img = p => p ? `<span class="pp-img"><img data-ph="${p.id}" alt="${esc(POSES.find(x => x[0] === p.pose)?.[1] || "")} ${fmtDM(p.date)}"></span>` : `<span class="pp-img miss"></span>`;
+  if (a && b) {
+    const pa = D.find(x => x.d === a).ps.find(p => p.pose === pose), pb = D.find(x => x.d === b).ps.find(p => p.pose === pose), A = bodyAt(a), B = bodyAt(b);
+    const sites = measureTable().sites.filter(([k]) => A.m?.[k] > 0 && B.m?.[k] > 0 && A.md !== B.md);
+    const row = (l, va, vb, u, d = 1, good = -1) => { const dd = va != null && vb != null ? vb - va : null; return `<div class="pp-r"><span>${l}</span><b>${va != null ? (d ? r1(va) : r0(va)) + u : "—"}</b><b>${vb != null ? (d ? r1(vb) : r0(vb)) + u : "—"}</b><em class="${dd == null || Math.abs(dd) < .05 ? "" : dd * good > 0 ? "up" : "down"}">${dd == null ? "" : sgn(dd)}</em></div>`; };
+    h += `<div class="card pad pp-cmp"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="seg sm">${POSES.map(([k, l]) => `<button data-act="pp-pose" data-k="${k}" aria-pressed="${pose === k}">${l}</button>`).join("")}</div><button class="btn soft sm" data-act="pp-share">${ic("image", "sm")}Picture</button></div>
+      <div class="pp-two"><div><select class="inp sm" data-chg="pp-a" aria-label="First date">${withPose.map(x => `<option value="${x.d}" ${x.d === a ? "selected" : ""}>${fmtDM(x.d)} ${x.d.slice(0, 4)}</option>`).join("")}</select>${img(pa)}</div><div><select class="inp sm" data-chg="pp-b" aria-label="Second date">${withPose.map(x => `<option value="${x.d}" ${x.d === b ? "selected" : ""}>${fmtDM(x.d)} ${x.d.slice(0, 4)}</option>`).join("")}</select>${img(pb)}</div></div>
+      <div class="pp-tab"><div class="pp-r head"><span>${daysBetween(a, b)} days</span><b>${fmtDM(a)}</b><b>${fmtDM(b)}</b><em>Δ</em></div>${row("Weight", A.w, B.w, " kg")}${A.trend && B.trend ? row("Trend", A.trend, B.trend, " kg") : ""}${A.bf || B.bf ? row("Body fat", A.bf, B.bf, "%") : ""}${sites.map(([k, l]) => row(l, A.m[k], B.m[k], " cm", 1, /shoulders|chest|arm|calf|thigh|neck/i.test(k) ? 1 : -1)).join("")}</div>
+      ${!sites.length ? `<div class="faint" style="font-size:12.5px">Log measurements within 3 weeks of each photo date to see them here.</div>` : ""}</div>`;
+  }
+  h += `<div class="pp-list">${[...D].reverse().map(x => `<div class="pp-day"><div class="pp-dh"><b>${fmtDM(x.d)} ${x.d.slice(0, 4)}</b><small>${(w => w ? r1(w) + " kg" : "")(bodyAt(x.d).w)}</small></div><div class="pp-th">${x.ps.map(p => `<button class="pp-t" data-act="pp-open" data-id="${p.id}" aria-label="${esc(p.pose)} ${fmtDM(p.date)}"><span class="pp-img"><img data-ph="${p.id}" alt=""></span><small>${esc(POSES.find(q => q[0] === p.pose)?.[1] || p.pose)}</small></button>`).join("")}</div></div>`).join("")}</div>`;
+  return h;
+}
+SHEETS.ppnew = sh => ({ title: "Progress photo", body: `<div class="grid2"><div class="field"><label for="pp-date">Date</label><input id="pp-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="pp-date"></div>
+    <div class="field"><span class="flabel">Pose</span><div class="chips">${POSES.map(([k, l]) => `<button class="chip" data-act="pp-npose" data-k="${k}" aria-pressed="${sh.pose === k}">${l}${PHOTOS().some(p => p.date === sh.date && p.pose === k) ? " ✓" : ""}</button>`).join("")}</div></div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn primary">${ic("camera", "sm")}Take the photo<input type="file" accept="image/*" capture="user" class="sr" data-chg="pp-file"></label><label class="btn soft">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-chg="pp-file"></label></div>
+    ${sh.busy ? `<div class="result"><span class="spinner"></span><span>Saving…</span></div>` : ""}
+    <div class="faint" style="font-size:12.5px">Tip: phone at chest height, 2 m away, same light every time, relaxed. ${cloudOK() ? "Saved on this device and in your private cloud folder." : "Saved on this device; sign in to keep them in the cloud too."}</div>`,
+  foot: `<button class="btn tonal" data-act="close-sheet">Done</button>` });
+ACT["pp-new"] = () => openSheet("ppnew", { date: todayISO(), pose: "front" });
+CHG["pp-date"] = v => { S_().date = v || todayISO(); renderSheet(); };
+ACT["pp-npose"] = el => { S_().pose = el.dataset.k; renderSheet(); };
+CHG["pp-file"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; sh.busy = true; renderSheet();
+  try { const old = PHOTOS().find(p => p.date === sh.date && p.pose === sh.pose); await photoAdd(f, sh.date, sh.pose); if (old) await photoDel(old.id); const i = POSES.findIndex(p => p[0] === sh.pose); toast(`${POSES[i][1]} photo saved`); if (i < 2) sh.pose = POSES[i + 1][0]; }
+  catch (e) { toast("Couldn't read that picture."); } sh.busy = false; if (UI.sheet === sh) renderSheet(); scheduleRender(); };
+ACT["pp-pose"] = el => { UI.ppPose = el.dataset.k; scheduleRender(); };
+CHG["pp-a"] = v => { UI.ppCmp = { ...(UI.ppCmp || {}), a: v }; scheduleRender(); };
+CHG["pp-b"] = v => { UI.ppCmp = { ...(UI.ppCmp || {}), b: v }; scheduleRender(); };
+SHEETS.ppview = sh => { const x = PHOTOS().find(p => p.id === sh.id); if (!x) return { title: "Photo", body: "", foot: "" }; const B = bodyAt(x.date);
+  return { title: `${POSES.find(p => p[0] === x.pose)?.[1] || ""} · ${fmtDM(x.date)}`, body: `<span class="pp-img big"><img data-ph="${x.id}" alt=""></span><div class="faint" style="font-size:13px">${B.w ? r1(B.w) + " kg" : ""}${B.bf ? ` · ${r1(B.bf)}% body fat` : ""}${B.m?.waist ? ` · waist ${B.m.waist} cm` : ""}</div>`,
+    foot: `<button class="btn danger" data-act="pp-del" data-id="${x.id}" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button><button class="btn tonal" data-act="pp-a-set" data-d="${x.date}">Compare from here</button><button class="btn primary" data-act="close-sheet">Done</button>` }; };
+ACT["pp-open"] = el => { openSheet("ppview", { id: el.dataset.id }); setTimeout(photosHydrate, 20); };
+ACT["pp-a-set"] = el => { const x = PHOTOS().find(p => p.date === el.dataset.d); UI.ppCmp = { ...(UI.ppCmp || {}), a: el.dataset.d }; if (x) UI.ppPose = x.pose; closeSheet(); };
+ACT["pp-del"] = el => { const id = el.dataset.id; openSheet("confirm", { title: "Delete this photo?", text: "It's removed from this device and your cloud folder.", yes: "Delete", danger: true, run: () => photoDel(id) }); };
+/* a shareable side-by-side picture (1080×1350) */
+ACT["pp-share"] = async () => {
+  const pose = UI.ppPose || "front", D = photoDates().filter(x => x.ps.some(p => p.pose === pose)); if (D.length < 1) return;
+  const a = UI.ppCmp?.a || D[0].d, b = UI.ppCmp?.b || D[D.length - 1].d, pa = D.find(x => x.d === a)?.ps.find(p => p.pose === pose), pb = D.find(x => x.d === b)?.ps.find(p => p.pose === pose);
+  const [ba, bb] = await Promise.all([photoBlob(pa), photoBlob(pb)]); if (!ba || !bb) { toast("A photo isn't on this device yet."); return; }
+  const W = 1080, H = 1350, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"), font = getComputedStyle(document.body).fontFamily;
+  x.fillStyle = "#111"; x.fillRect(0, 0, W, H);
+  for (const [i, bl] of [[0, ba], [1, bb]]) { const im = await createImageBitmap(bl), w = W / 2 - 6, hh = H - 170, k = Math.max(w / im.width, hh / im.height); x.save(); x.beginPath(); x.rect(i * (W / 2 + 6), 0, w, hh); x.clip(); x.drawImage(im, i * (W / 2 + 6) + (w - im.width * k) / 2, (hh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); }
+  const A = bodyAt(a), B = bodyAt(b); x.fillStyle = "#fff"; x.textBaseline = "top";
+  [[a, A, 40], [b, B, W / 2 + 46]].forEach(([d, v, X]) => { x.font = `700 40px ${font}`; x.fillText(fmtDM(d) + " " + d.slice(0, 4), X, H - 150); x.font = `500 32px ${font}`; x.globalAlpha = .8; x.fillText([v.w ? r1(v.w) + " kg" : "", v.bf ? r1(v.bf) + "%" : "", v.m?.waist ? `waist ${v.m.waist}` : ""].filter(Boolean).join(" · "), X, H - 96); x.globalAlpha = 1; });
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", .9)), file = new File([blob], `progress-${a}-${b}.jpg`, { type: "image/jpeg" });
+  if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file] }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+  await saveFile(file.name, blob, "Picture saved");
+};
+const _bodyView = bodyView;
+bodyView = function () { const h = _bodyView(); setTimeout(photosHydrate, 30); return photosSection() + h; };
+const _afterRenderPh = afterRender;
+afterRender = function () { _afterRenderPh(); if ($("img[data-ph]")) photosHydrate(); };
+const _renderSheetPh = renderSheet;
+renderSheet = function () { _renderSheetPh(); if (document.querySelector(".sheet img[data-ph], #sheet img[data-ph]") || $("img[data-ph]")) photosHydrate(); };
+/* ================= water and caffeine: a tap per glass or coffee, reminders, what's still in you at bedtime =================
+   Off until switched on in Settings. Water goal: 35 ml per kg of trend weight + 500 ml per hour of training (or your own).
+   Caffeine: half-life 5 h, so the card shows what's left at bedtime; a warning past your cut-off time or the daily max. */
+const HYD = () => ({ on: false, goal: null, remind: true, from: "09:00", to: "21:00", every: 2, caffOn: true, caffMax: 400, cut: "15:00", bed: "23:00", ...(S.settings.hydra || {}) });
+const CAFF = [["Espresso", 65], ["Coffee", 95], ["Moka cup", 110], ["Tea", 40], ["Cola", 35], ["Energy drink", 80], ["Pre-workout", 200], ["Caffeine pill", 100]];
+const hm2h = hm => { const [h, m] = String(hm || "0:0").split(":").map(Number); return h + (m || 0) / 60; };
+function waterGoal(d) { const H = HYD(); if (H.goal > 0) return +H.goal; const w = trendAt(d) || 75, min = sessionsFor(d).list.filter(x => x.sport && x.sport !== "Rest").reduce((a, x) => a + (+x.min || 0), 0); return Math.round((w * 35 + min / 60 * 500) / 250) * 250; }
+const waterOf = d => +(logGet(d)?.water || 0);
+const caffOf = d => (logGet(d)?.caff || []);
+function caffLeft(d, atH) { return caffOf(d).reduce((a, [t, mg]) => { const dt = atH - hm2h(t); return dt < 0 ? a : a + mg * Math.pow(.5, dt / 5); }, 0); }
+function waterStats(a, b) { if (!HYD().on) return null; let n = 0, sum = 0, goal = 0; for (let d = a; d <= b; d = addDays(d, 1)) { const w = waterOf(d); if (w > 0) { n++; sum += w; goal += waterGoal(d); } } return n ? { avg: sum / n, goal: goal / n, n } : null; }
+function hydraCard() {
+  const H = HYD(); if (!H.on) return ""; const d = todayISO(), w = waterOf(d), g = waterGoal(d), pct = clamp(w / g, 0, 1), now = hm2h(nowHM());
+  const exp = clamp((now - hm2h(H.from)) / Math.max(1, hm2h(H.to) - hm2h(H.from)), 0, 1) * g, behind = w < exp - 400;
+  const C = caffOf(d), mg = C.reduce((a, x) => a + x[1], 0), bed = caffLeft(d, hm2h(H.bed) + (hm2h(H.bed) < 12 ? 24 : 0)), late = now >= hm2h(H.cut);
+  return `<section class="card pad hy"><div class="hy-row"><div class="hy-w"><span class="flabel">Water</span><div class="hy-v"><b>${r1(w / 1000)}</b><small>/ ${r1(g / 1000)} l</small></div><span class="hy-bar"><i style="width:${r0(pct * 100)}%"></i><u style="left:${r0(clamp(exp / g, 0, 1) * 100)}%"></u></span>${behind ? `<small class="hy-warn">Behind by ${r1((exp - w) / 1000)} l</small>` : w >= g ? `<small class="hy-ok">Goal reached</small>` : ""}</div>
+    <div class="hy-btns"><button class="btn tonal sm" data-act="hy-add" data-ml="250">+ Glass</button><button class="btn tonal sm" data-act="hy-add" data-ml="500">+ Bottle</button>${w ? `<button class="icon-btn sm" data-act="hy-add" data-ml="-250" aria-label="Remove a glass">${ic("minus", "sm")}</button>` : ""}</div></div>
+    ${H.caffOn ? `<div class="hy-c"><div class="row" style="justify-content:space-between;gap:8px"><span><span class="flabel">Caffeine</span> <b>${r0(mg)} mg</b><small class="faint"> / ${H.caffMax}</small></span><small class="${bed > 50 ? "hy-warn" : "faint"}">≈ ${r0(bed)} mg at ${esc(H.bed)}</small></div>
+      <div class="chips">${CAFF.slice(0, 6).map(([l, v]) => `<button class="chip sm" data-act="hy-caff" data-l="${esc(l)}" data-mg="${v}">${esc(l)}</button>`).join("")}${C.length ? `<button class="chip sm" data-act="hy-caff-undo" aria-label="Remove the last one">${ic("minus", "sm")}</button>` : ""}</div>
+      ${mg > H.caffMax ? `<small class="hy-warn">Over your ${H.caffMax} mg a day.</small>` : late && C.some(x => hm2h(x[0]) >= hm2h(H.cut)) ? `<small class="hy-warn">After ${esc(H.cut)}: it can cut deep sleep tonight.</small>` : C.length ? `<small class="faint">${C.map(x => `${x[0]} ${esc(x[2] || "")}`).join(" · ")}</small>` : ""}</div>` : ""}</section>`;
+}
+TODAY_CARDS.push({ col: "b", o: 1, fn: hydraCard });
+ACT["hy-add"] = el => { const d = todayISO(), ml = +el.dataset.ml; mutateLog(d, day => { day.water = Math.max(0, (+day.water || 0) + ml) || null; }); haptic(8); };
+ACT["hy-caff"] = el => { const H = HYD(), d = todayISO(), mg = +el.dataset.mg, t = nowHM(); mutateLog(d, day => { day.caff = [...(day.caff || []), [t, mg, el.dataset.l]]; }); haptic(8);
+  const tot = caffOf(d).reduce((a, x) => a + x[1], 0); if (tot > H.caffMax) toast(`${tot} mg today: over your ${H.caffMax} mg`); else if (hm2h(t) >= hm2h(H.cut)) toast(`After ${H.cut}: about ${r0(caffLeft(d, hm2h(H.bed)))} mg still in you at bedtime`); };
+ACT["hy-caff-undo"] = () => mutateLog(todayISO(), day => { const c = [...(day.caff || [])]; c.pop(); day.caff = c.length ? c : null; });
+function hydraSettings() { const H = HYD(), sw = (k, l, sub) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}${sub ? `<small class="faint" style="display:block;font-size:12px">${sub}</small>` : ""}</span><button type="button" class="switch" role="switch" aria-checked="${!!H[k]}" data-act="hy-opt" data-k="${k}" aria-label="${esc(l)}"></button></label>`;
+  const tm = (k, l) => `<div class="field"><label for="hy-${k}">${l}</label><input id="hy-${k}" class="inp" type="time" value="${esc(H[k])}" data-chg="hy-set" data-k="${k}"></div>`;
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Water and caffeine</span>${sw("on", "Track water and caffeine", "A card on Today: one tap per glass, bottle or coffee")}
+    ${H.on ? `<div class="grid2"><div class="field"><label for="hy-goal">Water goal</label><div class="unit-inp"><input id="hy-goal" class="inp" inputmode="numeric" value="${H.goal || ""}" placeholder="auto ${fmtN(waterGoal(todayISO()))}" data-chg="hy-set" data-k="goal"><span>ml</span></div></div>
+      <div class="field"><span class="flabel">Remind me every</span><div class="chips">${[[0, "Off"], [1, "1 h"], [2, "2 h"], [3, "3 h"]].map(([v, l]) => `<button class="chip sm" data-act="hy-every" data-v="${v}" aria-pressed="${(H.remind ? H.every : 0) === v}">${l}</button>`).join("")}</div></div></div>
+      <div class="grid4">${tm("from", "From")}${tm("to", "To")}${H.caffOn ? tm("cut", "Caffeine cut-off") + tm("bed", "Bedtime") : ""}</div>
+      ${sw("caffOn", "Caffeine")}${H.caffOn ? `<div class="field" style="max-width:220px"><label for="hy-caffMax">Max a day</label><div class="unit-inp"><input id="hy-caffMax" class="inp" inputmode="numeric" value="${H.caffMax}" data-chg="hy-set" data-k="caffMax"><span>mg</span></div></div>` : ""}
+      <div class="faint" style="font-size:12.5px">Water reminders arrive only when you're behind the day's pace, between the two times, with notifications on (Reminders above). 400 mg of caffeine a day is the usual safe upper limit for adults (EFSA).</div>` : ""}</section>`; }
+SETTINGS_CARDS.push({ o: 1, fn: hydraSettings });
+ACT["hy-opt"] = el => { const H = HYD(), k = el.dataset.k; S.settings.hydra = { ...H, [k]: !H[k] }; saveSettings(); };
+ACT["hy-every"] = el => { const v = +el.dataset.v; S.settings.hydra = { ...HYD(), remind: v > 0, every: v || HYD().every }; saveSettings(); };
+CHG["hy-set"] = (v, el) => { const k = el.dataset.k, n = ["goal", "caffMax"].includes(k); S.settings.hydra = { ...HYD(), [k]: n ? (num(v) > 0 ? r0(num(v)) : (k === "goal" ? null : 400)) : v || HYD()[k] }; saveSettings(); };
+/* reminders: water when behind, at most every N hours */
+const _remTickHy = reminderTick;
+reminderTick = function () { _remTickHy();
+  const R = S.settings?.reminders || {}, H = HYD(); if (!H.on || !H.remind || !R.on || !("Notification" in window) || Notification.permission !== "granted") return;
+  const d = todayISO(), now = nowHM(); if (now < H.from || now > H.to) return;
+  let last = 0; try { last = +localStorage.getItem("engine.hyAt") || 0; } catch (e) {} if (Date.now() - last < H.every * 3600e3) return;
+  const g = waterGoal(d), w = waterOf(d), exp = clamp((hm2h(now) - hm2h(H.from)) / Math.max(1, hm2h(H.to) - hm2h(H.from)), 0, 1) * g;
+  if (w >= exp - 250) return; try { localStorage.setItem("engine.hyAt", String(Date.now())); } catch (e) {}
+  notify("Drink some water", `${r1(w / 1000)} of ${r1(g / 1000)} l so far today.`, "engine-water", { tab: "today" });
+};
+/* ================= sleep, linked to training load and to the next day's calories =================
+   Tonight's target grows after a heavy day, before a hard or long session, and with sleep debt. Your own history
+   shows how a short night moves your intake and your training the day after. */
+const SLP = () => ({ target: 7.5, wake: "07:00", ...(S.settings.sleep || {}) });
+function sleepTonight(d = todayISO()) {
+  const P = SLP(), L = loadState(), why = []; let t = +P.target;
+  const ld = dayLoad(d) + (d === todayISO() ? sessionsFor(d).list.filter(w => !(logGet(d)?.workouts || []).includes(w)).reduce((a, w) => a + sessionLoad(w), 0) : 0), usual = L.usual / 7;
+  if (usual > 0 && ld > usual * 1.5) { t += .5; why.push("heavy day"); }
+  const tm = sessionsFor(addDays(d, 1)).list.filter(w => w.sport && w.sport !== "Rest"), race = races().some(r => r.date === addDays(d, 1));
+  if (race) { t += .5; why.push("race tomorrow"); } else { const k = tm.find(w => sessionIntensity(w) === "Hard" || +w.min >= 90); if (k) { t += .5; why.push(`${sessionIntensity(k) === "Hard" ? "hard" : "long"} session tomorrow`); } }
+  const s7 = []; for (let i = 0; i < 7; i++) { const v = +logGet(addDays(d, -i))?.sleep; if (v > 0) s7.push(v); }
+  const debt = s7.length >= 3 ? s7.reduce((a, v) => a + Math.max(0, P.target - v), 0) : 0; if (debt >= 3) { t += .5; why.push(`${r1(debt)} h short this week`); }
+  t = Math.min(t, 10); const bed = hm2h(P.wake) - t - .25, bh = ((bed % 24) + 24) % 24;
+  return { t, why, bed: `${String(Math.floor(bh)).padStart(2, "0")}:${String(Math.round((bh % 1) * 60 / 5) * 5 % 60).padStart(2, "0")}`, debt, avg7: s7.length ? s7.reduce((a, b) => a + b, 0) / s7.length : null };
+}
+/* your data: after a short night (< 6.5 h) vs a good one (≥ 7.5 h), how intake vs target and training change that day; and how you sleep after heavy days */
+function sleepLinks(days = 120) {
+  return memo("sleeplinks", () => {
+    const s = energySeries(), t = todayISO(), A = { short: [], good: [] }, T = { short: [], good: [] }, after = { heavy: [], light: [] }, L = loadState(), usual = L.usual / 7;
+    for (let i = 1; i <= days; i++) { const d = addDays(t, -i), sl = +logGet(d)?.sleep; if (!(sl > 0)) continue; const k = sl < 6.5 ? "short" : sl >= 7.5 ? "good" : null;
+      const r = s.rows[d], it = r?.intake; if (k && it && !it.est) A[k].push(it.kcal - targetsFor(d).kcal);
+      if (k) T[k].push(dayLoad(d));
+      const prev = addDays(d, -1), pl = dayLoad(prev); if (usual > 0) { if (pl > usual * 1.5) after.heavy.push(sl); else if (pl < usual * .5) after.light.push(sl); } }
+    const avg = a => a.length >= 3 ? a.reduce((x, y) => x + y, 0) / a.length : null;
+    return { kShort: avg(A.short), kGood: avg(A.good), nS: A.short.length, nG: A.good.length, lShort: avg(T.short), lGood: avg(T.good), sHeavy: avg(after.heavy), sLight: avg(after.light) };
+  });
+}
+function sleepCard() {
+  const d = todayISO(), last = +logGet(d)?.sleep || null, P = sleepTonight(d), K = sleepLinks(), Ld = loadState(); if (!last && !P.avg7) return "";
+  const lines = [], short = last && last < 6.5;
+  if (short) { if (K.kShort != null && K.kGood != null && K.kShort - K.kGood > 80) lines.push(`After short nights you eat about ${fmtN(r0(K.kShort - K.kGood))} kcal more than after good ones: keep protein and fibre high at lunch, plan a filling snack.`); else lines.push("Short night: hunger is often higher today. Protein at every meal, no shopping hungry.");
+    const hard = sessionsFor(d).list.some(w => sessionIntensity(w) === "Hard"); if (hard) lines.push(Ld.ready === "red" ? "Swap today's hard session for an easy one, or move it." : "Keep today's hard session, but shorter: cut the last interval set."); }
+  else if (last && last >= P.t - .25) lines.push("Well rested: a good day for the key session.");
+  if (K.sHeavy != null && K.sLight != null && K.sLight - K.sHeavy > .3) lines.push(`You sleep ${r1(K.sLight - K.sHeavy)} h less after heavy days: wind down earlier tonight${P.why.includes("heavy day") ? "" : " when the load is high"}.`);
+  return `<section class="card pad sl"><div class="row" style="justify-content:space-between;gap:8px"><span class="flabel">Sleep</span><button class="link" data-act="sl-open">Details</button></div>
+    <div class="sl-k"><span><b>${last ? r1(last) : "—"}</b><small>h last night</small></span><span><b>${r1(P.t)}</b><small>h tonight</small></span><span><b>${P.bed}</b><small>in bed by</small></span></div>
+    ${P.why.length ? `<small class="faint">Tonight +${r1(P.t - SLP().target)} h: ${esc(P.why.join(", "))}.</small>` : ""}${lines.length ? `<ul class="wk-tips">${lines.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</section>`;
+}
+TODAY_CARDS.push({ col: "b", o: 2, fn: sleepCard });
+SHEETS.sleep = () => { const K = sleepLinks(), P = sleepTonight(), S2 = SLP();
+  const row = (l, v, s = "") => `<div class="lrow" style="padding:8px 14px"><span><span class="t" style="font-weight:550">${l}</span>${s ? `<span class="s">${s}</span>` : ""}</span><span class="end num">${v}</span></div>`;
+  return { title: "Sleep and you", body: `<div class="card">${row("Tonight", `${r1(P.t)} h`, P.why.length ? P.why.join(", ") : "your usual target")}${row("In bed by", P.bed, `to wake at ${S2.wake}`)}${row("Last 7 nights", P.avg7 ? r1(P.avg7) + " h" : "—", P.debt ? `${r1(P.debt)} h below target` : "")}</div>
+    <span class="flabel">From your last 4 months</span><div class="card">
+    ${row("Intake vs target after a short night", K.kShort == null ? "—" : sgn(K.kShort, 0) + " kcal", `${K.nS} nights under 6.5 h`)}${row("… after a good night", K.kGood == null ? "—" : sgn(K.kGood, 0) + " kcal", `${K.nG} nights of 7.5 h or more`)}
+    ${row("Training load on short-night days", K.lShort == null ? "—" : fmtN(r0(K.lShort)), K.lGood == null ? "" : `${fmtN(r0(K.lGood))} after good nights`)}${row("Sleep after heavy days", K.sHeavy == null ? "—" : r1(K.sHeavy) + " h", K.sLight == null ? "" : `${r1(K.sLight)} h after light days`)}</div>
+    <div class="grid2"><div class="field"><label for="sl-target">Usual target</label><div class="unit-inp"><input id="sl-target" class="inp" inputmode="decimal" value="${S2.target}" data-chg="sl-set" data-k="target"><span>h</span></div></div><div class="field"><label for="sl-wake">Wake up at</label><input id="sl-wake" class="inp" type="time" value="${esc(S2.wake)}" data-chg="sl-set" data-k="wake"></div></div>
+    <div class="faint" style="font-size:12.5px">Log sleep in the morning check-in (or let intervals.icu bring it from the watch). Short sleep raises hunger hormones and lowers how hard training feels doable; the target adds 30′ after heavy days, before hard or long sessions and when you owe sleep.</div>`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
+ACT["sl-open"] = () => openSheet("sleep", { live: true });
+CHG["sl-set"] = (v, el) => { const k = el.dataset.k; S.settings.sleep = { ...SLP(), [k]: k === "target" ? clamp(num(v) || 7.5, 5, 10) : v || "07:00" }; saveSettings(); renderSheet(); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
