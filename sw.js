@@ -1,6 +1,6 @@
 /* Engine service worker: opens instantly and works offline. App files: network first (always the newest
    version when online), heavy libraries and the label reader: cache first. */
-const V = "engine-202610221024";
+const V = "engine-202610221053";
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

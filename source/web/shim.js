@@ -112,13 +112,36 @@
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename || "download"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); return { status: "saved" }; } };
 
   /* ---------- sample: optional AI with your own free key (Gemini, or any OpenAI-compatible service such as Groq / OpenRouter) ---------- */
-  const AI_PRESETS = { gemini: { label: "Google Gemini", model: "gemini-2.5-flash" }, groq: { label: "Groq", base: "https://api.groq.com/openai/v1", model: "meta-llama/llama-4-scout-17b-16e-instruct" }, openrouter: { label: "OpenRouter", base: "https://openrouter.ai/api/v1", model: "google/gemini-2.0-flash-exp:free" } };
+  const AI_PRESETS = { gemini: { label: "Google Gemini", model: "gemini-flash-latest" }, groq: { label: "Groq", base: "https://api.groq.com/openai/v1", model: "meta-llama/llama-4-scout-17b-16e-instruct" }, openrouter: { label: "OpenRouter", base: "https://openrouter.ai/api/v1", model: "google/gemini-2.0-flash-exp:free" } };
   E.AI_PRESETS = AI_PRESETS;
   E.aiCfg = () => { const a = (typeof S !== "undefined" && S.settings && S.settings.ai) || {}; return a.key ? { provider: a.provider || "gemini", key: a.key, model: a.model || AI_PRESETS[a.provider || "gemini"]?.model, base: a.base || AI_PRESETS[a.provider || "gemini"]?.base } : null; };
   const b64 = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = no; r.readAsDataURL(blob); });
   async function shrink(blob) { try { const bmp = await createImageBitmap(blob); const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)); const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return await new Promise(r => c.toBlob(r, "image/jpeg", .85)); } catch (e) { return blob; } }
-  async function ask(input, opts = {}, json = false) {
-    const cfg = E.aiCfg(); if (!cfg) { const e = new Error("Add an AI key in Settings"); e.code = "not_granted"; throw e; }
+  /* Google retires models for new keys often: pick the best Flash model this key can use */
+  E.bestGemini = function (models) {
+    const ok = models.filter(m => /^gemini-/.test(m) && !/lite|image|tts|live|audio|embed|exp|thinking|robotics|computer|native|aqa/.test(m));
+    if (ok.includes("gemini-flash-latest")) return "gemini-flash-latest";
+    const ver = m => { const v = m.match(/^gemini-(\d+(?:\.\d+)?)-flash(?:-latest)?$/); return v ? +v[1] : -1; };
+    const flash = ok.filter(m => ver(m) >= 0).sort((a, b) => ver(b) - ver(a) || a.length - b.length);
+    return flash[0] || ok.find(m => /flash/.test(m)) || models.find(m => /flash-lite/.test(m)) || models[0] || null;
+  };
+  E.geminiModels = async key => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${encodeURIComponent(key)}`); const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "HTTP " + r.status); e.status = r.status; e.body = j; throw e; } return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); };
+  const retired = e => (e?.status === 404 || e?.status === 400) && /no longer available|not found|is not supported|deprecated/i.test(String(e?.message || ""));
+  async function ask(input, opts = {}, json = false, over = null, retry = true) {
+    try { return await ask1(input, opts, json, over); }
+    catch (e) {
+      const cfg = over || E.aiCfg();
+      if (!retry || !cfg || cfg.provider !== "gemini" || !retired(e)) throw e;
+      let next = (String(e.message).match(/use models\/([\w.-]+)/) || [])[1];
+      if (!next) { try { next = E.bestGemini(await E.geminiModels(cfg.key)); } catch (x) {} }
+      if (!next || next === cfg.model) throw e;
+      if (!over && typeof S !== "undefined" && S.settings?.ai) { S.settings.ai = { ...S.settings.ai, model: next }; try { saveSettings(); } catch (x) {} }
+      try { opts.onModel?.(next); } catch (x) {}
+      return ask(input, opts, json, { ...cfg, model: next }, false);
+    }
+  }
+  async function ask1(input, opts = {}, json = false, over = null) {
+    const cfg = over || E.aiCfg(); if (!cfg) { const e = new Error("Add an AI key in Settings"); e.code = "not_granted"; throw e; }
     const msgs = typeof input === "string" ? [{ role: "user", content: input }] : input;
     const imgs = []; for (const f of opts.images || []) { const s = await shrink(f); imgs.push({ mime: s.type || "image/jpeg", data: await b64(s) }); }
     const sys = json ? "Reply with only valid JSON, no prose, no code fences." : "";
@@ -126,19 +149,19 @@
     if (cfg.provider === "gemini") {
       const contents = msgs.map((m, i) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }, ...(i === msgs.length - 1 ? imgs.map(x => ({ inline_data: { mime_type: x.mime, data: x.data } })) : [])] }));
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent?key=${encodeURIComponent(cfg.key)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents, ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}), generationConfig: { temperature: .2, ...(json ? { responseMimeType: "application/json" } : {}) } }), signal: opts.signal });
-      const j = await r.json(); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; throw e; }
+      const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; e.status = r.status; e.body = j; throw e; }
       text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
     } else {
       const m2 = msgs.map((m, i) => ({ role: m.role, content: i === msgs.length - 1 && imgs.length ? [{ type: "text", text: m.content }, ...imgs.map(x => ({ type: "image_url", image_url: { url: `data:${x.mime};base64,${x.data}` } }))] : m.content }));
       const r = await fetch(cfg.base.replace(/\/$/, "") + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + cfg.key }, body: JSON.stringify({ model: cfg.model, temperature: .2, messages: [...(sys ? [{ role: "system", content: sys }] : []), ...m2], ...(json ? { response_format: { type: "json_object" } } : {}) }), signal: opts.signal });
-      const j = await r.json(); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; throw e; }
+      const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; e.status = r.status; e.body = j; throw e; }
       text = j.choices?.[0]?.message?.content || "";
     }
     if (opts.onText) try { opts.onText({ text, delta: text }); } catch (e) {}
     return text;
   }
   const sample = async (input, opts) => ({ text: await ask(input, opts), truncated: false });
-  sample.json = async (input, opts) => { const t = await ask(input, opts, true); const m = t.match(/[\[{][\s\S]*[\]}]/); return JSON.parse(m ? m[0] : t); };
+  sample.json = async (input, opts, over) => { const t = await ask(input, opts, true, over); const m = t.match(/[\[{][\s\S]*[\]}]/); return JSON.parse(m ? m[0] : t); };
   sample.limits = async () => ({ images: true });
   E.sample = sample;
 
