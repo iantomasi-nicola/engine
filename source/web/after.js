@@ -2,15 +2,26 @@
 (function () {
   const E = window.ENGINE;
   /* ---- Settings: account, AI, backup ---- */
-  function webCards() {
+  function acctCard() {
     const acct = !E.cloud ? `<div class="faint" style="font-size:13px">Cloud sync isn't set up in this copy of the app: data stays on this device.</div>`
       : E.uid ? `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${esc(E.email || "Signed in")}</b><small class="faint" style="display:block;font-size:12.5px">Synced on every device where you sign in${E.pending() ? ` · ${E.pending()} change${E.pending() > 1 ? "s" : ""} waiting for the network` : ""}</small></span><button class="btn soft sm" data-act="eg-signout">Sign out</button></div>`
       : `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>This device only</b><small class="faint" style="display:block;font-size:12.5px">Sign in to keep phone and computer in sync. What's here is uploaded the first time.</small></span><button class="btn primary sm" data-act="eg-signin">Sign in</button></div>`;
     return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}</section>
-      ${suppSettingsCard()}${reminderCard()}${aiCard()}${aiFeatCard()}${proSettingsCard()}${shopSettingsCard()}${settingsCards()}`;
+`;
   }
+  /* the cards in groups that fold away; which ones are open is remembered on this device */
+  function grp(k, title, sub, inner) { const open = (UI.setOpen || {})[k]; return `<details class="set-grp" data-grp="${k}" ${open ? "open" : ""}><summary><span><b>${title}</b><small>${sub}</small></span>${ic("chevD", "sm")}</summary><div class="set-grp-in">${inner}</div></details>`; }
+  function groups() { const ai = (S.settings.ai?.services || []).filter(x => x.on !== false && (x.key || x.base)).length, R = S.settings.reminders || {};
+    return grp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + SETTINGS_CARDS.filter(c => c.o === 0).map(c => c.fn()).join(""))
+      + grp("rem", "Reminders", `${R.on ? "On" : "Off"} · supplements, water, pantry, weekly report`, suppSettingsCard() + reminderCard() + SETTINGS_CARDS.filter(c => c.o === 1).map(c => c.fn()).join(""))
+      + grp("ai", "AI", ai ? `${ai} service${ai > 1 ? "s" : ""} on` : "Not set up", aiCard() + aiFeatCard())
+      + grp("nut", "Nutrition extras", "Pro nutrients, shopping and pantry, carb cycling", proSettingsCard() + shopSettingsCard() + SETTINGS_CARDS.filter(c => c.o === 2).map(c => c.fn()).join(""))
+      + grp("feat", "Features", "Switch off what you don't use", SETTINGS_CARDS.filter(c => c.o < 0 || c.o > 2).map(c => c.fn()).join(""));
+  }
+  document.addEventListener("toggle", e => { const d = e.target; if (!d.matches?.("details.set-grp")) return; UI.setOpen = { ...(UI.setOpen || {}), [d.dataset.grp]: d.open }; try { localStorage.setItem("engine.setOpen", JSON.stringify(UI.setOpen)); } catch (x) {} }, true);
+  try { UI.setOpen = JSON.parse(localStorage.getItem("engine.setOpen") || "{}"); } catch (e) { UI.setOpen = {}; }
   const origSettings = VIEWS.settings;
-  VIEWS.settings = function () { const h = origSettings(); return h.replace('<div class="set-group">', '<div class="set-group">' + webCards()); };
+  VIEWS.settings = function () { const h = origSettings(); return h.replace('<div class="set-group">', '<div class="set-group">' + groups()); };
   ACT["eg-signin"] = () => E.signIn();
   ACT["eg-signout"] = () => openSheet("confirm", { title: "Sign out?", text: "Your data stays in your account. This device keeps a copy until you sign in again.", yes: "Sign out", run: () => E.signOut() });
   /* ---- AI services: every key you have, open and closed models, tried in your order ---- */

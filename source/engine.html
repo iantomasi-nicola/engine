@@ -1898,6 +1898,23 @@ body.kb-open .add-acts,body.kb-open .add-tip{display:none}
 .cc-b b,.cc-d b{font-size:11.5px;color:var(--muted);font-weight:600}.cc-b span,.cc-d span{font-size:16px;font-weight:750}
 .cc-d small{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .cc-H{background:color-mix(in srgb,var(--carb) 26%,var(--surface))}.cc-L{background:color-mix(in srgb,var(--fat) 16%,var(--surface))}
+/* sheets: footer buttons never spill out of their pill; cards inside a sheet are flat */
+.sheet-f .btn:not(.primary){flex:0 1 auto}
+.sheet-f .btn{overflow:hidden}
+.sheet-b .card{box-shadow:none!important;border:1px solid var(--line)}
+.sheet-b .card .card{border:0}
+.bk-r .t,.bk-r .s{white-space:normal}
+.bk-r{align-items:center}
+.set-grp{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.set-grp>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;cursor:pointer;list-style:none}
+.set-grp>summary::-webkit-details-marker{display:none}
+.set-grp>summary b{display:block;font-size:15px}.set-grp>summary small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.set-grp[open]>summary .ic{transform:rotate(180deg)}
+.set-grp-in{display:flex;flex-direction:column;gap:12px;padding:0 10px 12px}
+.set-grp-in>.card{box-shadow:none;border:1px solid var(--line)}
+/* Today: quick actions in one row that scrolls sideways on phones */
+@media (max-width:640px){.td-nudges{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.td-nudges::-webkit-scrollbar{display:none}.td-nudges>*{flex:none}}
+.seg>button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3656,7 +3673,7 @@ VIEWS.settings = function () {
     <div class="section-h"><h2>You</h2></div>
     <div class="card pad" style="display:flex;flex-direction:column;gap:12px">
       <div class="grid2"><div class="field"><label for="s-weight">Body weight</label><div class="unit-inp"><input id="s-weight" class="inp" inputmode="decimal" value="${st.weight}" data-chg="weight"><span>kg</span></div></div>
-      <div class="field"><span class="flabel">Goal</span><div class="seg">${[["cut", "Lose"], ["maintain", "Maintain"], ["gain", "Gain"]].map(([k, l]) => `<button data-act="goal" data-k="${k}" aria-pressed="${st.goal === k}">${l}</button>`).join("")}</div></div></div>
+      <div class="field"><span class="flabel">Goal</span><div class="seg">${[["cut", "Lose"], ["maintain", "Keep"], ["gain", "Gain"]].map(([k, l]) => `<button data-act="goal" data-k="${k}" aria-pressed="${st.goal === k}">${l}</button>`).join("")}</div></div></div>
       <button class="btn soft" data-act="recalc">${ic("bolt", "sm")}Recalculate targets from weight and goal</button>
       <div class="faint" style="font-size:12.5px">Starting points per kg: strength 2.0 g protein / 4 g carbs, endurance 1.6 / 6, hybrid 1.8 / 5, rest 1.8 / 2.5, fat about 0.9 g. Adjust anything below.</div>
     </div>
@@ -4377,7 +4394,7 @@ SHEETS.checkin = sh => {
     ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
     ${row(esc(r.phase.phase), (r.phase.kcal > 0 ? "+" : "") + fmtN(r.phase.kcal), "kcal/day vs TDEE")}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
     ${r.intake ? row("Balance", (r.balance > 0 ? "+" : "") + fmtN(r.balance), `≈ ${sgn(r.estKg * 1000, 0)} g of body weight`) : ""}</div></div>`;
-  return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals of this day</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
+  return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
 };
 
 /* ================= session editor ================= */
@@ -7712,7 +7729,7 @@ function icuChip() { const s = icuState();
 function icuSettingsCard() {
   const s = icuState(), b = s.bridge, P = icuPending(), busy = ICU_KICK_STATE === "sent", F = icuFail();
   const sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
-  if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, activities, sleep, resting HR, HRV, weight and body fat.</div></div>
+  if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, activities, sleep, resting HR, HRV, steps and body fat (weight only from what you type).</div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="API key (intervals.icu → Settings → Developer)" style="flex:1;min-width:200px"><input id="icu-aid" class="inp" style="max-width:150px" placeholder="Athlete ID (i123456)" data-chg="icu-aid"><button class="btn primary" data-act="icu-save-key">Save</button></div>
     <div class="faint" style="font-size:12.5px">The key stays in your account. Sync runs when you tap it, straight from this app.</div></section>`;
   return `<section class="card pad icu-card">
@@ -9724,9 +9741,8 @@ function gpsPreview(L) {
 /* ================= Today: cards added by the modules below, in two columns ================= */
 const TODAY_CARDS = [];
 function todayCards(col) { return TODAY_CARDS.filter(c => c.col === col).sort((a, b) => a.o - b.o).map(c => { try { return c.fn() || ""; } catch (e) { console.warn(e); return ""; } }).join(""); }
-/* Settings: cards added by the modules below (after the built-in ones) */
+/* Settings: cards added by the modules below, grouped by their o: 0 account, 1 reminders, 2 nutrition, other features */
 const SETTINGS_CARDS = [];
-function settingsCards() { return SETTINGS_CARDS.sort((a, b) => a.o - b.o).map(c => { try { return c.fn() || ""; } catch (e) { console.warn(e); return ""; } }).join(""); }
 /* ================= periodization: blocks, deloads and a backward plan to your races =================
    Every week gets a phase. With an A/B race ahead the plan is built backwards from race day (race week, taper, peak,
    build blocks with a deload every N weeks, base before that, recovery after). Without one it's a rolling cycle.
@@ -10245,7 +10261,7 @@ const OUT_PRESETS = [
   ["Sushi (12–15 pieces)", 750, 35, 115, 15], ["Poke bowl", 700, 35, 85, 22], ["Panino / sandwich", 600, 28, 65, 24], ["Aperitivo + snacks", 700, 15, 60, 38], ["Fish restaurant", 900, 55, 70, 38], ["Steak & sides", 1100, 65, 60, 60], ["Salad bowl", 550, 30, 35, 30]];
 SHEETS.eatout = sh => {
   const E = sh.est, por = sh.por || 1, can = AIF("restaurant") && !!Sync.sample, img = can && Sync.sampleImages;
-  return { title: "Eaten out", body: `<div class="grid2"><div class="field"><label for="eo-date">Day</label><input id="eo-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="eo-date"></div><div class="field"><span class="flabel">Meal</span>${mealChips(sh.meal, "eo-meal")}</div></div>
+  return { title: "Eaten out", body: `<div class="field"><span class="flabel">Meal</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${mealChips(sh.meal, "eo-meal")}<input id="eo-date" class="inp sm" type="date" value="${sh.date}" max="${todayISO()}" data-chg="eo-date" aria-label="Day" style="max-width:160px"></div></div>
     ${can ? `<div class="field"><span class="flabel">What did you have?</span><div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn tonal sm">${ic("camera", "sm")}Photo of the plate<input type="file" accept="image/*" capture="environment" class="sr" data-chg="eo-photo"></label><label class="btn soft sm">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-chg="eo-photo"></label>` : ""}</div>
       ${sh.photoURL ? `<img class="eo-ph" src="${sh.photoURL}" alt="Your plate">` : ""}
       <textarea id="eo-desc" class="inp" rows="2" placeholder="e.g. carbonara, half a margherita, a beer and a tiramisù" data-in="eo-desc">${esc(sh.desc || "")}</textarea>
@@ -10312,7 +10328,7 @@ function goalCard(g, big) {
   return `<button class="gl-c" data-act="goal-edit" data-id="${g.id}"><div class="gl-h"><b>${esc(g.name || goalLabel(g))}</b>${status}</div>
     <div class="gl-bar"><i style="width:${pct}%"></i>${G.ms.slice(0, 3).map(m => `<u style="left:${m.f * 100}%" class="${m.hit ? "on" : ""}"></u>`).join("")}</div>
     <div class="gl-k"><span><small>Start</small><b>${goalFmt(g, G.s0)}</b></span><span><small>Now</small><b>${goalFmt(g, G.cur)}</b></span><span><small>Goal</small><b>${g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv)}</b></span><span><small>${g.due ? "By" : "Progress"}</small><b>${g.due ? fmtDM(g.due) : pct + "%"}</b></span></div>
-    ${big ? `<div class="gl-ms">${G.ms.map(m => `<span class="${m.hit ? "on" : ""}"><i>${r0(m.f * 100)}%</i><b>${g.kind === "run" ? fmtClock(predictMin(+g.km, m.v) * 60) : goalFmt(g, m.v)}</b><small>${m.hit ? "✓ " + fmtDM(m.hit) : m.fc ? "≈ " + fmtDM(m.fc) : "—"}</small></span>`).join("")}</div>` : ""}</button>`;
+    ${big && G.s0 != null ? `<div class="gl-ms">${G.ms.map(m => `<span class="${m.hit ? "on" : ""}"><i>${r0(m.f * 100)}%</i><b>${g.kind === "run" ? fmtClock(predictMin(+g.km, m.v) * 60) : goalFmt(g, m.v)}</b><small>${m.hit ? "✓ " + fmtDM(m.hit) : m.fc ? "≈ " + fmtDM(m.fc) : "—"}</small></span>`).join("")}</div>` : ""}</button>`;
 }
 function goalsView() {
   const L = GOALS(), open = L.filter(g => !goalProg(g).done), done = L.filter(g => goalProg(g).done);
@@ -10329,7 +10345,7 @@ SHEETS.goal = sh => { const g = sh.draft, ex = goalExs(), isEx = ["reps", "rm", 
   return { title: sh.isNew ? "New goal" : "Goal", body: `<div class="field"><span class="flabel">Kind</span><div class="chips">${GOAL_KINDS.map(([k, l]) => `<button class="chip sm" data-act="gl-kind" data-k="${k}" aria-pressed="${g.kind === k}">${l}</button>`).join("")}</div></div>
     ${g.kind === "run" ? `<div class="grid2"><div class="field"><span class="flabel">Distance</span><div class="chips">${[["5k", 5], ["10k", 10], ["Half", 21.0975], ["Marathon", 42.195]].map(([l, k]) => `<button class="chip sm" data-act="gl-km" data-k="${k}" aria-pressed="${+g.km === k}">${l}</button>`).join("")}</div></div><div class="field"><label for="gl-t">Target time</label><input id="gl-t" class="inp" value="${esc(g.tstr || "")}" placeholder="e.g. 39:59" data-in="gl" data-k="tstr"></div></div>`
       : `${isEx ? `<div class="field"><label for="gl-ex">Exercise</label><select id="gl-ex" class="inp" data-chg="gl-ex">${ex.map(n => `<option ${n === g.ex ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></div>` : ""}<div class="field"><label for="gl-v">Target</label><div class="unit-inp" style="max-width:200px"><input id="gl-v" class="inp" inputmode="decimal" value="${esc(String(g.target ?? ""))}" data-in="gl" data-k="target"><span>${{ weight: "kg", bf: "%", waist: "cm", reps: "reps", rm: "+kg", hold: "s" }[g.kind]}</span></div></div>`}
-    <div class="grid2"><div class="field"><label for="gl-due">By (optional)</label><input id="gl-due" class="inp" type="date" value="${g.due || ""}" data-in="gl" data-k="due"></div><div class="field"><label for="gl-name">Name (optional)</label><input id="gl-name" class="inp" value="${esc(g.name || "")}" placeholder="${esc(goalLabel({ ...g, target: g.kind === "run" ? parseClock(g.tstr) || 0 : g.target || "…" }))}" data-in="gl" data-k="name"></div></div>
+    <div class="grid2"><div class="field"><label for="gl-due">By (optional)</label><input id="gl-due" class="inp" type="date" value="${g.due || ""}" data-in="gl" data-k="due"></div><div class="field"><label for="gl-name">Name (optional)</label><input id="gl-name" class="inp" value="${esc(g.name || "")}" placeholder="${esc((g.kind === "run" ? parseClock(g.tstr) : num(g.target)) ? goalLabel({ ...g, target: g.kind === "run" ? parseClock(g.tstr) : g.target }) : "e.g. Sub-40 10k")}" data-in="gl" data-k="name"></div></div>
     <div class="note" id="gl-pv">${esc(pv)}</div>`,
     foot: `${sh.isNew ? "" : `<button class="btn danger" data-act="goal-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>`}<button class="btn primary" data-act="goal-save">Save</button>` }; };
 ACT["goal-new"] = () => openSheet("goal", { isNew: true, draft: { id: puid("gl"), kind: "run", km: 10, tstr: "", target: "", ex: goalExs()[0] || "Pull-up", start: todayISO() } });
@@ -10355,7 +10371,7 @@ function fuelPlan(sec, P = FUELP()) {
   const out = [], end = Math.max(sec || 0, 0) || 6 * 3600, gelEvery = Math.max(10, Math.round(60 * P.gel / Math.max(20, P.cph))) * 60;
   for (let t = P.first * 60; t < end - 5 * 60; t += gelEvery) out.push({ at: t, k: "gel" });
   if (P.water) for (let t = P.water * 60; t < end - 3 * 60; t += P.water * 60) if (!out.some(x => Math.abs(x.at - t) < 90)) out.push({ at: t, k: "water" });
-  if (P.salt) for (let t = P.salt * 60; t < end - 10 * 60; t += P.salt * 60) out.push({ at: t + 30, k: "salt" });
+  if (P.salt) for (let t = P.salt * 60; t < end - 10 * 60; t += P.salt * 60) out.push({ at: t, k: "salt" });
   return out.sort((a, b) => a.at - b.at);
 }
 const FUEL_L = { gel: ["Gel", "Prendi un gel, con acqua", "Gel now, with water"], water: ["Water", "Bevi qualche sorso", "Drink a few sips"], salt: ["Salt", "Sale: una capsula", "Salt: one capsule"] };
