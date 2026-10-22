@@ -9263,17 +9263,18 @@ async function storyCanvas(D, photo, layout, O) {
   for (const wd of String(O.title || "").split(/\s+/).filter(Boolean)) { const t = line ? line + " " + wd : wd; if (x.measureText(t).width > W - 2 * M && line) { tl.push(line); line = wd; } else line = t; } if (line) tl.push(line);
   x.font = F(500, 42 * k); const cl = []; line = "";
   for (const wd of String(O.caption || "").split(/\s+/).filter(Boolean)) { const t = line ? line + " " + wd : wd; if (x.measureText(t).width > W - 2 * M && line) { cl.push(line); line = wd; } else line = t; } if (line) cl.push(line);
-  const areaTop = below ? 90 : 110, areaBot = below ? H * .5 - 50 : H - 110, track = O.route && D.track && D.track.length > 3, lines = O.lines ? D.lines : [];
-  const showSport = O.sport && norm(D.sport) !== norm(O.title), hSport = showSport ? 52 * k : 0, hTitle = tl.length * 100 * k + (tl.length ? 24 : 0), hCap = cl.length * 54 * k + (cl.length ? 24 : 0), hStats = Math.ceil(stats.length / cols) * 150 * k;
-  let hRoute = track ? Math.min(560, (areaBot - areaTop) - hSport - hTitle - hCap - hStats - 40) : 0; if (hRoute < 220) hRoute = 0;
-  const lh = 64 * k; let nLines = Math.max(0, Math.floor(((areaBot - areaTop) - hSport - hTitle - hCap - hStats - (hRoute ? hRoute + 30 : 0) - 20) / lh)); nLines = Math.min(nLines, lines.length);
-  const total = hSport + hTitle + hCap + hStats + (hRoute ? hRoute + 30 : 0) + (nLines ? nLines * lh + 20 : 0);
-  let y = O.pos === "top" ? areaTop + (O.date ? 70 : 0) : O.pos === "center" ? areaTop + Math.max(0, (areaBot - areaTop - total) / 2) : Math.max(areaTop, areaBot - total);
+  /* Instagram covers the top ~260 px (progress bar, your name) and the bottom ~380 px (reply box): text stays out of both */
+  const areaTop = 270, areaBot = below ? H * .5 - 50 : H - 390, track = O.route && D.track && D.track.length > 3, lines = O.lines ? D.lines : [];
+  const showSport = O.sport && norm(D.sport) !== norm(O.title), hDate = O.date ? 54 : 0, hSport = showSport ? 52 * k : 0, hTitle = tl.length * 100 * k + (tl.length ? 24 : 0), hCap = cl.length * 54 * k + (cl.length ? 24 : 0), hStats = Math.ceil(stats.length / cols) * 150 * k;
+  let hRoute = track ? Math.min(560, (areaBot - areaTop) - hDate - hSport - hTitle - hCap - hStats - 40) : 0; if (hRoute < 220) hRoute = 0;
+  const lh = 64 * k; let nLines = Math.max(0, Math.floor(((areaBot - areaTop) - hDate - hSport - hTitle - hCap - hStats - (hRoute ? hRoute + 30 : 0) - 20) / lh)); nLines = Math.min(nLines, lines.length);
+  const total = hDate + hSport + hTitle + hCap + hStats + (hRoute ? hRoute + 30 : 0) + (nLines ? nLines * lh + 20 : 0);
+  let y = O.pos === "top" ? areaTop : O.pos === "center" ? areaTop + Math.max(0, (areaBot - areaTop - total) / 2) : Math.max(areaTop, areaBot - total);
   // a shade behind the text so it reads on any photo
   if (bg) { const y0 = Math.max(0, y - 260), y1 = Math.min(H, y + total + 200), sh = x.createLinearGradient(0, y0, 0, y1), col = dark ? "255,255,255" : "0,0,0";
     sh.addColorStop(0, `rgba(${col},0)`); sh.addColorStop(.3, `rgba(${col},.62)`); sh.addColorStop(.75, `rgba(${col},.62)`); sh.addColorStop(1, `rgba(${col},0)`); x.fillStyle = sh; x.fillRect(0, y0, W, y1 - y0); }
   x.textBaseline = "top";
-  if (O.date) { x.fillStyle = ink; x.globalAlpha = .85; x.font = F(600, 34); const ds = fmtLong(D.date); x.fillText(ds, M, O.pos === "top" ? areaTop : 84); x.globalAlpha = 1; }
+  if (O.date) { x.fillStyle = ink; x.globalAlpha = .85; x.font = F(600, 34); x.fillText(fmtLong(D.date), M, y); x.globalAlpha = 1; y += hDate; }
   if (showSport) { x.fillStyle = accent; x.font = F(700, 34 * k); x.fillText(String(D.sport).toUpperCase(), M, y); y += hSport; }
   x.fillStyle = ink; x.font = F(800, 92 * k); for (const t of tl) { x.fillText(t, M, y); y += 100 * k; } if (tl.length) y += 24;
   x.font = F(500, 42 * k); x.globalAlpha = .92; for (const t of cl) { x.fillText(t, M, y); y += 54 * k; } x.globalAlpha = 1; if (cl.length) y += 24;
