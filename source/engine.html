@@ -208,6 +208,11 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rc-next{display:flex;flex-direction:column;gap:6px}.rc-next>div{display:flex;flex-direction:column;gap:1px;font-size:13.5px}.rc-next>div span{color:var(--muted)}
 .lv-tally em{font-style:normal;color:var(--warn);font-weight:600}.sl-i.skip .sl-ck,.lv-li.skip .lv-ck{color:var(--warn)}.lv-li.skip{box-shadow:inset 3px 0 0 var(--warn)!important}.lv-li.skip small{color:var(--warn)}.sl-i.skip .sl-t{opacity:.6;text-decoration:line-through}
 .rc-last{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:10px 12px;border-radius:14px;background:var(--v-fill,var(--surface-2));font-size:13.5px}.rc-last .ic{vertical-align:-3px}
+.am-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.am-list{display:flex;flex-direction:column;gap:8px}
+.am-ex{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.am-ex .inp{min-height:42px}
+.stp.sm b{min-width:30px!important;font-size:16px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -11431,6 +11436,42 @@ function recapsCard() { const L = recapList(); if (!L.length) return "";
   const tips = P.ex.filter(x => x.sets_ || (x.under && !x.tm)).map(x => x.sets_ ? `${x.name}: ${x.sets_.text}` : `${x.name}: ${x.under} set${x.under > 1 ? "s" : ""} under target last time`);
   const note = `<div class="rc-last"><b>${fmtDM(P.date)}</b><span>${esc(P.lines[0])}</span>${tips.length ? `<span class="muted">${esc(tips.slice(0, 3).join(" · "))}</span>` : ""}${P.ai?.headline ? `<span class="muted">${ic("spark", "sm")} ${esc(P.ai.headline)}</span>` : ""}</div>`;
   return h.replace('<span class="eyebrow">Last time · your call</span>', '<span class="eyebrow">Last time · your call</span>').replace(/(<section class="lv-card"><div class="lv-eb"><span class="eyebrow">Last time · your call<\/span>[\s\S]*?<\/div>)/, `$1${note}`); }; }
+/* ================= edit the AMRAP before it starts =================
+   On the AMRAP screen, before Start: minutes, exercises and reps per round, add or drop one. Today only, or also
+   in the saved workout (its AMRAP line is rewritten). A changed AMRAP is a different test in Records. */
+const amLine = d => `- ${d.min}m AMRAP ${d.exs.filter(e => e.name.trim()).map(e => `${e.reps ? e.reps + " " : ""}${e.name.trim()}`).join(" + ")}`;
+function amScriptLine(script, t) { const L = String(script || "").split("\n"), names = t.exs.map(e => normEx(e.name));
+  return L.findIndex(l => /\bamrap\b/i.test(l) && names.every(n => normEx(l).includes(n))); }
+SHEETS.amedit = sh => { const L = LV(), t = L?.tasks[L.cur]; if (!t || t.t !== "amrap") return { title: "AMRAP", body: "", foot: "" }; const d = sh.d, canSave = !!(L.tplId && tplById(L.tplId) && amScriptLine(tplById(L.tplId).script, t) >= 0);
+  return { title: `Edit ${t.title || "AMRAP"}`,
+    body: `<div class="am-row"><span class="flabel">Minutes</span><div class="stp"><button class="icon-btn" data-act="am-min" data-d="-1" aria-label="One minute less">${ic("minus")}</button><b>${d.min}′</b><button class="icon-btn" data-act="am-min" data-d="1" aria-label="One minute more">${ic("plus")}</button></div></div>
+      <span class="flabel">Each round</span>
+      <div class="am-list">${d.exs.map((e, i) => `<div class="am-ex"><div class="stp sm"><button class="icon-btn sm" data-act="am-rep" data-i="${i}" data-d="-1" aria-label="Fewer reps">${ic("minus", "sm")}</button><b>${e.reps || "—"}</b><button class="icon-btn sm" data-act="am-rep" data-i="${i}" data-d="1" aria-label="More reps">${ic("plus", "sm")}</button></div>
+        <input class="inp" value="${esc(e.name)}" list="am-names" data-in="am-ex" data-i="${i}" aria-label="Exercise ${i + 1}"><button class="icon-btn sm" data-act="am-del" data-i="${i}" aria-label="Remove ${esc(e.name)}" ${d.exs.length < 2 ? "disabled" : ""}>${ic("close", "sm")}</button></div>`).join("")}</div>
+      <datalist id="am-names">${swapNames("").map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+      <button class="btn soft sm" data-act="am-add" style="align-self:flex-start">${ic("plus", "sm")}Add exercise</button>
+      <div class="note">${esc(amLine(d).slice(2))} · ${d.exs.reduce((a, e) => a + (+e.reps || 0), 0)} reps a round</div>
+      ${canSave ? `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!sh.save}" data-act="am-save" aria-label="Also change it in the saved workout"></button>Also change it in “${esc(L.name)}”</label>` : ""}`,
+    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="am-apply">${ic("check", "sm")}Apply</button>` }; };
+ACT["am-edit"] = () => { const L = LV(), t = L?.tasks[L.cur]; if (!t || t.t !== "amrap" || L.clk) return; openSheet("amedit", { d: { min: Math.max(1, Math.round(t.dur / 60)), exs: t.exs.map(e => ({ name: e.name, reps: e.reps || 0 })) }, save: false, live: true }); };
+ACT["am-min"] = el => { const d = S_().d; d.min = clamp(d.min + +el.dataset.d, 1, 60); renderSheet(); };
+ACT["am-rep"] = el => { const e = S_().d.exs[+el.dataset.i]; e.reps = clamp((+e.reps || 0) + +el.dataset.d, 0, 200); renderSheet(); };
+ACT["am-del"] = el => { const d = S_().d; if (d.exs.length > 1) d.exs.splice(+el.dataset.i, 1); renderSheet(); };
+ACT["am-add"] = () => { S_().d.exs.push({ name: "", reps: 5 }); renderSheet(); setTimeout(() => [...document.querySelectorAll('[data-in="am-ex"]')].pop()?.focus(), 30); };
+ACT["am-save"] = () => { const sh = S_(); sh.save = !sh.save; renderSheet(); };
+INP["am-ex"] = (v, el) => { S_().d.exs[+el.dataset.i].name = v; };
+ACT["am-apply"] = () => { const sh = S_(), L = LV(), t = L?.tasks[L.cur], d = sh.d; if (!t || t.t !== "amrap") return closeSheet();
+  const exs = d.exs.filter(e => e.name.trim()); if (!exs.length) { toast("Add at least one exercise."); return; }
+  const old = { ...t, exs: t.exs.map(e => ({ ...e })) };
+  t.dur = d.min * 60; t.exs = exs.map(e => ({ raw: `${e.reps ? e.reps + " " : ""}${e.name.trim()}`, reps: +e.reps || null, name: e.name.trim() }));
+  const r = L.res[L.cur] = L.res[L.cur] || {}; r.rounds = 0; r.partial = 0; r.splits = []; delete r.timeUp;
+  const line = amLine({ min: d.min, exs });
+  { const i = amScriptLine(L.script, old); if (i >= 0) { const A = L.script.split("\n"); A[i] = line; L.script = A.join("\n"); } }
+  if (sh.save && L.tplId) { const tp = tplById(L.tplId), i = tp ? amScriptLine(tp.script, old) : -1; if (i >= 0) { const A = tp.script.split("\n"); A[i] = line; tp.script = A.join("\n"); tp.updated = todayISO(); L.baseScript = tp.script; } }
+  lvJ(L, "amrap-edit", { from: amLine({ min: Math.round(old.dur / 60), exs: old.exs }).slice(2), to: line.slice(2) });
+  saveWK(); closeSheet(); toast(sh.save ? "AMRAP changed · saved in the workout too" : "AMRAP changed for today"); scheduleRender(); };
+/* the button, on the AMRAP screen until it starts */
+{ const _lt = liveTask; liveTask = function (L, t, r) { const o = _lt(L, t, r); if (t?.t === "amrap" && !L.clk && o?.body) o.body += `<div class="row lv-adj"><button class="btn tonal sm" data-act="am-edit">${ic("edit", "sm")}Edit AMRAP</button></div>`; return o; }; }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
