@@ -12,6 +12,10 @@ It's a static web app: `index.html` plus a few assets, served by GitHub Pages. I
 - Not signed in: stored only in the browser of that device.
 - `config.js` holds the Supabase project URL and the publishable key (public by design).
 
+## Reminders with the app closed
+Optional Web Push through your own Supabase project: `supabase/push.sql`, the `supabase/functions/engine-push` function
+and a public key in `config.js`. Steps in `supabase/PUSH.md`.
+
 ## Integrations
 - intervals.icu: direct from the browser with your API key (Settings → intervals.icu → Sync now).
 - Open Food Facts: barcode and name search.

@@ -10438,6 +10438,57 @@ SHEETS.bkpoints = sh => ({ title: "Restore points", body: sh.list ? (sh.list.len
   foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
 ACT["bk-points"] = async () => { openSheet("bkpoints", {}); const sh = S_(); try { const ks = (await BKDB.keys("pts")).sort(), why = {}; for (const k of ks) why[k] = (await BKDB.get("pts", k))?.why || ""; sh.list = ks; sh.why = why; } catch (e) { sh.list = []; sh.why = {}; } if (UI.sheet === sh) renderSheet(); };
 ACT["bk-point"] = async el => { const p = await BKDB.get("pts", el.dataset.k); if (p?.data) restoreOpen({ ...p.data, exported: el.dataset.k }, "point"); };
+/* ================= notifications with the app closed (Web Push through your Supabase project) =================
+   The app keeps the next 48 h of reminders in the push_queue table; a small function sends the due ones every
+   5 minutes and skips those you no longer need (supplement ticked, water drunk). Set-up: supabase/PUSH.md. */
+const pushCfg = () => window.ENGINE_CONFIG?.vapidPublicKey || "";
+const pushCan = () => "PushManager" in window && !!navigator.serviceWorker && !!window.ENGINE?.sb;
+const pushOn = () => !!S.settings?.reminders?.push && !!window.ENGINE?.uid;
+const b64u = s => { const p = "=".repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+const atLocal = (d, hm) => { const [y, m, dd] = d.split("-").map(Number), [h, mi] = String(hm).split(":").map(Number); return new Date(y, m - 1, dd, h, mi || 0).toISOString(); };
+function pushPlan() {
+  const R = S.settings.reminders || {}, out = [], now = new Date().toISOString(), t = todayISO();
+  for (const d of [t, addDays(t, 1)]) {
+    for (const s of suppSlots(d)) if (!suppTaken(d, s.k)) out.push({ key: `supp|${d}|${s.k}`, at: atLocal(d, s.t), title: `${s.x.name}${s.x.dose ? " · " + s.x.dose : ""}`, body: `Time for your ${s.x.name.toLowerCase()}${s.x.withFood ? ", with food" : ""}.`, tag: "supp-" + s.k, data: { k: s.k, date: d }, cond: { date: d, supp: s.k } });
+    const ex = Object.entries(S.shop.pantry || {}).map(([id, p]) => ({ f: getFood(id) || BUILTIN[id], p })).filter(x => x.f && x.p.exp && x.p.g > 0 && daysBetween(d, x.p.exp) <= 1 && daysBetween(d, x.p.exp) >= -1);
+    if (ex.length) out.push({ key: `pantry|${d}`, at: atLocal(d, R.pantryAt || "18:00"), title: "Pantry: use soon", body: ex.slice(0, 4).map(x => `${x.f.name}: ${dlTxt(daysBetween(d, x.p.exp))}`).join("\n"), tag: "engine-expiry", data: { tab: "pantry" } });
+    const H = HYD(); if (H.on && H.remind && H.every) { const g = waterGoal(d), a = hm2h(H.from), b = hm2h(H.to);
+      for (let h = a + H.every; h <= b; h += H.every) { const hm = `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round(h % 1 * 60)).padStart(2, "0")}`, exp = r0((h - a) / Math.max(1, b - a) * g);
+        out.push({ key: `water|${d}|${hm}`, at: atLocal(d, hm), title: "Drink some water", body: `About ${r1(exp / 1000)} l by now, ${r1(g / 1000)} l today.`, tag: "engine-water", data: { tab: "today" }, cond: { date: d, water_lt: exp - 250 } }); } }
+    const RP = S.settings.report || {}; if (dow(d) === 0 && RP.notify !== false) out.push({ key: `report|${d}`, at: atLocal(d, RP.at || "08:30"), title: "Your week in review", body: "Last week's numbers and three things to change.", tag: "engine-report", data: { tab: "report" } });
+  }
+  return out.filter(x => x.at > now);
+}
+let PUSH_T = 0, PUSH_SIG = "";
+function pushSync(force) { if (!pushOn()) return; clearTimeout(PUSH_T); PUSH_T = setTimeout(async () => {
+  const plan = pushPlan(), sig = JSON.stringify(plan.map(x => [x.key, x.at, x.body])); if (!force && sig === PUSH_SIG) return;
+  try { const sb = ENGINE.sb, uid = ENGINE.uid, keys = plan.map(x => x.key);
+    const { data: cur } = await sb.from("push_queue").select("key").eq("user_id", uid).is("sent_at", null).gte("at", new Date().toISOString());
+    const gone = (cur || []).map(r => r.key).filter(k => !keys.includes(k)); if (gone.length) await sb.from("push_queue").delete().eq("user_id", uid).in("key", gone);
+    if (plan.length) { const { error } = await sb.from("push_queue").upsert(plan.map(x => ({ user_id: uid, ...x, sent_at: null })), { onConflict: "user_id,key" }); if (error) throw error; }
+    PUSH_SIG = sig; S.settings.reminders.pushErr = null; } catch (e) { const m = String(e?.message || e); if (S.settings.reminders.pushErr !== m) { S.settings.reminders = { ...S.settings.reminders, pushErr: m.slice(0, 120) }; } } }, force ? 50 : 4000); }
+let PUSH_V = -1; setInterval(() => { if (pushOn() && DATA_V !== PUSH_V) { PUSH_V = DATA_V; pushSync(); } }, 5000);
+async function pushEnable() {
+  if (!pushCan()) { toast("This browser can't receive push notifications."); return; }
+  if (!window.ENGINE?.uid) { toast("Sign in first: push goes through your account."); return; }
+  if (!pushCfg()) { openSheet("confirm", { title: "One-time set-up needed", text: "Notifications with the app closed need a small function in your Supabase project and a key in config.js. The steps are in supabase/PUSH.md in the app's repository (about 10 minutes).", yes: "OK", run: () => {} }); return; }
+  const p = Notification.permission === "granted" ? "granted" : await Notification.requestPermission(); if (p !== "granted") { toast("Notifications are blocked for this site."); return; }
+  try { const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(pushCfg()) }), j = sub.toJSON();
+    const { error } = await ENGINE.sb.from("push_subs").upsert({ user_id: ENGINE.uid, endpoint: j.endpoint, sub: j, updated_at: new Date().toISOString() }, { onConflict: "user_id,endpoint" }); if (error) throw error;
+    S.settings.reminders = { ...(S.settings.reminders || {}), on: true, push: true, pushErr: null }; saveSettings(); pushSync(true); toast("Done: reminders arrive with the app closed too"); }
+  catch (e) { toast("Couldn't turn it on: " + String(e?.message || e).slice(0, 80)); }
+}
+async function pushDisable() { try { const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub) { await ENGINE.sb.from("push_subs").delete().eq("user_id", ENGINE.uid).eq("endpoint", sub.endpoint); await sub.unsubscribe(); } await ENGINE.sb.from("push_queue").delete().eq("user_id", ENGINE.uid).is("sent_at", null); } catch (e) {}
+  S.settings.reminders = { ...(S.settings.reminders || {}), push: false }; saveSettings(); }
+ACT["push-toggle"] = () => pushOn() ? pushDisable() : pushEnable();
+ACT["push-test"] = async () => { try { const { error } = await ENGINE.sb.from("push_queue").upsert({ user_id: ENGINE.uid, key: "test|" + Date.now(), at: new Date().toISOString(), title: "Engine test", body: "Push works: this came with the app closed.", tag: "engine-test", data: {} }, { onConflict: "user_id,key" }); if (error) throw error; toast("Test queued: it arrives within 5 minutes, even with the app closed"); } catch (e) { toast("Couldn't queue the test: " + String(e?.message || e).slice(0, 80)); } };
+/* with push on, the server sends them: no second copy from the open app */
+const _remTickP = reminderTick;
+reminderTick = function () { if (pushOn() && !S.settings.reminders?.pushErr) return; _remTickP(); };
+const _remPrefsP = reminderPrefs;
+reminderPrefs = function () { const R = S.settings.reminders || {}, can = pushCan(), signed = !!window.ENGINE?.uid;
+  return _remPrefsP().replace('<button class="btn soft sm" data-act="rem-ics"', `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${pushOn()}" data-act="push-toggle" aria-label="Also with the app closed" ${can ? "" : "disabled"}></button><span>Also with the app closed<small class="faint" style="display:block;font-size:12.5px">${!can ? "This browser can't receive push." : !signed ? "Needs your account: sign in above." : !pushCfg() ? "Needs a one-time set-up in your Supabase project (supabase/PUSH.md)." : R.pushErr ? `Not working: ${esc(R.pushErr)}` : pushOn() ? "On: sent from your Supabase project." : "Push through your Supabase project."}</small></span></label>${pushOn() ? `<button class="btn text sm" data-act="push-test" style="align-self:flex-start">Send a test</button>` : ""}
+    <button class="btn soft sm" data-act="rem-ics"`); };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
@@ -10445,6 +10496,7 @@ ACT["bk-point"] = async el => { const p = await BKDB.get("pts", el.dataset.k); i
   try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
   /* home-screen shortcuts: ?a=<action> runs once the app is up */
   try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["gps-run", "open-add", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 900); } catch (e) {}
+  if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(null, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);

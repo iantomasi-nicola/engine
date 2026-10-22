@@ -1,7 +1,7 @@
 /* Engine service worker: opens instantly and works offline.
    App files: network first with a short timeout (the newest version when online, the saved one when not).
    Libraries, the label reader and icons: kept in their own cache that survives updates. */
-const V = "engine-202610221627", HEAVY = "engine-heavy-1";
+const V = "engine-202610221629", HEAVY = "engine-heavy-1";
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png"];
 const WARM = ["vendor/zxing.min.js", "vendor/tesseract.min.js", "ocr/worker.min.js", "ocr/core/tesseract-core-simd-lstm.wasm.js", "ocr/core/tesseract-core-lstm.wasm.js", "ocr/lang/ita.wasm"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
@@ -21,6 +21,12 @@ self.addEventListener("fetch", e => {
   }
   const net = fetch(req).then(r => { if (r.ok) { const c = r.clone(); caches.open(V).then(x => x.put(req, c)); } return r; });
   e.respondWith(timeout(net, req.mode === "navigate" ? 3500 : 6000).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || (req.mode === "navigate" ? caches.match("index.html") : net))));
+});
+/* push from the Engine function in your Supabase project (reminders with the app closed) */
+self.addEventListener("push", e => {
+  let m = {}; try { m = e.data ? e.data.json() : {}; } catch (x) { m = { title: "Engine", body: e.data ? e.data.text() : "" }; }
+  const d = m.data || {}, o = { body: m.body || "", tag: m.tag || "engine", icon: "icons/icon-192.png", badge: "icons/icon-192.png", data: d, renotify: true, ...(d.k ? { actions: [{ action: "taken", title: "Taken" }] } : {}) };
+  e.waitUntil(self.registration.showNotification(m.title || "Engine", o));
 });
 /* tapping a reminder: "Taken" ticks the supplement, otherwise the app opens where it matters */
 self.addEventListener("notificationclick", e => {
