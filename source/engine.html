@@ -173,12 +173,14 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .subseg button[aria-selected="true"]{background:var(--md-primary);color:var(--md-on-primary);border-radius:12px}
 .groc-sub{padding:12px 0 2px}
 .hist-sub{margin:12px 0 4px}
+
 @media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
 /* expanded (computer): calendar and the open day side by side */
 .cv-split{display:flex;flex-direction:column;gap:14px}
 @media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-split .cv-day{position:sticky;top:16px}}
 /* expanded: settings groups in two columns */
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
+
 
 </style></head><body>
 <title>Engine</title>
@@ -2065,6 +2067,41 @@ select.inp{background:transparent!important}
 .td-bar i{background:var(--c,var(--md-primary))!important}
 .wd.done{background:var(--md-primary)!important;color:var(--md-on-primary)!important}.wd.done small{color:var(--md-on-primary)!important}
 @media (min-width:720px){.sheet-h::before{display:none!important}}
+/* ---------- the phone: compact, aligned, nothing cut ---------- */
+.shop-date{position:relative;gap:8px}.shop-date input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.st-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.st-ctl .seg{width:auto}.st-ctl .seg button{flex:0 0 auto}
+/* the side column on wide screens is narrow: the weigh-in goes on two lines there */
+@media (min-width:1024px){.plan-side .weigh{flex-wrap:wrap}.plan-side .weigh-l{flex:1 1 100%}.plan-side .weigh-in{flex:1 1 100%;display:flex;gap:8px}.plan-side .weigh-in .unit-inp{flex:1;width:auto}}
+.stat-grid>.stat:only-child{grid-column:1/-1}
+.set-goal{grid-column:1/-1}
+.show-xs{display:none}@media (max-width:520px){.show-xs{display:inline}}
+@media (max-width:599px){
+  .chips.scroll:has(.shop-date){display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.25fr);gap:6px;overflow:visible}
+  .chips.scroll:has(.shop-date)>*{justify-content:center;padding:0 6px!important;min-width:0;white-space:nowrap}
+  .shop-date{gap:5px!important}
+  .pan-main .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+}
+@media (max-width:599px){
+  .td-nudges{display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px!important;margin:0 0 12px!important;padding:0!important;overflow:visible!important}
+  .td-nudges>button{flex-direction:column;justify-content:center;height:60px!important;min-height:60px!important;padding:6px 2px!important;gap:4px!important;font-size:12px!important;border-radius:16px!important;white-space:nowrap;min-width:0}
+  .td-nudges>button .ic{width:20px;height:20px}
+  .td-nudges [data-act="shopq-open"],.q-long{display:none}
+}
+@media (min-width:600px) and (max-width:1023px){.td-nudges [data-act="shopq-open"]{display:none}}
+@media (max-width:599px){
+  .td-cta{justify-content:flex-start}
+  .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center}
+  .goal .stat small{font-size:11px}.goal .stat .faint{line-height:1.25}
+  .ph-w small{font-size:9px}
+  .st-ctl .seg{flex:1 1 auto}.st-ctl .seg button{padding:0 10px!important;flex:1 1 auto}
+}
+@media (max-width:380px){.plan-side .toolbar .btn .ic{display:none}.plan-side .toolbar .btn{padding:0 10px!important}}
+@media (max-width:599px){
+  .cv-top{flex-direction:column-reverse;align-items:stretch;gap:8px}
+  .cv-top .subseg{width:100%;max-width:none}.cv-top .subseg button{flex:1 1 0}
+  .cv-nav{justify-content:space-between}.cv-nav b{min-width:0;flex:1}
+  .cv-tools{margin-left:0;width:100%;justify-content:space-between}
+}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3597,8 +3634,8 @@ VIEWS.plan = function () {
       <span class="weigh-in"><span class="unit-inp"><input id="qw-in" class="inp" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Weight in kg"><span>kg</span></span><span class="unit-inp bf"><input id="qw-bf" class="inp" inputmode="decimal" placeholder="${lastBf() ? r1(lastBf()[1]) : "BF"}" aria-label="Body fat percent, optional"><span>%</span></span><button class="btn ink sm" type="submit">Save</button></span></form>`;
   }
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
-    <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button>${FEAT("eatout") ? `<button class="btn ghost sm" data-act="eat-out" data-date="${date}">${ic("plate", "sm")}Eaten out</button>` : ""}
-    ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
+    <button class="btn ghost sm tb-more" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button><button class="btn ghost sm tb-more" data-act="plan-share" data-date="${date}">${ic("image", "sm")}Share</button>${FEAT("eatout") ? `<button class="btn ghost sm" data-act="eat-out" data-date="${date}">${ic("plate", "sm")}Eaten out</button>` : ""}
+    ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm tb-more" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
   if (eat.manual) {
     meals += `<button class="logged" data-act="open-checkin" data-date="${date}"><span class="logged-ic">${ic("check")}</span><span class="logged-t"><b>Logged total · ${fmtN(eat.kcal)} kcal</b><small>${eat.hasMacros ? `${r0(eat.c)} g carbs · ${r0(eat.p)} g protein · ${r0(eat.f)} g fat` : "Calories only"} · daily total from your log. Foods you tick as eaten replace it.</small></span>${ic("chevR", "sm")}</button>`;
@@ -3702,8 +3739,8 @@ VIEWS.stats = function (embedded) {
   let streak = 0; for (let i = 0; i < 400; i++) { const d = S.days[addDays(end, -i)]; if (d && dayItems(d).some(([, it]) => it.eaten)) streak++; else if (i > 0) break; }
   const w = S.settings.weight || 75;
   let h = `${embedded ? "" : `<header class="top"><div class="top-row"><div><div class="top-title">Stats</div><div class="top-sub">Last ${n} days · ${basis === "eaten" ? "what you ate" : "what you planned"}</div></div></div>`}
-    <div style="display:flex;gap:8px;padding:${embedded ? "0" : "10px 0 12px"};flex-wrap:wrap"><div class="seg" style="flex:1 1 250px">${[[7, "7 days"], [30, "30 days"], [90, "90 days"]].map(([k, l]) => `<button data-act="stats-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div>
-    <div class="seg" style="flex:1 1 150px">${[["eaten", "Eaten"], ["planned", "Planned"]].map(([k, l]) => `<button data-act="stats-basis" data-b="${k}" aria-pressed="${basis === k}">${l}</button>`).join("")}</div></div>${embedded ? "" : "</header>"}`;
+    <div class="st-ctl" style="padding:${embedded ? "0" : "10px 0 12px"}"><div class="seg sm">${[[7, "7 days"], [30, "30 days"], [90, "90 days"]].map(([k, l]) => `<button data-act="stats-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div>
+    <div class="seg sm">${[["eaten", "Eaten"], ["planned", "Planned"]].map(([k, l]) => `<button data-act="stats-basis" data-b="${k}" aria-pressed="${basis === k}">${l}</button>`).join("")}</div></div>${embedded ? "" : "</header>"}`;
   if (!has.length) return h + `<div class="empty"><h3>No ${basis} days in this range</h3><p>${basis === "eaten" ? "Tick the circle next to each food once you've eaten it. Your trends appear here." : "Plan a few days and your trends appear here."}</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Go to plan</button></div></div>`;
   h += `<div class="stat-grid">
     <div class="stat"><b>${fmtN(avg("kcal"))}</b><small>avg kcal · ${r0(avg("kcal") / (avgT("kcal") || 1) * 100)}% of target</small></div>
@@ -3814,16 +3851,14 @@ VIEWS.settings = function () {
   const CUIS = ["Italian", "Mediterranean", "Asian", "Mexican", "Middle Eastern", "Indian", "Nordic", "American", "Japanese", "Greek"];
   const activeShare = activeMeals().reduce((a, m) => a + (+m.share || 0), 0);
   return `<header class="top"><div class="top-row"><div><div class="top-title">Settings</div><div class="top-sub">Targets, training and connections</div></div>${syncPill()}</div></header>
-  <div class="set-group">${icuSettingsCard()}
-    <div class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Menu on the phone</span>${segBar("nav-pos", S.settings.navPos === "top" ? "top" : "bottom", [["bottom", "At the bottom"], ["top", "At the top"]])}<div class="faint" style="font-size:12.5px">If the bar at the bottom doesn't respond in your viewer, move it to the top.</div></div>
-    <details class="card pad set-det"><summary>Live workouts & timer · sounds and voice</summary><div class="set-in">${playerSettings()}</div></details>
-    <div class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Daily targets</span>${segBar("target-mode", st.fit.targetMode, [["smart", "Energy balance"], ["simple", "By training type"]])}
+  <div class="set-group">${[
+    [20, setGrp("tgt", "Targets", st.fit.targetMode === "smart" ? "Energy balance, calibrated on your weight trend" : "By training type", `    <div class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Daily targets</span>${segBar("target-mode", st.fit.targetMode, [["smart", "Energy balance"], ["simple", "By training type"]])}
       <div class="faint" style="font-size:12.5px">${st.fit.targetMode === "smart" ? "Target = BMR + daily movement + planned or logged training + digestion, calibrated on your real weight trend, plus the kcal of your phase. Protein and fat in g/kg of trend weight, carbs fill the rest." : "Fixed protein, carbs and fat for each training type, scaled by intensity."}</div></div>
-    ${st.fit.targetMode === "smart" ? fitSettings() + `<div class="section-h"><h2>Meal planning</h2></div>` : `
+    ${st.fit.targetMode === "smart" ? fitSettings() : `
     <div class="section-h"><h2>You</h2></div>
     <div class="card pad" style="display:flex;flex-direction:column;gap:12px">
       <div class="grid2"><div class="field"><label for="s-weight">Body weight</label><div class="unit-inp"><input id="s-weight" class="inp" inputmode="decimal" value="${st.weight}" data-chg="weight"><span>kg</span></div></div>
-      <div class="field"><span class="flabel">Goal</span><div class="seg">${[["cut", "Lose"], ["maintain", "Keep"], ["gain", "Gain"]].map(([k, l]) => `<button data-act="goal" data-k="${k}" aria-pressed="${st.goal === k}">${l}</button>`).join("")}</div></div></div>
+      <div class="field set-goal"><span class="flabel">Goal</span><div class="seg">${[["cut", "Lose"], ["maintain", "Keep"], ["gain", "Gain"]].map(([k, l]) => `<button data-act="goal" data-k="${k}" aria-pressed="${st.goal === k}">${l}</button>`).join("")}</div></div></div>
       <button class="btn soft" data-act="recalc">${ic("bolt", "sm")}Recalculate targets from weight and goal</button>
       <div class="faint" style="font-size:12.5px">Starting points per kg: strength 2.0 g protein / 4 g carbs, endurance 1.6 / 6, hybrid 1.8 / 5, rest 1.8 / 2.5, fat about 0.9 g. Adjust anything below.</div>
     </div>
@@ -3842,8 +3877,8 @@ VIEWS.settings = function () {
     <div class="sched">${DOWK.map((k, i) => { const s = st.schedule[k]; const t = typeById(s.t); return `<button data-act="open-training" data-sched="${k}"><b>${DOW[i]}</b><i style="background:${colorVar(t.color)}"></i><em>${esc(t.name)}</em><em class="faint">${t.id === "rest" ? "–" : esc(st.intensity[s.i]?.name || "")}</em></button>`; }).join("")}</div>
     <div class="faint" style="font-size:12.5px">The default for each weekday. Change a single date from the Plan tab.</div>
 
-    `}
-    <div class="section-h"><h2>Meals</h2><span class="faint" style="font-size:12px">${activeShare}% assigned</span></div>
+    `}`)],
+    [30, setGrp("meals", "Meals and planner", `${activeMeals().length} meals a day · diet, cuisines, cheat meals`, `    <div class="section-h"><h2>Meals</h2><span class="faint" style="font-size:12px">${activeShare}% assigned</span></div>
     <div class="card">${st.meals.map(meal).join("")}</div>
     <div class="faint" style="font-size:12.5px">Shares split each day's target between meals and are rescaled if they don't add up to 100%.</div>
 
@@ -3858,17 +3893,22 @@ VIEWS.settings = function () {
         <div class="field"><label for="ch-def">Default way to make room</label><select id="ch-def" class="inp" data-chg="cheat-strat">${CHEAT_STRATS.map(([k, l]) => `<option value="${k}" ${cheatRules().strategy === k ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
       <div class="field"><span class="flabel">Round portions to</span><div class="seg">${[1, 5, 10].map(k => `<button data-act="step" data-k="${k}" aria-pressed="${st.step === k}">${k} g</button>`).join("")}</div></div>
       <div class="faint" style="font-size:12.5px">The planner learns from what you plan and eat: foods you use often in a meal come back there, favourites (★) and pantry items get priority, and nothing repeats from yesterday.</div>
-    </div>
-
-    <div class="section-h"><h2>Data</h2></div>
-    <div class="card">
+    </div>`)],
+    [50, setGrp("icu", "intervals.icu", icuState().key ? (icuFail() ? "Sync failed" : icuAgo() + " · syncs by itself") : "Not connected", icuSettingsCard())],
+    [60, setGrp("live", "Live workouts & timer", "Voice, sounds, screen and cycling", `<div class="set-in">${playerSettings()}</div>`)],
+    [95, setGrp("data", "Data", "Excel export, full backup, setup again", `    <div class="card">
       <div class="lrow"><span><span class="t">Sync</span><span class="s">${Sync.db ? "Saved to your Claude account and synced on every device where you open this page." : "Saved in this browser only. Open the page inside Claude while signed in to sync."}</span></span><span class="end">${syncPill()}</span></div>
       <button class="lrow" data-act="export-xlsx"><span><span class="t">Export to Excel</span><span class="s">Daily log, workouts, meals, weekly table, tests, records, measurements and your foods, one sheet each</span></span><span class="end">${ic("download")}</span></button>
       <button class="lrow" data-act="export"><span><span class="t">Full backup (JSON)</span><span class="s">Everything, including settings, to keep or restore later</span></span><span class="end">${ic("download")}</span></button>
       <button class="lrow" data-act="reset-onboard"><span><span class="t">Run setup again</span><span class="s">Recalculate everything from weight, goal and schedule</span></span><span class="end">${ic("chevR")}</span></button>
-    </div>
+    </div>`)],
+    ...SET_EXTRA()].sort((a, b) => a[0] - b[0]).map(x => x[1]).join("")}
   </div>`;
 };
+/* settings come in groups that fold away; web extras (look, account, AI…) add theirs through SET_EXTRA, sorted by the number */
+const setGrp = (k, title, sub, inner) => `<details class="set-grp" data-grp="${k}" ${(UI.setOpen || {})[k] ? "open" : ""}><summary><span><b>${title}</b><small>${sub}</small></span>${ic("chevD", "sm")}</summary><div class="set-grp-in">${inner}</div></details>`;
+let SET_EXTRA = () => SETTINGS_CARDS.map(c => [10 + c.o, c.fn()]);
+const navPosCard = () => `<div class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Menu on the phone</span>${segBar("nav-pos", S.settings.navPos === "top" ? "top" : "bottom", [["bottom", "At the bottom"], ["top", "At the top"]])}<div class="faint" style="font-size:12.5px">If the bar at the bottom doesn't respond in your viewer, move it to the top.</div></div>`;
 /* ================= shared bits ================= */
 const INT_COLOR = { Light: "fat", Moderate: "carb", Hard: "pro" };
 const pill = (st) => { const c = st === "OK" || st === "green" ? "good" : st === "CHECK" || st === "Warning" || st === "yellow" ? "warn" : st === "OFF" || st === "Low" || st === "red" || st === "Missing" ? "bad" : "faint"; return `<span class="pill" style="--c:var(--${c})">${esc(st)}</span>`; };
@@ -4083,7 +4123,7 @@ function overviewView() {
   let h = "";
   h += `<div class="card pad goal"><div class="row" style="justify-content:space-between"><span class="flabel">Goal</span><button class="link" data-act="tab" data-tab="settings">Edit</button></div>
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
-    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${kpi(G.eta ? fmtDM(G.eta) : "—", "ETA at current deficit", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week` : G.deficit > 0 ? "" : "no deficit planned")}</div>
+    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${kpi(G.eta ? fmtDM(G.eta) : "—", "ETA", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week` : G.deficit > 0 ? "" : "no deficit planned")}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
   h += `<div class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Weekly check</span><div>${esc(C.weekly)}</div>${C.brk ? `<div class="${C.weeksIn >= E.dietBreakWeeks && C.phase.phase === "Cut" ? "note accent" : "muted"}" style="font-size:13.5px">${esc(C.brk)}</div>` : ""}</div>`;
   h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "watch-based")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
@@ -5380,6 +5420,7 @@ ACT["day-menu"] = () => {
     { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a cheat meal", icon: "star", sub: "Pizza night, dinner out… the plan makes room", run: () => openCheat({ date }) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
+    { label: "Share the day as a picture", icon: "image", run: () => ACT["plan-share"]({ dataset: { date } }) },
     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
     ...(has ? [
       { label: "Mark all as not eaten", icon: "undo", run: () => mutateDay(date, d => { for (const [, it] of dayItems(d)) if (it.eaten) { it.eaten = false; pantryAdjust(it, -1); } }, { undo: "Unmarked all" }) },
@@ -8042,7 +8083,7 @@ VIEWS.today = function () {
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
-  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
+  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
     // phone: one column in the order you use it: today's training, food, body, then the rest
     ? `<div class="today-grid one">${todayCards("a")}${tr}${fuel}${body}${todayCards("b")}${suppCard()}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
@@ -9202,7 +9243,7 @@ VIEWS.shop = function () {
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))} · ${toBuy.length} to buy${T.est ? ` · ≈ ${fmtEur(T.est)}${T.known < toBuy.length ? ` for ${T.known} with a price` : ""}` : ""}</div></div>
     <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div>
     <div class="chips scroll" style="padding:8px 0 10px">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}
-    <label class="chip" style="gap:8px">${ic("calendar", "sm")}<span class="sr">Start date</span><input id="shop-start" type="date" value="${start}" data-in="shop-start" style="border:0;background:transparent;font-size:13.5px;font-weight:600;min-width:0"></label></div></header>`;
+    <label class="chip shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input id="shop-start" type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label></div></header>`;
   if (!toBuy.length && !(S.shop.extras || []).length) h += `<div class="empty"><h3>Nothing to buy</h3><p>The list builds itself from the meals planned in these days, minus what's in your pantry.</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Plan meals</button></div></div>`;
   else h += `<div class="note shop-hint">Tap a product in the shop to enter how much you took and what it cost: the pantry and your spending update when you finish.</div><div class="card shop-card">${shopListHTML(toBuy, false)}</div>`;
   const extraIds = Object.keys(S.shop.checked || {}).filter(id => S.shop.checked[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
@@ -9299,7 +9340,7 @@ VIEWS.pantry = function () {
   const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
   let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
-    <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open">${ic("plate", "sm")}What can I cook?</button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
+    <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open" aria-label="What can I cook?">${ic("plate", "sm")}<span class="hide-xs">What can I cook?</span><span class="show-xs">Cook</span></button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
   h += expiryCard("pantry");
   if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
   if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
@@ -9353,7 +9394,7 @@ CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {})
    is added as an extra purchase), in the pantry it's stored with its use-by date. */
 function destPick(food) {
   const dest = UI.dest; UI.dest = null; if (!food) return;
-  if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
+  if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = food.source === "homemade" ? 4 : { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
     openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || addDays(todayISO(), shelf), u: p?.u || (food.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk }); return; }
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === food.id && x.buy > 0), c = S.shop.checked?.[food.id];
   if (UI.tab !== "shop") { UI.tab = UI.fuelTab = "shop"; scheduleRender(); }
@@ -9853,7 +9894,7 @@ function trainSeason() {
       <small class="faint">Target = your usual week (${fmtN(r0(T.base))} load${T.baseKm ? `, ${r1(T.baseKm)} km` : ""}) × ${T.f.toFixed(2)}.</small>` : `<small class="faint">Log a few weeks of training and the targets appear.</small>`}</div>`;
   // the strip: 4 weeks back, 12 ahead
   let strip = ""; for (let k = -4; k <= 12; k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), dn = k < 0 ? weekDone(ws).l : null, r = races().find(x => weekStartOf(x.date) === ws);
-    strip += `<button class="ph-w ${k === 0 ? "now" : ""} ${k < 0 ? "past" : ""}" data-act="ph-edit" data-w="${ws}" style="--c:var(--${PH[p.ph][1]})" aria-label="Week of ${fmtDM(ws)}: ${PH[p.ph][0]}"><i style="height:${clamp(((dn ?? t.load) / Math.max(1, t.base * 1.2)) * 100, 12, 100)}%"></i><small>${fmtDM(ws).replace(" ", "<br>")}</small>${r ? `<em>${ic("flag", "sm")}</em>` : ""}${p.manual ? `<u></u>` : ""}</button>`; }
+    strip += `<button class="ph-w ${k === 0 ? "now" : ""} ${k < 0 ? "past" : ""}" data-act="ph-edit" data-w="${ws}" style="--c:var(--${PH[p.ph][1]})" aria-label="Week of ${fmtDM(ws)}: ${PH[p.ph][0]}"><i style="height:${clamp(((dn ?? t.load) / Math.max(1, t.base * 1.2)) * 100, 12, 100)}%"></i><small>${+ws.slice(8)}<br>${+ws.slice(8) <= 7 || k === -4 ? esc(fmtDM(ws).split(" ")[1].slice(0, 3)) : "&nbsp;"}</small>${r ? `<em>${ic("flag", "sm")}</em>` : ""}${p.manual ? `<u></u>` : ""}</button>`; }
   h += `<div class="section-h"><h2>Season</h2><span class="faint" style="font-size:12px">bar = load (done or target) · tap a week to change it</span></div><div class="card pad"><div class="ph-strip">${strip}</div>
     <div class="cv-leg" style="margin-top:8px">${Object.keys(PH).map(k => `<span><i style="background:var(--${PH[k][1]})"></i>${PH[k][0]}</span>`).join("")}</div></div>`;
   // backward plan to the next race
@@ -10663,8 +10704,8 @@ function ccSettings() { const P = CCP(), ws = weekStartOf(todayISO());
     <div class="seg sm">${[["training", "By training"], ["week", "Weekly pattern"]].map(([k, l]) => `<button data-act="cc-mode" data-k="${k}" aria-pressed="${P.mode === k}">${l}</button>`).join("")}</div>
     ${P.mode === "week" ? `<div class="cc-pat">${DOWK.map((k, i) => `<button class="cc-b cc-${P.week[k] || "M"}" data-act="cc-wd" data-k="${k}" aria-label="${DOWL[i]}: ${CC_L[P.week[k] || "M"]}"><b>${DOW[i]}</b><span>${P.week[k] || "M"}</span></button>`).join("")}</div><small class="faint">Tap a day to switch High → Medium → Low.</small>` : ""}
     <div class="grid2"><div class="field"><span class="flabel">High days</span><div class="chips">${[20, 30, 40, 50].map(v => `<button class="chip sm" data-act="cc-set" data-k="high" data-v="${v}" aria-pressed="${P.high === v}">+${v}%</button>`).join("")}</div></div><div class="field"><span class="flabel">Low days</span><div class="chips">${[20, 35, 50].map(v => `<button class="chip sm" data-act="cc-set" data-k="low" data-v="${v}" aria-pressed="${P.low === v}">−${v}%</button>`).join("")}</div></div></div>
-    <div class="field"><span class="flabel">Calories</span><div class="seg sm">${[["same", "Stay the same (fat moves)"], ["follow", "Follow the carbs"]].map(([k, l]) => `<button data-act="cc-kcal" data-k="${k}" aria-pressed="${P.kcal === k}">${l}</button>`).join("")}</div></div>
-    <div class="cc-week">${days}</div><small class="faint">This week · carbs and kcal targets. Protein never changes; fat stays at least 0.6 g per kg.</small></section>`; }
+    <div class="field"><span class="flabel">Calories</span><div class="seg sm">${[["same", "Stay the same"], ["follow", "Follow the carbs"]].map(([k, l]) => `<button data-act="cc-kcal" data-k="${k}" aria-pressed="${P.kcal === k}">${l}</button>`).join("")}</div></div>
+    <div class="cc-week">${days}</div><small class="faint">This week · carbs and kcal targets. Protein never changes; with "Stay the same" fat moves the other way, never below 0.6 g per kg.</small></section>`; }
 SETTINGS_CARDS.push({ o: 2, fn: ccSettings });
 const ccSave = o => { S.settings.carbCycle = { ...CCP(), ...o }; saveSettings(); };
 ACT["cc-on"] = () => ccSave({ on: !CCP().on });
@@ -10875,6 +10916,7 @@ fuelNav = () => { const groc = UI.tab === "shop" || UI.tab === "pantry", xp = (E
 ACT["groc-seg"] = el => { UI.tab = UI.fuelTab = UI.groc = el.dataset.k; scheduleRender(); window.scrollTo(0, 0); };
 { const f = ACT["fuel-tab"]; ACT["fuel-tab"] = el => { if (el.dataset.k === "shop" || el.dataset.k === "pantry") UI.groc = el.dataset.k; return f(el); }; }
 if (location.hash === "#dash") { UI.tab = "progress"; UI.progSeg = "reports"; }
+SETTINGS_CARDS.push({ o: -2, fn: navPosCard });
 /* on a phone the tab rows scroll: keep the open one in view */
 { const _ar = afterRender; afterRender = function () { _ar(); document.querySelectorAll(".seg.many, .subseg").forEach(g => { const b = g.querySelector('[aria-pressed="true"],[aria-selected="true"]'); if (b && g.scrollWidth > g.clientWidth + 2) { const l = b.offsetLeft - g.offsetLeft, r = l + b.offsetWidth; if (l < g.scrollLeft + 24 || r > g.scrollLeft + g.clientWidth - 28) g.scrollLeft = Math.max(0, l - 24); } }); }; }
 /* ================= intervals.icu on its own: both ways, no button =================
@@ -10908,6 +10950,50 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && ic
 addEventListener("online", () => { ICU_AUTO.wait = 0; if (icuState().key && (icuStale(10) || icuPending().n)) icuAutoSoon(2e3); });
 setInterval(() => { if (!document.hidden && (icuStale(15) || (icuPending().n && !ICU_AUTO.t))) icuAutoSoon(500); }, 60e3);
 setTimeout(() => { if (icuState().key && (icuStale(5) || icuPending().n)) icuAutoSoon(0); }, 3500);
+/* ================= homemade or no label: a few words (or a photo) → values per 100 g → a food in your list =================
+   For what you cooked or bought loose. The AI estimates per 100 g and a typical portion; without AI, the closest
+   homemade classic. Either way it opens in the food editor to check, is saved to Foods (marked as estimated)
+   and then goes on to the pantry or the shopping trip like any other food. */
+AI_FEATS.push(["homemade", "Homemade and unlabelled food", "What you cooked or bought loose → values per 100 g, saved to your foods."]);
+const HOME_PRESETS = [ // name, kcal, protein, carbs, fat per 100 g, portion g
+  ["Lasagna", 165, 9, 14, 8, 300], ["Pasta al ragù", 160, 7, 22, 5, 320], ["Risotto", 150, 4, 22, 5, 300], ["Minestrone", 55, 2.5, 8, 1.5, 350],
+  ["Meatballs in sauce", 190, 13, 6, 12, 200], ["Frittata", 175, 11, 3, 13, 150], ["Roast chicken & potatoes", 160, 14, 10, 7, 350], ["Parmigiana", 180, 8, 8, 13, 250],
+  ["Homemade bread", 260, 8.5, 52, 2, 60], ["Pizza (home)", 250, 10, 33, 8, 350], ["Ciambellone / plain cake", 380, 6, 52, 16, 70], ["Cookies", 460, 6, 65, 19, 30],
+  ["Tiramisù", 290, 6, 28, 17, 120], ["Jam", 240, 0.4, 59, 0.1, 20], ["Granola", 450, 10, 60, 18, 50], ["Hummus", 230, 7, 14, 16, 50]];
+const homeRole = e => { const k = Math.max(1, e.kcal); return e.p * 4 / k > .3 ? "P" : e.f * 9 / k > .5 ? "F" : "C"; };
+SHEETS.homemade = sh => {
+  const E = sh.est, can = AIF("homemade") && !!Sync.sample, img = can && Sync.sampleImages;
+  return { title: "Homemade or no label", focus: sh.name ? null : "hm-name",
+    body: `<div class="field"><label for="hm-name">Name</label><input id="hm-name" class="inp" value="${esc(sh.name || "")}" placeholder="e.g. Grandma's lasagna, loose almonds, bakery focaccia" data-in="hm-name" autocomplete="off"></div>
+    ${can ? `<div class="field"><label for="hm-desc">What's in it</label><textarea id="hm-desc" class="inp" rows="3" placeholder="Ingredients and amounts if you know them: 250 g flour, 3 eggs, 150 g sugar, 100 ml oil… or just “bakery focaccia with oil and salt”" data-in="hm-desc">${esc(sh.desc || "")}</textarea></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn soft sm">${ic("camera", "sm")}Photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="hm-photo"></label>` : ""}<button class="btn primary sm" data-act="hm-est" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Estimating…' : ic("spark", "sm") + "Estimate"}</button></div>
+      ${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your food">` : ""}` : `<div class="note">With an AI service (Settings › AI) a description or a photo becomes values per 100 g. Meanwhile pick the closest, or type the values in the next step.</div>`}
+    <div class="field"><span class="flabel">${can ? "Or start from a classic" : "Start from a classic"}</span><div class="chips">${HOME_PRESETS.map(([n, k], i) => `<button class="chip sm" data-act="hm-pre" data-i="${i}" aria-pressed="${E?.pre === i}">${esc(n)} <span class="faint">${k}</span></button>`).join("")}</div><small class="faint">kcal per 100 g</small></div>
+    ${E ? `<div class="card pad eo-res"><div class="row" style="justify-content:space-between"><b>${esc(sh.name || E.name)}</b><b>${fmtN(r0(E.kcal))} kcal <small class="faint">/ 100 g</small></b></div><small class="faint">${r1(E.p)} g protein · ${r1(E.c)} g carbs · ${r1(E.f)} g fat${E.fib ? ` · ${r1(E.fib)} g fibre` : ""}${E.conf ? ` · ${esc(E.conf)} confidence` : ""}</small>${E.portion ? `<small class="faint">A portion: about ${fmtN(E.portion)} g · ${fmtN(r0(E.kcal * E.portion / 100))} kcal</small>` : ""}${E.notes ? `<small class="faint">${esc(E.notes)}</small>` : ""}</div>` : ""}`,
+    foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="hm-next">${ic("chevR", "sm")}${E ? "Check and save" : "Type the values"}</button>` };
+};
+INP["hm-name"] = v => { S_().name = v; };
+INP["hm-desc"] = v => { S_().desc = v; };
+ACT["hm-pre"] = el => { const [n, kcal, p, c, f, portion] = HOME_PRESETS[+el.dataset.i], sh = S_(); sh.est = { name: n, kcal, p, c, f, portion, pre: +el.dataset.i }; if (!(sh.name || "").trim()) sh.name = n; renderSheet(); };
+CHG["hm-photo"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; try { sh.photo = await shrink(f, 1024); if (sh.photoURL) URL.revokeObjectURL(sh.photoURL); sh.photoURL = URL.createObjectURL(sh.photo); } catch (e) { toast("Couldn't read that picture."); return; } renderSheet(); ACT["hm-est"](); };
+ACT["hm-est"] = async () => { const sh = S_(), name = (sh.name || "").trim(), text = (sh.desc || "").trim(); if (!name && !text && !sh.photo) { toast("Give it a name or say what's in it."); return; }
+  sh.busy = true; renderSheet();
+  const prompt = `Estimate the nutrition values PER 100 g of this homemade or unlabelled food${sh.photo ? " (photo attached)" : ""}. Name: """${name.slice(0, 120)}""".${text ? ` Ingredients / description: """${text.slice(0, 800)}""".` : ""} If ingredient amounts are given, compute from them (account for water lost in cooking when it matters); otherwise use a typical Italian home recipe. Reply with only JSON: {"name":"short name","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"portion_g":number,"confidence":"low|medium|high","notes":"one short sentence on the assumption"}`;
+  try { const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : { modelTier: "quick" }); if (UI.sheet !== sh) return;
+    const k = +j?.kcal; if (k > 0 && k < 950) { sh.est = { name: String(j.name || name || "Homemade").slice(0, 60), kcal: r0(k), p: r1(+j.protein || 0), c: r1(+j.carbs || 0), f: r1(+j.fat || 0), fib: r1(+j.fibre || 0), portion: clamp(r0(+j.portion_g || 0), 0, 1500), conf: String(j.confidence || ""), notes: String(j.notes || "").slice(0, 160) }; if (!name) sh.name = sh.est.name; }
+    else toast("No estimate came back: add the ingredients, or start from a classic."); }
+  catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
+  sh.busy = false; if (UI.sheet === sh) renderSheet(); };
+/* into the usual food editor, values filled in: you check, save, and the pantry (or the trip) asks how much */
+ACT["hm-next"] = () => { const sh = S_(), E = sh.est, d = UI.dest, name = (sh.name || E?.name || "").trim();
+  const f = blankFood(name); f.source = "homemade"; f.est = !!E; f.cat = "other";
+  if (E) { f.per = { ...f.per, kcal: E.kcal, p: E.p, c: E.c, f: E.f, fib: E.fib || 0 }; f.role = homeRole(E); if (E.portion) f.servings = [{ l: "1 portion", g: E.portion }]; f.note = E.notes || ""; }
+  openSheet("food", { draft: f, isNew: true, then: d ? "qty" : null, date: UI.date, meal: suggestMeal() }); UI.dest = d; };
+ACT["pd-home"] = () => { const d = UI.dest; openSheet("homemade", { name: S_()?.q || "" }); UI.dest = d; };
+ACT["home-food"] = () => { UI.dest = null; openSheet("homemade", {}); };
+/* the button: next to New food, Label and Barcode when adding to the pantry or the trip */
+const _prodAdd = SHEETS.prodadd;
+SHEETS.prodadd = sh => { const o = _prodAdd(sh); o.body = o.body.replace('<button class="aa" data-act="pd-label">', `<button class="aa" data-act="pd-home">${ic("plate")}<span>Homemade</span></button><button class="aa" data-act="pd-label">`); return o; };
 /* ================= boot ================= */
 (function boot() {
   loadLocal();

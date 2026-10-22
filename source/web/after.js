@@ -9,20 +9,18 @@
     return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}</section>
 `;
   }
-  /* the cards in groups that fold away; which ones are open is remembered on this device */
-  function grp(k, title, sub, inner) { const open = (UI.setOpen || {})[k]; return `<details class="set-grp" data-grp="${k}" ${open ? "open" : ""}><summary><span><b>${title}</b><small>${sub}</small></span>${ic("chevD", "sm")}</summary><div class="set-grp-in">${inner}</div></details>`; }
-  function groups() { const ai = (S.settings.ai?.services || []).filter(x => x.on !== false && (x.key || x.base)).length, R = S.settings.reminders || {};
-    return grp("look", "Look", `${{ system: "System", light: "Light", dark: "Dark" }[LOOK().theme]} theme · accent ${(ACCENTS.find(a => a[0].toLowerCase() === LOOK().accent.toLowerCase()) || [0, "custom"])[1]}`, SETTINGS_CARDS.filter(c => c.o === -2).map(c => c.fn()).join(""))
-      + grp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + SETTINGS_CARDS.filter(c => c.o === 0).map(c => c.fn()).join(""))
-      + grp("rem", "Reminders", `${R.on ? "On" : "Off"} · supplements, water, pantry, weekly report`, suppSettingsCard() + reminderCard() + SETTINGS_CARDS.filter(c => c.o === 1).map(c => c.fn()).join(""))
-      + grp("ai", "AI", ai ? `${ai} service${ai > 1 ? "s" : ""} on` : "Not set up", aiCard() + aiFeatCard())
-      + grp("nut", "Nutrition extras", "Pro nutrients, shopping and pantry, carb cycling", proSettingsCard() + shopSettingsCard() + SETTINGS_CARDS.filter(c => c.o === 2).map(c => c.fn()).join(""))
-      + grp("feat", "Features", "Switch off what you don't use", SETTINGS_CARDS.filter(c => c.o === -1 || c.o > 2).map(c => c.fn()).join(""));
+  /* the web groups, merged with the app's own by SET_EXTRA (number = place in the list) */
+  function groups() { const ai = (S.settings.ai?.services || []).filter(x => x.on !== false && (x.key || x.base)).length, R = S.settings.reminders || {}, cards = f => SETTINGS_CARDS.filter(f).map(c => c.fn()).join("");
+    return [[10, setGrp("look", "Look", `${{ system: "System", light: "Light", dark: "Dark" }[LOOK().theme]} theme · accent ${(ACCENTS.find(a => a[0].toLowerCase() === LOOK().accent.toLowerCase()) || [0, "custom"])[1]}`, cards(c => c.o === -2))],
+      [40, setGrp("nut", "Nutrition extras", "Pro nutrients, shopping and pantry, carb cycling", proSettingsCard() + shopSettingsCard() + cards(c => c.o === 2))],
+      [70, setGrp("rem", "Reminders", `${R.on ? "On" : "Off"} · supplements, water, pantry, weekly report`, suppSettingsCard() + reminderCard() + cards(c => c.o === 1))],
+      [80, setGrp("ai", "AI", ai ? `${ai} service${ai > 1 ? "s" : ""} on` : "Not set up", aiCard() + aiFeatCard())],
+      [90, setGrp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + cards(c => c.o === 0))],
+      [100, setGrp("feat", "Features", "Switch off what you don't use", cards(c => c.o === -1 || c.o > 2))]];
   }
   document.addEventListener("toggle", e => { const d = e.target; if (!d.matches?.("details.set-grp")) return; UI.setOpen = { ...(UI.setOpen || {}), [d.dataset.grp]: d.open }; try { localStorage.setItem("engine.setOpen", JSON.stringify(UI.setOpen)); } catch (x) {} }, true);
   try { UI.setOpen = JSON.parse(localStorage.getItem("engine.setOpen") || "{}"); } catch (e) { UI.setOpen = {}; }
-  const origSettings = VIEWS.settings;
-  VIEWS.settings = function () { const h = origSettings(); return h.replace('<div class="set-group">', '<div class="set-group">' + groups()); };
+  SET_EXTRA = groups;
   ACT["eg-signin"] = () => E.signIn();
   ACT["eg-signout"] = () => openSheet("confirm", { title: "Sign out?", text: "Your data stays in your account. This device keeps a copy until you sign in again.", yes: "Sign out", run: () => E.signOut() });
   /* ---- AI services: every key you have, open and closed models, tried in your order ---- */
