@@ -283,7 +283,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .track .pl{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--c) 38%,transparent);border-radius:99px}
 .track .ea{position:absolute;inset:0 auto 0 0;background:var(--c);border-radius:99px}
 .track.over .pl{background:repeating-linear-gradient(-45deg,var(--c) 0 4px,color-mix(in srgb,var(--c) 55%,transparent) 4px 8px)}
-.hero-foot{display:flex;gap:8px;flex-wrap:wrap}
+
 .legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:14px;height:6px;border-radius:3px;background:var(--ink)}
@@ -444,15 +444,15 @@ textarea.inp{padding:10px 12px;min-height:80px;resize:vertical}
 .adh .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:650}
 
 /* shopping */
-.shop-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:6px;align-items:center;padding:8px 14px 8px 8px;border-top:1px solid var(--line)}
-.shop-item:first-child{border-top:0}
-.shop-item.done .t{text-decoration:line-through;color:var(--faint)}
-.shop-item .t{font-weight:600;display:block}
-.shop-item .s{font-size:12.5px;color:var(--muted);display:block}
-.shop-item .q{font-family:var(--display);font-stretch:110%;font-weight:650;font-variant-numeric:tabular-nums;text-align:right;font-size:14px}
-.shop-item .q small{display:block;font-family:var(--body);font-size:11px;color:var(--faint);font-weight:500}
-.shop-item.done .chk span{background:var(--ink);border-color:var(--ink)}
-.shop-item.done .chk span svg{opacity:1}
+
+
+
+
+
+
+
+
+
 .leftover{color:var(--good);font-weight:650}
 
 .set-group{display:flex;flex-direction:column;gap:12px}
@@ -492,7 +492,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .estrip small{font-size:11px}
 .ready{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:99px;background:var(--surface-2);color:var(--ink)}
 .ready i{width:8px;height:8px;border-radius:50%}
-.rdot{width:14px;height:14px;border-radius:50%;flex:none;margin-top:3px}
+
 .stat-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 .goal .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 .goal .stat b{font-size:19px}
@@ -725,82 +725,82 @@ details.card>summary::-webkit-details-marker{display:none}
 .today-grid{display:flex;flex-direction:column;gap:14px}
 .tg-col{display:flex;flex-direction:column;gap:14px;min-width:0}
 @media (min-width:1180px){.today-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:16px}}
-.t-hero{background:var(--hero);color:var(--hero-ink);border:1px solid var(--hero-line);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
-.t-hero .eyebrow{color:var(--hero-muted)}
-.t-hero-top{display:flex;justify-content:space-between;align-items:center}
-.t-dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 28%,transparent)}
-.t-big{display:block;font-family:var(--display);font-stretch:125%;font-weight:820;font-size:44px;letter-spacing:-.025em;line-height:.95;text-transform:uppercase;color:var(--hero-ink)}
-.t-sub{display:block;font-size:13.5px;color:var(--hero-muted);margin-top:8px}
-.t-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.t-metrics button{background:rgba(255,255,255,.07);border-radius:14px;padding:10px 11px;text-align:left;color:inherit;display:flex;flex-direction:column;gap:2px;min-width:0}
-.t-metrics small{font-size:10.5px;color:var(--hero-muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
-.t-metrics b{font-family:var(--display);font-stretch:112%;font-size:22px;font-weight:800;line-height:1.15;white-space:nowrap}
-.t-metrics b i{font-style:normal;font-size:13px;margin-left:1px;color:var(--hero-muted)}
-.t-metrics span{font-size:11px;color:var(--hero-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.t-weigh{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:14px;padding:7px 7px 7px 12px}
-.t-weigh>span:first-child{display:flex;gap:7px;align-items:center;font-weight:650;font-size:13.5px;flex:1;white-space:nowrap}
-.t-weigh .unit-inp{width:108px;flex:none}
-.t-weigh .inp{background:rgba(255,255,255,.1);color:var(--hero-ink);border-color:transparent;min-height:38px}
-.t-weigh .unit-inp>span{color:var(--hero-muted)}
-.t-card{background:var(--surface);border-radius:var(--r-lg);padding:14px 16px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
-.t-card.flush{padding:0 0 4px;gap:0}
-.t-card-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.t-card-h.pad{padding:14px 16px 8px}
-.t-card-h .pill svg{width:12px;height:12px}
-.sess-big{display:grid;grid-template-columns:5px minmax(0,1fr) auto;gap:12px;align-items:center}
-.sb-bar{align-self:stretch;border-radius:3px;background:var(--c)}
-.sb-main{min-width:0}
-.sb-main>b{display:block;font-family:var(--display);font-stretch:120%;font-weight:840;font-size:24px;letter-spacing:-.015em;line-height:1.05;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-meta{display:flex;gap:14px;margin-top:5px;font-size:12px;color:var(--muted);font-weight:600;flex-wrap:wrap}
-.sb-meta i{font-style:normal;font-family:var(--display);font-stretch:110%;font-size:18px;font-weight:780;color:var(--ink);margin-right:3px}
-.sb-det{display:block;font-size:12.5px;color:var(--muted);margin-top:5px}
-.t-actions{gap:8px;flex-wrap:wrap}.t-actions .btn{flex:1 1 auto}
-.sess-rest{display:flex;gap:12px;align-items:center}
-.sr-ic{width:44px;height:44px;flex:none;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;color:var(--fat)}
-.sess-rest b{display:block;font-family:var(--display);font-stretch:120%;font-size:22px;font-weight:840;text-transform:uppercase}
-.sess-rest small{color:var(--muted);font-size:13px}
-.wdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .wd{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px 7px;border-radius:12px;background:var(--surface-2);min-width:0;color:var(--ink)}
 .wd small{font-size:11px;font-weight:750;color:var(--muted)}
 .wd.now{box-shadow:inset 0 0 0 2px var(--ink)}
 .wd.done{background:var(--volt);color:var(--volt-ink)}.wd.done small{color:var(--volt-ink);opacity:.7}
 .wd.missed{opacity:.55}
-.wd-dots{display:flex;gap:3px;height:8px;align-items:center}
-.wd-dots i{width:8px;height:8px;border-radius:50%;background:var(--c)}
-.wd-dots i.rest{background:var(--surface-3)}
-.wd-ic{height:14px;display:grid;place-items:center;font-weight:800;font-size:13px}.wd-ic svg{width:14px;height:14px}
+
+
+
+
 .wd em{font-style:normal;font-size:10px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
-.t-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.t-stats.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-.t-stats>span{display:flex;flex-direction:column;min-width:0}
-.t-stats b{font-family:var(--display);font-stretch:112%;font-size:22px;font-weight:800;line-height:1.1;white-space:nowrap}
-.t-stats b i{font-style:normal;font-size:12.5px;color:var(--muted);margin-left:2px;font-weight:650}
-.t-stats small{font-size:11.5px;color:var(--muted);font-weight:600}
-.loadbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;font-size:12.5px;font-weight:650}
-.loadbar small{color:var(--muted);font-weight:500}
-.loadbar>i{order:3;flex:1 1 100%;position:relative;height:8px;border-radius:99px;background:var(--surface-2)}
-.loadbar u{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--c)}
-.loadbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);margin-left:-1px}
-.fuel-k{display:flex;justify-content:space-between;align-items:baseline;gap:4px 10px;text-align:left;color:var(--ink);flex-wrap:wrap}
-.fuel-k b{font-family:var(--display);font-stretch:118%;font-size:32px;font-weight:840;letter-spacing:-.02em}
-.fuel-k small{color:var(--muted);font-weight:600;font-size:13px}
-.fuel-k>span:last-child{font-size:12.5px}
-.fuel-bar{position:relative;height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.fuel-bar i{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--accent) 35%,transparent);border-radius:99px}
-.fuel-bar u{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
-.fuel-m{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.fuel-m>span{display:flex;flex-direction:column;gap:3px;min-width:0}
-.fuel-m small{font-size:11.5px;color:var(--muted);font-weight:650}
-.fuel-m b{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fuel-m b i{font-style:normal;font-weight:500;color:var(--muted);font-size:12px}
-.fuel-m u{display:block;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;text-decoration:none}
-.fuel-m em{display:block;height:100%;background:var(--c);border-radius:99px}
-.fuel-tip{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:9px 11px}
-.fuel-tip svg{flex:none;margin-top:2px;color:var(--ink)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .lrow.up{grid-template-columns:52px minmax(0,1fr) auto}
 .up-d b{display:block;font-size:13.5px}.up-d small{font-size:11.5px;color:var(--muted)}
-.up-int{display:flex;gap:4px}.up-int i{width:8px;height:8px;border-radius:50%;background:var(--c)}
-.t-card .lrow b.num{font-family:var(--display);font-size:15px}
+
+
 /* fitness */
 .ffw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .ffw-c{background:var(--surface);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);border-top:3px solid var(--c);min-width:0}
@@ -808,7 +808,7 @@ details.card>summary::-webkit-details-marker{display:none}
 .ffw-c b{display:block;font-family:var(--display);font-stretch:118%;font-size:30px;font-weight:840;line-height:1.1;color:var(--c)}
 .ffw-c span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 /* calendar */
-.icu-btn{flex:none}
+
 label.row:has(.switch){flex-wrap:nowrap}
 .sheet a,.sheet-b a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .switch[aria-checked="true"]{background:var(--accent)!important}
@@ -847,7 +847,7 @@ label.row:has(.switch){flex-wrap:nowrap}
   .cal-sum span{flex-direction:row;gap:4px;align-items:baseline}
   .cal-sum b{font-size:13px}
 }
-@media (max-width:520px){.top-title{font-stretch:108%;font-size:22px}.t-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.t-big{font-size:40px}.ffw-c b{font-size:24px}.ffw-c{padding:10px 11px}}
+@media (max-width:520px){.top-title{font-stretch:108%;font-size:22px}.ffw-c b{font-size:24px}.ffw-c{padding:10px 11px}}
 
 
 /* ===== calm palette refinements ===== */
@@ -855,7 +855,7 @@ label.row:has(.switch){flex-wrap:nowrap}
 .top-title{font-weight:800}
 .pill{background:color-mix(in srgb,var(--c) 13%,transparent)}
 .wd.done{background:var(--ink);color:var(--bg)}.wd.done small{color:var(--bg)}
-.t-dot{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent)}
+
 /* ===== live banner ===== */
 .lv-banner{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border-radius:var(--r-lg);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:14px;color:var(--ink)}
 .lv-banner>span:nth-child(2){flex:1;min-width:0}.lv-banner b{display:block}.lv-banner small{color:var(--muted);font-size:12.5px}
@@ -891,8 +891,8 @@ label.row:has(.switch){flex-wrap:nowrap}
 .wo-script{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
 .wo-pv summary{cursor:pointer;list-style:none}.wo-pv summary::-webkit-details-marker{display:none}.wo-pv .pad{padding:0 12px 12px}
 .cal-s[data-act]{cursor:pointer}.cal-s[data-act]:hover{filter:brightness(.96)}
-.sess-big[data-act]{cursor:pointer}
-.stack-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+
 /* ===== live player ===== */
 body.live-mode #side,body.live-mode #bnav,body.live-mode .bnav,body.live-mode #fab{display:none!important}
 body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px!important}
@@ -908,14 +908,14 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 .lv-tgt{font-size:17px;font-weight:650}
 .lv-note{font-size:13px;color:var(--muted);margin-top:-4px}
 .lv-last{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
-.lv-sg{display:flex;gap:8px;align-items:center;text-align:left;font-size:13px;font-weight:600;background:var(--accent-soft);color:var(--ink);border-radius:12px;padding:8px 11px}
+
 .lv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lv-row .lab{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:42px}
 .lv-row .inp.sm{flex:1;min-height:40px;font-size:15px}
 .stp{display:inline-flex;align-items:center;background:var(--surface-2);border-radius:12px;padding:3px}
 .stp button{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--ink)}.stp button:active{background:var(--surface-3)}
 .stp b{min-width:58px;text-align:center;font-family:var(--display);font-size:20px;font-weight:780;font-variant-numeric:tabular-nums}.stp b small{font-size:11px;color:var(--muted);margin-left:2px;font-weight:650}
 .rir{display:inline-flex;gap:4px}.rir button{width:36px;height:36px;border-radius:10px;background:var(--surface-2);font-weight:700;font-size:13.5px}.rir button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.lv-notes summary{cursor:pointer;display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);font-weight:600;list-style:none}.lv-notes summary::-webkit-details-marker{display:none}.lv-notes textarea{margin-top:8px;padding:10px 12px;min-height:60px}
+
 .minis{display:flex;gap:8px;flex-wrap:wrap}
 .mini{display:inline-flex;align-items:center;gap:2px;min-width:54px;justify-content:center;height:46px;border-radius:14px;background:var(--surface-2);font-family:var(--display);font-weight:780;font-size:20px;padding:0 6px;color:var(--muted)}
 .mini.now{background:var(--surface);box-shadow:inset 0 0 0 2px var(--ink);color:var(--ink)}.mini.ok{background:var(--ink);color:var(--bg)}
@@ -925,7 +925,7 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 .lv-subt .btn{background:rgba(255,255,255,.12);color:var(--hero-ink)}
 .btn.big{min-height:54px;font-size:16px;border-radius:16px;width:100%}
 .btn[disabled]{opacity:.4;pointer-events:none}
-.lv-ctl{gap:8px}.lv-ctl .btn{flex:1;min-height:50px}
+
 .lv-clock{position:relative;width:min(240px,64vw);aspect-ratio:1;margin:4px auto}
 .lv-clock svg{width:100%;height:100%;transform:rotate(-90deg)}
 .lv-clock circle{fill:none;stroke-width:6}.lv-clock .bg{stroke:var(--surface-2)}.lv-clock .fg{stroke:var(--ink);stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:calc(1 - var(--p));transition:stroke-dashoffset .2s linear}
@@ -944,17 +944,17 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 .am-r .stp b{min-width:34px;font-size:18px}.am-r .stp button{width:32px;height:34px}
 .lv-next{display:flex;flex-direction:column;gap:6px;margin-top:16px}
 .lv-nx{display:flex;flex-direction:column;text-align:left;background:var(--surface);border-radius:14px;padding:10px 14px;color:var(--ink);box-shadow:var(--shadow)}.lv-nx span{font-weight:650;font-size:14px}.lv-nx small{font-size:12px;color:var(--muted)}
-.lv-nav{display:flex;gap:8px;margin-top:14px}.lv-nav .btn{flex:1}
+
 .lv-list{display:flex;flex-direction:column;gap:4px}
 .lv-lb{font-size:11px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:12px 4px 2px}
 .lv-li{display:flex;gap:10px;align-items:center;text-align:left;background:var(--surface);border-radius:12px;padding:9px 12px;color:var(--ink)}
 .lv-li b{display:block;font-size:14px;font-weight:650}.lv-li small{font-size:12px;color:var(--muted)}
 .lv-li.now{box-shadow:inset 0 0 0 2px var(--ink)}.lv-li.ok{opacity:.6}
 .lv-ck{width:26px;height:26px;flex:none;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--muted)}.lv-li.ok .lv-ck{background:var(--ink);color:var(--bg)}
-.lv-sum{background:var(--surface);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+
 .pr{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600}
 .rpe{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}.rpe button{height:42px;border-radius:11px;background:var(--surface-2);font-weight:750}.rpe button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-body.live-mode .t-card{margin-bottom:12px}
+
 @media (max-width:420px){.lv-h{font-size:25px}.lv-card{padding:16px 14px 18px}.rir button{width:32px}.stp b{min-width:48px}}
 
 
@@ -994,10 +994,10 @@ body{font-family:var(--body);letter-spacing:.1px}
 /* chips */
 .chip{min-height:32px;border-radius:8px;border:1px solid color-mix(in srgb,var(--faint) 55%,transparent);background:transparent;color:var(--ink);font-weight:500;font-size:13.5px;padding:0 14px}
 .chip[aria-pressed="true"]{background:var(--sec-c)!important;color:var(--on-sec-c)!important;border-color:transparent!important}
-.chips-a{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px;margin:0 0 12px}
-.chips-a::-webkit-scrollbar{display:none}
+
+
 .chip-a{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 14px;border-radius:8px;border:1px solid color-mix(in srgb,var(--faint) 45%,transparent);background:var(--surface);color:var(--ink);font-size:13.5px;font-weight:500;white-space:nowrap;flex:none}
-.chip-a.hl{background:var(--sec-c);color:var(--on-sec-c);border-color:transparent}
+
 .chip-a.busy{opacity:.65}
 .chip-a svg{width:16px;height:16px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}.dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}
@@ -1027,43 +1027,43 @@ body{font-family:var(--body);letter-spacing:.1px}
 select.inp{background:var(--surface)!important}
 /* cards & surfaces */
 .card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.hero,.meal,.coach,.dt,.streak,.ffw-c,.cal,.lv-banner{border-radius:16px!important;box-shadow:var(--shadow)!important}
-.m-card{background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;text-align:left;color:var(--ink);width:100%}
-.m-card.flush{padding:0;gap:0}
-button.m-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.1),0 2px 6px 2px rgba(0,0,0,.06)!important}
-.mc-over{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--muted)}
-.mc-over>span:last-child{font-weight:500;color:var(--faint)}
-.mc-over.pad{padding:14px 16px 6px}
-.hero-card{background:color-mix(in srgb,var(--accent-soft) 60%,var(--surface))!important}
-.sess-row{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;width:100%;color:var(--ink);padding:2px 0}
-.sr-bar{align-self:stretch;border-radius:2px;min-height:44px}
-.sr-b b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1.2}
-.sr-b small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
-.sr-smart{display:block;font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
-.mc-act{display:flex;gap:8px;flex-wrap:wrap}
-.rest-b b{display:block;font-family:var(--display);font-size:22px;font-weight:600}.rest-b span{font-size:13.5px;color:var(--muted)}
-.fuel-k{display:flex;align-items:baseline;gap:6px;justify-content:flex-start!important}.fuel-k b{font-size:32px;font-weight:600;letter-spacing:-.01em}.fuel-k small{font-size:13.5px;color:var(--muted)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .lin{display:block;position:relative;height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}
 .lin i,.lin u{position:absolute;inset:0 auto 0 0;border-radius:3px;text-decoration:none}
 .lin i{background:var(--accent)}
 .lin.two i{background:color-mix(in srgb,var(--accent) 30%,var(--surface-3))}.lin.two u{background:var(--accent)}
-.fuel-m{display:flex!important;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-.fuel-m>span{flex-direction:row!important;align-items:center}.fuel-m b{font-size:13px!important}
-.fuel-m span{display:inline-flex;align-items:center;gap:6px}.fuel-m i{width:8px;height:8px;border-radius:50%}.fuel-m b{color:var(--ink);font-weight:600}
-.fuel-tip{font-size:12.5px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:8px 11px}
+
+
+
+
 .wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.wk-d{display:flex;flex-direction:column;align-items:center;gap:5px}
-.wk-d small{font-size:11.5px;color:var(--muted);font-weight:500}
-.wk-d i{width:34px;height:34px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-style:normal;font-size:12.5px;font-weight:600;color:var(--muted)}
-.wk-d i svg{width:16px;height:16px}
-.wk-d.plan i{background:transparent;border:1.5px dashed var(--faint)}
-.wk-d.done i{background:var(--accent);color:var(--accent-ink)}
-.wk-d.miss i{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
-.wk-d.now small{color:var(--accent);font-weight:700}.wk-d.now i{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
-.wk-t{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.wk-t b{color:var(--ink);font-weight:600}
-.tip-m{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-top:1px solid var(--line)}
-.tip-m:first-of-type{border-top:0}
-.tip-m .tip-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
-.tip-m b{display:block;font-size:14px;font-weight:600}.tip-m span{font-size:13px;color:var(--muted)}
+
+
+
+
+
+
+
+
+
+
+
+
+
 .lrow.up{grid-template-columns:72px minmax(0,1fr) auto!important;align-items:center}
 .today-grid{gap:12px!important}.tg-col{gap:12px!important}
 @media (min-width:1180px){.today-grid{gap:16px!important}}
@@ -1076,10 +1076,10 @@ button.m-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.1),0 2px 6px 2px rgba(0,0,0
 .menu-i:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .menu-i span{display:flex;flex-direction:column;font-size:15px;font-weight:500}.menu-i small{font-size:12.5px;color:var(--muted);font-weight:400}
 .menu-i>svg{color:var(--muted)}.menu-i.danger,.menu-i.danger>svg{color:var(--bad)}
-.dlg-ok{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
-.dlg-ic{width:56px;height:56px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
-.dlg-ok h2{margin:6px 0 0;font-family:var(--display);font-size:22px;font-weight:600}
-.dlg-ok ul{text-align:left;margin:6px 0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--muted)}
+
+
+
+
 .note.warn{border-left:3px solid var(--warn)}
 .empty.slim{padding:16px;gap:10px}.empty.slim p{margin:0;font-size:14px;color:var(--muted)}
 /* navigation: M3 navigation bar & rail-like drawer */
@@ -1178,7 +1178,7 @@ body.live-mode .main{padding-bottom:120px!important}
 .wl-main>b{font-family:var(--display)!important;font-size:18px!important;font-weight:600!important}
 .cal-s.pl{border-style:dashed}
 .lv-up{border-radius:12px!important}
-@media (max-width:420px){.lv-h{font-size:24px!important}.lv-card{padding:16px 14px!important}.rir button{width:40px!important;height:40px!important}.stp b{min-width:52px!important}.sum-stats b{font-size:20px}.sr-b b{font-size:20px}.top-title{font-size:23px}}
+@media (max-width:420px){.lv-h{font-size:24px!important}.lv-card{padding:16px 14px!important}.rir button{width:40px!important;height:40px!important}.stp b{min-width:52px!important}.sum-stats b{font-size:20px}.top-title{font-size:23px}}
 button,a{touch-action:manipulation}
 .top-row>div:first-child{min-width:0}
 @media (max-width:520px){.ph-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}}
@@ -1291,8 +1291,8 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 .pl-add{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border-radius:8px;color:var(--muted);border:1px dashed var(--line)}
 .pl-add:hover{color:var(--ink);background:var(--surface-2)}
 .cal-s.miss{opacity:.5}.cal-s.miss b{text-decoration:line-through}
-.sess-row.is-done b{color:var(--muted)}.sess-row.is-done b svg{color:var(--good)}
-.fuel-src{font-size:12.5px;color:var(--muted)}
+
+
 /* ===== Today (v3): one surface per topic, type does the work ===== */
 .td-top .top-sub{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .td-top .top-title{font-size:30px;margin-top:2px}
@@ -1322,8 +1322,8 @@ button.td-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,
 @media (max-width:560px){.td-s{grid-template-columns:1fr;gap:10px}.td-s-a{flex-direction:row-reverse;justify-content:flex-end;gap:6px}.td-s.done .td-s-a{position:absolute;right:0;top:12px}.td-s.done .td-s-b{padding-right:48px}.td-go{height:38px;padding:0 22px}}
 .td-s:first-of-type{border-top:0}
 .td-s-m{display:block;text-align:left;color:var(--ink);min-width:0}
-.td-s-i{width:28px;height:28px;border-radius:50%;margin-top:2px;border:2px solid var(--c);display:grid;place-items:center;color:var(--surface)}
-.td-s.done .td-s-i{background:var(--c)}
+
+
 .td-s-b{display:flex;flex-direction:column;gap:2px;min-width:0}
 .td-s-b b{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
 .td-s.done .td-s-b b{color:var(--muted)}
@@ -1396,7 +1396,7 @@ body:has(.clip-bar) .cal-d.fut,body:has(.clip-bar) .cal-d.now{cursor:copy}
 .off-r{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto!important;gap:12px;align-items:center}
 .off-img{width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--surface-2);display:grid;place-items:center;color:var(--faint);overflow:hidden}
 .off-img img{width:100%;height:100%;object-fit:cover}
-.off-hint{font-size:12.5px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+
 .kring .of{white-space:nowrap}
 .off-row .t{color:var(--ink);font-weight:600}.off-row .t svg{vertical-align:-2px}
 .plus-btn.done{background:var(--ink)!important;color:var(--surface)!important}
@@ -1483,13 +1483,13 @@ body:has(.clip-bar) .cal-d.fut,body:has(.clip-bar) .cal-d.now{cursor:copy}
 
 
 .sq-add .inp{min-height:38px}
-.ns-links{display:flex;flex-direction:column;gap:6px}
-.ns-link,.ns-link *{text-decoration:none!important}.ns-link{display:grid;grid-template-columns:28px minmax(0,1fr) 18px;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface-2);color:var(--ink);text-decoration:none}
-.ns-link b{display:block;font-size:14px}.ns-link small{display:block;font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ns-n{width:26px;height:26px;border-radius:13px;background:var(--surface);display:grid;place-items:center;font-weight:700;font-size:12.5px}
-.ns-link.ok .ns-n{background:var(--good);color:#fff}
+
+
+
+
+
 .ns-log{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--good)}.ns-log .bad{color:var(--bad)}
-.ns-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}.ns-steps code{font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+
 .fd-auto small{font-weight:400}
 input.inp[readonly]{background:var(--surface-2);color:var(--muted)}
 /* ==== Material 3 refresh: tonal palette from an athletic olive-lime seed, M3 shapes, type and components ==== */
@@ -1997,7 +1997,6 @@ const foodKeys = f => [f.name, f.brand, f.alias || ALIAS_IT[f.id]].filter(Boolea
 const BUILTIN_REC = {};
 for (const r of BUILTIN_RECIPES) BUILTIN_REC[r.id] = { ...r, ingredients: r.ingredients.map(([food, g]) => ({ food, g })), source: "builtin" };
 const AISLE_NAME = Object.fromEntries(AISLES);
-const ROLE_NAME = Object.fromEntries(ROLES);
 const COLOR_TOKENS = ["pro", "fat", "carb", "accent", "faint", "good", "bad"];
 
 const GKG = { rest: { p: 1.8, c: 2.5, f: 1.0 }, strength: { p: 2.0, c: 4, f: 0.9 }, endurance: { p: 1.6, c: 6, f: 0.9 }, hybrid: { p: 1.8, c: 5, f: 0.9 } };
@@ -2601,7 +2600,6 @@ function memo(key, fn) { const k = key + "|" + DATA_V + "|" + todayISO(); if (ME
 
 /* ================= workout calories ================= */
 function ageAt(date) { const dob = FIT().profile.dob; if (!dob) return 30; return Math.floor(daysBetween(dob, date) / 365.25); }
-function sportMet(name) { return FIT().sports.find(s => s.name === name)?.met ?? 5; }
 const INTS = ["Light", "Moderate", "Hard"];
 /* real kcal = measured by a watch: typed in, recorded in intervals.icu, or imported from the workbook */
 const fromDevice = w => w.src === "intervals" || /^icu-a-/.test(w.ext || "") || (w.exts || []).length > 0;
@@ -4453,13 +4451,14 @@ function goQty(food, from) {
 
 /* ================= Claude features ================= */
 function sampleErr(e) {
-  const c = e && e.code;
-  if (c === "not_granted") return "Claude access was declined for this page. Allow it from the page's Permissions menu to use this.";
-  if (c === "rate_limited") return "Claude is busy or you've hit a usage limit. Try again in a minute.";
+  const c = e && e.code, st = e && e.status;
+  if (!navigator.onLine) return "No connection: the AI needs the internet. Everything else works offline.";
+  if (c === "not_granted") return "Add an AI service in Settings first (a free Gemini or Groq key is enough).";
+  if (st === 429 || c === "rate_limited") return "Every AI service you added is out of quota right now. Try again later, or add another key.";
   if (c === "image_rejected") return "That photo couldn't be read. Try a JPEG or PNG under 20 MB.";
-  if (c === "invalid_json" || c === "empty_completion") return "Claude's answer couldn't be used. Try again.";
-  if (c === "cancelled") return "Stopped.";
-  return "Claude couldn't answer right now. Try again.";
+  if (c === "cancelled" || e?.name === "AbortError") return "Stopped.";
+  if (e instanceof SyntaxError) return "The AI's answer couldn't be used. Try again.";
+  return "No AI service answered" + (e?.message ? ": " + String(e.message).slice(0, 80) : ".");
 }
 async function claudeLabel(files) {
   const prompt = `These photos show a packaged food product: its nutrition table and possibly the front of the pack or the barcode.
@@ -4494,7 +4493,6 @@ function parseLabelText(txt) {
   const T = fixLabelWords(txt || "").replace(/\r/g, "").replace(/[|¦\[\]{}]/g, " ").replace(/(\d)\s+([.,])\s*(\d)/g, "$1$2$3")
     .replace(/(\d)[oO](?=\D|$)/g, "$10").replace(/(^|[\s(])[oO]([.,]\d)/g, "$10$2").replace(/(\d[.,]?)[lI](?=\s|g|$)/g, "$11");
   const tokIn = s => [...String(s).matchAll(/(<\s*)?(\d+(?:[.,]\d+)?)/g)].map(m => m[1] ? "0" : m[2]);
-  const numsIn = s => tokIn(s).map(t => parseFloat(t.replace(",", ".")));
   // every keyword with its position; the value is the first number before the next keyword
   const hits = [];
   for (const [k, re] of LABEL_KEYS) for (const m of T.matchAll(re)) hits.push({ k, a: m.index + Math.max(0, m[0].search(/[a-zà-ú\d]/i)), b: m.index + m[0].length });
@@ -4574,7 +4572,6 @@ async function ocrWorker(onProg) {
    1. grey, scaled so the text is big enough; 2. straightened (the angle where the text lines line up best);
    3. turned if the photo is sideways; 4. local threshold (survives shadows and glare), white-on-colour inverted;
    5. table rules erased (they break the lines into fragments). */
-const LBL = {};
 function grayOf(img, maxSide) {
   const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height, k = Math.min(maxSide / Math.max(W0, H0), 2.5);
   const w = Math.max(1, Math.round(W0 * k)), h = Math.max(1, Math.round(H0 * k)), c = document.createElement("canvas"); c.width = w; c.height = h;
@@ -4583,8 +4580,6 @@ function grayOf(img, maxSide) {
   for (let i = 0, j = 0; j < g.length; i += 4, j++) g[j] = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8;
   return { g, w, h };
 }
-function otsu(g) { const H = new Float64Array(256); for (let i = 0; i < g.length; i++) H[g[i]]++; let sum = 0; for (let t = 0; t < 256; t++) sum += t * H[t];
-  let sB = 0, wB = 0, best = 0, th = 128; for (let t = 0; t < 256; t++) { wB += H[t]; if (!wB) continue; const wF = g.length - wB; if (!wF) break; sB += t * H[t]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF); if (v > best) { best = v; th = t; } } return th; }
 /* how well the dark pixels line up in rows at a given angle (higher = text lines are horizontal) */
 function lineScore(pts, w, h, deg) { const r = deg * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r), n = Math.ceil(w + h), P = new Float64Array(n * 2);
   for (let i = 0; i < pts.length; i += 2) { const y = Math.round(pts[i + 1] * cs - pts[i] * sn) + n; if (y >= 0 && y < P.length) P[y]++; }
@@ -5036,7 +5031,6 @@ ACT["add-seg"] = el => { S_().seg = el.dataset.seg; renderSheet(); };
 ACT.pick = el => { const sh = S_(); openSheet("qty", { kind: el.dataset.kind, ref: el.dataset.id, qty: +el.dataset.qty || (el.dataset.kind === "recipe" ? 1 : defaultQty(getFood(el.dataset.id))), date: sh.date || UI.date, meal: sh.meal, back: "add", addQ: sh.q || "", addSeg: sh.seg || "recent" }); };
 const backToAdd = sh => openSheet("add", { date: sh.date, meal: sh.meal, seg: sh.addSeg || "recent", q: sh.addQ || "" });
 ACT["qty-back"] = () => backToAdd(S_());
-ACT["add-clear"] = () => { const sh = S_(); sh.q = ""; renderSheet(); setTimeout(() => $("#add-q")?.focus(), 30); };
 ACT["add-rm"] = el => { const sh = S_(), date = sh.date || UI.date, id = el.dataset.id; const it = (getDay(date).meals[sh.meal] || []).find(x => x.id === id); if (!it) return;
   mutateDay(date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== id); }); refreshAdd();
   toast(`Removed ${itemName(it)}`, () => { mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }); refreshAdd(); }); };
@@ -5225,7 +5219,6 @@ ACT["cp-run"] = () => {
 };
 
 /* describe */
-ACT["open-describe-run"] = () => runDescribe();
 ACT["ds-run"] = () => runDescribe();
 ACT["ds-toggle"] = el => { const it = S_().items[+el.dataset.i]; it.on = !it.on; renderSheet(); };
 ACT["ds-add"] = () => {
@@ -5251,7 +5244,6 @@ ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
-ACT["pantry-add"] = () => openSheet("pantry", {});
 ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "" }); };
 ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food]; sh.g = p?.g ?? (getFood(sh.food).pack || ""); sh.exp = p?.exp || ""; sh._new = true; renderSheet(); };
 ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
@@ -5293,11 +5285,6 @@ ACT.diet = el => { const k = el.dataset.k; S.settings.diet[k] = !S.settings.diet
 ACT.cuisine = el => { const k = el.dataset.k, c = S.settings.cuisines; S.settings.cuisines = c.includes(k) ? c.filter(x => x !== k) : [...c, k]; saveSettings(); };
 ACT["avoid-del"] = el => { S.settings.avoid = S.settings.avoid.filter(a => a !== el.dataset.k); saveSettings(); };
 ACT.step = el => { S.settings.step = +el.dataset.k; saveSettings(); };
-ACT.export = async () => {
-  const data = JSON.stringify({ app: "Fuel", exported: new Date().toISOString(), settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, shop: S.shop, body: S.body }, null, 1);
-  if (Sync.downloads) { try { await Sync.downloads.save({ filename: `fuel-backup-${todayISO()}.json`, data }); return; } catch (e) { if (e?.code === "cancelled" || e?.code === "declined") return; } }
-  try { await navigator.clipboard.writeText(data); toast("Backup copied to the clipboard as JSON"); } catch (e) { toast("Export isn't available in this view."); }
-};
 ACT["reset-onboard"] = () => startOnboard();
 function startOnboard() {
   const st = S.settings; const sched = {}; for (const k of DOWK) sched[k] = st.schedule[k]?.t || "rest";
@@ -5910,7 +5897,6 @@ const dlt = (a, b, d = 0, inv = false) => { if (a == null || b == null) return "
 function reportsView() {
   const kind = UI.dashSeg === "month" ? "month" : "week", off = UI.repOff || 0;
   const P = periodOf(kind, off), R = periodStats(P), Q = periodStats(periodOf(kind, off - 1));
-  const goalDown = ["Cut"].includes(R.phase);
   let h = `<div class="rep-bar"><div class="rep-nav"><button class="icon-btn" data-act="rep-off" data-d="-1" aria-label="Previous">${ic("chevL")}</button><b>${esc(P.label)}</b><button class="icon-btn" data-act="rep-off" data-d="1" aria-label="Next" ${off >= 0 ? "disabled" : ""}>${ic("chevR")}</button></div></div>`;
   if (!R.days) return h + `<div class="empty"><h3>This ${kind} hasn't started yet</h3></div>`;
   h += `<div class="card pad rep-hl"><div class="row" style="justify-content:space-between"><span class="flabel">${kind === "week" ? "Weekly" : "Monthly"} report · ${esc(R.phase)}${R.end < P.b ? " · in progress" : ""}</span><button class="link" data-act="rep-copy">${ic("copy", "sm")} Copy</button></div>
@@ -6190,9 +6176,6 @@ ACT["pmc-days"] = el => { UI.pmcDays = +el.dataset.k; scheduleRender(); };
 ACT["cal-off"] = el => { UI.calOff = (UI.calOff || 0) + +el.dataset.d; scheduleRender(); };
 /* ================= import planned workouts from intervals.icu =================
    Three ways in: the API (athlete 0 + API key, basic auth), the JSON the same API URL returns in a browser, or the calendar export (.ics). */
-const ICU = "https://intervals.icu/api/v1";
-function icuRange() { const a = todayISO(); return { a, b: addDays(a, 41) }; }
-function icuUrl() { const { a, b } = icuRange(); return `${ICU}/athlete/${typeof icuAid === "function" ? icuAid() : "0"}/events?oldest=${a}&newest=${b}&category=WORKOUT`; }
 function icuSport(t) {
   const fit = FIT(), names = fit.sports.map(s => s.name), s = String(t || "").toLowerCase();
   const find = re => names.find(n => re.test(n));
@@ -6251,11 +6234,6 @@ function icuFromIcs(txt) {
     const looksWorkout = /run|ride|bike|cycl|swim|walk|hike|weight|strength|gym|calis|row|workout|z\d|interval|tempo|easy/i.test(`${name} ${desc} ${e.CATEGORIES || ""}`) || min;
     return looksWorkout ? { ext: "icu-" + (e.UID || e.DTSTART.d + name), date: e.DTSTART.d, sport: icuSport(`${e.CATEGORIES || ""} ${name}`), min, km, int: icuIntensity(name, desc, min, 0), note: name.slice(0, 80), script: desc.trim().slice(0, 6000) || null } : null;
   }).filter(Boolean);
-}
-function icuParse(txt) {
-  txt = String(txt || "").trim(); if (!txt) return [];
-  if (/^BEGIN:VCALENDAR/m.test(txt)) return icuFromIcs(txt);
-  try { return icuFromJson(JSON.parse(txt)); } catch (e) { return null; }
 }
 function icuLoaded(sh, items, src) {
   const today = todayISO();
@@ -6517,7 +6495,6 @@ function decideNext(e, sets, loadNow) {
   return { kind: "none", text: `Final set RIR ${rir} (below ${tRir}) → repeat, focus on form` };
 }
 function progressionFor(e, date) { const L = lastFor(e, date); if (!L) return null; const d = decideNext(e, L.sets, L.load ?? e.load); return d ? { ...d, last: L } : null; }
-const suggestFor = progressionFor;
 
 /* ---------- live session ---------- */
 const LV = () => WK().live;
@@ -6937,7 +6914,6 @@ function liveSummary(L) {
   if (L.minutes == null) L.minutes = dur;
   const byEx = {}; for (const s of R.sets) (byEx[s.ex] = byEx[s.ex] || []).push(s);
   const exDef = {}; L.tasks.forEach(t => (t.exs || []).forEach(e => { exDef[e.name] = exDef[e.name] || e; }));
-  const ico = icuState();
   let h = topBar(`<button class="icon-btn" data-act="lv-resume-steps" aria-label="Back to the workout">${ic("chevL")}</button>`, "Workout complete", `${esc(L.name)} · ${fmtDM(L.date)}`, `<span></span>`);
   h += `<div class="lv-wrap two"><div class="lv-main"><div class="sum-stats"><span><b>${L.minutes}</b><small>min</small></span><span><b>${R.sets.length}</b><small>sets</small></span><span><b>${fmtN(reps)}</b><small>reps</small></span><span><b>${vol ? fmtN(vol) : holds ? holds + "s" : "—"}</b><small>${vol ? "kg × reps" : "holds"}</small></span></div>`;
   if (prs.length) h += `<section class="lv-card"><span class="eyebrow">Personal bests</span>${prs.map(p => `<div class="pr">${ic("spark", "sm")}${esc(p)}</div>`).join("")}</section>`;
@@ -7000,7 +6976,6 @@ ACT["lv-adj"] = el => { const a = LV().adj[el.dataset.k]; if (a) a.on = !a.on; s
 ACT["lv-adj-all"] = () => { const L = LV(); Object.values(L.adj).forEach(a => a.on = false); saveWK(); scheduleRender(); };
 ACT["lv-edit"] = () => openSheet("lvedit", { script: LV().script, saveTpl: false });
 ACT["lv-menu"] = () => openSheet("lvmenu", {});
-ACT["lv-mute"] = () => { const w = WK(); w.mute = !w.mute; saveWK(); closeSheet(); toast(w.mute ? "Sounds off · vibration only" : "Sounds on"); };
 ACT["lv-start"] = () => { audioOn(); const [L] = LR(); L.clk = { start: nowMs() + PLAYER().prep * 1000, acc: 0, paused: false }; TICK_LAST = {}; CUE_DONE = new Set(); saveWK(); scheduleRender(); };
 ACT["lv-pause"] = () => { const [L] = LR(); const c = L.clk; if (!c) return; if (c.paused) { c.start = nowMs(); c.paused = false; } else { c.acc += nowMs() - c.start; c.paused = true; } saveWK(); scheduleRender(); };
 ACT["lv-done"] = () => { audioOn(); const [L, t, r] = LR(); if (t.t === "set") { r.ex.forEach(x => { if (x.reps.length > 1) x.mini = x.reps.length; }); finishSet(); return; } completeTask(); };
@@ -7340,7 +7315,7 @@ SHEETS.race = sh => { const d = sh.draft, past = d.date && d.date <= todayISO(),
     ${past || d.result?.done ? `<div class="field"><span class="flabel">Result</span><div class="grid2"><input class="inp" value="${esc(d.result?.time || "")}" placeholder="${run ? "Time, e.g. 45:12" : "Score / reps"}" data-in="rc-res" data-k="time" aria-label="Result"><input class="inp" value="${esc(d.result?.place || "")}" placeholder="Place, e.g. 12th / 340" data-in="rc-res" data-k="place" aria-label="Placing"></div>
       <textarea class="inp" rows="2" placeholder="How it went, splits, conditions" data-in="rc-res" data-k="notes" aria-label="Race notes">${esc(d.result?.notes || "")}</textarea>${run ? `<span class="faint" style="font-size:12.5px">A running time updates your PBs, VDOT and paces.</span>` : ""}</div>` : ""}
     <div class="field"><label for="rc-notes">Notes</label><textarea id="rc-notes" class="inp" rows="2" placeholder="Logistics, kit, plan" data-in="rc" data-k="notes">${esc(d.notes || "")}</textarea></div>`,
-    foot: `${!sh.isNew ? `<button class="btn danger" data-act="rc-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="rc-save">Save</button>` }; };
+    foot: `${!sh.isNew ? `<button class="btn danger" data-act="race-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="race-save">Save</button>` }; };
 INP.rc = (v, el) => { const d = S_().draft; d[el.dataset.k] = el.dataset.k === "km" ? num(v) || null : v; };
 INP["rc-res"] = (v, el) => { const d = S_().draft; d.result = { ...(d.result || {}), [el.dataset.k]: v }; };
 CHG["rc-date"] = v => { S_().draft.date = v; renderSheet(); };
@@ -7349,35 +7324,20 @@ ACT["rc-sport"] = el => { const d = S_().draft; d.sport = el.dataset.k; if (!isR
 ACT["rc-km"] = el => { S_().draft.km = +el.dataset.k; renderSheet(); };
 ACT["rc-new"] = () => openSheet("race", { isNew: true, draft: { id: puid("rc"), name: "", date: addDays(todayISO(), 42), sport: FIT().runSport, km: 10, pri: "A", goal: "", loc: "", notes: "" } });
 ACT["rc-edit"] = el => { const r = races().find(x => x.id === el.dataset.id); if (r) openSheet("race", { isNew: false, draft: clone(r) }); };
-ACT["rc-save"] = () => { const d = S_().draft; if (!d.date) { toast("Pick the date."); return; } d.name = (d.name || "").trim() || `${d.sport} race`;
+ACT["race-save"] = () => { const d = S_().draft; if (!d.date) { toast("Pick the date."); return; } d.name = (d.name || "").trim() || `${d.sport} race`;
   if (d.result && (d.result.time || d.result.place)) d.result.done = true;
   if (icuLinked()) { if (d.ext) d.dirty = true; else d.pushNew = true; }
   const L = races(), i = L.findIndex(x => x.id === d.id); if (i >= 0) L[i] = d; else L.push(d);
   if (d.result?.done && isRunRace(d) && d.km > 0) { const sec = parseClock(d.result.time); if (sec) { const T = S.train; T.tests = T.tests || []; const j = T.tests.findIndex(x => x.race === d.id); const item = { id: j >= 0 ? T.tests[j].id : puid("t"), date: d.date, kind: "Race", km: +d.km, sec, notes: d.name, race: d.id }; if (j >= 0) T.tests[j] = item; else T.tests.push(item); } }
   saveWK(); closeSheet(); toast(d.result?.done ? "Result saved" : `${d.name} · ${daysBetween(todayISO(), d.date)} days to go`); if (icuLinked()) icuKick("race saved", "soon"); };
-ACT["rc-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this race?", text: "Its result is removed too.", yes: "Delete", danger: true, run: () => { const gone = races().find(r => r.id === id); if (gone?.ext) S.train.racesDel = [...new Set([...(S.train.racesDel || []), gone.ext])]; S.train.races = races().filter(r => r.id !== id); if (icuLinked()) icuKick("race deleted", "soon"); S.train.tests = (S.train.tests || []).filter(t => t.race !== id); saveWK(); } }); };
+ACT["race-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this race?", text: "Its result is removed too.", yes: "Delete", danger: true, run: () => { const gone = races().find(r => r.id === id); if (gone?.ext) S.train.racesDel = [...new Set([...(S.train.racesDel || []), gone.ext])]; S.train.races = races().filter(r => r.id !== id); if (icuLinked()) icuKick("race deleted", "soon"); S.train.tests = (S.train.tests || []).filter(t => t.race !== id); saveWK(); } }); };
 /* ================= intervals.icu: connection, two-way sync, manual import ================= */
-const icuAid = () => (S.settings?.intervals?.aid || "").trim() || "0";
 /* The page can't call intervals.icu itself (browser sandbox, and the API takes the key only from apps):
    the sync runs in a scheduled Claude task, both ways, and the page starts it on demand (Sync now). */
 function icuState() { const s = S.settings?.intervals || {}; return { aid: s.aid || "", key: s.key || "", bridge: s.bridge || null, athlete: s.athlete || s.bridge?.athlete || "", push: s.push !== false }; }
 function icuSet(o) { S.settings.intervals = { ...(S.settings.intervals || {}), ...o }; saveSettings(); }
 function icuDisconnect() { const { key, bridge, athlete, ...rest } = S.settings.intervals || {}; S.settings.intervals = rest; saveSettings(); toast("Disconnected from intervals.icu"); scheduleRender(); }
 const isIcu = w => String(w?.ext || "").startsWith("icu-");
-function icuApplyPlanned(items, a, b) {
-  const by = {}; for (const x of items) if (x.date >= a && x.date <= b) (by[x.date] = by[x.date] || []).push(x);
-  const covered = new Set(items.map(x => x.sport)), today = todayISO();
-  let n = 0;
-  for (let d = a; d <= b; d = addDays(d, 1)) {
-    const L = logGet(d) || {}, cur = Array.isArray(L.planned) ? L.planned : null, xs = by[d] || [];
-    const dup = d >= today && (cur || []).some(w => !isIcu(w) && covered.has(w.sport));
-    if (!xs.length && !dup && !(cur || []).some(isIcu)) continue;
-    const base = (cur || []).filter(w => !isIcu(w) && !xs.some(x => x.sport === w.sport) && !(d >= today && covered.has(w.sport))), next = [...base, ...xs.map(x => wClean({ sport: x.sport, int: x.int, src: "intervals", ext: x.ext, min: x.min || null, km: x.km || null, note: x.note || null, script: x.script || null }))];
-    const value = next.length ? next : null; if (JSON.stringify(value) === JSON.stringify(cur)) continue;
-    n += xs.length; mutateLog(d, day => { day.planned = value; });
-  }
-  return n;
-}
 function icuApplyActivities(acts) {
   const groups = {};
   for (const x of acts) {
@@ -7420,14 +7380,12 @@ function icuApplyWellness(rows) {
   return n;
 }
 /* the last run that failed after the last good one, if any */
-function icuFail() { const v = UI.syncstat, last = icuState().bridge?.last; if (!v || v.ok || !v.at) return null; if (last && Date.parse(last) >= Date.parse(v.at)) return null; return v; }
+function icuFail() { const v = UI.syncstat; return v && !v.ok ? v : null; }
 function icuAgo() { const last = icuState().bridge?.last; if (!last) return "never synced"; const m = Math.round((Date.now() - new Date(last)) / 60000); return m < 1 ? "synced just now" : m < 60 ? `synced ${m} min ago` : m < 1440 ? `synced ${Math.round(m / 60)} h ago` : `synced ${fmtDM(last.slice(0, 10))}`; }
 /* ---------- linked mode: intervals.icu is the training calendar, sync runs through Claude both ways ---------- */
-const ICU_TRIGGER = "trig_01BR8d2pwhxEMH26oCV71A7L";
 const icuLinked = () => { const s = icuState(); return !!(s.key && s.bridge); };
 const icuPlanMode = () => icuLinked() && S.settings?.intervals?.planSource !== false;
-let ICU_MCP = null, ICU_KICK_T = 0, ICU_LAST_KICK = 0, ICU_KICK_STATE = "";
-try { window.claude?.use?.("mcp").then(m => { ICU_MCP = m; }).catch(() => {}); } catch (e) {}
+let ICU_KICK_STATE = "";
 function icuPending() {
   let plan = 0, done = 0; const t = todayISO(), since = icuState().bridge?.since || t;
   for (const m of Object.values(S.logm || {})) for (const [d, day] of Object.entries(m.days || {})) {
@@ -7436,21 +7394,16 @@ function icuPending() {
   }
   return { plan, done, n: plan + done };
 }
-/* start the sync task. mode: true = "Sync now" (user tap), "soon" = right after an edit (a few seconds, so quick edits travel together),
-   false = background nudge (only when the viewer already allowed it, at most every 2 min) */
-let ICU_STATE_T = 0;
+/* Sync now: straight from this app to intervals.icu (edits just wait in the "to send" count until you tap it) */
 async function icuKick(reason, mode = false) {
-  // the sync runs only when you tap Sync: edits just wait in the "to send" count
   if (!icuState().key) return;
   if (mode !== true) { scheduleRender(); return; }
-  clearTimeout(ICU_KICK_T);
-  if (!ICU_MCP) { toast("Open Engine inside claude.ai to start the sync from here."); return; }
-  if (ICU_KICK_STATE === "sent" && Date.now() - ICU_LAST_KICK < 150e3) { toast("Sync already running · results in about a minute"); return; }
-  ICU_LAST_KICK = Date.now(); ICU_KICK_STATE = "sent"; scheduleRender(); clearTimeout(ICU_STATE_T); ICU_STATE_T = setTimeout(() => { ICU_KICK_STATE = ""; scheduleRender(); }, 240e3);
-  try { await ICU_MCP.callTool("Claude Code Remote", "fire_trigger", { trigger_id: ICU_TRIGGER, text: `Requested from Engine (${reason}). Run the sync now.` }); toast("Sync started · results in about a minute"); }
-  catch (e) { ICU_KICK_STATE = ""; const c = e?.code;
-    toast(c === "approval_required" || c === "not_in_manifest" || c === "consent_required" ? "Allow Engine to start the sync when claude.ai asks (once)." : c === "server_not_connected" ? "Sync can't start from this view: open Engine in claude.ai." : "Couldn't start the sync. Try again in a minute."); }
-  scheduleRender();
+  if (ICU_KICK_STATE === "sent") { toast("Sync already running"); return; }
+  ICU_KICK_STATE = "sent"; scheduleRender(); if (UI.sheet) renderSheet();
+  try { const r = await icuSyncDirect(); UI.syncstat = { at: new Date().toISOString(), ok: true, summary: r };
+    toast(`intervals.icu synced · ${r.planned} planned, ${r.acts} activities, ${r.well} wellness${r.pushed || r.sent_plan || r.sent_well ? ` · sent ${r.pushed + r.sent_plan + r.sent_well}` : ""}`); }
+  catch (e) { console.warn(e); UI.syncstat = { at: new Date().toISOString(), ok: false, error: String(e?.message || e) }; toast("Sync failed: " + String(e?.message || e).slice(0, 90)); }
+  finally { ICU_KICK_STATE = ""; scheduleRender(); if (UI.sheet) renderSheet(); }
 }
 /* record plan changes for intervals.icu: new items, edits, deletions */
 function planDiff(day, next) {
@@ -7466,30 +7419,25 @@ function icuChip() { const s = icuState();
   const p = icuPending().n;
   return `<button class="chip-a" data-act="icu-now" aria-label="Sync with intervals.icu now"><span class="dot ${s.bridge ? "ok" : "warn"}"></span>intervals.icu · ${ICU_KICK_STATE === "sent" ? "syncing…" : s.bridge ? icuAgo() : "waiting for first sync"}${p ? ` · ${p} to send` : ""}</button>`; }
 function icuSettingsCard() {
-  const s = icuState(), b = s.bridge, P = icuPending(), sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
-  if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, completed activities, sleep, resting HR, HRV and weight.</div></div>
+  const s = icuState(), b = s.bridge, P = icuPending(), busy = ICU_KICK_STATE === "sent", F = icuFail();
+  const sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
+  if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, activities, sleep, resting HR, HRV, weight and body fat.</div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="API key (intervals.icu → Settings → Developer)" style="flex:1;min-width:200px"><input id="icu-aid" class="inp" style="max-width:150px" placeholder="Athlete ID (i123456)" data-chg="icu-aid"><button class="btn primary" data-act="icu-save-key">Save</button></div>
-    <div class="faint" style="font-size:12.5px">Then tap Sync now. It runs whenever you tap it, never on a schedule.</div>
-    <div class="row" style="gap:8px;align-items:center"><button class="btn soft sm" data-act="icu-nosync">${ic("download", "sm")}Sync without Claude</button><span class="faint" style="font-size:12.5px">browser links or a Python script</span></div></section>`;
+    <div class="faint" style="font-size:12.5px">The key stays in your account. Sync runs when you tap it, straight from this app.</div></section>`;
   return `<section class="card pad icu-card">
-    <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · waiting for the first sync"}</div></div><span class="status ${b ? "ok" : "warn"}">${b ? "Synced" : "Pending"}</span></div>
-    ${icuFail() ? `<div class="note warn">Last sync failed (${fmtDM(icuFail().at.slice(0, 10))} ${icuFail().at.slice(11, 16)} UTC): ${esc(String(icuFail().error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" data-act="icu-now" ${ICU_KICK_STATE === "sent" ? "disabled" : ""}>${ICU_KICK_STATE === "sent" ? "Sync started…" : "Sync now"}</button><button class="btn soft" data-act="icu-nosync">${ic("download", "sm")}Without Claude</button><span class="faint" style="font-size:13px">${P.n ? `${P.plan ? `${P.plan} plan change${P.plan > 1 ? "s" : ""}` : ""}${P.plan && P.done ? " and " : ""}${P.done ? `${P.done} workout${P.done > 1 ? "s" : ""}` : ""} waiting to be sent` : "Everything is up to date"}</span></div>
-    <div class="faint" style="font-size:12.5px">Sync now runs through Claude when you tap it (about a minute). Without Claude: open the intervals.icu links and paste, or run engine_sync.py on a computer.${S.settings.intervals?.manual?.last ? ` Last manual sync ${fmtDM(S.settings.intervals.manual.last.slice(0, 10))}: ${esc(S.settings.intervals.manual.res || "")}.` : ""}</div>
-    <div class="icu-what">
-      ${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts you add, edit or delete in Engine go back to it.")}
-      ${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}
-      ${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}
-    </div>
+    <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · tap Sync now"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
+    ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}${busy ? "Syncing…" : "Sync now"}</button><span class="faint" style="font-size:13px">${P.n ? `${P.n} change${P.n > 1 ? "s" : ""} waiting to be sent` : "Everything is up to date"}</span></div>
+    <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}</div>
     <details class="icu-acc"><summary>Account and import</summary>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><label for="icu-aid" class="faint" style="font-size:13px">Athlete ID</label><input id="icu-aid" class="inp" style="max-width:150px" value="${esc(s.aid || "")}" placeholder="i123456" data-chg="icu-aid"></div>
       <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="New API key" style="flex:1;min-width:180px"><button class="btn tonal sm" data-act="icu-save-key">Change key</button></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn text sm" data-act="icu-nosync">Links, files and script (no Claude)</button><button class="btn text sm" data-act="icu-open">Pick planned workouts from a file</button><button class="btn text sm" data-act="icu-disc" style="color:var(--bad)">Disconnect</button></div></details>
-  </section>`;
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn text sm" data-act="icu-open">Import files (CSV, .ics, JSON)</button><button class="btn text sm" data-act="icu-disc" style="color:var(--bad)">Disconnect</button></div></details></section>`;
 }
+
 SHEETS.icuset = () => ({ title: "intervals.icu", body: icuSettingsCard(), foot: "" });
 ACT["icu-now"] = () => icuKick("Sync now", true);
-ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · tap Sync now to connect"); icuKick("new key", true); };
+ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pushwell"] = () => { icuSet({ pushWell: S.settings.intervals?.pushWell === false }); scheduleRender(); if (UI.sheet) renderSheet(); };
 CHG["icu-aid-m"] = v => { icuSet({ aid: v.trim() }); renderSheet(); };
@@ -7569,13 +7517,6 @@ function sessionDetail(w) {
 const SHORT_SPORT = { running: "Run", walking: "Walk", cycling: "Bike", calisthenics: "Calis", strength: "Gym", "strength training": "Gym", football: "Footy", swimming: "Swim", hiking: "Hike", rowing: "Row", other: "Other" };
 function shortSport(s) { return SHORT_SPORT[String(s).toLowerCase()] || (s.length > 7 ? s.slice(0, 6) + "." : s); }
 function greeting() { const h = new Date().getHours(); return h < 5 ? "Late night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
-function sessionSmart(w, date) {
-  const t = w.tpl ? tplById(w.tpl) : null, sc = w.script || t?.script; if (!sc) return sessionDetail(w);
-  const P = w.prog ? progById(w.prog) : null, tasks = buildTasks(P && w.week ? scriptForWeek(sc, P, w.week, w.tpl) : sc);
-  const pr = Object.values(proposalsFor(tasks, date)).filter(a => a.kind !== "none");
-  const sets = tasks.filter(x => x.t === "set").length, est = Math.round(estimateScript(tasks) / 60);
-  return `${est} min · ${sets} sets${pr.length ? ` · ${pr.length} exercise${pr.length > 1 ? "s" : ""} progress today` : ""}`;
-}
 VIEWS.today = function () {
   const today = todayISO(), L = loadState(), Lg = logGet(today) || {}, items = daySessions(today), list = items.map(x => x.w);
   const left = items.filter(x => x.st === "planned"), doneIt = items.filter(x => x.st === "done"), allDone = items.length > 0 && !left.length;
@@ -7657,11 +7598,8 @@ VIEWS.today = function () {
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
   return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
 /* ---- Today helpers ---- */
-const editBtn = (d, x, label) => x && x.ri >= 0 ? `<button class="link" data-act="edit-session" data-list="planned" data-date="${d}" data-i="${x.ri}">${label}</button>` : "";
-const shortName = x => { const p = x.p || x.w, t = p.tpl ? tplById(p.tpl) : null; const n = t?.name || p.note || shortSport(p.sport); return n.length > 22 ? n.replace(/^W\d+\s*·\s*/, "").slice(0, 22) : n; };
 function readyWhy(L) { const r = []; if (L.sleepLast && L.sleepLast < 6.5) r.push(`slept ${r1(L.sleepLast)} h`); if (L.hrvOk && L.hrvZ < -0.75) r.push(`HRV ${r0(L.hrv7)} vs ${r0(L.hrvBase)}`); if (L.rhr7 && L.base && L.rhr7 - L.base >= 3) r.push(`resting HR +${r0(L.rhr7 - L.base)}`); return r.join(", ") || "recent load"; }
 function compliance(p, w) { const q = (+w.min || 0) / (+p.min || 1); return q >= 0.9 && q <= 1.15 ? "As planned" : q < 0.9 ? `${r0(q * 100)}% of the planned ${r0(p.min)} min` : `${r0(w.min - p.min)} min longer than planned`; }
-function progressCount(w, date) { try { const sc = w.script || (w.tpl ? tplById(w.tpl)?.script : ""); if (!sc) return ""; const n = Object.values(proposalsFor(buildTasks(sc), date)).filter(a => a.kind !== "none").length; return n ? ` · ${n} to progress` : ""; } catch (e) { return ""; } }
 function nextMeal(date) {
   const day = S.days[date]; if (!day) return null;
   for (const m of activeMeals()) { const its = (day.meals?.[m.id] || []).filter(it => !it.eaten); if (!its.length) continue;
@@ -7803,7 +7741,7 @@ async function searchOFF(q) {
 }
 const offThumb = f => `<span class="off-img">${f.img ? `<img src="${esc(f.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ic("plate", "sm")}</span>`;
 const offRow = (f, i, act) => `<button class="lrow off-r" data-act="${act}" data-i="${i}">${offThumb(f)}<span style="min-width:0"><span class="t">${esc(f.name)}${nutriTag(f)}</span><span class="s">${esc([f.brand, f.qtyText].filter(Boolean).join(" · "))}${f.brand || f.qtyText ? " · " : ""}${fmtN(f.per.kcal)} kcal · ${r1(f.per.c)}C ${r1(f.per.p)}P ${r1(f.per.f)}F /100 ${f.unit}</span></span><span class="end">${ic("plus", "sm")}</span></button>`;
-const OFF_HINT = `To search Open Food Facts from Engine, allow <b>world.openfoodfacts.org</b>, <b>search.openfoodfacts.org</b> and <b>images.openfoodfacts.org</b> in claude.ai → Settings → Capabilities (as you did for intervals.icu), then reopen the page.`;
+const OFF_HINT = `Check the connection and try again in a moment.`;
 /* inline: after a short pause, if your own foods don't cover it, show the best Open Food Facts matches right in the list */
 let OFF_INL_T = 0;
 function offInline(sh) {
@@ -8284,82 +8222,6 @@ function playerSettings() {
 }
 ACT["snd-mute"] = () => { const w = WK(); w.mute = !w.mute; saveWK(); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["snd-test"] = () => { audioOn(); [0, 1, 2].forEach(i => playCue("tick", .3 + i)); playCue("go", 3.3); setTimeout(() => say(VT("Via! Minuto 2 di 6", "Go! Minute 2 of 6")), 3300); };
-
-/* ================= intervals.icu without Claude =================
-   1. Browser links: open them where you're signed in to intervals.icu, copy what they show (or save the file) and paste it here.
-      Planned workouts, races, activities and wellness are merged straight away. Download only.
-   2. engine_sync.py on a computer: Export → run the script → Import the result. Two-way, same merge rules as the Claude sync. */
-function icuLinks() {
-  const t = todayISO(), aid = icuAid(), last = S.settings?.intervals?.manual?.last || icuState().bridge?.last, since = last ? addDays(last.slice(0, 10), -3) : addDays(t, -28), base = `https://intervals.icu/api/athlete/${aid}`;
-  return [["events", "Planned workouts & races", `${base}/events?oldest=${addDays(t, -7)}&newest=${addDays(t, 365)}`],
-    ["activities", "Completed activities", `${base}/activities?oldest=${since < addDays(t, -120) ? addDays(t, -120) : since}&newest=${t}`],
-    ["wellness", "Weight, body fat, sleep, HR, HRV", `${base}/wellness?oldest=${since < addDays(t, -120) ? addDays(t, -120) : since}&newest=${t}`]];
-}
-function icuApplyRaces(arr) {
-  const R = races(), today = todayISO(); let n = 0;
-  for (const e of arr) { if (!String(e.category || "").startsWith("RACE")) continue; const date = String(e.start_date_local || "").slice(0, 10); if (!date) continue;
-    const ext = "icu-" + e.id, name = String(e.name || "Race"), km = e.distance ? r1(e.distance / 1000) : (name.match(/(\d+(?:[.,]\d+)?)\s*km\b/i) ? +name.match(/(\d+(?:[.,]\d+)?)\s*km\b/i)[1].replace(",", ".") : /half|mezza/i.test(name) ? 21.0975 : /marathon|maratona/i.test(name) ? 42.195 : null);
-    const pri = String(e.category).slice(5, 6) || "A", cur = R.find(r => r.ext === ext) || R.find(r => !r.ext && r.date === date);
-    if (cur) { if (cur.dirty) continue; Object.assign(cur, wClean({ name, date, km: km || cur.km, pri, ext })); }
-    else { R.push(wClean({ id: "rc-" + ext, name, date, sport: icuSport(e.type || name), km, pri, ext, notes: String(e.description || "").slice(0, 500) || null })); n++; } }
-  put("train", "", S.train); return n;
-}
-function icuManualMark(res) { const i = S.settings.intervals || {}; S.settings.intervals = { ...i, manual: { last: new Date().toISOString(), res } }; if (i.bridge) S.settings.intervals.bridge = { ...i.bridge, last: new Date().toISOString(), res: res + " (manual)" }; saveSettings(); }
-/* one pasted text / file → merged into Engine; returns a short result line, or throws a message */
-function icuIngest(txt) {
-  txt = String(txt || "").trim(); if (!txt) throw "Paste the data first.";
-  if (/^BEGIN:VCALENDAR/m.test(txt)) { const items = icuFromIcs(txt); const t = todayISO(); return `${icuApplyPlanned(items, t, addDays(t, 42))} planned workouts`; }
-  let j = null;
-  if (!/^[\[{]/.test(txt) && /,/.test(txt.split(/\r?\n/)[0] || "")) { const rows = icuCsv(txt); const kind = icuKind(rows); if (kind === "activities") return `${icuApplyActivities(rows)} activity days`; if (kind === "wellness") return `${icuApplyWellness(rows)} wellness days`; throw "That CSV isn't activities or wellness."; }
-  try { j = JSON.parse(txt); } catch (e) { throw /<html|<!doctype/i.test(txt) ? "That's a web page, not data: copy what the link shows once the page has loaded." : "That doesn't look like intervals.icu data: copy everything the link shows (it starts with [ )."; }
-  if (j && j.kind === "engine-import") return applyEngineImport(j);
-  if (j && !Array.isArray(j) && (j.error || j.status === 401 || j.status === 403)) throw "intervals.icu answered “not signed in”: open the link in the browser where you're logged in to intervals.icu.";
-  const arr = Array.isArray(j) ? j : j?.events || [j]; if (!arr.length) return "nothing new (empty list)";
-  const kind = icuKind(arr);
-  if (kind === "activities") return `${icuApplyActivities(arr)} activity days`;
-  if (kind === "wellness") return `${icuApplyWellness(arr)} wellness days`;
-  const t = todayISO(), planned = icuFromJson(arr), p = icuApplyPlanned(planned, addDays(t, -7), addDays(t, 42)), rc = icuApplyRaces(arr);
-  return `${p} planned workouts${rc ? `, ${rc} new races` : ""}`;
-}
-SHEETS.icusync = sh => {
-  const L = icuLinks(), done = sh.done || {};
-  return { title: "Sync without Claude", wide: true, body: `
-    <div class="note">Two ways that don't use Claude. The browser links bring data <b>in</b> from intervals.icu; the Python script on a computer also sends your workouts, plan changes and check-ins <b>out</b>.</div>
-    <div class="field"><span class="flabel">1 · From the browser (phone or computer)</span>
-      <div class="faint" style="font-size:12.5px">Open each link in the browser where you're signed in to intervals.icu. When the page shows the data, select all and copy (or save the page as a file), then paste it below.</div>
-      <div class="ns-links">${L.map(([k, l, u], i) => `<a class="ns-link ${done[k] ? "ok" : ""}" href="${esc(u)}" target="_blank" rel="noopener"><span class="ns-n">${done[k] ? ic("check", "sm") : i + 1}</span><span><b>${l}</b><small>${done[k] ? esc(done[k]) : esc(u.replace("https://", "").replace(/\?.*/, ""))}</small></span>${ic("chevR", "sm")}</a>`).join("")}</div>
-      ${icuAid() === "0" ? `<div class="note warn">Add your Athlete ID (intervals.icu → Settings, it starts with “i”) so the links point to your account.<div class="row" style="gap:8px;margin-top:8px"><input class="inp" style="max-width:160px" placeholder="i123456" data-chg="icu-aid-m"></div></div>` : ""}
-      <textarea id="ns-txt" class="inp mono" rows="4" placeholder="Paste here: Engine recognises planned workouts, races, activities and wellness by itself"></textarea>
-      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="ns-read">Merge pasted data</button><label class="btn tonal" style="cursor:pointer">${ic("plus", "sm")}Files (.json, .csv, .ics)<input type="file" multiple accept=".json,.csv,.ics,.txt,application/json,text/csv,text/calendar" data-chg="ns-files" hidden></label></div>
-      ${sh.log?.length ? `<div class="ns-log">${sh.log.map(x => `<div class="${x.bad ? "bad" : ""}">${x.bad ? "✗" : "✓"} ${esc(x.t)}</div>`).join("")}</div>` : ""}</div>
-    <div class="field"><span class="flabel">2 · Two-way with a script on your computer</span>
-      <ol class="ns-steps"><li><button class="link" data-act="ns-script">Download engine_sync.py</button> (once). Needs Python 3, nothing else.</li>
-        <li><button class="link" data-act="ns-export">Export from Engine</button> → engine-export.json (no API key inside).</li>
-        <li>Run <code>python3 engine_sync.py engine-export.json</code> in the folder with both files. The first time it asks for your intervals.icu API key and can remember it on that computer.</li>
-        <li>Import the <code>engine-import-….json</code> it writes: <label class="link" style="cursor:pointer">choose the file<input type="file" accept=".json,application/json" data-chg="ns-files" hidden></label>, or paste its text above.</li></ol>
-      <div class="faint" style="font-size:12.5px">Changes you make in Engine between Export and Import are kept: the result only touches the days and fields the sync changed.</div></div>`,
-    foot: `<button class="btn tonal" data-act="close-sheet">Close</button>` };
-};
-ACT["icu-nosync"] = () => openSheet("icusync", { done: {}, log: [] });
-function nsLog(sh, name, fn) { try { const r = fn(); sh.log = [...(sh.log || []), { t: `${name}: ${r}` }]; const k = /activit/.test(r) ? "activities" : /wellness/.test(r) ? "wellness" : /planned|races/.test(r) ? "events" : null; if (k) sh.done = { ...(sh.done || {}), [k]: r }; icuManualMark(r); }
-  catch (e) { sh.log = [...(sh.log || []), { t: `${name}: ${typeof e === "string" ? e : "couldn't read it"}`, bad: true }]; if (typeof e !== "string") console.warn(e); } renderSheet(); }
-ACT["ns-read"] = () => { const sh = S_(), v = $("#ns-txt")?.value; nsLog(sh, "Pasted data", () => icuIngest(v)); const el = $("#ns-txt"); if (el && !sh.log[sh.log.length - 1].bad) el.value = ""; };
-CHG["ns-files"] = (v, el) => { const sh = S_(); for (const f of [...(el.files || [])]) { const rd = new FileReader(); rd.onload = () => nsLog(S_() || sh, f.name, () => icuIngest(rd.result)); rd.readAsText(f); } };
-function engineExport() {
-  const t = todayISO(), lo = addDays(t, -62).slice(0, 7), hi = addDays(t, 62).slice(0, 7), months = {};
-  for (const mk of Object.keys(S.logm || {})) if (mk >= lo && mk <= hi) months[mk] = clone(S.logm[mk]);
-  const { key, ...icu } = S.settings.intervals || {};
-  return { kind: "engine-export", v: 1, at: new Date().toISOString(), today: t, settings: { intervals: icu, fit: { sports: FIT().sports, runSport: FIT().runSport } }, train: { races: clone(S.train.races || []), racesDel: clone(S.train.racesDel || []) }, logm: months };
-}
-ACT["ns-export"] = async () => { const data = JSON.stringify(engineExport()); if (await saveFile("engine-export.json", data, "engine-export.json saved")) return; try { await navigator.clipboard.writeText(data); toast("Export copied: paste it into a file named engine-export.json"); } catch (e) { toast("Saving files isn't available in this view."); } };
-ACT["ns-script"] = async () => { let txt = ""; try { txt = await (await fetch("sync/engine_sync.txt", { cache: "no-store" })).text(); } catch (e) {} if (!/engine_sync/.test(txt)) { toast("Couldn't load the script. Try again in a moment."); return; } if (await saveFile("engine_sync.py", txt, "engine_sync.py saved")) return; try { await navigator.clipboard.writeText(txt); toast("Script copied: save it as engine_sync.py"); } catch (e) { toast("Saving files isn't available in this view."); } };
-function applyEngineImport(j) {
-  const by = {}; for (const p of j.patches || []) (by[p.d] = by[p.d] || []).push(p);
-  for (const [d, ps] of Object.entries(by)) mutateLog(d, day => { for (const p of ps) { if (p.v === null) delete day[p.k]; else day[p.k] = p.v; } });
-  if (j.intervals) { const cur = S.settings.intervals || {}; S.settings.intervals = { ...cur, ...j.intervals, key: cur.key, manual: { last: new Date().toISOString(), res: j.summary?.res || "script" } }; saveSettings(); }
-  if (j.train) { S.train.races = j.train.races || []; S.train.racesDel = j.train.racesDel || []; put("train", "", S.train); }
-  const s = j.summary || {}; return `${Object.keys(by).length} days updated · ${s.planned || 0} planned, ${s.acts || 0} activities, ${s.well || 0} wellness in · sent ${(s.pushed || 0)} workouts, ${(s.sent_plan || 0)} plan changes, ${(s.sent_well || 0)} check-ins`;
-}
 
 ACT["fd-unhide"] = el => { del("foods", el.dataset.id); toast(`${BUILTIN[el.dataset.id]?.name || "Food"} restored`); if (!hiddenFoods().filter(f => f.id !== el.dataset.id).length) UI.foodsSeg = "all"; };
 ACT["fd-unhide-all"] = () => { const ids = hiddenFoods().map(f => f.id); openSheet("confirm", { title: `Restore ${ids.length} foods?`, text: "All the built-in foods you deleted come back.", yes: "Restore all", run: () => { ids.forEach(id => del("foods", id)); UI.foodsSeg = "all"; toast(`${ids.length} foods restored`); } }); };
