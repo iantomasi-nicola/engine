@@ -82,12 +82,14 @@ async function icuSyncDirect() {
       const nxt = [...base, ...xs], value = nxt.length ? nxt : null;
       if (!same(value, cur)) { const dd = day(ds); if (value === null) delete dd.planned; else dd.planned = value; res.planned += xs.length; tidy(ds); } } }
   // completed activities
+  // seconds in each zone (heart rate, pace, power) as intervals.icu computed them
+  const zt = a => { if (!Array.isArray(a) || !a.length) return null; const v = a.map(z => Math.round(+(typeof z === "object" && z ? z.secs : z) || 0)); return v.some(Boolean) ? v : null; };
   const acts = await req(`/athlete/${AID}/activities?oldest=${add(TODAY, -21)}&newest=${TODAY}`) || [];
   const groups = {};
   for (const x of acts) { if (!x || typeof x !== "object") continue; const date = String(x.start_date_local || x.start_date || "").slice(0, 10); if (!date || date > TODAY) continue;
     const mins = r0_((x.moving_time || x.elapsed_time || 0) / 60), km = x.distance ? r1_(x.distance / 1000) : null, sp = sport(x.type || x.name);
     if (mins < 8 && !(km && km >= 1)) continue;
-    const w = cleanO({ sport: sp, min: mins || null, km: km && km > .2 ? km : null, hr: x.average_heartrate ? r0_(x.average_heartrate) : null, kcal: x.calories ? r0_(x.calories) : null, rpe: x.perceived_exertion || x.icu_rpe || null, int: intensity(x.name || "", "", mins, x.icu_training_load || 0), ext: `icu-a-${x.id}`, src: "intervals", note: (x.name || "").slice(0, 80) || null, _xid: x.external_id || null, load: x.icu_training_load ? r0_(x.icu_training_load) : null, pev: x.paired_event_id ? `icu-${x.paired_event_id}` : null, _start: String(x.start_date_local || "").slice(0, 19) || null, _src: x.source || null });
+    const w = cleanO({ sport: sp, min: mins || null, km: km && km > .2 ? km : null, hr: x.average_heartrate ? r0_(x.average_heartrate) : null, kcal: x.calories ? r0_(x.calories) : null, rpe: x.perceived_exertion || x.icu_rpe || null, int: intensity(x.name || "", "", mins, x.icu_training_load || 0), ext: `icu-a-${x.id}`, src: "intervals", note: (x.name || "").slice(0, 80) || null, _xid: x.external_id || null, gearN: (x.gear && typeof x.gear === "object" ? x.gear.name : null) || null, hrz: zt(x.icu_hr_zone_times), pz: zt(x.pace_zone_times || x.gap_zone_times), wz: zt(x.icu_zone_times), load: x.icu_training_load ? r0_(x.icu_training_load) : null, pev: x.paired_event_id ? `icu-${x.paired_event_id}` : null, _start: String(x.start_date_local || "").slice(0, 19) || null, _src: x.source || null });
     (groups[date + "|" + sp] = groups[date + "|" + sp] || []).push(w); }
   for (const [key, ws] of Object.entries(groups)) {
     const [date, sp] = key.split("|"), dd = day(date); let lst = clone(dd.workouts || []); const before = JSON.stringify(lst);
@@ -101,15 +103,15 @@ async function icuSyncDirect() {
     for (const w of ws) {
       const xid = w._xid, st = w._start || ""; const ren = w._ren, dup = w._dup; delete w._xid; delete w._start; delete w._src; delete w._ren; delete w._dup;
       if (dup) w.dups = dup; if (ren) lst = lst.map(o => o.ext === w.ext ? { ...o, note: w.note } : o);
-      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, o.sid ? { ...w, wmin: w.min } : w, ["kcal", "hr", "load", "pev", "km", "dups", "wmin"]) : o); continue; }
+      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, o.sid ? { ...w, wmin: w.min } : w, ["kcal", "hr", "load", "pev", "km", "dups", "wmin", "gearN", "hrz", "pz", "wz"]) : o); continue; }
       let k = xid ? lst.findIndex(o => o.sid === xid) : -1;
       if (k < 0) for (let n = 0; n < lst.length; n++) { const o = lst[n]; if (!o.sid || o.ext || o.sport !== sp) continue;
         try { const A = new Date(st).getTime(), B = new Date(String(wss[o.sid]?.start || "")).getTime(); if (isFinite(A) && isFinite(B) && Math.abs(A - B) > 3 * 3600e3) continue; } catch (e) {} k = n; break; }
-      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, { ...w, wmin: w.min }, ["kcal", "hr", "load", "pev", "km", "wmin"]); known.add(w.ext); continue; }
+      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, { ...w, wmin: w.min }, ["kcal", "hr", "load", "pev", "km", "wmin", "gearN", "hrz", "pz", "wz"]); known.add(w.ext); continue; }
       neu.push(w); }
     const loc = lst.map((o, i) => [o, i]).filter(([o]) => o.sport === sp && !o.ext && !o.sid).map(([, i]) => i);
     if (neu.length && loc.length) {
-      if (loc.length === 1 && neu.length === 1) { const o = lst[loc[0]], w = neu[0], m = { ...o, ext: w.ext }; for (const k of ["kcal", "hr", "km", "rpe", "min", "int", "load", "pev"]) if (!m[k] && w[k] != null) m[k] = w[k]; lst[loc[0]] = cleanO(m); neu = []; }
+      if (loc.length === 1 && neu.length === 1) { const o = lst[loc[0]], w = neu[0], m = { ...o, ext: w.ext }; for (const k of ["kcal", "hr", "km", "rpe", "min", "int", "load", "pev", "gearN", "hrz", "pz", "wz"]) if (!m[k] && w[k] != null) m[k] = w[k]; lst[loc[0]] = cleanO(m); neu = []; }
       else { const o = lst[loc[0]], m = { ...o, exts: [...new Set([...(o.exts || []), ...neu.map(w => w.ext)])].sort() }; if (!m.kcal) m.kcal = neu.reduce((s, w) => s + (w.kcal || 0), 0) || null; if (!m.load) m.load = neu.reduce((s, w) => s + (w.load || 0), 0) || null; lst[loc[0]] = cleanO(m); neu = []; } }
     lst = [...lst, ...neu];
     if (JSON.stringify(lst) !== before) { dd.workouts = lst; res.acts++; } tidy(date); }
@@ -136,7 +138,9 @@ async function icuSyncDirect() {
     for (const a2 of s.amrap || []) lines.push(`${a2.title} AMRAP ${a2.min}': ${a2.rounds}+${a2.partial}`);
     return lines.join("\n") + `\nRPE ${s.rpe}` + (s.note ? `\n${s.note}` : "") + "\n— logged with Engine"; };
   if (!NO_PUSH && icu.push !== false) for (let k = 0; k < 14; k++) { const date = add(TODAY, -k), dd = day(date, false); if (!dd) continue;
-    for (const w of dd.workouts || []) { if (w.pushed || w.exts || w.sport === "Rest") continue; if (!w.sid && date < SINCE_LINK) continue;
+    for (const w of dd.workouts || []) {
+      if (w.rpeDirty && String(w.ext || "").startsWith("icu-a-")) { try { await req(`/activity/${String(w.ext).slice(6)}`, "PUT", cleanO({ perceived_exertion: w.rpe, icu_rpe: w.rpe })); delete w.rpeDirty; res.pushed++; } catch (e) { if (e.fatal) throw e; } continue; }
+      if (w.pushed || w.exts || w.sport === "Rest") continue; if (!w.sid && date < SINCE_LINK) continue;
       const s = (dd.wsess || []).find(x => x.id === w.sid) || {};
       if (isIcuW(w)) { if (w.sid && String(w.ext).startsWith("icu-a-") && Object.keys(s).length) { try { await req(`/activity/${String(w.ext).slice(6)}`, "PUT", cleanO({ name: s.name || w.note, description: stext(s), perceived_exertion: w.rpe, icu_rpe: w.rpe })); w.pushed = true; res.pushed++; } catch (e) { if (e.fatal) throw e; } } continue; }
       const startT = s.start ? new Date(s.start).getTime() : NaN, ended = isFinite(startT) ? startT + (w.min || 0) * 60e3 : null;
