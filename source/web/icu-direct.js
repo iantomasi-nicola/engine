@@ -52,7 +52,12 @@ async function icuSyncDirect() {
   const ath = await req(`/athlete/${AID}`) || {};
   const athlete = ath.name || [ath.firstname, ath.lastname].filter(Boolean).join(" ") || icu.athlete || "";
   // Engine -> intervals.icu: planned workouts added, edited or deleted here
-  const evBody = (date, w) => { const desc = w.script || (w.min ? `- ${Math.trunc(w.min)}m${w.km ? ` ${w.km}km` : ""}` : ""); const b = { category: "WORKOUT", start_date_local: `${date}T00:00:00`, type: itype(w.sport), name: w.note || w.sport || "Workout", description: desc }; if (w.min) b.moving_time = Math.trunc(w.min * 60); return b; };
+  // strength: intervals.icu would read "- 6 Pull-up" as timed steps and get the length wrong, so the lines go as "•" text (Engine reads both)
+  // and the duration is Engine's own, calibrated on your live sessions
+  const strW = w => typeof isStrength === "function" && isStrength(w.sport);
+  const evBody = (date, w) => { let desc = w.script || (w.min ? `- ${Math.trunc(w.min)}m${w.km ? ` ${w.km}km` : ""}` : ""); let min = w.min;
+    if (strW(w) && w.script) { desc = desc.replace(/^(\s*)-\s+/gm, "$1• "); try { const g = workoutGist(w).min; if (g > 0) min = g; } catch (e) {} }
+    const b = { category: "WORKOUT", start_date_local: `${date}T00:00:00`, type: itype(w.sport), name: w.note || w.sport || "Workout", description: desc }; if (min) b.moving_time = Math.trunc(min * 60); return b; };
   for (const mk of Object.keys(docs)) for (const [date, dd] of Object.entries(docs[mk].days)) {
     if (date < add(TODAY, -2)) continue;
     for (const ext of [...(dd.plannedDel || [])]) { try { await req(`/athlete/${AID}/events/${String(ext).slice(4)}`, "DELETE"); res.sent_plan++; } catch (e) { if (e.fatal) throw e; if (e.status !== 404) continue; } dd.plannedDel = (dd.plannedDel || []).filter(x => x !== ext); }
@@ -69,7 +74,8 @@ async function icuSyncDirect() {
   for (const e of ev) { if (!e || typeof e !== "object" || (e.category && e.category !== "WORKOUT")) continue;
     const date = String(e.start_date_local || e.start_date || "").slice(0, 10); if (!date) continue;
     const [sm, sk, hasT] = stepTotals(e.description);
-    const mins = r0_((e.moving_time || e.workout_doc?.duration || 0) / 60) || sm || null;
+    let mins = r0_((e.moving_time || e.workout_doc?.duration || 0) / 60) || sm || null;
+    if (strW({ sport: sport(e.type || e.name) }) && e.description) { try { const g = workoutGist({ sport: sport(e.type || e.name), script: String(e.description) }).min; if (g > 0) mins = g; } catch (x) {} }
     const km = hasT ? null : (r1_((e.distance || e.workout_doc?.distance || 0) / 1000) || sk || null);
     (by[date] = by[date] || []).push(cleanO({ sport: sport(e.type || e.name), int: intensity(e.name || "", e.description || "", mins || 0, e.icu_training_load || 0), src: "intervals", ext: `icu-${e.id ?? date + e.name}`, min: mins, km: km && km > 0 ? km : null, note: (e.name || "").slice(0, 80) || null, script: String(e.description || "").trim().slice(0, 6000) || null, load: e.icu_training_load ? r0_(e.icu_training_load) : null })); }
   const covered = new Set(Object.values(by).flat().map(w => w.sport));
