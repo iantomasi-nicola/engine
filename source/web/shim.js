@@ -111,75 +111,113 @@
   const downloads = { save: async ({ filename, data, mimeType }) => { const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType || (/\.json$/i.test(filename) ? "application/json" : "text/plain") });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename || "download"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); return { status: "saved" }; } };
 
-  /* ---------- sample: optional AI with your own free key (Gemini, or any OpenAI-compatible service such as Groq / OpenRouter) ---------- */
-  const AI_PRESETS = { gemini: { label: "Google Gemini", model: "gemini-flash-latest" }, groq: { label: "Groq", base: "https://api.groq.com/openai/v1", model: "meta-llama/llama-4-scout-17b-16e-instruct" }, openrouter: { label: "OpenRouter", base: "https://openrouter.ai/api/v1", model: "google/gemini-2.0-flash-exp:free" } };
+  /* ---------- AI: every key you add (open and closed models), tried in your order; if a model fails, the next one ---------- */
+  const AI_PRESETS = {
+    gemini: { label: "Google Gemini", kind: "gemini", model: "gemini-flash-latest", url: "aistudio.google.com → Get API key", free: true, open: false },
+    anthropic: { label: "Claude (Anthropic)", kind: "anthropic", base: "https://api.anthropic.com/v1", model: "claude-haiku-5-5", url: "console.anthropic.com → API keys", open: false },
+    openai: { label: "OpenAI", kind: "openai", base: "https://api.openai.com/v1", model: "gpt-5-mini", url: "platform.openai.com → API keys", open: false },
+    groq: { label: "Groq", kind: "openai", base: "https://api.groq.com/openai/v1", model: "meta-llama/llama-4-scout-17b-16e-instruct", url: "console.groq.com → API Keys", free: true, open: true },
+    openrouter: { label: "OpenRouter", kind: "openai", base: "https://openrouter.ai/api/v1", model: "google/gemma-3-27b-it:free", url: "openrouter.ai → Keys (models ending in :free cost nothing)", free: true, open: true },
+    mistral: { label: "Mistral", kind: "openai", base: "https://api.mistral.ai/v1", model: "mistral-small-latest", url: "console.mistral.ai → API keys", free: true, open: true },
+    huggingface: { label: "Hugging Face", kind: "openai", base: "https://router.huggingface.co/v1", model: "google/gemma-3-27b-it", url: "huggingface.co → Settings → Access tokens", free: true, open: true },
+    cerebras: { label: "Cerebras", kind: "openai", base: "https://api.cerebras.ai/v1", model: "llama-3.3-70b", url: "cloud.cerebras.ai → API keys", free: true, open: true, vision: false },
+    custom: { label: "Other (OpenAI-compatible)", kind: "openai", base: "", model: "", url: "any service with an OpenAI-style /v1 address: Together, DeepInfra, Ollama, LM Studio…", open: true, custom: true }
+  };
   E.AI_PRESETS = AI_PRESETS;
-  E.aiCfg = () => { const a = (typeof S !== "undefined" && S.settings && S.settings.ai) || {}; return a.key ? { provider: a.provider || "gemini", key: a.key, model: a.model || AI_PRESETS[a.provider || "gemini"]?.model, base: a.base || AI_PRESETS[a.provider || "gemini"]?.base } : null; };
+  const ST = () => (typeof S !== "undefined" && S.settings) || null;
+  /* settings.ai = { services: [{ id, provider, key, model, on, models, check }] } (older single-key settings are migrated) */
+  E.aiServices = () => { const st = ST(); if (!st) return []; const a = st.ai || {};
+    if (!a.services && a.key) st.ai = { services: [{ id: "s1", provider: a.provider || "gemini", key: a.key, model: a.model, on: true, models: a.models, check: a.check }] };
+    return (st.ai?.services || []).filter(s => s && (s.key || (s.provider === "custom" && s.base))); };
+  E.anyAI = () => E.aiServices().some(s => s.on !== false);
+  E.aiCfg = () => { const s = E.aiServices().find(x => x.on !== false); return s ? svcCfg(s) : null; };
+  const svcCfg = s => { const P = AI_PRESETS[s.provider] || AI_PRESETS.gemini; return { id: s.id, provider: s.provider, kind: P.kind, key: s.key, model: s.model || P.model, base: s.base || P.base, models: s.models || [], vision: s.vision ?? P.vision }; };
   const b64 = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = no; r.readAsDataURL(blob); });
   async function shrink(blob) { try { const bmp = await createImageBitmap(blob); const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)); const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return await new Promise(r => c.toBlob(r, "image/jpeg", .85)); } catch (e) { return blob; } }
-  /* Google retires models for new keys often: pick the best Flash model this key can use */
-  E.bestGemini = function (models) {
-    const ok = models.filter(m => /^gemini-/.test(m) && !/lite|image|tts|live|audio|embed|exp|thinking|robotics|computer|native|aqa/.test(m));
-    if (ok.includes("gemini-flash-latest")) return "gemini-flash-latest";
-    const ver = m => { const v = m.match(/^gemini-(\d+(?:\.\d+)?)-flash(?:-latest)?$/); return v ? +v[1] : -1; };
-    const flash = ok.filter(m => ver(m) >= 0).sort((a, b) => ver(b) - ver(a) || a.length - b.length);
-    return flash[0] || ok.find(m => /flash/.test(m)) || models.find(m => /flash-lite/.test(m)) || models[0] || null;
+  const err = (r, j, label) => { const e = new Error(j?.error?.message || j?.message || (typeof j?.error === "string" ? j.error : "") || `${label} error ${r.status}`); e.status = r.status; e.body = j; return e; };
+  /* model lists and the best model of each family */
+  E.listModels = async cfg => {
+    if (cfg.kind === "gemini") { const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": cfg.key } }); const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, "Gemini"); return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); }
+    if (cfg.kind === "anthropic") { const r = await fetch(cfg.base + "/models?limit=100", { headers: { "x-api-key": cfg.key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" } }); const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, "Claude"); return (j.data || []).map(m => m.id); }
+    const r = await fetch(cfg.base.replace(/\/$/, "") + "/models", { headers: { Authorization: "Bearer " + cfg.key } }); const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, "AI"); return (j.data || []).map(m => m.id);
   };
-  E.geminiModels = async key => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": key } }); const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "HTTP " + r.status); e.status = r.status; e.body = j; throw e; } return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => String(m.name).replace(/^models\//, "")); };
-  const retired = e => (e?.status === 404 || e?.status === 400) && /no longer available|not found|is not supported|deprecated/i.test(String(e?.message || ""));
-  const busy = e => [500, 502, 503, 504].includes(e?.status) || /overloaded|high demand|unavailable/i.test(String(e?.message || ""));
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  async function ask(input, opts = {}, json = false, over = null, retry = true) {
-    try { return await ask1(input, opts, json, over); }
-    catch (e) {
-      const cfg = over || E.aiCfg();
-      if (retry && cfg && busy(e)) {
-        // Google's model is busy: wait a moment and retry, then try a lighter model
-        for (const ms of [1500, 3500]) { await wait(ms); try { return await ask1(input, opts, json, over); } catch (x) { if (!busy(x)) throw x; } }
-        if (cfg.provider === "gemini") { let alt = null; try { const ms = (await E.geminiModels(cfg.key)).filter(m => m !== cfg.model); alt = ms.find(m => /^gemini-[\d.]+-flash-lite$/.test(m)) || E.bestGemini(ms); } catch (x) {}
-          if (alt) { try { opts.onBusyModel?.(alt); } catch (x) {} return ask(input, opts, json, { ...cfg, model: alt }, false); } }
-        throw e;
-      }
-      if (!retry || !cfg || cfg.provider !== "gemini" || !retired(e)) throw e;
-      let next = (String(e.message).match(/use models\/([\w.-]+)/) || [])[1];
-      if (!next) { try { next = E.bestGemini(await E.geminiModels(cfg.key)); } catch (x) {} }
-      if (!next || next === cfg.model) throw e;
-      if (!over && typeof S !== "undefined" && S.settings?.ai) { S.settings.ai = { ...S.settings.ai, model: next }; try { saveSettings(); } catch (x) {} }
-      try { opts.onModel?.(next); } catch (x) {}
-      return ask(input, opts, json, { ...cfg, model: next }, false);
-    }
+  E.geminiModels = key => E.listModels({ kind: "gemini", key });
+  const ver = (m, re) => { const v = m.match(re); return v ? +v[1] : -1; };
+  E.bestGemini = models => { const ok = models.filter(m => /^gemini-/.test(m) && !/lite|image|tts|live|audio|embed|exp|thinking|robotics|computer|native|aqa/.test(m)); if (ok.includes("gemini-flash-latest")) return "gemini-flash-latest"; const re = /^gemini-(\d+(?:\.\d+)?)-flash(?:-latest)?$/; const f = ok.filter(m => ver(m, re) >= 0).sort((a, b) => ver(b, re) - ver(a, re)); return f[0] || ok.find(m => /flash/.test(m)) || models.find(m => /flash-lite/.test(m)) || models[0] || null; };
+  function rank(cfg, models) { // models worth trying, best first
+    const bad = /embed|audio|tts|transcri|realtime|whisper|moderation|image-gen|dall|search|guard|instruct-vision-only|codestral|ocr$/i;
+    let ms = models.filter(m => !bad.test(m));
+    if (cfg.kind === "gemini") { const pick = []; const add = m => m && !pick.includes(m) && pick.push(m); add(E.bestGemini(ms)); ms.filter(m => /^gemini-[\d.]+-flash$/.test(m)).sort((a, b) => b.localeCompare(a)).forEach(add); ms.filter(m => /flash-lite/.test(m)).forEach(add); ms.filter(m => /^gemini-[\d.]+-pro$/.test(m)).forEach(add); return pick; }
+    if (cfg.kind === "anthropic") return ms.sort((a, b) => (/haiku/.test(b) - /haiku/.test(a)) || (/sonnet/.test(b) - /sonnet/.test(a)) || b.localeCompare(a));
+    if (cfg.provider === "openrouter") return ms.filter(m => /:free$/.test(m)).sort((a, b) => (/gemini|gemma|llama-4|qwen.*vl|mistral/i.test(b) - /gemini|gemma|llama-4|qwen.*vl|mistral/i.test(a)));
+    if (cfg.provider === "groq") return ms.sort((a, b) => (/llama-4|vision|scout|maverick/i.test(b) - /llama-4|vision|scout|maverick/i.test(a)));
+    if (cfg.provider === "openai") return ms.filter(m => /^(gpt|o\d)/.test(m)).sort((a, b) => (/mini/.test(b) - /mini/.test(a)) || b.localeCompare(a));
+    if (cfg.provider === "mistral") return ms.sort((a, b) => (/small|medium|pixtral/.test(b) - /small|medium|pixtral/.test(a)));
+    return ms;
   }
-  async function ask1(input, opts = {}, json = false, over = null) {
-    const cfg = over || E.aiCfg(); if (!cfg) { const e = new Error("Add an AI key in Settings"); e.code = "not_granted"; throw e; }
+  async function call(cfg, msgs, imgs, json, signal) {
+    const sys = json ? "Reply with only valid JSON, no prose, no code fences." : "";
+    if (cfg.kind === "gemini") {
+      const contents = msgs.map((m, i) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }, ...(i === msgs.length - 1 ? imgs.map(x => ({ inline_data: { mime_type: x.mime, data: x.data } })) : [])] }));
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.key }, body: JSON.stringify({ contents, ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}), generationConfig: { temperature: .2, ...(json ? { responseMimeType: "application/json" } : {}) } }), signal });
+      const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, "Gemini");
+      return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+    }
+    if (cfg.kind === "anthropic") {
+      const m2 = msgs.map((m, i) => ({ role: m.role === "assistant" ? "assistant" : "user", content: i === msgs.length - 1 && imgs.length ? [...imgs.map(x => ({ type: "image", source: { type: "base64", media_type: x.mime, data: x.data } })), { type: "text", text: m.content }] : m.content }));
+      const r = await fetch(cfg.base + "/messages", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": cfg.key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify({ model: cfg.model, max_tokens: 1500, temperature: .2, ...(sys ? { system: sys } : {}), messages: m2 }), signal });
+      const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, "Claude");
+      return (j.content || []).map(c => c.text || "").join("");
+    }
+    const m2 = msgs.map((m, i) => ({ role: m.role, content: i === msgs.length - 1 && imgs.length ? [{ type: "text", text: m.content }, ...imgs.map(x => ({ type: "image_url", image_url: { url: `data:${x.mime};base64,${x.data}` } }))] : m.content }));
+    const r = await fetch(cfg.base.replace(/\/$/, "") + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + cfg.key }, body: JSON.stringify({ model: cfg.model, messages: [...(sys ? [{ role: "system", content: sys }] : []), ...m2], ...(json && cfg.provider !== "openrouter" ? { response_format: { type: "json_object" } } : {}) }), signal });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw err(r, j, AI_PRESETS[cfg.provider]?.label || "AI");
+    return j.choices?.[0]?.message?.content || "";
+  }
+  const fatalKey = e => e?.status === 401 || (e?.status === 400 && /API_KEY_INVALID|api key not valid|invalid x-api-key|incorrect api key/i.test(String(e?.message))) || (e?.status === 403 && /credit|billing|permission/i.test(String(e?.message)));
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  /* the chain: each service in your order; inside it, its model, then the next good models */
+  async function ask(input, opts = {}, json = false, over = null) {
     const msgs = typeof input === "string" ? [{ role: "user", content: input }] : input;
     const imgs = []; for (const f of opts.images || []) { const s = await shrink(f); imgs.push({ mime: s.type || "image/jpeg", data: await b64(s) }); }
-    const sys = json ? "Reply with only valid JSON, no prose, no code fences." : "";
-    let text = "";
-    if (cfg.provider === "gemini") {
-      const contents = msgs.map((m, i) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }, ...(i === msgs.length - 1 ? imgs.map(x => ({ inline_data: { mime_type: x.mime, data: x.data } })) : [])] }));
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.key }, body: JSON.stringify({ contents, ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}), generationConfig: { temperature: .2, ...(json ? { responseMimeType: "application/json" } : {}) } }), signal: opts.signal });
-      const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; e.status = r.status; e.body = j; throw e; }
-      text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
-    } else {
-      const m2 = msgs.map((m, i) => ({ role: m.role, content: i === msgs.length - 1 && imgs.length ? [{ type: "text", text: m.content }, ...imgs.map(x => ({ type: "image_url", image_url: { url: `data:${x.mime};base64,${x.data}` } }))] : m.content }));
-      const r = await fetch(cfg.base.replace(/\/$/, "") + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + cfg.key }, body: JSON.stringify({ model: cfg.model, temperature: .2, messages: [...(sys ? [{ role: "system", content: sys }] : []), ...m2], ...(json ? { response_format: { type: "json_object" } } : {}) }), signal: opts.signal });
-      const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j?.error?.message || "AI error " + r.status); e.code = r.status === 429 ? "rate_limited" : "error"; e.status = r.status; e.body = j; throw e; }
-      text = j.choices?.[0]?.message?.content || "";
+    const chain = over ? [over] : E.aiServices().filter(s => s.on !== false).map(svcCfg);
+    if (!chain.length) { const e = new Error("Add an AI key in Settings"); e.code = "not_granted"; throw e; }
+    const tried = []; let last = null;
+    for (const cfg of chain) {
+      if (imgs.length && cfg.vision === false && !over) { tried.push(`${cfg.provider}: skipped (no photos)`); continue; }
+      let models = [cfg.model]; let listed = false;
+      for (let k = 0; k < models.length && k < 4; k++) {
+        const c = { ...cfg, model: models[k] };
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try { const text = await call(c, msgs, imgs, json, opts.signal); tried.push(`${c.provider}/${c.model}: ok`);
+            if (k > 0 || cfg !== chain[0]) { try { opts.onModel?.(c.model, c.provider); } catch (x) {} if (!over && k > 0) remember(cfg.id, c.model); }
+            E.lastRun = { provider: c.provider, model: c.model, tried };
+            if (opts.onText) try { opts.onText({ text, delta: text }); } catch (x) {}
+            return text; }
+          catch (e) { if (e.name === "AbortError") throw e; last = e;
+            if ([500, 502, 503, 504, 529].includes(e.status) && attempt === 0 && k === 0) { await wait(1000); continue; }
+            tried.push(`${c.provider}/${c.model}: ${e.status || ""} ${String(e.message).slice(0, 60)}`); break; }
+        }
+        if (fatalKey(last)) break; // this key doesn't work: next service
+        if (!listed) { listed = true; let hint = (String(last?.message).match(/use models\/([\w.-]+)/) || [])[1]; let ms = [];
+          try { ms = rank(cfg, cfg.models?.length ? cfg.models : await E.listModels(cfg)); } catch (x) {}
+          models = [...new Set([models[0], ...(hint ? [hint] : []), ...ms])]; }
+      }
     }
-    if (opts.onText) try { opts.onText({ text, delta: text }); } catch (e) {}
-    return text;
+    E.lastRun = { tried }; const e = last || new Error("No AI service answered"); e.tried = tried; throw e;
   }
+  function remember(id, model) { const st = ST(); const s = st?.ai?.services?.find(x => x.id === id); if (s && s.model !== model) { s.model = model; try { saveSettings(); } catch (x) {} } }
   const sample = async (input, opts) => ({ text: await ask(input, opts), truncated: false });
   sample.json = async (input, opts, over) => { const t = await ask(input, opts, true, over); const m = t.match(/[\[{][\s\S]*[\]}]/); return JSON.parse(m ? m[0] : t); };
   sample.limits = async () => ({ images: true });
-  E.sample = sample;
+  E.sample = sample; E.svcCfg = svcCfg; E.rankModels = rank;
 
   /* ---------- the claude.use() entry point the app calls ---------- */
   window.claude = { use: async name => {
     if (name === "db") { const id = await auth(); if (!id) return null; ensureLoad(); flushQ(); return db; }
     if (name === "user") { const id = await auth(); return id ? user : null; }
     if (name === "downloads") return downloads;
-    if (name === "sample") return E.aiCfg() ? sample : null;
+    if (name === "sample") return E.anyAI() ? sample : null;
     return null;
   } };
 })();
