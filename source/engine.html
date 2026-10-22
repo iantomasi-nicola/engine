@@ -85,6 +85,60 @@ body.nav-top .fuel-sticky{top:0}
   .plan-meals .meal-head{padding-top:12px!important;padding-bottom:8px!important}
   .plan-meals .add-row{padding-top:9px!important;padding-bottom:11px!important}
 }
+
+/* shopping, pantry, spending */
+.shop-card{padding:4px 0}
+.shop-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:4px;padding:2px 12px 2px 8px;border-top:1px solid var(--line)}
+.sq .shop-row:first-of-type{border-top:0}
+.shop-row.done .t{text-decoration:line-through;color:var(--faint)}
+.shop-main{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;padding:8px 4px;background:none}
+.shop-main .t{font-size:15px;font-weight:500;color:var(--ink)}
+.shop-main .s{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.shop-q{display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:6px 0 6px 6px;background:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+span.shop-q{flex-direction:row;align-items:center;gap:6px}
+.shop-q b{font-size:14.5px;font-weight:600;color:var(--ink)}
+.shop-q small{font-size:12px;color:var(--muted)}
+.shop-q .eur{width:64px;min-height:34px;padding:0 8px;text-align:right}
+.sq-h{display:flex;justify-content:space-between;padding:12px 16px 4px;font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.sq-add{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.sq-add .inp{flex:1;min-width:0}
+.shop-hint{font-size:12.5px}
+.shop-covered summary{cursor:pointer;font-weight:500;padding:4px 0}
+.shop-done-bar{position:sticky;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:5;padding:8px 0}
+@media (min-width:600px){.shop-done-bar{bottom:12px}}
+.pan-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.pan-main{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;background:none;padding:2px 0}
+.pan-q{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.pan-q b{min-width:58px;text-align:center;font-weight:600}
+.pan-q small{font-size:11.5px;color:var(--muted);margin-left:2px;font-weight:400}
+.lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
+.lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
+
+.lrow.pan-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important}
+.pan-main{overflow:hidden}
+.pan-main .s,.shop-main .s{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.plan-side .toolbar{flex-wrap:wrap!important;overflow:visible!important}
+
+.sq-h{border-bottom:0!important;padding:12px 16px 2px!important}
+.sq-h + .shop-row{border-top:0}
+
+.lrow:has(> .switch) .s,.lrow:has(> .switch) .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.lrow:has(> .switch){gap:14px}
+
+.lrow:has(> .switch) .s,.lrow:has(> .switch) .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.lrow:has(> .switch){gap:14px}
+
+/* use-by dates */
+.xp-card{display:flex;flex-direction:column;gap:6px}
+.xp-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:4px 0}
+.xp-dot{width:10px;height:10px;border-radius:50%;background:var(--warn)}
+.xp-row.bad .xp-dot{background:var(--bad)}
+.xp-t{display:flex;flex-direction:column;min-width:0}
+.xp-t b{font-weight:500;font-size:14.5px}
+.xp-t small{font-size:12.5px;color:var(--muted)}
+.xp-row.bad .xp-t small{color:var(--bad)}
+.tab-dot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1356,7 +1410,7 @@ body:has(.clip-bar) .cal-d.fut,body:has(.clip-bar) .cal-d.now{cursor:copy}
 .add-top{position:sticky;top:-8px;z-index:3;display:flex;flex-direction:column;gap:10px;background:var(--sheet);padding:10px 0 10px;margin:-8px 0 2px;border-bottom:1px solid var(--line)}
 .add-acts{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}.add-acts::-webkit-scrollbar{display:none}
 .aa{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:76px;height:64px;padding:0 10px;border-radius:16px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:12.5px;font-weight:600}
-.aa .ic{width:22px;height:22px}.aa.main{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.aa .ic{width:22px;height:22px}.aa.aa-main{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .tnav{display:none}
 @media (max-width:959px){
   body.nav-top .bnav{display:none!important}
@@ -1415,12 +1469,9 @@ body:has(.clip-bar) .cal-d.fut,body:has(.clip-bar) .cal-d.now{cursor:copy}
 .chip.sm{min-height:28px;padding:0 10px;font-size:12.5px}
 .sq{display:flex;flex-direction:column}
 .sq-h{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;padding:8px 2px 3px;border-bottom:1px solid var(--line)}
-.sq-i{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:36px;padding:3px 2px;border-bottom:1px solid var(--line);text-align:left;color:var(--ink);font-size:14px}
-.sq-ck{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--faint);display:grid;place-items:center}.sq-ck .ic{width:14px;height:14px;opacity:0}
-.sq-i.done .sq-ck{background:var(--good);border-color:var(--good);color:#fff}.sq-i.done .sq-ck .ic{opacity:1}
-.sq-i.done .sq-n{text-decoration:line-through;color:var(--faint)}
-.sq-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sq-q{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);white-space:nowrap}
-.sq-add{display:flex;gap:8px;margin-top:8px}.sq-add .inp{min-height:38px}
+
+
+.sq-add .inp{min-height:38px}
 .ns-links{display:flex;flex-direction:column;gap:6px}
 .ns-link,.ns-link *{text-decoration:none!important}.ns-link{display:grid;grid-template-columns:28px minmax(0,1fr) 18px;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface-2);color:var(--ink);text-decoration:none}
 .ns-link b{display:block;font-size:14px}.ns-link small{display:block;font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1552,7 +1603,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .badge{background:var(--md-error)!important;color:#fff!important}
 /* add sheet toolbar & food tiles in the new palette */
 .aa{background:var(--md-sc)!important;border:0!important;border-radius:16px!important;color:var(--ink)!important}
-.aa.main{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important}
+.aa.aa-main{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important}
 .add-top{background:var(--md-sc-low)!important;border-bottom-color:var(--line)!important}
 .fh-b,.tm-mode{background:var(--md-sc-high)!important;border-radius:16px!important}
 .tm-mode[aria-pressed="true"]{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important}
@@ -1633,7 +1684,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 @media (min-width:600px) and (max-width:1023px){.side-btn .ic{padding:4px 16px!important;width:24px!important;height:24px!important}}
 .icon-btn .ic{width:24px!important;height:24px!important}
 .big-action .ic{width:36px!important;height:36px!important}
-.sq-ck .ic{width:16px!important;height:16px!important}
+
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -2297,13 +2348,19 @@ function plannerContext(opts = {}) {
   const today = todayISO();
   const foods = allFoods().filter(f => f.per && f.role && f.role !== "X" && dietOK(f) && !f.noPlan);
   const recipes = allRecipes().filter(r => recipeOK(r) && (r.ingredients || []).length && !r.noPlan);
+  /* what's at home comes first, the closer to its use-by date the stronger; once the plan uses it all up, no more push.
+     Expired food is never planned automatically. */
+  const pUse = {};
   const pantryBoost = id => {
     const p = S.shop.pantry[id]; if (!p || !(p.g > 0)) return 0;
-    let b = opts.usePantry === false ? 0.6 : 1.6;
-    if (p.exp) { const dl = daysBetween(today, p.exp); if (dl <= 3) b += opts.usePantry === false ? 0.5 : 2.6; }
-    return b;
+    const dl = p.exp ? daysBetween(today, p.exp) : 99; if (dl < 0) return 0;
+    const left = p.g - (pUse[id] || 0); if (left < 15) return 0;
+    const on = opts.usePantry !== false;
+    let b = on ? 1.6 : 0.6;
+    if (dl <= 0) b += on ? 4.5 : 1; else if (dl <= 1) b += on ? 4 : 0.8; else if (dl <= 3) b += on ? 3 : 0.5; else if (dl <= 7) b += on ? 1.2 : 0.2;
+    return b * Math.min(1, left / 60 + 0.4);
   };
-  return { habits, jit, foods, recipes, pantryBoost, recent: {}, week: {}, opts };
+  return { habits, jit, foods, recipes, pantryBoost, pUse, recent: {}, week: {}, opts };
 }
 function scoreFood(ctx, f, mealId) {
   const h = ctx.habits;
@@ -2333,14 +2390,14 @@ function planMeal(meal, T, ctx, keep = []) {
   let best = null;
   for (let trial = 0; trial < 42; trial++) {
     const vars = []; const used = new Set(keep.map(k => k.ref));
-    const recW = recPool.length ? (recPool.some(r => ctx.habits[meal.id + "|" + r.id]) ? 0.45 : 0.18) : 0;
+    const recW = recPool.length ? (recPool.some(r => ctx.habits[meal.id + "|" + r.id]) ? 0.45 : 0.18) + (recPool.some(r => (r.ingredients || []).some(ing => ctx.pantryBoost(ing.food) > 3)) ? 0.25 : 0) : 0;
     let slots = tpl;
     // big targets (endurance days) need room for a second carb or fruit
     if (kind === "m" && T.c > 105) slots = [...tpl, { roles: ["C", "R"], opt: clamp((T.c - 105) / 60, 0.3, 0.95) }];
     if (kind === "s" && T.kcal > 420) slots = [...tpl, { roles: ["R", "C", "F", "D"], opt: 0.8 }];
     if (kind === "b" && T.kcal > 700) slots = [...tpl, { roles: ["R", "C"], opt: 0.8 }];
     if (Math.random() < recW && !keep.length) {
-      const scored = recPool.map(r => ({ x: r, s: 1 + 1.3 * Math.log1p(ctx.habits[meal.id + "|" + r.id] || 0) + (r.fav ? 1.2 : 0) - (ctx.recent[meal.id + "|" + r.id] ? 1.8 : 0) + (Math.random() - 0.5) * 2 * ctx.jit })).sort((a, b) => b.s - a.s);
+      const scored = recPool.map(r => ({ x: r, s: 1 + 1.3 * Math.log1p(ctx.habits[meal.id + "|" + r.id] || 0) + (r.ingredients || []).reduce((a, ing) => a + 0.6 * ctx.pantryBoost(ing.food), 0) + (r.fav ? 1.2 : 0) - (ctx.recent[meal.id + "|" + r.id] ? 1.8 : 0) + (Math.random() - 0.5) * 2 * ctx.jit })).sort((a, b) => b.s - a.s);
       const pk = weightedPick(scored);
       if (pk) {
         const ps = recipePerServing(pk.x);
@@ -2407,8 +2464,8 @@ function planDay(date, ctx, { mode = "fill", meals = null, picker = null } = {})
       for (const it of items) newIds.add(it.id);
       for (const it of items) {
         ctx.recent[m.id + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1;
-        if (it.kind === "food") ctx.week[it.ref] = (ctx.week[it.ref] || 0) + 1;
-        else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) ctx.week[ing.food] = (ctx.week[ing.food] || 0) + 1; }
+        if (it.kind === "food") { ctx.week[it.ref] = (ctx.week[it.ref] || 0) + 1; if (ctx.pUse) ctx.pUse[it.ref] = (ctx.pUse[it.ref] || 0) + it.qty; }
+        else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) { ctx.week[ing.food] = (ctx.week[ing.food] || 0) + 1; if (ctx.pUse) ctx.pUse[ing.food] = (ctx.pUse[ing.food] || 0) + ing.g * it.qty / (r.servings || 1); } }
       }
     }
   }
@@ -2462,30 +2519,6 @@ function swapOptions(it, mealId) {
 }
 
 /* ================= shopping ================= */
-function shoppingNeeds(start, n) {
-  const need = {}; const add = (id, g) => { if (g > 0) need[id] = (need[id] || 0) + g; };
-  for (let i = 0; i < n; i++) {
-    const d = S.days[addDays(start, i)]; if (!d) continue;
-    for (const [, it] of dayItems(d)) {
-      if (it.eaten || it.kind === "quick") continue;
-      if (it.kind === "food") add(it.ref, it.qty);
-      else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1)); }
-    }
-  }
-  return need;
-}
-function shoppingRows(start, n) {
-  const need = shoppingNeeds(start, n); const rows = [];
-  for (const [id, g] of Object.entries(need)) {
-    const f = getFood(id); if (!f) continue;
-    const have = S.shop.pantry[id]?.g || 0;
-    const buy = Math.max(0, g - have);
-    const packs = f.pack && buy > 0 ? Math.ceil(buy / f.pack - 0.02) : 0;
-    const left = packs ? packs * f.pack - buy : 0;
-    rows.push({ id, f, need: g, have, buy, packs, left, cat: f.cat || "other" });
-  }
-  return rows;
-}
 /* ================= fitness settings (ported from the Fitness & Nutrition workbook) ================= */
 const DEF_ZONES = [
   { z: "Z1", name: "Recovery", hr: 0, pSlow: null, pFast: 1.3, rpe: "1–2", use: "Recovery runs, warm-up, cool-down" },
@@ -3072,8 +3105,8 @@ const colorVar = c => `var(--${COLOR_TOKENS.includes(c) ? c : "accent"})`;
 
 /* ================= navigation ================= */
 const TABS = [["today", "Today", "home"], ["train", "Train", "fitness"], ["plan", "Fuel", "plate"], ["progress", "Progress", "chart"], ["dash", "Dashboard", "dash"]];
-const FUEL_TABS = ["plan", "foods", "shop"];
-const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"]].map(([k, l]) => `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}</button>`).join("")}</nav>`;
+const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
+const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const xp = k === "pantry" ? (E => E.expired.length + E.soon.length)(expiryList()) : 0; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`; }).join("")}</nav>`;
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
   return (side ? [...TABS, ["timer", "Timer", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
@@ -3186,7 +3219,6 @@ VIEWS.plan = function () {
   }
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
     <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button>
-    <button class="btn ghost sm" data-act="tab" data-tab="shop">${ic("cart", "sm")}Shopping list</button>
     ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
   if (eat.manual) {
@@ -3263,7 +3295,7 @@ VIEWS.foods = function () {
     <div class="row"><button class="btn soft sm" data-act="new-recipe">${ic("book", "sm")}Recipe</button><button class="btn ink sm" data-act="new-food">${ic("plus", "sm")}Food</button></div></div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:10px 0 12px">
     <div class="search">${ic("search")}<input id="foods-q" type="search" placeholder="Search foods and recipes" value="${esc(q)}" data-in="foods-q" autocomplete="off"><button class="icon-btn" data-act="open-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
-    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "My foods"], ["recipes", "Recipes"], ["fav", "Favourites"], ...(hiddenFoods().length ? [["hidden", `Deleted ${hiddenFoods().length}`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div></div></header>`;
+    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `Deleted ${hiddenFoods().length}`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div></div></header>`;
   if (seg === "hidden") { const hf = hiddenFoods().filter(f => !q || matchScore(foodKeys(f), q) > 0).sort((a, b) => a.name.localeCompare(b.name));
     return h + `<div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px"><span class="faint" style="font-size:13px">Built-in foods you deleted. Restore the ones you want back.</span>${hf.length > 1 ? `<button class="btn soft sm" data-act="fd-unhide-all">Restore all</button>` : ""}</div>
       <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${f.id}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
@@ -3276,53 +3308,6 @@ VIEWS.foods = function () {
 };
 
 function hiddenFoods() { return Object.values(S.foods || {}).filter(x => x && x.hidden && BUILTIN[x.id]).map(x => BUILTIN[x.id]); }
-/* ================= shopping view ================= */
-VIEWS.shop = function () {
-  const n = S.shop.range || 7, start = UI.shopStart;
-  const rows = shoppingRows(start, n);
-  const checked = S.shop.checked || {};
-  const groups = {};
-  for (const r of rows) (groups[r.cat] = groups[r.cat] || []).push(r);
-  const toBuy = rows.filter(r => r.buy > 0);
-  let h = `<header class="top">${fuelNav()}<div class="top-row"><div><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))} · ${toBuy.length} item${toBuy.length === 1 ? "" : "s"} to buy</div></div>
-    <div class="row"><button class="btn soft sm" data-act="shopq-open">${ic("list", "sm")}Compact</button><button class="btn soft sm" data-act="copy-list">${ic("copy", "sm")}Copy</button></div></div>
-    <div class="chips scroll" style="padding:10px 0 12px">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}
-    <label class="chip" style="gap:8px">${ic("calendar", "sm")}<span class="sr">Start date</span><input id="shop-start" type="date" value="${start}" data-in="shop-start" style="border:0;background:transparent;font-size:13.5px;font-weight:600;min-width:0"></label></div></header>`;
-  if (!rows.length && !(S.shop.extras || []).length) {
-    h += `<div class="empty"><h3>Your list is empty</h3><p>The list builds itself from the meals you plan in these days, minus what you already have at home.</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Plan meals</button></div></div>`;
-  }
-  const anyChecked = Object.values(checked).some(Boolean);
-  for (const [cat, label] of AISLES) {
-    const g = groups[cat]; if (!g) continue;
-    h += `<div class="section-h"><h2>${label}</h2></div><div class="card">${g.sort((a, b) => a.f.name.localeCompare(b.f.name)).map(r => {
-      const done = !!checked[r.id];
-      const covered = r.buy <= 0;
-      const u = r.f.unit || "g";
-      const sub = covered ? `Covered by your pantry (${fmtN(r.have)} ${u})` :
-        (r.packs ? `${r.packs} × ${fmtN(r.f.pack)} ${u} pack${r.packs > 1 ? "s" : ""}` : "") + (r.have ? `${r.packs ? " · " : ""}${fmtN(r.have)} ${u} at home` : "") + (r.left >= 10 ? ` · <span class="leftover">${fmtN(r.left)} ${u} left over</span>` : "");
-      return `<div class="shop-item ${done || covered ? "done" : ""}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="Bought ${esc(r.f.name)}" ${covered ? "disabled" : ""}><span>${ic("check")}</span></button>
-        <div style="min-width:0"><span class="t">${esc(r.f.name)}</span><span class="s">${sub || "&nbsp;"}</span></div>
-        <span class="q">${fmtN(covered ? r.need : r.buy)} ${u}<small>for ${fmtN(r.need)} ${u} planned</small></span></div>`;
-    }).join("")}</div>`;
-  }
-  h += `<div class="section-h"><h2>Extras</h2></div><div class="card">${(S.shop.extras || []).map(x => `<div class="shop-item ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><div style="min-width:0"><span class="t">${esc(x.text)}</span></div><button class="icon-btn" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></div>`).join("")}
-    <form class="shop-item" data-form="extra" style="grid-template-columns:36px minmax(0,1fr) auto"><span class="chk" aria-hidden="true">${ic("plus", "sm")}</span><input id="extra-in" class="inp" style="border:0;min-height:38px;padding:0" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">Add</button></form></div>`;
-  if (anyChecked || (S.shop.extras || []).some(x => x.done)) h += `<button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Done shopping: move bought items to pantry</button>`;
-  h += pantrySection();
-  return h;
-};
-function pantrySection() {
-  const ids = Object.keys(S.shop.pantry || {}).filter(id => getFood(id) && S.shop.pantry[id].g > 0);
-  const today = todayISO();
-  ids.sort((a, b) => (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
-  const soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
-  let h = `<div class="section-h"><h2>Pantry</h2><button class="link" data-act="pantry-add">${ic("plus", "sm")} Add</button></div>`;
-  if (soon.length) h += `<div class="note accent">${soon.length} item${soon.length > 1 ? "s" : ""} to use soon: ${soon.map(id => esc(getFood(id).name)).join(", ")}. <button class="link" data-act="plan-pantry">Plan with these</button></div>`;
-  if (!ids.length) return h + `<div class="note">What's at home goes here. Items you tick off the list move in automatically, and the planner uses them first so nothing goes to waste.</div>`;
-  return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id); const dl = p.exp ? daysBetween(today, p.exp) : null;
-    return `<button class="lrow" data-act="pantry-edit" data-id="${id}"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}</span></span><span class="end num">${fmtN(p.g)} ${f.unit || "g"}</span></button>`; }).join("")}</div>`;
-}
-
 /* ================= stats view ================= */
 VIEWS.stats = function (embedded) {
   const n = UI.statsRange, end = todayISO(), start = addDays(end, -(n - 1));
@@ -3879,7 +3864,9 @@ const addRowsFor = sh => {
   if (seg === "recent") {
     const rec = recentFoods(30).filter(r => r.kind === "food" ? getFood(r.ref) : getRecipe(r.ref));
     const ofMeal = rec.filter(r => r.meal === sh.meal), others = rec.filter(r => r.meal !== sh.meal);
-    return [...ofMeal, ...others].slice(0, 25).map(r => r.kind === "food" ? foodRow(getFood(r.ref), r.qty) : recRow(getRecipe(r.ref), r.qty)).join("")
+    const mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m", spare = S.settings.shopPrefs?.leftovers === false ? [] : pantrySpare().filter(x => (x.f.meals || ["m"]).includes(mk) && getFood(x.id)).slice(0, 4);
+    const spareH = spare.length ? `<div class="lrow sub-h"><span class="s">${ic("jar", "sm")} At home, not in the plan</span></div>` + spare.map(x => foodRow(x.f, Math.min(x.g, defaultQty(x.f) * (x.f.countable ? 1 : 1.5)))).join("") + `<div class="lrow sub-h"><span class="s">Recent</span></div>` : "";
+    return spareH + [...ofMeal, ...others].slice(0, 25).map(r => r.kind === "food" ? foodRow(getFood(r.ref), r.qty) : recRow(getRecipe(r.ref), r.qty)).join("")
       || `<div class="lrow"><span><span class="t">Nothing recent yet</span><span class="s">Search above or browse All. Foods you add show up here.</span></span></div>`;
   }
   if (seg === "fav") return [...allFoods().filter(f => f.fav).map(f => foodRow(f)), ...allRecipes().filter(r => r.fav).map(r => recRow(r))].join("") || `<div class="lrow"><span><span class="t">No favourites yet</span><span class="s">Tap ★ on any food to keep it one tap away.</span></span></div>`;
@@ -3900,7 +3887,7 @@ SHEETS.add = sh => {
     title: `Add to ${mealName(sh.meal)}`, focus: "add-q",
     body: `<div class="add-top">${mealChips(sh.meal)}
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
-      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
+      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["fav", "Favourites"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       </div><div id="add-ctx">${addCtxFor(sh)}</div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
@@ -3955,7 +3942,7 @@ SHEETS.food = sh => {
   const d = sh.draft; if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per); const calc = kcalFromMacros(d.per);
   const isBuiltinEdit = BUILTIN[d.id] && !sh.isNew;
   const orig = d.orig;
-  const nfield = (k, l, color, u = "g") => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><div class="unit-inp"><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" data-in="fd-per" data-k="${k}"><span>${u}</span></div></div>`;
+  const nfield = (k, l, color, u = "g") => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><div class="unit-inp"><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? "" : ""}" data-in="fd-per" data-k="${k}"><span>${u}</span></div></div>`;
   return {
     title: sh.isNew ? (d.source === "off" ? "Imported product" : d.source === "label" ? "Check the label values" : "New food") : "Edit food",
     focus: sh.isNew && !d.name ? "fd-name" : null,
@@ -4043,7 +4030,7 @@ SHEETS.planner = sh => {
     body: `<div class="field"><span class="flabel">What to plan</span><div class="seg">${[["day", relDay(UI.date)], ["week", "Next 7 days"]].map(([k, l]) => `<button data-act="pl-scope" data-k="${k}" aria-pressed="${sh.scope === k}">${esc(l)}</button>`).join("")}</div></div>
       <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["fill", "Keep, fill the gaps"], ["replace", "Start fresh"]].map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${sh.mode === k}">${l}</button>`).join("")}</div>
         <span class="faint" style="font-size:12.5px">${sh.mode === "replace" ? "Planned items are replaced. Anything already marked as eaten stays." : "Meals you've already filled stay as they are; empty meals get planned to cover what's left."}</span></div>
-      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Prefers food you have at home, especially if it expires soon</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
+      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Food at home goes into the plan first, the closest to its use-by date first. Expired food is left out.</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Cook once, eat twice</span><span class="s">Lunch and dinner repeat over pairs of days: lunch day 1 = lunch day 2, dinner day 1 = dinner day 2. Portions still follow each day's target.</span></span><button class="switch" role="switch" aria-checked="${!!sh.pairs}" data-act="pl-toggle" data-k="pairs" aria-label="Cook once, eat twice"></button></div>
       ${AIF("plan") ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dishes chosen by the AI</span><span class="s">The AI builds real dishes from your habits and foods, in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.claude}" data-act="pl-toggle" data-k="claude" aria-label="Dishes chosen by the AI"></button></div>` : ""}
       <div class="note">Targets come from each day's training type. Portions are rounded to ${S.settings.step} g and whole pieces, so days land close to target rather than to the gram.</div>
@@ -4099,6 +4086,7 @@ SHEETS.pantry = sh => {
     title: f ? f.name : "Add to pantry", focus: f ? "pa-g" : "pa-q",
     body: f ? `<div class="grid2"><div class="field"><label for="pa-g">Amount at home</label><div class="unit-inp"><input id="pa-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="pa" data-k="g"><span>${f.unit || "g"}</span></div></div>
         <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div></div>
+        <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>
         ${f.pack ? `<div class="chips"><button class="chip" data-act="pa-set" data-v="${f.pack}">1 pack · ${f.pack} ${f.unit || "g"}</button><button class="chip" data-act="pa-set" data-v="${f.pack * 2}">2 packs</button></div>` : ""}`
       : `<div class="search">${ic("search")}<input id="pa-q" type="search" placeholder="Which food?" value="${esc(q)}" data-in="pa-q" autocomplete="off"></div>
         <div class="card">${res.map(r => `<button class="lrow" data-act="pa-pick" data-id="${r.x.id}"><span class="t">${esc(r.x.name)}</span><span class="end">${ic("chevR")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type to search your foods.</span></div>`}</div>`,
@@ -4788,7 +4776,8 @@ async function claudePicks(dates, meals, twinOf = {}) {
   const recs = allRecipes().filter(r => recipeOK(r) && !r.noPlan);
   const habits = buildHabits();
   const top = foods.sort((a, b) => (habits["*|" + b.id] || 0) - (habits["*|" + a.id] || 0)).slice(0, 160);
-  const pantry = Object.entries(S.shop.pantry || {}).filter(([id, p]) => p.g > 0 && getFood(id)).map(([id, p]) => `${id} (${p.g} g${p.exp ? ", use by " + p.exp : ""})`);
+  const tdy = todayISO(), pantry = Object.entries(S.shop.pantry || {}).filter(([id, p]) => p.g > 0 && getFood(id) && !(p.exp && p.exp < tdy)).sort((a, b) => (a[1].exp || "9999").localeCompare(b[1].exp || "9999"))
+    .map(([id, p]) => { const dl = p.exp ? daysBetween(tdy, p.exp) : null; return `${id} (${p.g} g${dl != null ? dl <= 1 ? ", EXPIRES " + (dl <= 0 ? "TODAY" : "TOMORROW") + ": use it first" : dl <= 3 ? `, expires in ${dl} days: use it early` : ", use by " + p.exp : ""})`; });
   const d = S.settings.diet; const diet = Object.keys(d).filter(k => d[k]).join(", ") || "none";
   const pairs = Object.keys(twinOf).length > 0;
   const dayLines = dates.map(dt => { const T = targetsFor(dt), ms = twinOf[dt] ? meals.filter(m => (m.kind || "m") !== "m") : meals; if (!ms.length) return ""; return `${dt} (${T.type.name}, ${T.kcal} kcal)${twinOf[dt] ? ` [lunch and dinner = leftovers of ${twinOf[dt]}, plan only these]` : ""}: ` + ms.map(m => `${m.id} [${m.kind === "b" ? "breakfast" : m.kind === "s" ? "snack" : "lunch/dinner"}, ~${r0(T.kcal * mealShare(m.id))} kcal]`).join(", "); }).filter(Boolean).join("\n");
@@ -4798,7 +4787,7 @@ Their usual meals (most frequent first):
 ${habitLines(meals)}
 ${pairs ? "They cook once and eat twice: every lunch and dinner you choose is eaten again the next day, so pick dishes that keep well (no fried or crispy things, no raw fish), and make lunch and dinner of the same day clearly different.\n" : ""}
 Cuisines they like: ${S.settings.cuisines.join(", ") || "any"}. Diet restrictions: ${diet}. Never use: ${S.settings.avoid.join(", ") || "nothing"}.
-Use these pantry items first: ${pantry.join("; ") || "none"}.
+Food at home, most urgent first (plan the urgent ones in the first days, in amounts that use them up): ${pantry.join("; ") || "none"}.
 Vary the main protein from day to day and avoid repeating yesterday's dish. Make each meal a coherent, real dish with a short name (e.g. "Pasta with tuna and cherry tomatoes").
 Lunch/dinner: 3-5 ids (a protein, a carb, vegetables, optionally olive oil or cheese) or one recipe plus a side. Breakfast: 2-4 ids. Snacks: 1-2 ids.
 Days and meals:
@@ -5245,32 +5234,12 @@ ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
 
 /* shopping */
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; put("shop", "", S.shop); };
-ACT["shop-check"] = el => { const id = el.dataset.id; S.shop.checked = S.shop.checked || {}; if (S.shop.checked[id]) delete S.shop.checked[id]; else S.shop.checked[id] = true; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
-ACT["shop-done"] = () => {
-  const rows = shoppingRows(UI.shopStart, S.shop.range || 7); let n = 0; const today = todayISO();
-  for (const r of rows) if (S.shop.checked?.[r.id]) {
-    const add = r.packs ? r.packs * r.f.pack : r.buy;
-    const p = S.shop.pantry[r.id] || { g: 0 };
-    const shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[r.f.cat] || 14;
-    S.shop.pantry[r.id] = { g: r0((p.g || 0) + add), exp: p.exp || addDays(today, shelf) };
-    n++;
-  }
-  S.shop.checked = {}; S.shop.extras = (S.shop.extras || []).filter(x => !x.done);
-  put("shop", "", S.shop); toast(`${n} item${n === 1 ? "" : "s"} moved to your pantry with an estimated use-by date`);
-};
-ACT["copy-list"] = async () => {
-  const rows = shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0 && !S.shop.checked?.[r.id]);
-  const lines = []; for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat); if (!g.length) continue; lines.push(label.toUpperCase()); for (const r of g) lines.push(`- ${r.f.name}: ${r.packs ? `${r.packs} × ${r.f.pack} ${r.f.unit || "g"}` : `${fmtN(r.buy)} ${r.f.unit || "g"}`}`); lines.push(""); }
-  for (const x of (S.shop.extras || []).filter(x => !x.done)) lines.push(`- ${x.text}`);
-  const txt = lines.join("\n").trim() || "Nothing to buy.";
-  try { await navigator.clipboard.writeText(txt); toast("Shopping list copied"); }
-  catch (e) { openSheet("confirm", { title: "Copy this list", text: txt, yes: "Done", run: () => {} }); }
-};
 ACT["pantry-add"] = () => openSheet("pantry", {});
 ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "" }); };
 ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food]; sh.g = p?.g ?? (getFood(sh.food).pack || ""); sh.exp = p?.exp || ""; sh._new = true; renderSheet(); };
+ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
 ACT["pa-set"] = el => { S_().g = +el.dataset.v; renderSheet(); };
 ACT["pa-save"] = () => { const sh = S_(); const g = num(sh.g); if (g > 0) S.shop.pantry[sh.food] = { g: r0(g), exp: sh.exp || "" }; else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
 ACT["pa-del"] = () => { const sh = S_(); delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
@@ -7668,7 +7637,7 @@ VIEWS.today = function () {
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
   const quick = `<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
-  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${tr}${body}</div><div class="tg-col">${fuel}${week}${next}</div></div>`;
+  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${tr}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${week}${next}</div></div>`;
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
   return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
@@ -8286,26 +8255,6 @@ ACT["tm-emdone"] = () => { const el = clkEl(TMR.clk), c = tmrC(); if (el < 0) re
 ACT["tm-rep"] = el => { const i = +el.dataset.i; TMR.reps[i] = Math.max(0, (TMR.reps[i] || 0) + +el.dataset.d); scheduleRender(); };
 ACT["tm-partial"] = el => { TMR.partial = Math.max(0, TMR.partial + +el.dataset.d); scheduleRender(); };
 
-/* ================= shopping list, one tap away and compact ================= */
-function shopToBuy() { return shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0); }
-function shopBadge() { const n = shopToBuy().filter(r => !S.shop.checked?.[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length; return n ? `<span class="badge">${n > 99 ? "99+" : n}</span>` : ""; }
-const shopBtn = () => `<button class="icon-btn has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart")}${shopBadge()}</button>`;
-SHEETS.shopq = sh => {
-  const n = S.shop.range || 7, start = UI.shopStart, rows = shopToBuy(), ck = S.shop.checked || {}, ex = S.shop.extras || [];
-  const left = rows.filter(r => !ck[r.id]).length + ex.filter(x => !x.done).length;
-  let body = `<div class="sq-top"><div class="chips">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div><span class="faint">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))}</span></div>`;
-  if (!rows.length && !ex.length) body += `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
-  for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat).sort((a, b) => (!!ck[a.id] - !!ck[b.id]) || a.f.name.localeCompare(b.f.name)); if (!g.length) continue;
-    body += `<div class="sq"><div class="sq-h">${esc(label)}<span>${g.filter(r => !ck[r.id]).length}</span></div>${g.map(r => { const u = r.f.unit || "g";
-      return `<button class="sq-i ${ck[r.id] ? "done" : ""}" data-act="shop-check" data-id="${r.id}" aria-pressed="${!!ck[r.id]}"><span class="sq-ck">${ic("check", "sm")}</span><span class="sq-n">${esc(r.f.name)}</span><span class="sq-q">${r.packs ? `${r.packs}×${fmtN(r.f.pack)}` : fmtN(r.buy)} ${u}</span></button>`; }).join("")}</div>`; }
-  if (ex.length) body += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<button class="sq-i ${x.done ? "done" : ""}" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}"><span class="sq-ck">${ic("check", "sm")}</span><span class="sq-n">${esc(x.text)}</span><span class="sq-q"></span></button>`).join("")}</div>`;
-  body += `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else…" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}</button></form>`;
-  const anyCk = Object.values(ck).some(Boolean) || ex.some(x => x.done);
-  return { title: `Shopping · ${left} to buy`, body, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto">${ic("copy", "sm")}Copy</button>${anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Bought → pantry</button>` : `<button class="btn soft" data-act="shopq-full">Full list & pantry</button>`}` };
-};
-ACT["shopq-open"] = () => openSheet("shopq", { live: true });
-ACT["shopq-full"] = () => { closeSheet(); UI.fuelTab = "shop"; UI.tab = "shop"; scheduleRender(); window.scrollTo(0, 0); };
-
 /* ================= calories from macros: 4 kcal/g protein and carbs, 9 fat, 2 fibre (EU labels) ================= */
 const kcalFromMacros = p => r0(4 * num(p.p) + 4 * num(p.c) + 9 * num(p.f) + 2 * num(p.fib));
 ACT["fd-auto"] = () => { const d = S_().draft; d.autoKcal = !d.autoKcal; if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per); renderSheet(); };
@@ -8793,7 +8742,7 @@ function nutTips(w, T) {
   for (const k of Object.keys(NUT)) { const N = NUT[k]; if (N.micro && !proMicro()) continue; const v = w.v[k] || 0, t = T[k]; if (!t || (w.cov[k] || 0) < w.kcal * 0.5) continue; const st = nutStatus(k, v, t); if (st === "good") continue;
     if (N.kind === "min") tips.push({ k, st, r: v / t, t: `${N.l}: ${fmtNut(v, N.u)} of ${fmtNut(t, N.u)} ${N.u} a day`, d: `Low on ${w.days} logged day${w.days > 1 ? "s" : ""}. Easy adds: ${nutBoosters(k).join(", ")}.` });
     else { const top = Object.entries(w.src[k] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3), tot = Object.values(w.src[k] || {}).reduce((a, b) => a + b, 0) || 1;
-      tips.push({ k, st, r: t / Math.max(v, 0.01), t: `${N.l}: ${fmtNut(v, N.u)} a day, limit ${fmtNut(t, N.u)} ${N.u}`, d: `Most of it came from ${top.map(([n, x]) => `${esc(n.toLowerCase())} (${r0(x / tot * 100)}%)`).join(", ")}. Smaller portions or a swap there make the difference.` }); } }
+      tips.push({ k, st, r: t / Math.max(v, 0.01), t: `${N.l}: ${fmtNut(v, N.u)} ${N.u} a day, limit ${fmtNut(t, N.u)} ${N.u}`, d: `Most of it came from ${top.map(([n, x]) => `${esc(n.toLowerCase())} (${r0(x / tot * 100)}%)`).join(", ")}. Smaller portions or a swap there make the difference.` }); } }
   return tips.sort((a, b) => (a.st === "bad" ? 0 : 1) - (b.st === "bad" ? 0 : 1) || a.r - b.r).slice(0, 5);
 }
 /* the nutrients card, at the end of Fuel: the day, the week, tips */
@@ -8861,11 +8810,237 @@ addEventListener("resize", () => { const bar = $("#fuel-sticky"); if (bar?.class
 ACT["clear-day"] = el => { const date = el.dataset.date || UI.date, n = dayItems(getDay(date)).length; if (!n) return;
   mutateDay(date, d => { d.meals = {}; delete d.dish; }, { undo: `${n} item${n > 1 ? "s" : ""} cleared` }); };
 
+/* ================= shopping: what the plan needs, what's left over, what it costs ================= */
+/* needs for the days in range, with where each one comes from (a recipe's ingredients show up here too) */
+function shoppingNeeds(start, n) {
+  const need = {}, src = {}, add = (id, g, why) => { if (!(g > 0)) return; need[id] = (need[id] || 0) + g; (src[id] = src[id] || new Set()).add(why); };
+  for (let i = 0; i < n; i++) {
+    const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; const dd = DOW[dow(dt)];
+    for (const [m, it] of dayItems(d)) {
+      if (it.eaten || it.kind === "quick") continue;
+      if (it.kind === "food") add(it.ref, it.qty, `${d.dish?.[m] || mealName(m)} ${dd}`);
+      else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1), `${r.name} ${dd}`); }
+    }
+  }
+  return { need, src };
+}
+function shoppingRows(start, n) {
+  const { need, src } = shoppingNeeds(start, n), rows = [];
+  for (const [id, g] of Object.entries(need)) {
+    const f = getFood(id) || BUILTIN[id]; if (!f) continue;
+    const have = S.shop.pantry[id]?.g || 0, buy = Math.max(0, r0(g - have));
+    const packs = f.pack && buy > 0 ? Math.ceil(buy / f.pack - 0.02) : 0, left = packs ? r0(packs * f.pack - buy) : 0;
+    rows.push({ id, f, need: r0(g), have, buy, packs, left, cat: f.cat || "other", src: [...(src[id] || [])] });
+  }
+  return rows;
+}
+/* prices: the last price paid for a food, per gram */
+const priceOf = id => { const p = S.shop.prices?.[id]; return p && p.g > 0 && p.eur >= 0 ? p : null; };
+const eurPerG = id => { const p = priceOf(id); return p ? p.eur / p.g : null; };
+const fmtEur = v => v == null ? "" : "€" + (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : fmtN(r0(v))).replace(".", ",");
+/* what you'd actually carry home: whole packs when the food comes in packs */
+const buyG = r => r.packs ? r.packs * r.f.pack : r.buy;
+function rowCost(r) { const c = S.shop.checked?.[r.id]; if (c && c.eur != null) return +c.eur; const k = eurPerG(r.id); return k == null ? null : k * buyG(r); }
+function shopToBuy() { return shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0); }
+function shopBadge() { const n = shopToBuy().filter(r => !S.shop.checked?.[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length; return n ? `<span class="badge">${n > 99 ? "99+" : n}</span>` : ""; }
+const shopBtn = () => `<button class="icon-btn has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart")}${shopBadge()}</button>`;
+function shopRowHTML(r, compact) {
+  const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
+  const packTxt = r.packs ? `${r.packs} pack${r.packs > 1 ? "s" : ""} of ${fmtN(r.f.pack)} ${u}${r.left >= 10 ? ` · ${fmtN(r.left)} ${u} to the pantry` : ""}` : "";
+  const sub = compact ? [packTxt, got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ") : [r.src.slice(0, 3).join(", ") + (r.src.length > 3 ? ` +${r.src.length - 3}` : ""), packTxt, r.have ? `${fmtN(r.have)} ${u} at home` : "", got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ");
+  return `<div class="shop-row ${done ? "done" : ""}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
+    <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</button>
+    <button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button></div>`;
+}
+function shopListHTML(rows, compact) {
+  let h = ""; const ck = S.shop.checked || {};
+  for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat).sort((a, b) => (!!ck[a.id] - !!ck[b.id]) || a.f.name.localeCompare(b.f.name)); if (!g.length) continue;
+    h += `<div class="sq"><div class="sq-h">${esc(label)}<span>${g.filter(r => !ck[r.id]).length}</span></div>${g.map(r => shopRowHTML(r, compact)).join("")}</div>`; }
+  const ex = S.shop.extras || [];
+  if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span></span><span class="shop-q">${x.eur != null ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="€" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${x.id}">`}<button class="icon-btn sm" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
+  h += `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
+  return h;
+}
+function shopTotals(rows) { let est = 0, known = 0, inCart = 0; for (const r of rows) { const c = rowCost(r); if (c != null) { est += c; known++; if (S.shop.checked?.[r.id]) inCart += c; } }
+  for (const x of S.shop.extras || []) if (x.eur != null) { est += +x.eur; if (x.done) inCart += +x.eur; }
+  return { est, known, inCart }; }
+VIEWS.shop = function () {
+  const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy);
+  const anyCk = Object.values(S.shop.checked || {}).some(Boolean) || (S.shop.extras || []).some(x => x.done);
+  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))} · ${toBuy.length} to buy${T.est ? ` · ≈ ${fmtEur(T.est)}${T.known < toBuy.length ? ` for ${T.known} with a price` : ""}` : ""}</div></div>
+    <div class="row"><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div>
+    <div class="chips scroll" style="padding:8px 0 10px">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}
+    <label class="chip" style="gap:8px">${ic("calendar", "sm")}<span class="sr">Start date</span><input id="shop-start" type="date" value="${start}" data-in="shop-start" style="border:0;background:transparent;font-size:13.5px;font-weight:600;min-width:0"></label></div></header>`;
+  if (!toBuy.length && !(S.shop.extras || []).length) h += `<div class="empty"><h3>Nothing to buy</h3><p>The list builds itself from the meals planned in these days, minus what's in your pantry.</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Plan meals</button></div></div>`;
+  else h += `<div class="note shop-hint">Tap a product in the shop to enter how much you took and what it cost: the pantry and your spending update when you finish.</div><div class="card shop-card">${shopListHTML(toBuy, false)}</div>`;
+  const covered = rows.filter(r => r.buy <= 0);
+  if (covered.length) h += `<details class="card pad shop-covered"><summary>${covered.length} already at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.need)} ${r.f.unit || "g"} planned · ${fmtN(r.have)} at home</span></span></div>`).join("")}</details>`;
+  if (anyCk) h += `<div class="shop-done-bar"><button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Finish shopping${T.inCart ? ` · ${fmtEur(T.inCart)}` : ""}</button></div>`;
+  h += spendCard();
+  return h;
+};
+SHEETS.shopq = sh => {
+  const n = S.shop.range || 7, start = UI.shopStart, rows = shopToBuy(), ck = S.shop.checked || {}, T = shopTotals(rows);
+  const left = rows.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length;
+  const anyCk = Object.values(ck).some(Boolean) || (S.shop.extras || []).some(x => x.done);
+  const body = `<div class="sq-top"><div class="chips">${[[3, "3 days"], [7, "7 days"], [14, "14 days"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div><span class="faint">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))}${T.est ? ` · ≈ ${fmtEur(T.est)}` : ""}</span></div>
+    ${rows.length || (S.shop.extras || []).length ? shopListHTML(rows, true) : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`}`;
+  return { title: `Shopping · ${left} to buy`, body, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto">${ic("copy", "sm")}Copy</button>${anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Finish${T.inCart ? ` · ${fmtEur(T.inCart)}` : ""}</button>` : `<button class="btn soft" data-act="shopq-full">Full list</button>`}` };
+};
+ACT["shopq-open"] = () => openSheet("shopq", { live: true });
+ACT["shopq-full"] = () => { closeSheet(); UI.fuelTab = "shop"; UI.tab = "shop"; scheduleRender(); window.scrollTo(0, 0); };
+/* in the shop: how much you took, what it cost */
+SHEETS.buy = sh => {
+  const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); const f = getFood(sh.id) || BUILTIN[sh.id]; if (!f) return { title: "Not found", body: "" };
+  const u = f.unit || "g", p = priceOf(sh.id), k = eurPerG(sh.id), g = num(sh.g), est = k != null && g ? k * g : null;
+  const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtN(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean);
+  return { title: f.name, focus: "by-g",
+    body: `${r ? `<div class="faint" style="font-size:13px">Planned: ${fmtN(r.need)} ${u}${r.have ? ` · ${fmtN(r.have)} ${u} at home` : ""}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}</div>` : ""}
+      <div class="grid2"><div class="field"><label for="by-g">You're taking</label><div class="unit-inp"><input id="by-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="by" data-k="g"><span>${u}</span></div></div>
+      <div class="field"><label for="by-eur">Price paid</label><div class="unit-inp"><input id="by-eur" class="inp" inputmode="decimal" value="${sh.eur ?? ""}" placeholder="${est != null ? est.toFixed(2) : ""}" data-in="by" data-k="eur"><span>€</span></div></div></div>
+      <div class="chips">${chips.map(([v, l]) => `<button class="chip" data-act="by-set" data-v="${v}">${l}</button>`).join("")}</div>
+      ${g && r && g > r.buy ? `<div class="note">${fmtN(g - r.buy)} ${u} more than the plan needs: it goes to the pantry and the planner will use it.</div>` : ""}
+      <div class="faint" style="font-size:12.5px">${p ? `Last price: ${fmtEur(p.eur)} for ${fmtN(p.g)} ${u} (${fmtEur(p.eur / p.g * 1000)}/${u === "ml" ? "l" : "kg"})${p.at ? `, ${fmtDM(p.at)}` : ""}.` : "No price yet: what you enter is remembered for next time and for the estimates."}</div>`,
+    foot: `${S.shop.checked?.[sh.id] ? `<button class="btn soft" data-act="by-out" style="flex:0 0 auto">Take out</button>` : ""}<button class="btn primary" data-act="by-ok">${ic("cart", "sm")}In the cart</button>` };
+};
+ACT["shop-buy"] = el => { const id = el.dataset.id, c = S.shop.checked?.[id], r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === id);
+  openSheet("buy", { id, g: c?.g ?? (r ? buyG(r) : ""), eur: c?.eur ?? "" }); };
+ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
+ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
+  S.shop.checked[sh.id] = { g: g || null, eur: eur != null && eur >= 0 ? Math.round(eur * 100) / 100 : null }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
+ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
+INP.by = (v, el) => { S_()[el.dataset.k] = v; };
+ACT["shop-check"] = el => { const id = el.dataset.id; S.shop.checked = S.shop.checked || {}; if (S.shop.checked[id]) delete S.shop.checked[id]; else S.shop.checked[id] = true; put("shop", "", S.shop); };
+CHG["extra-eur"] = (v, el) => { const x = (S.shop.extras || []).find(e => e.id === el.dataset.id); if (!x) return; const e = num(v); if (e > 0) { x.eur = Math.round(e * 100) / 100; put("shop", "", S.shop); } };
+/* finish: what was taken goes to the pantry (leftovers included), prices are remembered, spending is logged */
+ACT["shop-done"] = () => {
+  const rows = shoppingRows(UI.shopStart, S.shop.range || 7), today = todayISO(); let n = 0, tot = 0; S.shop.buys = S.shop.buys || []; S.shop.prices = S.shop.prices || {};
+  for (const [id, c] of Object.entries(S.shop.checked || {})) { if (!c) continue; const r = rows.find(x => x.id === id), f = getFood(id) || BUILTIN[id]; if (!f) continue;
+    const g = r0(c.g || (r ? buyG(r) : f.pack || 0)); if (!(g > 0)) continue;
+    const eur = c.eur != null ? c.eur : eurPerG(id) != null ? Math.round(eurPerG(id) * g * 100) / 100 : null;
+    const p = S.shop.pantry[id] || { g: 0 }, shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[f.cat] || 14;
+    S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : addDays(today, shelf) };
+    if (c.eur != null) S.shop.prices[id] = { eur: c.eur, g, at: today };
+    S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null }); if (eur != null) tot += eur; n++; }
+  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null }); if (x.eur != null) tot += +x.eur; n++; }
+  S.shop.buys = S.shop.buys.filter(b => b.d >= addDays(today, -730));
+  S.shop.checked = {}; S.shop.extras = (S.shop.extras || []).filter(x => !x.done);
+  put("shop", "", S.shop); if (UI.sheet?.type === "shopq") closeSheet();
+  toast(`${n} item${n === 1 ? "" : "s"} in the pantry${tot ? ` · ${fmtEur(tot)} spent` : ""}`);
+};
+ACT["copy-list"] = async () => {
+  const rows = shopToBuy().filter(r => !S.shop.checked?.[r.id]), lines = [];
+  for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat); if (!g.length) continue; lines.push(label.toUpperCase()); for (const r of g) lines.push(`- ${r.f.name}: ${fmtN(r.buy)} ${r.f.unit || "g"}${r.packs ? ` (${r.packs} × ${fmtN(r.f.pack)})` : ""}`); lines.push(""); }
+  for (const x of (S.shop.extras || []).filter(x => !x.done)) lines.push(`- ${x.text}`);
+  const txt = lines.join("\n").trim() || "Nothing to buy.";
+  try { await navigator.clipboard.writeText(txt); toast("Shopping list copied"); } catch (e) { openSheet("confirm", { title: "Copy this list", text: txt, yes: "Done", run: () => {} }); }
+};
+/* spending: this week / month / year, and the averages */
+function spendStats() {
+  const B = (S.shop.buys || []).filter(b => b.eur != null), today = todayISO(), ws = weekStartOf(today), ms = today.slice(0, 8) + "01", ys = today.slice(0, 5) + "01-01";
+  const sum = f => B.filter(f).reduce((a, b) => a + +b.eur, 0); if (!B.length) return null;
+  const first = B.reduce((a, b) => b.d < a ? b.d : a, today), days = Math.max(7, daysBetween(first, today) + 1);
+  const last90 = sum(b => b.d > addDays(today, -91)), span90 = Math.min(91, days);
+  const perDay = last90 / span90;
+  return { week: sum(b => b.d >= ws), month: sum(b => b.d >= ms), year: sum(b => b.d >= ys), avgWeek: perDay * 7, avgMonth: perDay * 30.44, avgYear: perDay * 365, since: first };
+}
+function spendCard() {
+  const s = spendStats(); if (!s) return `<div class="section-h"><h2>Spending</h2></div><div class="note">Enter what you pay while shopping (tap a product): weekly, monthly and yearly food spending show up here.</div>`;
+  const t = (l, v, sub) => `<div class="stat"><b>${fmtEur(v)}</b><small>${l}${sub ? ` · ${sub}` : ""}</small></div>`;
+  const B = (S.shop.buys || []).filter(b => b.eur != null && b.d > addDays(todayISO(), -31)), by = {};
+  for (const b of B) by[b.n] = (by[b.n] || 0) + +b.eur; const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 5), mx = top[0]?.[1] || 1;
+  return `<div class="section-h"><h2>Spending</h2><span class="faint" style="font-size:12.5px">since ${fmtDM(s.since)}</span></div>
+    <div class="stat-grid">${t("this week", s.week)}${t("this month", s.month)}${t("this year", s.year)}</div>
+    ${S.settings.shopPrefs?.budget ? (() => { const b = S.settings.shopPrefs.budget, pct = s.week / b * 100; return `<div class="card pad"><div class="nut-t"><span>Weekly budget</span><span><b>${fmtEur(s.week)}</b> / ${fmtEur(b)}</span></div><div class="nut-bar"><i style="width:${clamp(pct, 0, 100)}%;background:var(--${pct > 100 ? "bad" : pct > 85 ? "warn" : "good"})"></i></div><div class="faint" style="font-size:12.5px;margin-top:6px">${pct > 100 ? `${fmtEur(s.week - b)} over this week.` : `${fmtEur(b - s.week)} left this week.`} Average ${fmtEur(s.avgWeek)} a week.</div></div>`; })() : ""}
+    <div class="stat-grid">${t("a week on average", s.avgWeek)}${t("a month", s.avgMonth)}${t("a year at this pace", s.avgYear)}</div>
+    ${(w => w.n ? `<div class="faint" style="font-size:12.5px">Thrown away in the last 30 days: ${w.n} item${w.n > 1 ? "s" : ""}${w.eur ? ` · ${fmtEur(w.eur)}` : ""}</div>` : "")((S.shop.waste || []).filter(x => x.d > addDays(todayISO(), -31)).reduce((a, x) => ({ n: a.n + 1, eur: a.eur + (+x.eur || 0) }), { n: 0, eur: 0 }))}
+    ${top.length ? `<div class="card pad"><div class="flabel" style="margin-bottom:6px">Most spent on, last 30 days</div>${top.map(([n, v]) => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 64px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n)}</span><span class="bar"><i style="width:${v / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtEur(v)}</span></div>`).join("")}</div>` : ""}`;
+}
+
+/* ================= pantry: what's at home, leftovers included, editable ================= */
+VIEWS.pantry = function () {
+  const today = todayISO(), ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
+  const need = shoppingNeeds(today, 7).need;
+  ids.sort((a, b) => (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
+  const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
+  let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
+  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
+    <div class="row"><button class="btn ink sm" data-act="pantry-add">${ic("plus", "sm")}Add</button></div></div></header>`;
+  h += expiryCard("pantry");
+  if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}<button class="link" data-act="plan-pantry">Plan meals with these</button></div>`;
+  if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
+  return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
+    return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} planned` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
+      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button><b>${fmtN(p.g)}<small>${u}</small></b><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
+};
+ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
+  const step = f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
+/* leftovers you have and the plan doesn't use: offered first when adding food */
+function pantrySpare(days = 7) { const need = shoppingNeeds(todayISO(), days).need; return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
+
+/* settings: leftovers and budget */
+function shopSettingsCard() {
+  const P = S.settings.shopPrefs || {};
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Shopping and pantry</span>
+    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${P.leftovers !== false}" data-act="shp-toggle" data-k="leftovers" aria-label="Offer leftovers"></button><span>Offer leftovers first<small class="faint" style="display:block;font-size:12.5px">When you add food, what's at home and not planned shows on top. The auto-planner uses it too.</small></span></label>
+    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!P.notify}" data-act="xp-notify" aria-label="Expiry notifications"></button><span>Notify me before food expires<small class="faint" style="display:block;font-size:12.5px">One notification a day when something in the pantry is due tomorrow or has expired. Expired and soon-to-expire items always show on Today and in the pantry.</small></span></label>
+    <div class="grid2"><div class="field"><label for="xp-days">“Use soon” from</label><div class="unit-inp"><input id="xp-days" class="inp" inputmode="numeric" value="${P.soonDays ?? 2}" data-chg="xp-days"><span>days before</span></div></div>
+    <div class="field"><label for="shp-budget">Weekly food budget</label><div class="unit-inp"><input id="shp-budget" class="inp" inputmode="decimal" value="${P.budget || ""}" placeholder="none" data-chg="shp-budget"><span>€</span></div></div></div></section>`;
+}
+ACT["shp-toggle"] = el => { const k = el.dataset.k, P = S.settings.shopPrefs || {}; S.settings.shopPrefs = { ...P, [k]: P[k] === false }; saveSettings(); scheduleRender(); };
+CHG["shp-budget"] = v => { const b = num(v); S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), budget: b > 0 ? b : null }; saveSettings(); scheduleRender(); };
+
+/* ================= pantry use-by dates: expired items marked, a reminder before they go off ================= */
+function expiryList() {
+  const today = todayISO(), out = { expired: [], soon: [] };
+  for (const [id, p] of Object.entries(S.shop.pantry || {})) { const f = getFood(id) || BUILTIN[id]; if (!f || !(p.g > 0) || !p.exp) continue;
+    const dl = daysBetween(today, p.exp), x = { id, f, g: p.g, exp: p.exp, dl }; if (dl < 0) out.expired.push(x); else if (dl <= (S.settings.shopPrefs?.soonDays ?? 2)) out.soon.push(x); }
+  out.expired.sort((a, b) => a.dl - b.dl); out.soon.sort((a, b) => a.dl - b.dl); return out;
+}
+const dlTxt = dl => dl < 0 ? `expired ${-dl === 1 ? "yesterday" : `${-dl} days ago`}` : dl === 0 ? "use today" : dl === 1 ? "use by tomorrow" : `use within ${dl} days`;
+/* the card on Today, and on top of the pantry */
+function expiryCard(where) {
+  const E = expiryList(); if (!E.expired.length && !E.soon.length) return "";
+  const row = x => `<div class="xp-row ${x.dl < 0 ? "bad" : "warn"}"><span class="xp-dot"></span><span class="xp-t"><b>${esc(x.f.name)}</b><small>${fmtN(x.g)} ${x.f.unit || "g"} · ${dlTxt(x.dl)}</small></span>${x.dl < 0 ? `<button class="btn text sm" data-act="xp-toss" data-id="${x.id}">Thrown away</button><button class="btn text sm" data-act="xp-keep" data-id="${x.id}">Still good</button>` : `<button class="btn text sm" data-act="xp-use" data-id="${x.id}">Use it</button>`}</div>`;
+  return `<section class="card pad xp-card" aria-label="Use-by dates"><div class="nut-h"><span class="flabel">${E.expired.length ? `${E.expired.length} expired` : ""}${E.expired.length && E.soon.length ? " · " : ""}${E.soon.length ? `${E.soon.length} to use soon` : ""}</span>${where === "today" ? `<button class="link" data-act="tab" data-tab="pantry">Pantry</button>` : ""}</div>
+    ${[...E.expired, ...E.soon].slice(0, where === "today" ? 4 : 50).map(row).join("")}
+    ${E.soon.length ? `<button class="btn tonal sm" data-act="plan-pantry" style="align-self:flex-start">${ic("spark", "sm")}Plan meals with these</button>` : ""}</section>`;
+}
+ACT["xp-toss"] = el => { const id = el.dataset.id, prev = clone(S.shop.pantry[id]), f = getFood(id) || BUILTIN[id];
+  S.shop.waste = S.shop.waste || []; S.shop.waste.push({ d: todayISO(), id, n: f?.name, g: prev?.g || 0, eur: eurPerG(id) != null ? Math.round(eurPerG(id) * (prev?.g || 0) * 100) / 100 : null });
+  delete S.shop.pantry[id]; put("shop", "", S.shop); toast(`${f?.name || "Item"} removed`, () => { S.shop.pantry[id] = prev; S.shop.waste.pop(); put("shop", "", S.shop); }); };
+ACT["xp-keep"] = el => { const p = S.shop.pantry[el.dataset.id]; if (!p) return; p.exp = addDays(todayISO(), 2); put("shop", "", S.shop); toast("Use-by moved to the day after tomorrow"); };
+ACT["xp-use"] = el => { const id = el.dataset.id, f = getFood(id); if (!f) return; const p = S.shop.pantry[id];
+  UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender();
+  openSheet("qty", { kind: "food", ref: id, qty: Math.min(p?.g || defaultQty(f), Math.max(defaultQty(f), 0)), date: todayISO(), meal: suggestMeal() }); };
+/* a system notification once a day when something is about to go off (only while the app is open or in the background tab) */
+async function expiryNotify(force) {
+  if (!S.settings.shopPrefs?.notify || !("Notification" in window) || Notification.permission !== "granted") return;
+  const key = "engine.xpNote", today = todayISO(); let last = ""; try { last = localStorage.getItem(key) || ""; } catch (e) {}
+  if (!force && last === today) return;
+  const E = expiryList(), items = [...E.soon.filter(x => x.dl <= 1), ...E.expired]; if (!items.length) return;
+  try { localStorage.setItem(key, today); } catch (e) {}
+  const body = items.slice(0, 4).map(x => `${x.f.name}: ${dlTxt(x.dl)}`).join("\n") + (items.length > 4 ? `\n+${items.length - 4} more` : "");
+  try { const reg = await navigator.serviceWorker?.getRegistration?.(); const opts = { body, tag: "engine-expiry", icon: "icons/icon-192.png", badge: "icons/icon-192.png" };
+    if (reg?.showNotification) await reg.showNotification("Pantry: use soon", opts); else new Notification("Pantry: use soon", opts); } catch (e) {}
+}
+ACT["xp-notify"] = async el => {
+  const P = S.settings.shopPrefs || {};
+  if (P.notify) { S.settings.shopPrefs = { ...P, notify: false }; saveSettings(); scheduleRender(); return; }
+  if (!("Notification" in window)) { toast("This browser can't show notifications. The reminder stays on Today."); return; }
+  const r = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+  if (r !== "granted") { toast("Notifications are blocked for this site: allow them in the browser settings."); return; }
+  S.settings.shopPrefs = { ...P, notify: true }; saveSettings(); scheduleRender(); expiryNotify(true);
+};
+CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), soonDays: clamp(Math.round(num(v)) || 2, 0, 14) }; saveSettings(); scheduleRender(); };
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(() => expiryNotify(), 1500); });
+setTimeout(() => expiryNotify(), 6000);
+
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
-  try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h)) UI.tab = h; } catch (e) {}
+  try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }

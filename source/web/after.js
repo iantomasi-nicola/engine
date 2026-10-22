@@ -37,9 +37,8 @@
       : E.uid ? `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${esc(E.email || "Signed in")}</b><small class="faint" style="display:block;font-size:12.5px">Synced on every device where you sign in${E.pending() ? ` · ${E.pending()} change${E.pending() > 1 ? "s" : ""} waiting for the network` : ""}</small></span><button class="btn soft sm" data-act="eg-signout">Sign out</button></div>`
       : `<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>This device only</b><small class="faint" style="display:block;font-size:12.5px">Sign in to keep phone and computer in sync. What's here is uploaded the first time.</small></span><button class="btn primary sm" data-act="eg-signin">Sign in</button></div>`;
     return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}
-      <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn soft sm" style="cursor:pointer">${ic("download", "sm")}Restore a backup (.json)<input type="file" accept=".json,application/json" data-chg="eg-restore" hidden></label><button class="btn soft sm" data-act="export">${ic("download", "sm")}Download a backup</button></div>
-      <div class="faint" style="font-size:12.5px">Moving from Engine on Claude: there, Settings → Full backup (JSON); here, Restore a backup.</div></section>
-      ${aiCard()}${aiFeatCard()}${proSettingsCard()}`;
+      <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn soft sm" style="cursor:pointer">${ic("download", "sm")}Restore a backup (.json)<input type="file" accept=".json,application/json" data-chg="eg-restore" hidden></label><button class="btn soft sm" data-act="export">${ic("download", "sm")}Download a backup</button></div></section>
+      ${aiCard()}${aiFeatCard()}${proSettingsCard()}${shopSettingsCard()}`;
   }
   const origSettings = VIEWS.settings;
   VIEWS.settings = function () { const h = origSettings(); return h.replace('<div class="set-group">', '<div class="set-group">' + webCards()); };
@@ -140,6 +139,10 @@
   const st = document.createElement("style"); st.textContent = `.ai-list{display:flex;flex-direction:column;gap:10px}.ai-svc{border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface,transparent)}.ai-svc.off{opacity:.62}.ai-h{display:flex;align-items:center;gap:12px}.ai-n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--sec-c);color:var(--on-sec-c);font-weight:700;font-size:13px;flex:none}.ai-t{flex:1;min-width:0;display:flex;flex-direction:column}.ai-t small{color:var(--faint);font-size:12.5px}.ai-m{gap:10px;align-items:center;flex-wrap:nowrap}.ai-m .inp{flex:1;min-width:0}.ai-acts{gap:6px;align-items:center;flex-wrap:wrap}.ai-add{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}`; document.head.appendChild(st);
 
   /* ---- offline + installable ---- */
-  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(() => navigator.serviceWorker.ready).then(reg => {
+    // once the app is idle, keep the barcode and label readers on the device too
+    const warm = () => { if (navigator.onLine && !(navigator.connection?.saveData)) reg.active?.postMessage("warm"); };
+    (window.requestIdleCallback || setTimeout)(warm, 8000);
+  }).catch(() => {}));
   addEventListener("online", () => scheduleRender()); addEventListener("offline", () => scheduleRender());
 })();

@@ -38,7 +38,9 @@
     if (authP) return authP;
     authP = (async () => {
       if (!sb) return null;
-      let s = null; try { s = (await sb.auth.getSession()).data.session; } catch (e) {}
+      let s = null, err = null; try { const r = await sb.auth.getSession(); s = r.data.session; err = r.error; } catch (e) { err = e; }
+      // offline with an expired token: keep using the account saved on this device, it refreshes once back online
+      if (!s && (err || !navigator.onLine)) { try { const st = JSON.parse(localStorage.getItem("engine-auth") || "null"), u = st?.user || st?.currentSession?.user; if (u?.id) s = { user: u }; } catch (e) {} }
       if (!s && !LS.get("engine.localOnly", false)) s = await E.loginScreen();
       if (s) { E.uid = s.user.id; E.email = s.user.email; E.mode = "cloud"; }
       return E.uid;
@@ -59,22 +61,33 @@
   const snapCol = (c, w, fc) => { const docs = []; for (const [p, d] of cache) if (collOf(p) === c && test(d, w)) docs.push({ id: p.split("/").pop(), data: () => d }); return { docs, size: docs.length, empty: !docs.length, metadata: { fromCache: !!fc } }; };
   function notify(p) { for (const cb of docL.get(p) || []) try { cb(snapDoc(p)); } catch (e) { console.warn(e); } const c = collOf(p); for (const l of colL.get(c) || []) try { l.cb(snapCol(c, l.w)); } catch (e) { console.warn(e); } }
   const errs = new Set(); const fail = e => { for (const f of errs) try { f(e); } catch (x) {} };
+  /* a copy of everything on this device: the app opens and works with no network, then catches up */
+  const snapKey = () => "engine.snap." + E.uid;
+  let snapT = 0; const saveSnap = () => { clearTimeout(snapT); snapT = setTimeout(() => { if (E.uid && loaded) try { localStorage.setItem(snapKey(), JSON.stringify([...cache])); } catch (e) {} }, 1200); };
+  function apply(out, fromCache) {
+    for (const q of queue) q.op === "del" ? out.delete(q.path) : out.set(q.path, q.data);
+    cache = out; loaded = true;
+    for (const p of docL.keys()) for (const cb of docL.get(p)) cb(snapDoc(p, fromCache));
+    for (const [c, ls] of colL) for (const l of ls) l.cb(snapCol(c, l.w, fromCache));
+  }
   async function loadAll() {
     const out = new Map(); let from = 0;
     for (;;) { const { data, error } = await sb.from(T).select("path,data").range(from, from + 999); if (error) throw error; for (const r of data) out.set(r.path, r.data); if (data.length < 1000) break; from += 1000; }
-    for (const q of queue) q.op === "del" ? out.delete(q.path) : out.set(q.path, q.data);
-    cache = out; loaded = true;
-    for (const p of docL.keys()) for (const cb of docL.get(p)) cb(snapDoc(p));
-    for (const [c, ls] of colL) for (const l of ls) l.cb(snapCol(c, l.w));
+    apply(out, false); saveSnap(); E.online = true;
     live();
   }
-  function ensureLoad() { if (loadP) return loadP; loadP = loadAll().catch(e => { loadP = null; fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(ensureLoad, 15000); }); return loadP; }
+  function ensureLoad() {
+    if (loadP) return loadP;
+    if (!loaded && E.uid) { try { const raw = localStorage.getItem(snapKey()); if (raw) apply(new Map(JSON.parse(raw)), true); } catch (e) {} }
+    loadP = loadAll().catch(e => { loadP = null; E.online = false; if (!loaded) fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); });
+    return loadP;
+  }
   function live() {
     if (chan || !E.uid) return;
     chan = sb.channel("engine-" + E.uid).on("postgres_changes", { event: "*", schema: "public", table: T, filter: "user_id=eq." + E.uid }, p => {
       if (queue.some(q => q.path === (p.new?.path || p.old?.path))) return; // our own write still on its way
       if (p.eventType === "DELETE") { if (!p.old?.path || !cache.has(p.old.path)) return; cache.delete(p.old.path); notify(p.old.path); return; }
-      const r = p.new; if (!r?.path) return; if (JSON.stringify(cache.get(r.path)) === JSON.stringify(r.data)) return; cache.set(r.path, r.data); notify(r.path);
+      const r = p.new; if (!r?.path) return; if (JSON.stringify(cache.get(r.path)) === JSON.stringify(r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
     }).subscribe();
   }
   let flushing = false;
@@ -86,8 +99,8 @@
     catch (e) { fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(flushQ, 8000); }
     finally { flushing = false; }
   }
-  addEventListener("online", () => { flushQ(); ensureLoad(); });
-  function write(p, op, data) { if (op === "del") cache.delete(p); else cache.set(p, data); queue = queue.filter(q => q.path !== p); queue.push({ op, path: p, data: op === "del" ? null : data }); LS.set("engine.q", queue); notify(p); flushQ(); return Promise.resolve(); }
+  addEventListener("online", () => { flushQ(); if (!E.online) { loadP = null; ensureLoad(); } });
+  function write(p, op, data) { if (op === "del") cache.delete(p); else cache.set(p, data); queue = queue.filter(q => q.path !== p); queue.push({ op, path: p, data: op === "del" ? null : data }); LS.set("engine.q", queue); notify(p); saveSnap(); flushQ(); return Promise.resolve(); }
   function docRef(full) { const p = rel(full);
     return { id: p.split("/").pop(), path: full,
       onSnapshot(cb, err) { (docL.get(p) || docL.set(p, new Set()).get(p)).add(cb); if (err) errs.add(err); if (loaded) cb(snapDoc(p)); else ensureLoad(); return () => docL.get(p)?.delete(cb); },
