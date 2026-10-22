@@ -150,6 +150,21 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .xp-t{flex:1 1 150px}
 .xp-row .btn{flex:0 0 auto}
 .xp-acts{display:flex;gap:2px;margin-left:auto}
+
+/* supplements */
+.supp-card{display:flex;flex-direction:column;gap:4px}
+.supp-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 0;text-align:left;background:none;border-top:1px solid var(--line);color:var(--ink)}
+.supp-row:first-of-type{border-top:0}
+.supp-row .chk span{width:24px;height:24px;border-radius:50%;border:2px solid var(--faint);display:grid;place-items:center;color:transparent}
+.supp-row.done .chk span{background:var(--good);border-color:var(--good);color:#fff}
+.supp-row.done .supp-t b{color:var(--faint);text-decoration:line-through}
+.supp-row.late .supp-time{color:var(--warn);font-weight:600}
+.supp-t{display:flex;flex-direction:column;min-width:0}.supp-t b{font-weight:500;font-size:14.5px}.supp-t small{font-size:12.5px;color:var(--muted)}
+.supp-time{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.supp-tf{display:inline-flex;align-items:center;gap:2px}.supp-tf .inp{width:120px}
+
+.story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px}
+.story-pv img{max-height:52vh;width:auto;border-radius:12px;box-shadow:var(--md-elev2,0 2px 8px rgba(0,0,0,.2))}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -4091,20 +4106,32 @@ SHEETS.typeedit = sh => {
 };
 
 /* ---------- pantry item ---------- */
+/* pantry units: grams or ml (the food's own unit), pieces (with the weight of one), or packs */
+function pantryUnits(f, p) { const pw = p?.pw || (f.countable || /\b(egg|uov|piece|pezz|fillet|filetto|slice|fett|can|scatolett|bar|barrett|jar|vasett|bottle|bottigli|pot|yogurt)/i.test(f.servings?.[0]?.l || "") ? f.servings?.[0]?.g : null) || null;
+  return { base: f.unit || "g", pw, pack: f.pack || null }; }
+function pantryQty(f, p) { const U = pantryUnits(f, p), u = p?.u;
+  if (u === "pz" && U.pw) { const n = p.g / U.pw; return { v: Math.abs(n - Math.round(n)) < 0.05 ? fmtN(Math.round(n)) : r1(n), u: Math.round(n) === 1 ? "piece" : "pieces" }; }
+  if (u === "pack" && U.pack) { const n = p.g / U.pack; return { v: Math.abs(n - Math.round(n)) < 0.05 ? fmtN(Math.round(n)) : r1(n), u: Math.round(n) === 1 ? "pack" : "packs" }; }
+  return { v: fmtN(p.g), u: U.base }; }
 SHEETS.pantry = sh => {
-  const f = sh.food ? getFood(sh.food) : null; const q = sh.q || "";
+  const f = sh.food ? getFood(sh.food) || BUILTIN[sh.food] : null; const q = sh.q || "";
   const res = !f && q ? foodSearch(q, "all").filter(r => r.t === "food").slice(0, 8) : [];
-  return {
-    title: f ? f.name : "Add to pantry", focus: f ? "pa-g" : "pa-q",
-    body: f ? `<div class="grid2"><div class="field"><label for="pa-g">Amount at home</label><div class="unit-inp"><input id="pa-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="pa" data-k="g"><span>${f.unit || "g"}</span></div></div>
+  if (!f) return { title: "Add to pantry", focus: "pa-q", body: `<div class="search">${ic("search")}<input id="pa-q" type="search" placeholder="Which food?" value="${esc(q)}" data-in="pa-q" autocomplete="off"></div>
+        <div class="card">${res.map(r => `<button class="lrow" data-act="pa-pick" data-id="${r.x.id}"><span class="t">${esc(r.x.name)}</span><span class="end">${ic("chevR")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type to search your foods.</span></div>`}</div>`, foot: "" };
+  const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw }), u = sh.u || "base", fac = u === "pz" ? num(sh.pw) || U.pw || 0 : u === "pack" ? U.pack : 1;
+  const shown = sh.n ?? (sh.g !== "" && sh.g != null && fac ? r1(num(sh.g) / fac) : "");
+  const opts = [["base", U.base === "ml" ? "ml" : "grams"], ["pz", "pieces"], ...(U.pack ? [["pack", `packs of ${fmtN(U.pack)} ${U.base}`]] : [])];
+  return { title: f.name, focus: "pa-n",
+    body: `<div class="field"><span class="flabel">Counted in</span><div class="seg">${opts.map(([k, l]) => `<button data-act="pa-unit" data-k="${k}" aria-pressed="${u === k}">${l}</button>`).join("")}</div></div>
+      ${u === "pz" ? `<div class="field"><label for="pa-pw">One piece weighs</label><div class="unit-inp" style="max-width:180px"><input id="pa-pw" class="inp" inputmode="decimal" value="${esc(String(sh.pw ?? U.pw ?? ""))}" placeholder="e.g. 60" data-in="pa" data-k="pw"><span>${U.base}</span></div></div>` : ""}
+      <div class="grid2"><div class="field"><label for="pa-n">Amount at home</label><div class="unit-inp"><input id="pa-n" class="inp" inputmode="decimal" value="${esc(String(shown))}" data-in="pa" data-k="n"><span>${u === "pz" ? "pcs" : u === "pack" ? "packs" : U.base}</span></div></div>
         <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div></div>
-        <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>
-        ${f.pack ? `<div class="chips"><button class="chip" data-act="pa-set" data-v="${f.pack}">1 pack · ${f.pack} ${f.unit || "g"}</button><button class="chip" data-act="pa-set" data-v="${f.pack * 2}">2 packs</button></div>` : ""}`
-      : `<div class="search">${ic("search")}<input id="pa-q" type="search" placeholder="Which food?" value="${esc(q)}" data-in="pa-q" autocomplete="off"></div>
-        <div class="card">${res.map(r => `<button class="lrow" data-act="pa-pick" data-id="${r.x.id}"><span class="t">${esc(r.x.name)}</span><span class="end">${ic("chevR")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type to search your foods.</span></div>`}</div>`,
-    foot: f ? `${S.shop.pantry[f.id] ? `<button class="btn danger" data-act="pa-del" style="flex:0 0 auto" aria-label="Remove from pantry">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pa-save">Save</button>` : ""
-  };
+      ${u !== "base" && fac && num(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtN(r0(num(shown) * fac))} ${U.base}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : ""}
+      <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>`,
+    foot: `${S.shop.pantry[f.id] ? `<button class="btn danger" data-act="pa-del" style="flex:0 0 auto" aria-label="Remove from pantry">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pa-save">Save</button>` };
 };
+function paGrams(sh) { const f = getFood(sh.food) || BUILTIN[sh.food], U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw }), u = sh.u || "base";
+  if (sh.n == null) return num(sh.g); const fac = u === "pz" ? num(sh.pw) || U.pw || 0 : u === "pack" ? U.pack : 1; return fac ? num(sh.n) * fac : 0; }
 
 /* ---------- onboarding ---------- */
 SHEETS.onboard = sh => ({
@@ -5244,11 +5271,12 @@ ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
-ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "" }); };
-ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food]; sh.g = p?.g ?? (getFood(sh.food).pack || ""); sh.exp = p?.exp || ""; sh._new = true; renderSheet(); };
+ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: p.u || "base", pw: p.pw }); };
+ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food], f = getFood(sh.food); sh.g = p?.g ?? (f.pack || ""); sh.exp = p?.exp || ""; sh.u = p?.u || (f.countable ? "pz" : "base"); sh.pw = p?.pw; sh._new = true; renderSheet(); };
+ACT["pa-unit"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; const g = paGrams(sh); sh.u = el.dataset.k; sh.n = undefined; if (g > 0) sh.g = g; renderSheet(); };
 ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
-ACT["pa-set"] = el => { S_().g = +el.dataset.v; renderSheet(); };
-ACT["pa-save"] = () => { const sh = S_(); const g = num(sh.g); if (g > 0) S.shop.pantry[sh.food] = { g: r0(g), exp: sh.exp || "" }; else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
+ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", pw = num(sh.pw) || null; if (u === "pz" && !pw && !pantryUnits(getFood(sh.food) || BUILTIN[sh.food]).pw) { toast("Type the weight of one piece."); $("#pa-pw")?.focus(); return; }
+  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: u === "pz" ? pw : null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
 ACT["pa-del"] = () => { const sh = S_(); delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
 
 /* stats */
@@ -7129,7 +7157,8 @@ SHEETS.wo = sh => {
   if (w) body += `<div class="wo-meta"><span class="pill" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})">${esc(w.int || sessionIntensity(w))}</span><span>${esc(w.sport)}${w.min ? ` · ${r0(w.min)} min` : ""}${w.km ? ` · ${r1(w.km)} km` : ""}${w.load ? ` · load ${w.load}` : ""}${R.logged && sessionKcal(w, R.date).kcal ? ` · ${fmtN(sessionKcal(w, R.date).kcal)} kcal` : ""}</span>${R.logged ? `<span class="pill" style="--c:var(--good)">Done</span>` : ""}${isIcu(R.p || w) ? `<span class="faint">intervals.icu</span>` : ""}</div>`;
   if (R.script && !isStrength(R.sport)) { const g = runGist(R.script); if (g.text) body += `<div class="wo-gist">${esc(g.text)}</div>`; }
   if (R.prog) { const P = progById(R.prog); if (P) body += `<div class="note">${esc(P.name)} · week ${R.week} of ${P.weeks} · ${esc(progRuleText(P, R.week))}</div>`; }
-  if (sess) body += `<div class="field"><span class="flabel">Result</span>${sessionDetailHTML(sess)}</div>`;
+  if (sess) body += `<div class="field"><div class="row" style="justify-content:space-between"><span class="flabel">Result</span><button class="link" data-act="story-open" data-date="${R.date}" data-id="${sess.id}">${ic("image", "sm")} Share as a story</button></div>${sessionDetailHTML(sess)}</div>`;
+  else if (R.logged && w) body += `<button class="btn soft sm" data-act="story-open" data-date="${R.date}" data-id="" style="align-self:flex-start">${ic("image", "sm")}Share as a story</button>`;
   if (R.script) body += `<div class="field"><div class="row" style="justify-content:space-between"><span class="flabel">Script</span><button class="link" data-act="wo-copy">${ic("copy", "sm")} Copy</button></div><pre class="wo-script">${esc(R.script)}</pre></div>
     ${isStrength(R.sport) || /emom|amrap|cluster|\dx\s*$/im.test(R.script) ? `<details class="card wo-pv"><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad">${scriptPreview(R.script)}</div></details>` : ""}`;
   else if (!sess) body += `<div class="note">${isStrength(R.sport) ? "No script on this session yet. Start it with one of your workouts, or write a new one." : "No workout text on this session."}</div>`;
@@ -7148,7 +7177,7 @@ function sessionDetailHTML(s, noFoot) {
     ${noFoot ? "" : `<div class="lrow"><span class="s">${s.min} min${s.km ? ` · ${r1(s.km)} km` : ""} · RPE ${s.rpe}${s.note ? " · " + esc(s.note) : ""}</span></div>`}</div>`;
 }
 SHEETS.wh = sh => { const s = (logGet(sh.date)?.wsess || []).find(x => x.id === sh.id); if (!s) return { title: "Session", body: "", foot: "" };
-  return { title: `${s.name} · ${fmtDM(sh.date)}`, body: sessionDetailHTML(s), foot: `<button class="btn danger" data-act="wh-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button><button class="btn primary" data-act="close-sheet">Done</button>` }; };
+  return { title: `${s.name} · ${fmtDM(sh.date)}`, body: sessionDetailHTML(s), foot: `<button class="btn danger" data-act="wh-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button><button class="btn tonal" data-act="story-open" data-date="${sh.date}" data-id="${s.id}">${ic("image", "sm")}Story</button><button class="btn primary" data-act="close-sheet">Done</button>` }; };
 ACT["wh-open"] = el => openSheet("wh", { date: el.dataset.date, id: el.dataset.id });
 ACT["wh-del"] = () => { const sh = S_(); openSheet("confirm", { title: "Delete this session?", text: "Removes its sets and the workout from that day.", yes: "Delete", danger: true, run: () => mutateLog(sh.date, d => { d.wsess = (d.wsess || []).filter(x => x.id !== sh.id); d.workouts = (d.workouts || []).filter(w => w.sid !== sh.id); if (!d.workouts.length) d.workouts = null; }) }); };
 ACT["wo-open"] = el => { const r = woResolve(el); if (r) openSheet("wo", { r }); };
@@ -7593,7 +7622,7 @@ VIEWS.today = function () {
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
   const quick = `<button class="td-q" data-act="free-open">${ic("play", "sm")}Free workout</button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button><button class="td-q" data-act="shopq-open">${ic("cart", "sm")}Shopping</button>`;
-  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${tr}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${week}${next}</div></div>`;
+  return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + `<div class="today-grid"><div class="tg-col">${tr}${suppCard()}${body}${expiryCard("today")}</div><div class="tg-col">${fuel}${week}${next}</div></div>`;
 };
 function icuDot() { const s = icuState(), p = icuPending().n, busy = ICU_KICK_STATE === "sent";
   return `<button class="td-sync ${busy ? "busy" : ""}" data-act="icu-now" title="intervals.icu · ${busy ? "syncing" : icuAgo()}${p ? ` · ${p} to send` : ""}" aria-label="Sync with intervals.icu">${ic("sync", "sm")}<i class="${icuFail() ? "bad" : s.bridge ? (p ? "warn" : "ok") : "warn"}"></i></button>`; }
@@ -8850,10 +8879,10 @@ VIEWS.pantry = function () {
   if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, leftovers from bigger packs included. Eating planned food takes it off. You can also add or correct things by hand.</p></div>`;
   return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
     return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} planned` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
-      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button><b>${fmtN(p.g)}<small>${u}</small></b><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
+      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q => `<b>${q.v}<small>${q.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
 };
 ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
-  const step = f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
+  const U = pantryUnits(f, p), step = p.u === "pz" && U.pw ? U.pw : p.u === "pack" && U.pack ? U.pack : f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
 function pantrySpare(days = 7) { const need = shoppingNeeds(todayISO(), days).need; return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
@@ -8862,7 +8891,6 @@ function shopSettingsCard() {
   const P = S.settings.shopPrefs || {};
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Shopping and pantry</span>
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${P.leftovers !== false}" data-act="shp-toggle" data-k="leftovers" aria-label="Offer leftovers"></button><span>Offer leftovers first<small class="faint" style="display:block;font-size:12.5px">When you add food, what's at home and not planned shows on top. The auto-planner uses it too.</small></span></label>
-    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!P.notify}" data-act="xp-notify" aria-label="Expiry notifications"></button><span>Notify me before food expires<small class="faint" style="display:block;font-size:12.5px">One notification a day when something in the pantry is due tomorrow or has expired. Expired and soon-to-expire items always show on Today and in the pantry.</small></span></label>
     <div class="grid2"><div class="field"><label for="xp-days">“Use soon” from</label><div class="unit-inp"><input id="xp-days" class="inp" inputmode="numeric" value="${P.soonDays ?? 2}" data-chg="xp-days"><span>days before</span></div></div>
     <div class="field"><label for="shp-budget">Weekly food budget</label><div class="unit-inp"><input id="shp-budget" class="inp" inputmode="decimal" value="${P.budget || ""}" placeholder="none" data-chg="shp-budget"><span>€</span></div></div></div></section>`;
 }
@@ -8892,28 +8920,7 @@ ACT["xp-keep"] = el => { const p = S.shop.pantry[el.dataset.id]; if (!p) return;
 ACT["xp-use"] = el => { const id = el.dataset.id, f = getFood(id); if (!f) return; const p = S.shop.pantry[id];
   UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender();
   openSheet("qty", { kind: "food", ref: id, qty: Math.min(p?.g || defaultQty(f), Math.max(defaultQty(f), 0)), date: todayISO(), meal: suggestMeal() }); };
-/* a system notification once a day when something is about to go off (only while the app is open or in the background tab) */
-async function expiryNotify(force) {
-  if (!S.settings.shopPrefs?.notify || !("Notification" in window) || Notification.permission !== "granted") return;
-  const key = "engine.xpNote", today = todayISO(); let last = ""; try { last = localStorage.getItem(key) || ""; } catch (e) {}
-  if (!force && last === today) return;
-  const E = expiryList(), items = [...E.soon.filter(x => x.dl <= 1), ...E.expired]; if (!items.length) return;
-  try { localStorage.setItem(key, today); } catch (e) {}
-  const body = items.slice(0, 4).map(x => `${x.f.name}: ${dlTxt(x.dl)}`).join("\n") + (items.length > 4 ? `\n+${items.length - 4} more` : "");
-  try { const reg = await navigator.serviceWorker?.getRegistration?.(); const opts = { body, tag: "engine-expiry", icon: "icons/icon-192.png", badge: "icons/icon-192.png" };
-    if (reg?.showNotification) await reg.showNotification("Pantry: use soon", opts); else new Notification("Pantry: use soon", opts); } catch (e) {}
-}
-ACT["xp-notify"] = async el => {
-  const P = S.settings.shopPrefs || {};
-  if (P.notify) { S.settings.shopPrefs = { ...P, notify: false }; saveSettings(); scheduleRender(); return; }
-  if (!("Notification" in window)) { toast("This browser can't show notifications. The reminder stays on Today."); return; }
-  const r = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
-  if (r !== "granted") { toast("Notifications are blocked for this site: allow them in the browser settings."); return; }
-  S.settings.shopPrefs = { ...P, notify: true }; saveSettings(); scheduleRender(); expiryNotify(true);
-};
 CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), soonDays: clamp(Math.round(num(v)) || 2, 0, 14) }; saveSettings(); scheduleRender(); };
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(() => expiryNotify(), 1500); });
-setTimeout(() => expiryNotify(), 6000);
 
 /* ================= add a product straight from the shopping list or the pantry =================
    Scan it, search it or create it: on the list it's ticked as bought (a planned item keeps its row, anything else
@@ -8921,7 +8928,7 @@ setTimeout(() => expiryNotify(), 6000);
 function destPick(food) {
   const dest = UI.dest; UI.dest = null; if (!food) return;
   if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
-    openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || addDays(todayISO(), shelf) }); return; }
+    openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || addDays(todayISO(), shelf), u: p?.u || (food.countable ? "pz" : "base"), pw: p?.pw }); return; }
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === food.id && x.buy > 0), c = S.shop.checked?.[food.id];
   if (UI.tab !== "shop") { UI.tab = UI.fuelTab = "shop"; scheduleRender(); }
   openSheet("buy", { id: food.id, g: c?.g ?? (r ? buyG(r) : food.pack || defaultQty(food)), eur: c?.eur ?? "", extra: !r });
@@ -9061,10 +9068,194 @@ function energyView() {
   return hh;
 }
 
+/* ================= supplements: what, how much, when; a tick when taken; reminders at the set time ================= */
+const SUPPS = () => (S.settings.supps || []).filter(x => x && x.name);
+const DOW1 = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const suppDue = (x, date) => x.on !== false && (!x.since || date >= x.since) && (!x.days || !x.days.length || x.days.includes(dow(date)));
+const suppLog = date => logGet(date)?.supp || {};
+const slotKey = (id, t) => id + "@" + t;
+function suppSlots(date) { const out = []; for (const x of SUPPS()) if (suppDue(x, date)) for (const t of (x.times && x.times.length ? x.times : ["08:00"])) out.push({ x, t, k: slotKey(x.id, t) }); return out.sort((a, b) => a.t.localeCompare(b.t)); }
+function suppTaken(date, k) { return suppLog(date)[k] || null; }
+const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+function suppAdherence(days = 7) { let due = 0, ok = 0; for (let i = 1; i <= days; i++) { const d = addDays(todayISO(), -i); for (const s of suppSlots(d)) { due++; if (suppTaken(d, s.k)) ok++; } } return due ? Math.round(ok / due * 100) : null; }
+function suppStreak() { let n = 0; for (let i = 1; i < 400; i++) { const d = addDays(todayISO(), -i), sl = suppSlots(d); if (!sl.length) continue; if (sl.every(s => suppTaken(d, s.k))) n++; else break; } const t = suppSlots(todayISO()); if (t.length && t.every(s => suppTaken(todayISO(), s.k))) n++; return n; }
+/* Today: the checklist */
+function suppCard(date = todayISO()) {
+  const sl = suppSlots(date); if (!SUPPS().length) return "";
+  const now = nowHM(), isToday = date === todayISO(), done = sl.filter(s => suppTaken(date, s.k)).length, ad = suppAdherence(), st = suppStreak();
+  const low = SUPPS().filter(x => x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3));
+  return `<section class="card pad supp-card" aria-label="Supplements"><div class="nut-h"><span class="flabel">Supplements · ${done}/${sl.length}</span><span class="faint" style="font-size:12.5px">${st ? `${st} day${st > 1 ? "s" : ""} in a row` : ""}${ad != null ? `${st ? " · " : ""}${ad}% last 7 days` : ""}</span></div>
+    ${sl.length ? sl.map(s => { const tk = suppTaken(date, s.k), late = isToday && !tk && s.t <= now;
+      return `<button class="supp-row ${tk ? "done" : late ? "late" : ""}" data-act="supp-tick" data-k="${esc(s.k)}" data-date="${date}" aria-pressed="${!!tk}"><span class="chk"><span>${ic("check")}</span></span><span class="supp-t"><b>${esc(s.x.name)}</b><small>${esc([s.x.dose, s.x.withFood ? "with food" : ""].filter(Boolean).join(" · "))}</small></span><span class="supp-time">${tk ? `taken ${esc(typeof tk === "string" ? tk : "")}` : esc(s.t)}</span></button>`; }).join("") : `<div class="faint" style="font-size:13px">Nothing scheduled today.</div>`}
+    ${low.length ? `<div class="note warn" style="font-size:12.5px">Running low: ${low.map(x => `${esc(x.name)} (${x.stock} left)`).join(", ")}. <button class="link" data-act="supp-shop">Add to the shopping list</button></div>` : ""}</section>`;
+}
+ACT["supp-tick"] = el => { const date = el.dataset.date || todayISO(), k = el.dataset.k, id = k.split("@")[0], x = SUPPS().find(s => s.id === id);
+  let was = false; mutateLog(date, day => { const m = { ...(day.supp || {}) }; if (m[k]) { delete m[k]; was = true; } else m[k] = nowHM(); day.supp = Object.keys(m).length ? m : undefined; if (!day.supp) delete day.supp; });
+  if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock + (was ? 1 : -1)); saveSettings(); }
+  haptic(15); scheduleRender(); };
+ACT["supp-shop"] = () => { const low = SUPPS().filter(x => x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3)); S.shop.extras = S.shop.extras || [];
+  for (const x of low) if (!S.shop.extras.some(e => !e.done && e.text === x.name)) S.shop.extras.push({ id: uid(), text: x.name, done: false }); put("shop", "", S.shop); toast(`${low.length} added to the shopping list`); };
+/* Settings: the list, with times, days and stock */
+function suppSettingsCard() {
+  const L = S.settings.supps || [];
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><div class="nut-h"><span class="flabel">Supplements</span><button class="btn tonal sm" data-act="supp-new">${ic("plus", "sm")}Add</button></div>
+    ${L.length ? `<div class="card">${L.map(x => `<button class="lrow" data-act="supp-edit" data-id="${x.id}"><span style="min-width:0"><span class="t">${esc(x.name)}${x.on === false ? ' <span class="tag">Paused</span>' : ""}</span><span class="s">${esc([x.dose, (x.times || []).join(", "), x.days?.length && x.days.length < 7 ? x.days.map(d => DOW1[d]).join(" ") : "every day", x.stock != null && x.stock !== "" ? `${x.stock} left` : ""].filter(Boolean).join(" · "))}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : `<div class="faint" style="font-size:13px">Creatine, vitamin D, omega-3, magnesium… Add them with the time you take them: they show on Today to tick off, with a reminder at that time.</div>`}</section>`;
+}
+function reminderCard() { return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px">${reminderPrefs()}</section>`; }
+SHEETS.supp = sh => { const d = sh.draft;
+  const tf = (i, t) => `<span class="supp-tf"><input class="inp" type="time" value="${esc(t)}" data-chg="supp-time" data-i="${i}" aria-label="Time ${i + 1}">${(d.times || []).length > 1 ? `<button class="icon-btn sm" data-act="supp-time-del" data-i="${i}" aria-label="Remove time">${ic("close", "sm")}</button>` : ""}</span>`;
+  return { title: sh.isNew ? "New supplement" : d.name || "Supplement", focus: sh.isNew ? "sp-name" : null,
+    body: `<div class="grid2"><div class="field"><label for="sp-name">Name</label><input id="sp-name" class="inp" value="${esc(d.name || "")}" placeholder="Creatine" data-in="sp" data-k="name"></div>
+      <div class="field"><label for="sp-dose">Dose</label><input id="sp-dose" class="inp" value="${esc(d.dose || "")}" placeholder="5 g, 1 capsule, 2000 IU" data-in="sp" data-k="dose"></div></div>
+      <div class="field"><span class="flabel">When</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${(d.times || ["08:00"]).map((t, i) => tf(i, t)).join("")}<button class="btn soft sm" data-act="supp-time-add">${ic("plus", "sm")}Time</button></div></div>
+      <div class="field"><span class="flabel">Days</span><div class="chips">${DOW1.map((l, i) => `<button class="chip sm" data-act="supp-day" data-i="${i}" aria-pressed="${!d.days?.length || d.days.includes(i)}">${l}</button>`).join("")}</div></div>
+      <div class="grid2"><div class="field"><label for="sp-stock">Doses left <span class="faint">(optional)</span></label><input id="sp-stock" class="inp" inputmode="numeric" value="${d.stock ?? ""}" placeholder="e.g. 60" data-in="sp" data-k="stock"></div>
+      <div class="field"><span class="flabel">&nbsp;</span><label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!d.withFood}" data-act="supp-flag" data-k="withFood" aria-label="With food"></button><span>With food</span></label></div></div>
+      <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${d.on !== false}" data-act="supp-flag" data-k="on" aria-label="Active"></button><span>Active<small class="faint" style="display:block;font-size:12.5px">Pause it without losing the history.</small></span></label>`,
+    foot: `${!sh.isNew ? `<button class="btn danger" data-act="supp-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="supp-save">Save</button>` };
+};
+ACT["supp-new"] = () => openSheet("supp", { isNew: true, draft: { id: "sp" + Date.now().toString(36), name: "", dose: "", times: ["08:00"], days: [], on: true, since: todayISO() } });
+ACT["supp-edit"] = el => { const x = (S.settings.supps || []).find(s => s.id === el.dataset.id); if (x) openSheet("supp", { draft: clone(x) }); };
+ACT["supp-time-add"] = () => { const d = S_().draft; d.times = [...(d.times || ["08:00"]), "20:00"]; renderSheet(); };
+ACT["supp-time-del"] = el => { const d = S_().draft; d.times.splice(+el.dataset.i, 1); renderSheet(); };
+CHG["supp-time"] = (v, el) => { const d = S_().draft; d.times = d.times || ["08:00"]; d.times[+el.dataset.i] = v || "08:00"; };
+ACT["supp-day"] = el => { const d = S_().draft, i = +el.dataset.i; let a = d.days?.length ? [...d.days] : [0, 1, 2, 3, 4, 5, 6]; a = a.includes(i) ? a.filter(x => x !== i) : [...a, i].sort(); d.days = a.length === 7 ? [] : a; renderSheet(); };
+ACT["supp-flag"] = el => { const d = S_().draft, k = el.dataset.k; d[k] = k === "on" ? d.on === false : !d[k]; renderSheet(); };
+INP.sp = (v, el) => { S_().draft[el.dataset.k] = v; };
+ACT["supp-save"] = () => { const sh = S_(), d = clone(sh.draft); d.name = (d.name || "").trim(); if (!d.name) { toast("Give it a name."); $("#sp-name")?.focus(); return; }
+  d.times = [...new Set((d.times || ["08:00"]).filter(Boolean))].sort(); d.stock = d.stock === "" || d.stock == null ? null : Math.max(0, Math.round(num(d.stock)));
+  const L = [...(S.settings.supps || [])], i = L.findIndex(x => x.id === d.id); if (i >= 0) L[i] = d; else L.push(d); S.settings.supps = L; saveSettings(); closeSheet(); toast(`${d.name} saved`); };
+ACT["supp-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title: "Delete this supplement?", text: "Past ticks stay in your log.", yes: "Delete", danger: true, run: () => { S.settings.supps = (S.settings.supps || []).filter(x => x.id !== id); saveSettings(); } }); };
+
+/* ================= reminders at a set time =================
+   While the app is open (or in a background tab) a check runs every 30 s and shows a notification at the set time.
+   For reminders with the app closed, the same times go into your phone's calendar as an .ics file. */
+function reminderPrefs() {
+  const R = S.settings.reminders || {}, perm = "Notification" in window ? Notification.permission : "unsupported";
+  return `<div class="field"><span class="flabel">Reminders</span>
+    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!R.on && perm === "granted"}" data-act="rem-toggle" aria-label="Notifications"></button><span>Notifications on this device<small class="faint" style="display:block;font-size:12.5px">${perm === "denied" ? "Blocked for this site: allow notifications in the browser settings." : perm === "unsupported" ? "This browser can't show notifications." : "At each supplement time, and for the pantry at the time below. They arrive while the app is open or in the background."}</small></span></label>
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rem-xp" style="font-size:13px">Pantry check at</label><input id="rem-xp" class="inp" type="time" value="${esc(R.pantryAt || "18:00")}" data-chg="rem-xp" style="max-width:130px"></div>
+    <button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
+    <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating) and the use-by dates in your pantry: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div></div>`;
+}
+ACT["rem-toggle"] = async () => { const R = S.settings.reminders || {};
+  if (R.on && "Notification" in window && Notification.permission === "granted") { S.settings.reminders = { ...R, on: false }; saveSettings(); scheduleRender(); return; }
+  if (!("Notification" in window)) { toast("This browser can't show notifications: use the calendar file."); return; }
+  const r = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+  if (r !== "granted") { toast("Notifications are blocked: allow them in the browser settings, or use the calendar file."); scheduleRender(); return; }
+  S.settings.reminders = { ...R, on: true }; S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), notify: true }; saveSettings(); scheduleRender(); notify("Reminders are on", "You'll get them at the times you set.", "engine-test"); };
+CHG["rem-xp"] = v => { S.settings.reminders = { ...(S.settings.reminders || {}), pantryAt: v || "18:00" }; saveSettings(); };
+async function notify(title, body, tag, data) {
+  try { const reg = await navigator.serviceWorker?.getRegistration?.(), o = { body, tag, icon: "icons/icon-192.png", badge: "icons/icon-192.png", data: data || {}, renotify: true, ...(data?.k ? { actions: [{ action: "taken", title: "Taken" }] } : {}) };
+    if (reg?.showNotification) await reg.showNotification(title, o); else new Notification(title, o); } catch (e) {}
+}
+const remSent = () => { try { return JSON.parse(localStorage.getItem("engine.rem") || "{}"); } catch (e) { return {}; } };
+const remMark = k => { const m = remSent(), d = todayISO(); for (const x of Object.keys(m)) if (m[x] < addDays(d, -2)) delete m[x]; m[k] = d; try { localStorage.setItem("engine.rem", JSON.stringify(m)); } catch (e) {} };
+function reminderTick() {
+  const R = S.settings?.reminders || {}; if (!S.settings || !R.on || !("Notification" in window) || Notification.permission !== "granted") return;
+  const d = todayISO(), now = nowHM(), sent = remSent();
+  for (const s of suppSlots(d)) { const key = d + "|" + s.k; if (s.t <= now && s.t >= addMin(now, -90) && !suppTaken(d, s.k) && sent[key] !== d) { remMark(key); notify(`${s.x.name}${s.x.dose ? " · " + s.x.dose : ""}`, `Time for your ${s.x.name.toLowerCase()}${s.x.withFood ? ", with food" : ""}.`, "supp-" + s.k, { k: s.k, date: d }); } }
+  const at = R.pantryAt || "18:00", key = d + "|pantry"; if (now >= at && sent[key] !== d) { const E = expiryList(), items = [...E.expired, ...E.soon.filter(x => x.dl <= 1)]; remMark(key);
+    if (items.length) notify("Pantry: use soon", items.slice(0, 4).map(x => `${x.f.name}: ${dlTxt(x.dl)}`).join("\n") + (items.length > 4 ? `\n+${items.length - 4} more` : ""), "engine-expiry", { tab: "pantry" }); }
+}
+function addMin(hm, m) { const [h, mi] = hm.split(":").map(Number); const t = Math.max(0, h * 60 + mi + m); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); }
+setInterval(reminderTick, 30000); setTimeout(reminderTick, 4000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(reminderTick, 800); });
+/* "Taken" pressed on a notification: the service worker tells the open app, or opens it with ?supp= */
+navigator.serviceWorker?.addEventListener?.("message", e => { const m = e.data || {}; if (m.type === "supp-taken" && m.k) { suppMark(m.date || todayISO(), m.k); } if (m.type === "open-tab" && m.tab) { UI.tab = m.tab; if (FUEL_TABS.includes(m.tab)) UI.fuelTab = m.tab; scheduleRender(); } });
+function suppMark(date, k) { if (suppTaken(date, k)) return; mutateLog(date, day => { day.supp = { ...(day.supp || {}), [k]: nowHM() }; }); const x = SUPPS().find(s => s.id === k.split("@")[0]); if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock - 1); saveSettings(); } toast(`${x?.name || "Supplement"} ticked`); scheduleRender(); }
+/* the calendar file */
+function icsEsc(t) { return String(t || "").replace(/[\\;,]/g, m => "\\" + m).replace(/\n/g, "\\n"); }
+ACT["rem-ics"] = async () => {
+  const dt = d => d.replace(/-/g, ""), stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Engine//Reminders//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Engine reminders"];
+  const BY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+  for (const x of SUPPS()) { if (x.on === false) continue; for (const t of x.times || ["08:00"]) { const hm = t.replace(":", "") + "00";
+    L.push("BEGIN:VEVENT", `UID:engine-supp-${x.id}-${t.replace(":", "")}@engine`, `DTSTAMP:${stamp}`, `DTSTART:${dt(todayISO())}T${hm}`, "DURATION:PT5M", `RRULE:FREQ=DAILY${x.days?.length ? ";BYDAY=" + x.days.map(i => BY[i]).join(",") : ""}`.replace("FREQ=DAILY;BYDAY", "FREQ=WEEKLY;BYDAY"),
+      `SUMMARY:${icsEsc(`${x.name}${x.dose ? " · " + x.dose : ""}`)}`, `DESCRIPTION:${icsEsc(x.withFood ? "With food" : "Engine supplement")}`, "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(x.name)}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT"); } }
+  const at = (S.settings.reminders?.pantryAt || "18:00").replace(":", "") + "00";
+  for (const [id, p] of Object.entries(S.shop.pantry || {})) { const f = getFood(id) || BUILTIN[id]; if (!f || !p.exp || !(p.g > 0) || p.exp < todayISO()) continue; const day = addDays(p.exp, -1) < todayISO() ? p.exp : addDays(p.exp, -1);
+    L.push("BEGIN:VEVENT", `UID:engine-exp-${id}-${p.exp}@engine`, `DTSTAMP:${stamp}`, `DTSTART:${dt(day)}T${at}`, "DURATION:PT5M", `SUMMARY:${icsEsc(`Use soon: ${f.name} (by ${fmtDM(p.exp)})`)}`, "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(f.name + " expires " + fmtDM(p.exp))}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT"); }
+  L.push("END:VCALENDAR");
+  const txt = L.join("\r\n"), n = L.filter(l => l === "BEGIN:VEVENT").length; if (!n) { toast("Nothing to remind yet: add a supplement or a use-by date."); return; }
+  if (await saveFile("engine-reminders.ics", txt, `Calendar file saved · ${n} reminder${n > 1 ? "s" : ""}`)) return; toast("Couldn't save the file here.");
+};
+
+/* ================= workout story: a 1080×1920 picture of the session, over or above your photo ================= */
+function storyData(date, w, s) {
+  const run = !!(s?.track?.length || s?.km || w?.km) && !isStrength(w?.sport || "");
+  const min = s?.min || w?.min || 0, km = s?.km || w?.km || 0, kcal = w ? sessionKcal(w, date)?.kcal : null;
+  const stats = [];
+  stats.push(["Time", min >= 60 ? `${Math.floor(min / 60)}h ${String(r0(min % 60)).padStart(2, "0")}` : `${r0(min)} min`]);
+  if (km) { stats.push(["Distance", `${r1(km)} km`]); stats.push(["Pace", `${fmtPace(min / km)} /km`]); }
+  if (s?.sets?.length) { const reps = s.sets.reduce((a, x) => a + (x.reps?.length ? x.reps.reduce((p, q) => p + (+q || 0), 0) : 0), 0), vol = s.sets.reduce((a, x) => a + (x.reps?.length ? x.reps.reduce((p, q) => p + (+q || 0), 0) : 0) * (+x.load || 0), 0);
+    stats.push(["Sets", String(s.sets.length)]); if (reps) stats.push(["Reps", fmtN(reps)]); if (vol) stats.push(["Added load", `${fmtN(r0(vol))} kg`]); }
+  if (w?.hr) stats.push(["Avg HR", `${r0(w.hr)} bpm`]);
+  if (kcal) stats.push(["Energy", `${fmtN(kcal)} kcal`]);
+  if (s?.rpe || w?.rpe) stats.push(["RPE", `${s?.rpe || w?.rpe}/10`]);
+  const lines = [];
+  if (s?.splits?.length) for (const sp of s.splits.slice(0, 8)) lines.push([`km ${sp.km}`, fmtPace(sp.sec / 60) + " /km"]);
+  else if (s) { const byEx = {}; for (const x of s.sets || []) (byEx[x.ex] = byEx[x.ex] || []).push(x);
+    for (const [k, ss] of Object.entries(byEx).slice(0, 7)) { const best = ss.reduce((a, x) => Math.max(a, +x.load || 0), 0); lines.push([k, ss[0].reps?.length ? `${ss.map(x => x.reps.join("-")).slice(0, 3).join(" · ")}${best ? ` +${r1(best)} kg` : ""}` : ss[0].hold?.length ? `${ss.map(x => (x.hold || []).join("-")).join(" · ")} s` : `${ss.length} sets`]); }
+    for (const a of (s.amrap || []).slice(0, 2)) lines.push([a.title || "AMRAP", `${a.rounds} rounds`]);
+    for (const e of (s.emom || []).slice(0, 2)) lines.push([e.title || "EMOM", `${e.done}/${e.of} min`]); }
+  return { title: s?.name || w?.note || w?.sport || "Workout", sport: w?.sport || (run ? "Run" : "Workout"), date, stats: stats.slice(0, 6), lines: lines.slice(0, 8), track: s?.track || null, run };
+}
+function roundRect(x, X, Y, W, H, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
+async function storyCanvas(D, photo, layout) {
+  const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const font = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif", F = (w, s) => `${w} ${s}px ${font}`;
+  const accent = "#B5E36B", ink = "#fff";
+  let img = null; if (photo) { try { img = await createImageBitmap(photo); } catch (e) { img = null; } }
+  const cover = (X, Y, w, h) => { const k = Math.max(w / img.width, h / img.height), iw = img.width * k, ih = img.height * k; x.save(); x.beginPath(); x.rect(X, Y, w, h); x.clip(); x.drawImage(img, X + (w - iw) / 2, Y + (h - ih) / 2, iw, ih); x.restore(); };
+  // background
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#151a10"); g.addColorStop(1, "#0b0d09"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  let top = 0;
+  if (img && layout === "bg") { cover(0, 0, W, H); const sh = x.createLinearGradient(0, H * 0.35, 0, H); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.82)"); x.fillStyle = sh; x.fillRect(0, 0, W, H); const st = x.createLinearGradient(0, 0, 0, 260); st.addColorStop(0, "rgba(0,0,0,.55)"); st.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = st; x.fillRect(0, 0, W, 260); }
+  if (img && layout === "below") { cover(0, H * 0.5, W, H * 0.5); top = 0; }
+  // brand + date
+  x.fillStyle = ink; x.font = F(800, 40); x.textBaseline = "top"; x.fillText("ENGINE", 72, 80);
+  x.font = F(500, 34); x.globalAlpha = .8; const ds = fmtLong(D.date); x.fillText(ds, W - 72 - x.measureText(ds).width, 84); x.globalAlpha = 1;
+  // block position
+  const base = img && layout === "bg" ? H - 900 : img && layout === "below" ? 200 : 360;
+  x.fillStyle = accent; x.font = F(700, 34); x.fillText(D.sport.toUpperCase(), 72, base);
+  x.fillStyle = ink; x.font = F(800, 92); let ty = base + 52; const words = String(D.title).split(" "); let line = "";
+  for (const wd of words) { const t = line ? line + " " + wd : wd; if (x.measureText(t).width > W - 144 && line) { x.fillText(line, 72, ty); ty += 100; line = wd; } else line = t; } x.fillText(line, 72, ty); ty += 130;
+  // stats grid
+  const cols = 3, cw = (W - 144) / cols; D.stats.forEach(([l, v], i) => { const cx = 72 + (i % cols) * cw, cy = ty + Math.floor(i / cols) * 150;
+    x.globalAlpha = .7; x.font = F(500, 30); x.fillStyle = ink; x.fillText(l, cx, cy); x.globalAlpha = 1; x.font = F(800, 58); x.fillText(v, cx, cy + 40, cw - 20); });
+  ty += Math.ceil(D.stats.length / cols) * 150 + 20;
+  // route or lines
+  const room = (img && layout === "below" ? H * 0.5 - 40 : H - 120) - ty;
+  if (D.track && D.track.length > 3 && room > 260 && !(img && layout === "bg")) {
+    const lat = D.track.map(p => p[0]), lon = D.track.map(p => p[1]), a0 = Math.min(...lat), a1 = Math.max(...lat), o0 = Math.min(...lon), o1 = Math.max(...lon), kx = Math.cos((a0 + a1) / 2 * Math.PI / 180);
+    const bw = W - 144, bh = Math.min(room - 40, 620), sc = Math.min(bw / ((o1 - o0) * kx || 1e-9), bh / ((a1 - a0) || 1e-9)) * .92, ox = 72 + (bw - (o1 - o0) * kx * sc) / 2, oy = ty + (bh - (a1 - a0) * sc) / 2;
+    x.strokeStyle = accent; x.lineWidth = 12; x.lineJoin = x.lineCap = "round"; x.beginPath(); D.track.forEach((p, i) => { const X = ox + (p[1] - o0) * kx * sc, Y = oy + (a1 - p[0]) * sc; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.stroke();
+    ty += bh + 30;
+  }
+  if (D.lines.length && room > 200) { const lh = 66, maxN = Math.max(0, Math.floor(((img && layout === "below" ? H * 0.5 - 40 : H - 120) - ty) / lh)); x.font = F(500, 38);
+    D.lines.slice(0, maxN).forEach(([a, b], i) => { const y = ty + i * lh; x.globalAlpha = .85; x.fillStyle = ink; x.fillText(a, 72, y, W * 0.55); x.globalAlpha = 1; x.font = F(700, 38); x.fillText(b, W - 72 - Math.min(x.measureText(b).width, W * 0.38), y, W * 0.38); x.font = F(500, 38); });
+  }
+  return c;
+}
+SHEETS.story = sh => ({ title: "Share the workout", body: `<div class="story-pv">${sh.url ? `<img src="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
+    <div class="field"><span class="flabel">Your photo</span><div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn soft sm">${ic("image", "sm")}${sh.photo ? "Change photo" : "Add a photo"}<input type="file" accept="image/*" class="sr" data-chg="story-photo"></label>${sh.photo ? `<div class="seg sm">${[["bg", "Behind"], ["below", "Below"]].map(([k, l]) => `<button data-act="story-layout" data-k="${k}" aria-pressed="${(sh.layout || "bg") === k}">${l}</button>`).join("")}</div><button class="btn text sm" data-act="story-nophoto">Remove</button>` : ""}</div></div>`,
+  foot: `<button class="btn tonal" data-act="story-save" style="flex:0 0 auto">${ic("download", "sm")}Save</button><button class="btn primary" data-act="story-share">${ic("copy", "sm")}Share</button>` });
+async function storyDraw() { const sh = S_(); if (!sh || sh.type !== "story") return; const c = await storyCanvas(sh.data, sh.photo, sh.layout || "bg"); const blob = await new Promise(r => c.toBlob(r, "image/png")); if (UI.sheet !== sh) return; if (sh.url) URL.revokeObjectURL(sh.url); sh.blob = blob; sh.url = URL.createObjectURL(blob); renderSheet(); }
+function storyOpen(date, w, s) { openSheet("story", { data: storyData(date, w, s), layout: "bg" }); setTimeout(storyDraw, 30); }
+ACT["story-open"] = el => { const d = el.dataset.date, L = logGet(d) || {}, s = (L.wsess || []).find(x => x.id === el.dataset.id) || null, w = (L.workouts || []).find(x => s ? x.sid === s.id : true) || null; storyOpen(d, w, s); };
+CHG["story-photo"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const sh = S_(); sh.photo = f; storyDraw(); };
+ACT["story-layout"] = el => { const sh = S_(); sh.layout = el.dataset.k; storyDraw(); };
+ACT["story-nophoto"] = () => { const sh = S_(); sh.photo = null; storyDraw(); };
+ACT["story-save"] = async () => { const sh = S_(); if (!sh.blob) return; if (!(await saveFile(`engine-${sh.data.date}.png`, sh.blob, "Picture saved"))) toast("Couldn't save the picture here."); };
+ACT["story-share"] = async () => { const sh = S_(); if (!sh.blob) return; const file = new File([sh.blob], `engine-${sh.data.date}.png`, { type: "image/png" });
+  if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: sh.data.title }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+  ACT["story-save"](); };
+
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
+  try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);

@@ -1,7 +1,7 @@
 /* Engine service worker: opens instantly and works offline.
    App files: network first with a short timeout (the newest version when online, the saved one when not).
    Libraries, the label reader and icons: kept in their own cache that survives updates. */
-const V = "engine-202610221523", HEAVY = "engine-heavy-1";
+const V = "engine-202610221541", HEAVY = "engine-heavy-1";
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png"];
 const WARM = ["vendor/zxing.min.js", "vendor/tesseract.min.js", "ocr/worker.min.js", "ocr/core/tesseract-core-simd-lstm.wasm.js", "ocr/core/tesseract-core-lstm.wasm.js", "ocr/lang/ita.wasm"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
@@ -22,5 +22,13 @@ self.addEventListener("fetch", e => {
   const net = fetch(req).then(r => { if (r.ok) { const c = r.clone(); caches.open(V).then(x => x.put(req, c)); } return r; });
   e.respondWith(timeout(net, req.mode === "navigate" ? 3500 : 6000).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || (req.mode === "navigate" ? caches.match("index.html") : net))));
 });
-/* tapping a reminder opens the app on the pantry */
-self.addEventListener("notificationclick", e => { e.notification.close(); e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => { const c = cs[0]; if (c) return c.focus(); return self.clients.openWindow("./#pantry"); })); });
+/* tapping a reminder: "Taken" ticks the supplement, otherwise the app opens where it matters */
+self.addEventListener("notificationclick", e => {
+  const n = e.notification, d = n.data || {}; n.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => {
+    const c = cs[0], msg = e.action === "taken" && d.k ? { type: "supp-taken", k: d.k, date: d.date } : d.tab ? { type: "open-tab", tab: d.tab } : null;
+    if (c) { if (msg) c.postMessage(msg); return c.focus(); }
+    const url = e.action === "taken" && d.k ? `./?supp=${encodeURIComponent(d.k)}&d=${d.date || ""}` : d.tab ? `./#${d.tab}` : "./";
+    return self.clients.openWindow(url);
+  }));
+});
