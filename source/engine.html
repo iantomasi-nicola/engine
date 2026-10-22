@@ -185,6 +185,18 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 
 .snap-pick{gap:8px;flex-wrap:wrap;align-items:center}.snap-pick .eo-ph{flex:1 1 100%}
 .lv-hrow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.lv-hrow .lv-swap{flex:none;margin-top:2px;color:var(--muted)}
+.td-gear{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-top:8px;padding:10px 12px;border-radius:16px;background:var(--md-sc-high,var(--surface-2));color:var(--ink)}
+.td-gear>.ic:first-child{color:var(--accent);flex:none}.td-gear>.ic:last-child{color:var(--muted);flex:none}
+.td-gear>span{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline;font-size:13.5px;line-height:1.35}
+.td-gear i{font-style:normal;color:var(--muted)}.td-gear i:not(:last-child)::after{content:" ·"}.td-gear i.ok{text-decoration:line-through;opacity:.6}
+.td-gear.all>span b{color:var(--good)}
+.gear-l{display:flex;flex-direction:column;gap:2px}
+.gear-i{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 6px;border-radius:14px;width:100%}
+.gear-i:hover{background:color-mix(in srgb,var(--md-on-surface,#000) 5%,transparent)}
+.gear-i b{display:block;font-weight:600}.gear-i small{display:block;color:var(--muted);font-size:12px}
+.gear-i .chk-c{width:24px;height:24px;border-radius:50%;border:2px solid var(--md-outline,var(--faint));display:grid;place-items:center;flex:none}
+.gear-i.ok .chk-c{background:var(--md-primary,var(--accent));border-color:transparent;color:var(--md-on-primary,#fff)}.gear-i.ok b{text-decoration:line-through;opacity:.65}
+.gear-pv{display:flex;flex-direction:column;gap:4px}.gear-pv .eyebrow{display:flex;align-items:center;gap:6px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8046,6 +8058,7 @@ VIEWS.today = function () {
         <div class="td-s-a">${isDone ? `<span class="td-done">Done</span>` : `${x.ri >= 0 ? `<button class="td-edit" data-act="edit-session" data-list="planned" data-date="${today}" data-i="${x.ri}" aria-label="Edit ${esc(title)}">${ic("edit", "sm")}</button>` : ""}<button class="td-go" data-act="wo-start" data-date="${today}" data-i="${i}" aria-label="Start ${esc(title)}">${LV() && LV().planDate === today ? "Resume" : "Start"}</button>`}</div></div>`; }).join("");
     const si = items.findIndex(x => x.st === "planned" && (x.w.script || x.w.tpl || isStrength(x.w.sport)));
     if (say) tr += `<p class="td-say">${say}</p>`;
+    if (!allDone && typeof gearToday === "function") tr += gearToday(left.map(x => x.p || x.w), today);
     if (!allDone) tr += `<div class="td-cta"><button class="btn text sm" data-act="done-as-planned" data-date="${today}">${left.length > 1 ? "Mark all done" : "Mark done"}</button></div>`;
   } else tr += `<p class="td-say big">${say}</p><div class="td-cta"><button class="btn tonal" data-act="plan-wo" data-date="${today}">${ic("plus", "sm")}Plan a workout</button></div>`;
   tr += `</section>`;
@@ -8081,7 +8094,7 @@ VIEWS.today = function () {
   const tips = coachInsights(today).filter(x => !/fuel it|Rest day|readiness|tomorrow/i.test(x.t)).slice(0, 2);
   const tm = addDays(today, 1), tl = plannedFor(tm).list.filter(w => w.sport && w.sport !== "Rest");
   const rows = [
-    `<button class="td-row" data-act="${tl.length ? "wo-open" : "plan-wo"}" data-date="${tm}" data-i="0" data-list="planned"><span><b>Tomorrow</b><small>${tl.length ? esc(tl.map(w => (w.tpl ? tplById(w.tpl)?.name : w.note || w.sport)).join(" + ")) : "Rest"}</small></span><span class="faint">${tl.length ? hm(tl.reduce((a, w) => a + (+w.min || 0), 0)) : ""}</span></button>`,
+    `<button class="td-row" data-act="${tl.length ? "wo-open" : "plan-wo"}" data-date="${tm}" data-i="0" data-list="planned"><span><b>Tomorrow</b><small>${tl.length ? esc(tl.map(w => (w.tpl ? tplById(w.tpl)?.name : w.note || w.sport)).join(" + ")) + (typeof gearShort === "function" ? gearShort(tl, tm) : "") : "Rest"}</small></span><span class="faint">${tl.length ? hm(tl.reduce((a, w) => a + (+w.min || 0), 0)) : ""}</span></button>`,
     race ? `<button class="td-row" data-act="rc-edit" data-id="${race.id}"><span><b>${esc(race.name)}</b><small>${(() => { const I = raceInsight(race); return [fmtDM(race.date), race.goal ? "goal " + esc(race.goal) : "", I.pred ? "predicted " + fmtClock(I.pred) : ""].filter(Boolean).join(" · "); })()}</small></span><span class="td-cd"><b>${daysBetween(today, race.date)}</b><small>days</small></span></button>` : "",
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
@@ -11074,6 +11087,74 @@ ACT["sw-pick"] = el => { const sh = S_(), L = LV(), to = String(el.dataset.n || 
       const r = L.res[i]?.ex?.[xi]; if (r && !(r.done || (i === L.cur && r.mini))) r.load = null; }); }
   L.swaps = [...(L.swaps || []), { from, to, at: L.cur, n }]; saveWK(); closeSheet(); haptic(10); toast(`${from} → ${to}${n > 1 ? ` · ${n} sets` : ""}`); scheduleRender(); };
 ACT["lv-swap"] = el => openSheet("lvswap", { x: +el.dataset.x || 0, q: "", live: true });
+ICONS.bag = `<path d="M280-80q-33 0-56.5-23.5T200-160v-480q0-64 40-109.5T340-806v-34q0-17 11.5-28.5T380-880h200q17 0 28.5 11.5T620-840v34q60 11 100 56.5T760-640v480q0 33-23.5 56.5T680-80H280Zm0-80h400v-480q0-33-23.5-56.5T600-720H360q-33 0-56.5 23.5T280-640v480Zm80-160h240v-80H360v80Zm40-406h160v-54H400v54Z"/>`;
+/* ================= what to bring: the gear a workout needs, read from its exercises =================
+   Ring push-ups → rings, a pull-up or dip with load (in the script, or in your last log of it) → dip belt and the
+   plates, bands, parallettes, rope, kettlebell… plus what you always take. Shown on Today (and on tomorrow's line, to
+   pack the night before) and before starting; ticks are per day on this device. */
+const GEAR_RULES = [
+  ["rings", "Rings", /\bring|anell/i], ["bands", "Bands", /\bband|elastic/i], ["pbars", "Parallettes", /parallett/i],
+  ["rope", "Jump rope", /\brope\b|corda|(double|single).?unders?|skipping/i], ["kb", "Kettlebell", /\bkb\b|kettlebell/i], ["db", "Dumbbells", /\bdb\b|dumbbell|manubri/i],
+  ["vest", "Weight vest", /\bvest\b|giubbott|zavorrat/i], ["wheel", "Ab wheel", /ab.?wheel|rollout/i], ["mat", "Mat", /\bmat\b|tappetin|stretching|mobility|yoga/i], ["strap", "Anchor strap", /nordic/i]];
+const GEAR_BW = /pull|chin|dip|muscle|push|row|squat|lunge|pistol|step.?up/i, GEAR_FREE = /\b(kb|db|barbell|kettlebell|dumbbell|bilanciere|manubri)\b/i;
+const GEARS = () => ({ always: ["Water"], custom: [], off: [], ...(S.settings.gear || {}) });
+const gearSave = o => { S.settings.gear = { ...GEARS(), ...o }; saveSettings(); };
+const rxWords = s => String(s || "").split(",").map(x => x.trim()).filter(Boolean).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+function gearList(script, date) {
+  const exs = (parseScript(script || "").blocks || []).flatMap(b => (b.steps || []).flatMap(s => s.exs || []));
+  const out = new Map(), add = (id, label, why) => { const o = out.get(id) || out.set(id, { id, label, why: [] }).get(id); if (why && !o.why.includes(why)) o.why.push(why); };
+  let belt = 0, kb = 0;
+  for (const e of exs) { const t = `${e.name} ${e.raw || ""}`;
+    for (const [id, label, rx] of GEAR_RULES) if (rx.test(t)) add(id, label, e.name);
+    const ld = +e.load || 0, past = ld ? 0 : +(lastFor(e, date)?.load || 0);
+    if (GEAR_BW.test(e.name) && !GEAR_FREE.test(t) && (ld > 0 || past > 0)) { belt = Math.max(belt, ld || past); add("belt", "Dip belt", e.name); }
+    if (/\bkb\b|kettlebell/i.test(t) && ld) kb = Math.max(kb, ld); }
+  if (belt) out.get("belt").label = `Dip belt + plates (${fmtKg(belt)} kg)`;
+  if (kb) out.get("kb").label = `Kettlebell ${fmtKg(kb)} kg`;
+  const G = GEARS(), all = exs.map(e => `${e.name} ${e.raw || ""}`).join(" \n ");
+  for (const c of G.custom) { const rx = rxWords(c.kw); if (c.item && rx && new RegExp(rx, "i").test(all)) add("c:" + c.item, c.item, ""); }
+  const list = [...out.values()].filter(x => !G.off.includes(x.id));
+  if (exs.length) for (const a of G.always) if (a && !list.some(x => x.label === a)) list.push({ id: "a:" + a, label: a, why: [], always: true });
+  return list;
+}
+const sessScript = w => w?.script || (w?.tpl && tplById(w.tpl)?.script) || "";
+const gearForDay = (ws, date) => [...new Map(ws.flatMap(w => gearList(sessScript(w), date)).map(x => [x.id, x])).values()];
+/* ticks: per day, on this device */
+const GEAR_OK = (() => { try { return JSON.parse(localStorage.getItem("engine.gearOk") || "{}"); } catch (e) { return {}; } })();
+function gearTick(date, id) { const d = GEAR_OK[date] = GEAR_OK[date] || {}; d[id] = !d[id];
+  for (const k of Object.keys(GEAR_OK)) if (k < addDays(todayISO(), -7)) delete GEAR_OK[k]; try { localStorage.setItem("engine.gearOk", JSON.stringify(GEAR_OK)); } catch (e) {} }
+function gearToday(ws, date) { const L = gearForDay(ws, date); if (!L.some(x => !x.always)) return ""; const ok = GEAR_OK[date] || {}, n = L.filter(x => ok[x.id]).length;
+  return `<button class="td-gear ${n === L.length ? "all" : ""}" data-act="gear-open" data-date="${date}">${ic("bag", "sm")}<span><b>${n === L.length ? "Packed" : "Bring"}</b> ${L.map(x => `<i class="${ok[x.id] ? "ok" : ""}">${esc(x.label)}</i>`).join("")}</span>${ic("chevR", "sm")}</button>`; }
+const gearShort = (ws, date) => { const L = gearForDay(ws, date).filter(x => !x.always); return L.length ? ` · bring ${esc(L.map(x => x.label.replace(/ \+ plates.*/, "")).join(", ").toLowerCase())}` : ""; };
+const gearChecklist = (L, date) => { const ok = GEAR_OK[date] || {}; return `<div class="gear-l">${L.map(x => `<button class="gear-i ${ok[x.id] ? "ok" : ""}" data-act="gear-tick" data-date="${date}" data-id="${esc(x.id)}" aria-pressed="${!!ok[x.id]}"><span class="chk-c">${ok[x.id] ? ic("check", "sm") : ""}</span><span><b>${esc(x.label)}</b>${x.why.length ? `<small>${esc(x.why.slice(0, 3).join(", "))}${x.why.length > 3 ? "…" : ""}</small>` : x.always ? "<small>Always</small>" : ""}</span></button>`).join("")}</div>`; };
+SHEETS.gear = sh => { const date = sh.date || todayISO(), ws = sh.live ? [] : plannedFor(date).list.filter(w => w.sport && w.sport !== "Rest"), L = sh.script != null ? gearList(sh.script, date) : gearForDay(ws, date);
+  return { title: date === todayISO() ? "What to bring" : `What to bring · ${relDay(date)}`, body: (L.length ? gearChecklist(L, date) : `<div class="note">Nothing special for this workout.</div>`) + `<button class="link" data-act="gear-set">Change what's detected and what you always bring</button>`,
+    foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
+ACT["gear-open"] = el => openSheet("gear", { date: el.dataset.date });
+ACT["gear-tick"] = el => { gearTick(el.dataset.date, el.dataset.id); haptic(8); if (UI.sheet) renderSheet(); scheduleRender(); };
+ACT["gear-set"] = () => { closeSheet(); UI.tab = "settings"; UI.setOpen = { ...(UI.setOpen || {}), live: true }; scheduleRender(); setTimeout(() => $("#gear-set")?.scrollIntoView({ block: "start", behavior: "smooth" }), 200); };
+/* settings, in Live workouts & timer */
+function gearSettings() { const G = GEARS();
+  return `<div class="field" id="gear-set"><span class="flabel">What to bring</span>
+    <div class="faint" style="font-size:12.5px">Found in the workout's exercises. Switch off what you never carry (e.g. rings that live at the park).</div>
+    <div class="chips">${[...GEAR_RULES.map(([id, l]) => [id, l]), ["belt", "Dip belt"]].map(([id, l]) => `<button class="chip sm" data-act="gear-rule" data-id="${id}" aria-pressed="${!G.off.includes(id)}">${l}</button>`).join("")}</div>
+    <span class="flabel" style="margin-top:6px">Always bring</span><div class="chips">${G.always.map((a, i) => `<button class="chip sm" data-act="gear-al-del" data-i="${i}" aria-label="Remove ${esc(a)}">${esc(a)} ${ic("close", "sm")}</button>`).join("")}</div>
+    <form class="row" data-form="gear-al" style="flex-wrap:nowrap;gap:8px"><input id="gear-al" class="inp" placeholder="e.g. chalk, towel, headphones" autocomplete="off"><button class="btn soft sm" type="submit">Add</button></form>
+    <span class="flabel" style="margin-top:6px">Your own rules</span>${G.custom.map((c, i) => `<div class="row" style="justify-content:space-between;gap:8px"><span><b>${esc(c.item)}</b> <small class="faint">when: ${esc(c.kw)}</small></span><button class="icon-btn sm" data-act="gear-cu-del" data-i="${i}" aria-label="Remove ${esc(c.item)}">${ic("close", "sm")}</button></div>`).join("")}
+    <form class="row" data-form="gear-cu" style="flex-wrap:wrap;gap:8px"><input id="gear-cu-i" class="inp" placeholder="Bring… (e.g. Gloves)" style="flex:1 1 120px" autocomplete="off"><input id="gear-cu-k" class="inp" placeholder="when it has… (muscle-up, rings)" style="flex:2 1 160px" autocomplete="off"><button class="btn soft sm" type="submit">Add</button></form></div>`; }
+const _playerSettingsG = playerSettings;
+playerSettings = function () { return _playerSettingsG() + gearSettings(); };
+ACT["gear-rule"] = el => { const G = GEARS(), id = el.dataset.id; gearSave({ off: G.off.includes(id) ? G.off.filter(x => x !== id) : [...G.off, id] }); scheduleRender(); };
+ACT["gear-al-del"] = el => { const G = GEARS(); gearSave({ always: G.always.filter((_, i) => i !== +el.dataset.i) }); scheduleRender(); };
+ACT["gear-cu-del"] = el => { const G = GEARS(); gearSave({ custom: G.custom.filter((_, i) => i !== +el.dataset.i) }); scheduleRender(); };
+FORMS["gear-al"] = () => { const v = ($("#gear-al")?.value || "").trim().slice(0, 40); if (!v) return; const G = GEARS(); if (!G.always.includes(v)) gearSave({ always: [...G.always, v] }); scheduleRender(); };
+FORMS["gear-cu"] = () => { const item = ($("#gear-cu-i")?.value || "").trim().slice(0, 40), kw = ($("#gear-cu-k")?.value || "").trim().slice(0, 120); if (!item || !kw) { toast("Write what to bring and the words that call for it."); return; } gearSave({ custom: [...GEARS().custom, { item, kw }] }); scheduleRender(); };
+/* before starting: the checklist right under the title, in both previews (sets and runs) */
+function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = h.indexOf('class="lv-card pv-top"'); if (!G.length || a < 0) return h;
+  const b = h.indexOf("</section>", a) + 10; return h.slice(0, b) + `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Bring</span>${gearChecklist(G, L.date)}</section>` + h.slice(b); }
+const _livePreviewG = livePreview, _runPreviewG = runPreview;
+livePreview = L => gearInPreview(_livePreviewG(L), L);
+runPreview = L => gearInPreview(_runPreviewG(L), L);
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
