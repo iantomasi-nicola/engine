@@ -3,6 +3,88 @@
 .sheet-f{flex-wrap:wrap}
 .sheet-f .btn{flex:1 1 auto;min-width:0;padding:0 14px;gap:6px}
 .sheet-f .btn.primary{flex-grow:2}
+
+/* live camera */
+button.big-action{width:100%;font:inherit;color:inherit;cursor:pointer}
+.cam{position:fixed;inset:0;z-index:200;background:#000;color:#fff;overflow:hidden;touch-action:none}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam-frame{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);border-radius:20px;box-shadow:0 0 0 200vmax rgba(0,0,0,.55);transition:box-shadow .2s}
+.cam-frame.bc{width:min(82vw,520px);height:min(34vw,220px)}
+.cam-frame.lb{width:min(88vw,620px);height:min(118vw,72vh)}
+.cam-frame i{position:absolute;width:30px;height:30px;border:4px solid #fff;border-radius:6px}
+.cam-frame i:nth-child(1){left:-2px;top:-2px;border-right:0;border-bottom:0;border-top-left-radius:20px}
+.cam-frame i:nth-child(2){right:-2px;top:-2px;border-left:0;border-bottom:0;border-top-right-radius:20px}
+.cam-frame i:nth-child(3){left:-2px;bottom:-2px;border-right:0;border-top:0;border-bottom-left-radius:20px}
+.cam-frame i:nth-child(4){right:-2px;bottom:-2px;border-left:0;border-top:0;border-bottom-right-radius:20px}
+.cam-frame.hit i{border-color:#9ACD32}
+.cam-line{position:absolute;left:8%;right:8%;top:50%;height:2px;background:#9ACD32;box-shadow:0 0 12px #9ACD32;animation:camline 1.6s ease-in-out infinite alternate}
+@keyframes camline{from{transform:translateY(-70px)}to{transform:translateY(70px)}}
+@media (prefers-reduced-motion:reduce){.cam-line{animation:none}}
+.cam-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
+.cam-t{flex:1;font-size:16px;font-weight:500;text-align:center}
+.cam-btn{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.45);color:#fff}
+.cam-btn[aria-pressed=true]{background:#fff;color:#000}
+.cam-bot{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.cam-hint{margin:0;font-size:14.5px;text-align:center;max-width:34ch;text-wrap:balance;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.cam-row{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap}
+.cam-pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:22px;background:rgba(255,255,255,.16);color:#fff;font-size:14px;font-weight:500;cursor:pointer;backdrop-filter:blur(8px)}
+.cam-shutter{width:76px;height:76px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;background:transparent}
+.cam-shutter span{width:60px;height:60px;border-radius:50%;background:#fff;transition:transform .1s}
+.cam-shutter:active span{transform:scale(.9)}
+
+/* Fuel: sticky sums, no drag handle, nutrients */
+.item{grid-template-columns:36px minmax(0,1fr) auto!important;padding-right:14px!important}
+.fuel-sticky{position:fixed;top:0;z-index:30;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:10px;align-items:end;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--md-sc,var(--bg));border-bottom:1px solid var(--line);box-shadow:var(--md-elev2,0 2px 6px rgba(0,0,0,.12));transform:translateY(-110%);transition:transform .18s ease;pointer-events:none}
+.fuel-sticky.on{transform:none;pointer-events:auto}
+.fuel-sticky span{font-size:12px;color:var(--muted);white-space:nowrap}
+.fuel-sticky b{color:var(--ink);font-weight:600}
+.fuel-sticky .track{height:6px;margin-top:4px}
+.fs-k .track .pl,.fs-k .track .ea{background:var(--accent)}
+.fs-m .track .pl,.fs-m .track .ea{background:var(--c)}
+.fuel-sticky .track .pl{opacity:.35}
+body.nav-top .fuel-sticky{top:0}
+@media (prefers-reduced-motion:reduce){.fuel-sticky{transition:none}}
+.nut-card{display:flex;flex-direction:column;gap:10px}
+.nut-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 18px}
+.nut-t{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.nut-t b{color:var(--ink);font-weight:600}
+.nut-bar{position:relative;height:6px;border-radius:3px;background:var(--surface-2);margin-top:5px;overflow:visible}
+.nut-bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--good)}
+.nut.warn .nut-bar i{background:var(--warn)}.nut.bad .nut-bar i{background:var(--bad)}
+.nut-more summary{cursor:pointer;font-weight:500;font-size:14px;padding:6px 0;list-style:none}
+.nut-more summary::-webkit-details-marker{display:none}
+.nut-more summary::after{content:" ▾";color:var(--faint)}
+.nut-more[open] summary::after{content:" ▴"}
+.nut-tips{display:flex;flex-direction:column;gap:8px}
+.ai-coach{line-height:1.5}
+.seg.sm button{min-height:32px;font-size:13px;padding:0 12px}
+
+/* Fuel, compact: the header scrolls away, the day's sums stay pinned on top */
+.top.plan-top{position:relative!important;top:auto!important}
+.plan-top .top-acts{flex-wrap:nowrap;gap:2px;align-items:center}
+.plan-top .top-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:599px){
+  .plan-top .ready{font-size:0;gap:0;width:40px;height:40px;padding:0;justify-content:center;background:transparent}
+  .plan-top .ready i{width:12px;height:12px}
+  .plan-top .week{padding:4px 0 8px}
+  .plan-side .hero{padding:12px 12px 14px!important;gap:10px!important}
+  .plan-side .hero-body{grid-template-columns:112px minmax(0,1fr);gap:14px}
+  .plan-side .kring,.plan-side .kring svg{width:112px;height:112px}
+  .plan-side .kring .big{font-size:25px}
+  .plan-side .mbars{gap:8px}
+  .plan-side .dfc{padding:9px 12px}
+  .plan-side .toolbar{gap:6px}
+}
+
+.fuel-sticky .track{background:var(--surface-2)}
+.fuel-sticky .track .pl{opacity:.5}
+@media (max-width:599px){
+  .plan-meals .item{padding-top:0!important;padding-bottom:0!important}
+  .plan-meals .item-main{padding-top:7px!important;padding-bottom:7px!important}
+  .plan-meals .meal-head{padding-top:12px!important;padding-bottom:8px!important}
+  .plan-meals .add-row{padding-top:9px!important;padding-bottom:11px!important}
+}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -3027,7 +3109,7 @@ function render() {
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
   $("#fab").hidden = UI.tab !== "plan";
   if (UI.sheet && UI.sheet.live) renderSheet();
-  restoreFocus(f); ensureLoop();
+  restoreFocus(f); ensureLoop(); afterRender();
 }
 
 /* ================= plan view ================= */
@@ -3087,8 +3169,8 @@ VIEWS.plan = function () {
   const empty = !dayItems(day).length, today = todayISO();
   const toEat = T.kcal - eat.kcal, diff = tot.kcal - T.kcal, onT = Math.abs(diff) <= T.kcal * 0.03;
   const planTxt = eat.manual ? "logged total" : !tot.kcal ? "nothing planned" : eat.kcal > 0 ? (toEat >= 0 ? `${fmtN(toEat)} to go` : `${fmtN(-toEat)} over`) : onT ? "on target" : `${fmtN(Math.abs(diff))} ${diff > 0 ? "over" : "short"}`;
-  let h = `<header class="top">${fuelNav()}<div class="top-row"><div><div class="top-title">${relDay(date)}</div><div class="top-sub">${fmtLong(date)}</div></div>
-    <div class="row">${SMART() && date === today ? readinessDot() : ""}${date !== today ? `<button class="btn soft sm" data-act="date" data-date="${today}">Today</button>` : ""}${SMART() ? `<button class="btn soft sm" data-act="open-checkin" data-date="${date}">${date < today ? "Edit log" : "Check-in"}</button>` : ""}${shopBtn()}<button class="icon-btn" data-act="day-menu" aria-label="Day options">${ic("more")}</button></div></div>
+  let h = `<header class="top plan-top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">${relDay(date)}</div><div class="top-sub">${fmtLong(date)}</div></div>
+    <div class="row top-acts">${SMART() && date === today ? readinessDot() : ""}${date !== today ? `<button class="btn soft sm" data-act="date" data-date="${today}">Today</button>` : ""}${SMART() ? `<button class="icon-btn" data-act="open-checkin" data-date="${date}" aria-label="${date < today ? "Edit log" : "Check-in"}" title="${date < today ? "Edit log" : "Check-in"}">${ic("pulse")}</button>` : ""}${shopBtn()}<button class="icon-btn" data-act="day-menu" aria-label="Day options">${ic("more")}</button></div></div>
     <nav class="week" aria-label="Week">${weekStrip()}</nav></header>`;
   let side = `<section class="hero" aria-label="Daily targets">
     ${SMART() ? sessionChip(date) : `<div class="hero-top">${trainChip(date)}</div>`}
@@ -3102,11 +3184,10 @@ VIEWS.plan = function () {
     side += `<form class="weigh" data-form="quickweigh"><span class="weigh-l">${ic("weight", "sm")}<span><b>Morning weigh-in</b><small>${last ? `last ${r1(last[1])} kg · ${fmtDM(last[0])}` : "keeps your targets accurate"}</small></span></span>
       <span class="weigh-in"><span class="unit-inp"><input id="qw-in" class="inp" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Weight in kg"><span>kg</span></span><span class="unit-inp bf"><input id="qw-bf" class="inp" inputmode="decimal" placeholder="${lastBf() ? r1(lastBf()[1]) : "BF"}" aria-label="Body fat percent, optional"><span>%</span></span><button class="btn ink sm" type="submit">Save</button></span></form>`;
   }
-  side += coachCard(date);
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>
     <button class="btn ghost sm" data-act="open-copy" data-scope="day">${ic("copy", "sm")}Copy</button>
     <button class="btn ghost sm" data-act="tab" data-tab="shop">${ic("cart", "sm")}Shopping list</button>
-    ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button>` : ""}</div>`;
+    ${!empty ? `<button class="btn ghost sm" data-act="all-eaten">${ic("check", "sm")}All eaten</button><button class="btn ghost sm" data-act="clear-day" data-date="${date}">${ic("trash", "sm")}Clear day</button>` : ""}</div>`;
   let meals = "";
   if (eat.manual) {
     meals += `<button class="logged" data-act="open-checkin" data-date="${date}"><span class="logged-ic">${ic("check")}</span><span class="logged-t"><b>Logged total · ${fmtN(eat.kcal)} kcal</b><small>${eat.hasMacros ? `${r0(eat.c)} g carbs · ${r0(eat.p)} g protein · ${r0(eat.f)} g fat` : "Calories only"} · daily total from your log. Foods you tick as eaten replace it.</small></span>${ic("chevR", "sm")}</button>`;
@@ -3122,7 +3203,8 @@ VIEWS.plan = function () {
       ${y && dayItems(y).length ? `<button class="btn ghost" data-act="copy-from" data-from="${addDays(date, -1)}">${ic("copy", "sm")}Same as yesterday</button>` : ""}</div></div>`;
   }
   for (const m of activeMeals()) meals += mealCard(date, m, day, T);
-  return h + `<div class="plan-grid"><div class="plan-side">${side}</div><div class="plan-meals">${meals}</div></div>`;
+  meals += coachCard(date) + nutCard(date);
+  return h + fuelSticky(date, tot, eat, T) + `<div class="plan-grid"><div class="plan-side">${side}</div><div class="plan-meals">${meals}</div></div>`;
 };
 function mealCard(date, m, day, T) {
   const items = day.meals[m.id] || [];
@@ -3143,8 +3225,7 @@ function itemRow(it, mealId) {
   return `<li class="item ${it.eaten ? "eaten" : ""} ${it.cheat ? "cheat" : ""}" data-item="${it.id}" data-meal="${mealId}">
     <button class="chk" data-act="toggle-eaten" data-meal="${mealId}" data-id="${it.id}" aria-label="${it.eaten ? "Mark as not eaten" : "Mark as eaten"}" aria-pressed="${!!it.eaten}"><span>${ic("check")}</span></button>
     <button class="item-main" data-act="open-item" data-meal="${mealId}" data-id="${it.id}"><span class="item-name">${it.cheat ? '<span class="tag cheat-tag">Cheat</span> ' : it.kind === "recipe" ? ic("book", "sm") + " " : ""}${esc(itemName(it))}</span><span class="item-sub">${esc(itemQty(it))}</span></button>
-    <span class="item-kcal">${fmtN(mm.kcal)}<small><i style="--c:var(--carb)">${r0(mm.c)}</i><i style="--c:var(--pro)">${r0(mm.p)}</i><i style="--c:var(--fat)">${r0(mm.f)}</i></small></span>
-    <span class="grip" data-grip aria-hidden="true">${ic("grip")}</span></li>`;
+    <span class="item-kcal">${fmtN(mm.kcal)}<small><i style="--c:var(--carb)">${r0(mm.c)}</i><i style="--c:var(--pro)">${r0(mm.p)}</i><i style="--c:var(--fat)">${r0(mm.f)}</i></small></span></li>`;
 }
 
 /* ================= foods view ================= */
@@ -3819,7 +3900,7 @@ SHEETS.add = sh => {
     title: `Add to ${mealName(sh.meal)}`, focus: "add-q",
     body: `<div class="add-top">${mealChips(sh.meal)}
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
-      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${Sync.sample ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
+      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("book")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("spark")}<span>Describe</span></button>` : ""}</div>
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["fav", "Favourites"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       </div><div id="add-ctx">${addCtxFor(sh)}</div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
@@ -3891,6 +3972,7 @@ SHEETS.food = sh => {
       <label class="row sw-row fd-auto"><button type="button" class="switch" role="switch" aria-checked="${!!d.autoKcal}" data-act="fd-auto" aria-label="Calculate calories from macros"></button><span>Calories from macros<small class="faint" style="display:block;font-size:12px">4 × protein + 4 × carbs + 9 × fat + 2 × fibre</small></span></label>
       <div id="fd-calc" class="faint" style="font-size:12.5px">${d.autoKcal ? "" : Math.abs(calc - num(d.per.kcal)) > 15 ? `Macros add up to ${calc} kcal. <button class="link" data-act="fd-usecalc">Use ${calc}</button>` : `Macros add up to ${calc} kcal.`}</div>
       <div class="grid4">${nfield("fib", "Fibre")}${nfield("sug", "Sugars")}${nfield("sat", "Saturated")}${nfield("salt", "Salt")}</div>
+      ${proMicro() ? `<details class="nut-more"><summary>Vitamins and minerals <span class="faint">per 100 ${d.unit || "g"}${BUILTIN_MX[d.id] ? " · empty = typical values" : ""}</span></summary><div class="grid4">${["mono", "poly", ...Object.keys(NUT).filter(k => NUT[k].micro)].map(k => { const l = k === "mono" ? "Monounsat." : k === "poly" ? "Polyunsat." : NUT[k].l, u = k === "mono" || k === "poly" ? "g" : NUT[k].u; return `<div class="field"><label for="fd-mx-${k}">${l}</label><div class="unit-inp"><input id="fd-mx-${k}" class="inp" inputmode="decimal" value="${d.mx?.[k] ?? ""}" placeholder="${BUILTIN_MX[d.id]?.[k] ?? ""}" data-in="fd-mx" data-k="${k}"><span>${u}</span></div></div>`; }).join("")}</div></details>` : ""}
       ${orig ? `<button class="btn ghost sm" data-act="fd-reset" style="align-self:flex-start">${ic("undo", "sm")}Reset to ${d.source === "off" ? "Open Food Facts" : "original"} values</button>` : ""}
       <div class="field"><span class="flabel">Portions</span>
         ${(d.servings || []).map((s, i) => `<div class="grid2" style="grid-template-columns:minmax(0,1fr) 110px 44px"><input id="fd-sl-${i}" class="inp" value="${esc(s.l)}" data-in="fd-serv" data-i="${i}" data-k="l" aria-label="Portion name"><div class="unit-inp"><input id="fd-sg-${i}" class="inp" inputmode="decimal" value="${s.g}" data-in="fd-serv" data-i="${i}" data-k="g" aria-label="Portion size"><span>${d.unit}</span></div><button class="icon-btn" data-act="fd-serv-del" data-i="${i}" aria-label="Remove portion">${ic("close", "sm")}</button></div>`).join("")}
@@ -3955,18 +4037,19 @@ SHEETS.training = sh => {
 
 /* ---------- auto planner ---------- */
 SHEETS.planner = sh => {
-  const days = sh.scope === "week" ? 7 : 1;
+  const days = sh.scope === "week" ? (sh.pairs ? 8 : 7) : sh.pairs ? 2 : 1;
   return {
     title: "Auto-plan",
     body: `<div class="field"><span class="flabel">What to plan</span><div class="seg">${[["day", relDay(UI.date)], ["week", "Next 7 days"]].map(([k, l]) => `<button data-act="pl-scope" data-k="${k}" aria-pressed="${sh.scope === k}">${esc(l)}</button>`).join("")}</div></div>
       <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["fill", "Keep, fill the gaps"], ["replace", "Start fresh"]].map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${sh.mode === k}">${l}</button>`).join("")}</div>
         <span class="faint" style="font-size:12.5px">${sh.mode === "replace" ? "Planned items are replaced. Anything already marked as eaten stays." : "Meals you've already filled stay as they are; empty meals get planned to cover what's left."}</span></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Prefers food you have at home, especially if it expires soon</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
-      ${Sync.sample ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dish ideas from Claude</span><span class="s">Claude combines your foods into named dishes in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.claude}" data-act="pl-toggle" data-k="claude" aria-label="Dish ideas from Claude"></button></div>` : ""}
+      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Cook once, eat twice</span><span class="s">Lunch and dinner repeat over pairs of days: lunch day 1 = lunch day 2, dinner day 1 = dinner day 2. Portions still follow each day's target.</span></span><button class="switch" role="switch" aria-checked="${!!sh.pairs}" data-act="pl-toggle" data-k="pairs" aria-label="Cook once, eat twice"></button></div>
+      ${AIF("plan") ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dishes chosen by the AI</span><span class="s">The AI builds real dishes from your habits and foods, in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.claude}" data-act="pl-toggle" data-k="claude" aria-label="Dishes chosen by the AI"></button></div>` : ""}
       <div class="note">Targets come from each day's training type. Portions are rounded to ${S.settings.step} g and whole pieces, so days land close to target rather than to the gram.</div>
       ${sh.busy ? `<div class="result"><span class="spinner"></span><span>${esc(sh.busy)}</span></div>` : ""}
       ${sh.err ? `<div class="note" style="color:var(--bad)">${esc(sh.err)}</div>` : ""}`,
-    foot: `<button class="btn primary" data-act="pl-run" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Plan ${days === 1 ? "the day" : "7 days"}</button>`
+    foot: `<button class="btn primary" data-act="pl-run" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Plan ${days === 1 ? "the day" : days === 2 ? "2 days" : days + " days"}</button>`
   };
 };
 
@@ -4211,7 +4294,7 @@ function toast(msg, undo) {
 }
 
 /* ================= barcode scanning ================= */
-const ZXING_SRC = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
+const ZXING_SRC = new URL("vendor/zxing.min.js", location.href).href;
 function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("load")); document.head.appendChild(s); }); }
 let zxReady = null;
 function loadZXing() { if (window.ZXing) return Promise.resolve(); if (!zxReady) zxReady = loadScript(ZXING_SRC).catch(e => { zxReady = null; throw e; }); return zxReady; }
@@ -4226,14 +4309,14 @@ function drawScaled(img, maxSide, rot = 0) {
   ctx.translate(sw / 2, shh / 2); ctx.rotate(rot * Math.PI / 180); ctx.drawImage(img, -w / 2, -h / 2, w, h);
   return c;
 }
-function zxDecode(canvas) {
+function zxDecode(canvas, fast) {
   const Z = window.ZXing; const w = canvas.width, h = canvas.height;
   const d = canvas.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, w, h).data;
   const lum = new Uint8ClampedArray(w * h);
   for (let i = 0, j = 0; i < d.length; i += 4, j++) lum[j] = (306 * d[i] + 601 * d[i + 1] + 117 * d[i + 2] + 512) >> 10;
   const hints = new Map();
   hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODE_128]);
-  hints.set(Z.DecodeHintType.TRY_HARDER, true);
+  if (!fast) hints.set(Z.DecodeHintType.TRY_HARDER, true);
   const reader = new Z.MultiFormatReader(); reader.setHints(hints);
   const src = new Z.RGBLuminanceSource(lum, w, h);
   for (const B of [Z.HybridBinarizer, Z.GlobalHistogramBinarizer]) {
@@ -4290,6 +4373,9 @@ function offToFood(code, p) {
   let kcal = g("energy-kcal_100g"); if (kcal == null && g("energy_100g") != null) kcal = g("energy_100g") / 4.184;
   const per = { kcal: r0(kcal || 0), p: r1(g("proteins_100g") || 0), c: r1(g("carbohydrates_100g") || 0), f: r1(g("fat_100g") || 0), fib: r1(g("fiber_100g") || 0), sug: r1(g("sugars_100g") || 0), sat: r1(g("saturated-fat_100g") || 0), salt: r1(g("salt_100g") || 0) };
   if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f);
+  // vitamins and minerals, when the product has them (Open Food Facts stores them in grams)
+  const mx = {}, mxs = { mono: ["monounsaturated-fat_100g", 1], poly: ["polyunsaturated-fat_100g", 1], om3: ["omega-3-fat_100g", 1], k: ["potassium_100g", 1e3], ca: ["calcium_100g", 1e3], fe: ["iron_100g", 1e3], mg: ["magnesium_100g", 1e3], vitc: ["vitamin-c_100g", 1e3], vitd: ["vitamin-d_100g", 1e6], b12: ["vitamin-b12_100g", 1e6], fol: ["vitamin-b9_100g", 1e6] };
+  for (const [k, [key, m]] of Object.entries(mxs)) { const v = g(key) ?? (k === "fol" ? g("folates_100g") : null); if (v != null && isFinite(v)) mx[k] = Math.round(v * m * 100) / 100; }
   const tags = (p.categories_tags || []).join(" ");
   const cat = /dairies|cheeses|yogurt|milks|eggs/.test(tags) ? "dairy" : /meats|hams|sausages|poultry/.test(tags) ? "meat" : /fishes|seafood|tunas/.test(tags) ? "fish" : /beverages|drinks|juices|waters/.test(tags) ? "drinks" : /frozen/.test(tags) ? "frozen" : /breads|bakery|crackers/.test(tags) ? "bakery" : /snacks|chocolates|biscuits|nuts|bars/.test(tags) ? "snacks" : /fruits|vegetables|fresh/.test(tags) ? "produce" : "pantry";
   const unit = p.product_quantity_unit === "ml" || /\d\s*(ml|cl|l)\b/i.test(p.quantity || "") ? "ml" : "g";
@@ -4299,35 +4385,35 @@ function offToFood(code, p) {
   if (sq > 0) servings.push({ l: `1 serving`, g: r1(sq) });
   if (pq > 0 && pq <= 600 && Math.abs(pq - sq) > 1) servings.push({ l: "1 pack", g: r1(pq) });
   const ns = String(p.nutriscore_grade || p.nutrition_grades || "").toLowerCase();
-  return clean0({ id: "off-" + code, name, brand: (p.brands || "").split(",")[0].trim(), barcode: code, unit, per, orig: clone(per), servings, pack: pq, cat, role, meals, fav: false, source: "off", edited: false,
+  return clean0({ id: "off-" + code, name, brand: (p.brands || "").split(",")[0].trim(), barcode: code, unit, per, orig: clone(per), mx: Object.keys(mx).length ? mx : null, servings, pack: pq, cat, role, meals, fav: false, source: "off", edited: false,
     img: /^https:\/\/images\.openfoodfacts\.org\//.test(p.image_front_small_url || "") ? p.image_front_small_url : null, nutri: /^[a-e]$/.test(ns) ? ns : null, nova: +p.nova_group || null, qtyText: p.quantity || null });
 }
 function findByBarcode(code) { return Object.values(S.foods).find(f => !f.hidden && f.barcode === code) || null; }
 
 /* ================= scanner sheet ================= */
 function labelStage(sh) {
-  return `${sh.readFail ? "" : `<label class="big-action">${ic("camera")}<span>Photograph the nutrition table</span><small>${Sync.sampleImages ? "Claude reads it; if it can't, the reader on this device takes over." : "Read on this device, no Claude needed."} Fill the photo with the table, flat and in good light.</small><input type="file" accept="image/*" capture="environment" class="sr" data-file="label"></label>
-    <label class="btn ghost block">${ic("image", "sm")}Choose a photo<input type="file" accept="image/*" class="sr" data-file="label"></label>`}
+  return `${sh.readFail ? "" : `<button class="big-action" data-act="cam-label">${ic("camera")}<span>Frame the nutrition table</span><small>${Sync.sampleImages && AIF("label") ? "The AI reads it; if it can't, the reader on this device takes over." : "Read on this device."} Only what's inside the frame is read.</small></button>
+    <div class="row" style="flex-wrap:nowrap"><label class="btn ghost" style="flex:1">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-file="label"></label><label class="btn ghost" style="flex:1">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-file="label"></label></div>`}
     ${sh.ocrOff ? `<div class="note warn">The photo reader couldn't start in this view. Paste the text instead: it's just as quick.</div>` : ""}
     <div class="field"><label for="lb-text">${sh.readFail ? "Check the text that was read and fix the numbers" : "Or paste the text of the table"}</label>
       <textarea id="lb-text" class="inp mono" rows="${sh.readFail ? 9 : 5}" data-in="lb-text" spellcheck="false" placeholder="Energia 1580 kJ / 374 kcal&#10;Grassi 1,5 g&#10;di cui saturi 0,3 g&#10;Carboidrati 72 g&#10;Proteine 12 g&#10;Sale 0,03 g">${esc(sh.text || "")}</textarea>
       <span class="faint" style="font-size:12.5px">iPhone: open the photo, touch and hold the text, then Copy (Live Text). Android: Google Lens, then Copy text. Only the per 100 g column is used.</span></div>
     <div class="row" style="flex-wrap:nowrap"><button class="btn primary" style="flex:1" data-act="lb-read">${ic("check", "sm")}Read values</button><button class="btn ghost" style="flex:1" data-act="scan-manual">${ic("edit", "sm")}Type them in</button></div>
     ${sh.readFail ? `<label class="btn ghost block">${ic("camera", "sm")}Retake the photo<input type="file" accept="image/*" capture="environment" class="sr" data-file="label"></label>` : ""}
-    ${Sync.sampleImages && sh.files?.length ? `<button class="btn text block" data-act="lb-claude">${ic("spark", "sm")}Ask Claude to read the photo again</button>` : ""}`;
+    ${Sync.sampleImages && AIF("label") && sh.files?.length ? `<button class="btn text block" data-act="lb-claude">${ic("spark", "sm")}Ask Claude to read the photo again</button>` : ""}`;
 }
 SHEETS.scan = sh => {
   const st = sh.stage || "start";
   const thumb = sh.url ? `<img class="thumb" src="${sh.url}" alt="">` : `<span class="thumb" style="display:grid;place-items:center">${ic("scan", "lg")}</span>`;
   const manual = `<form data-form="scan-code" class="row" style="flex-wrap:nowrap"><input id="scan-code" class="inp" inputmode="numeric" placeholder="Or type the barcode number" value="${esc(sh.code || "")}" autocomplete="off"><button class="btn soft" type="submit">Look up</button></form>`;
   let body = "";
-  if (st === "start") body = `<label class="big-action">${ic("camera")}<span>Take a photo of the barcode</span><small>Hold the phone 10–15 cm away so the bars fill most of the photo</small><input type="file" accept="image/*" capture="environment" class="sr" data-file="scan"></label>
-    <label class="btn ghost block">${ic("image", "sm")}Choose a photo<input type="file" accept="image/*" class="sr" data-file="scan"></label>${manual}`;
+  if (st === "start") body = `<button class="big-action" data-act="cam-barcode">${ic("scan")}<span>Scan with the camera</span><small>Point at the barcode: it's read by itself, no photo to take</small></button>
+    <div class="row" style="flex-wrap:nowrap"><label class="btn ghost" style="flex:1">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-file="scan"></label><label class="btn ghost" style="flex:1">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-file="scan"></label></div>${manual}`;
   else if (st === "label") body = labelStage(sh);
   else if (st === "busy") body = `<div class="result">${thumb}<span class="spinner"></span><span>${esc(sh.msg)}</span></div>`;
   else if (st === "nocode") body = `<div class="result">${thumb}<span><b>No barcode found in this photo.</b><br><span class="muted">Retake it closer, in good light, with the barcode straight.</span></span></div>
     <label class="btn primary block">${ic("camera", "sm")}Retake photo<input type="file" accept="image/*" capture="environment" class="sr" data-file="scan"></label>
-    ${Sync.sampleImages && sh.file ? `<button class="btn ghost block" data-act="scan-digits">${ic("spark", "sm")}Ask Claude to read the numbers</button>` : ""}${manual}`;
+    ${Sync.sampleImages && AIF("label") && sh.file ? `<button class="btn ghost block" data-act="scan-digits">${ic("spark", "sm")}Ask Claude to read the numbers</button>` : ""}${manual}`;
   else if (st === "missing") body = `<div class="result">${thumb}<span style="min-width:0"><b class="num">${esc(sh.code)}</b><br><span class="muted">${sh.unreachable ? "Open Food Facts can't be reached from inside this page, so the product couldn't be fetched right now." : "This product isn't on Open Food Facts yet."}</span></span></div>
     <button class="btn primary block" data-act="open-label-here">${ic("camera", "sm")}Read the nutrition label</button>
     <button class="btn ghost block" data-act="scan-manual">${ic("edit", "sm")}Enter the values myself</button>
@@ -4389,40 +4475,80 @@ const LABEL_KEYS = [
   ["p", /protein[ea]?|protéines?|eiwei(ß|ss)/gi], ["c", /carboidrati|carbohydrates?|glucides|kohlenhydrate/gi],
   ["f", /grassi|(^|[^a-z])(total )?fat(?![a-z])|lipidi|matières grasses|(^|[^a-z])fett(?![a-z])/gi],
   ["e", /energia|energy|énergie|valore energetico|brennwert/gi], ["x", /\d\s*k\s*j|\d\s*k\s*c\s*a\s*[l1i]/gi]];
+/* what a printed number might really have been: the "g" after it read as 9 ("72 g" → 729), a lost decimal comma (1,5 → 15) */
+function numGuesses(raw, salt) {
+  const r = String(raw).replace(",", "."), out = [[parseFloat(r), 0]], add = (str, pen) => { const v = parseFloat(str.replace(/\.$/, "")); if (!isFinite(v)) return; const o = out.find(o => o[0] === v); if (o) o[1] = Math.min(o[1], pen); else out.push([v, pen]); };
+  const digits = r.replace(".", ""), dec = (r.split(".")[1] || "").length;
+  if (/[89]$/.test(r) && digits.length >= 2) { const s9 = r.slice(0, -1); add(s9, !salt && dec >= 2 ? 0 : 1); if (!salt && dec >= 2) out[0][1] = 0.8; if (!s9.includes(".") && s9.length >= 2) add(s9.slice(0, -1) + "." + s9.slice(-1), 2); }
+  if (!r.includes(".") && r.length >= 2) add(r.slice(0, -1) + "." + r.slice(-1), 1.5);
+  return out;
+}
+/* words the reader got slightly wrong ("Protoine", "nergy") put back, so the keywords still match */
+const LABEL_WORDS = ["energia", "grassi", "saturi", "carboidrati", "zuccheri", "fibre", "fibra", "proteine", "sale", "sodio", "energy", "fat", "saturates", "carbohydrate", "sugars", "protein", "salt", "glucides", "lipides", "sucres", "protéines", "fett", "kohlenhydrate", "zucker", "eiweiß", "salz"];
+function editDist(a, b) { if (Math.abs(a.length - b.length) > 2) return 9; let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[b.length]; }
+function fixLabelWords(t) { return String(t).replace(/[A-Za-zÀ-ÿ]{4,}/g, w => { const l = w.toLowerCase(); if (LABEL_WORDS.includes(l)) return w; let best = null, bd = 9; for (const v of LABEL_WORDS) { const d = editDist(l, v); if (d < bd) { bd = d; best = v; } } return best && bd <= (best.length >= 8 ? 2 : 1) ? best : w; }); }
 function parseLabelText(txt) {
-  const T = String(txt || "").replace(/\r/g, "").replace(/[|¦]/g, " ").replace(/(\d)\s+([.,])\s*(\d)/g, "$1$2$3");
-  const numsIn = s => [...String(s).matchAll(/(<\s*)?(\d+(?:[.,]\d+)?)/g)].map(m => m[1] ? 0 : parseFloat(m[2].replace(",", ".")));
+  const T = fixLabelWords(txt || "").replace(/\r/g, "").replace(/[|¦\[\]{}]/g, " ").replace(/(\d)\s+([.,])\s*(\d)/g, "$1$2$3")
+    .replace(/(\d)[oO](?=\D|$)/g, "$10").replace(/(^|[\s(])[oO]([.,]\d)/g, "$10$2").replace(/(\d[.,]?)[lI](?=\s|g|$)/g, "$11");
+  const tokIn = s => [...String(s).matchAll(/(<\s*)?(\d+(?:[.,]\d+)?)/g)].map(m => m[1] ? "0" : m[2]);
+  const numsIn = s => tokIn(s).map(t => parseFloat(t.replace(",", ".")));
   // every keyword with its position; the value is the first number before the next keyword
   const hits = [];
   for (const [k, re] of LABEL_KEYS) for (const m of T.matchAll(re)) hits.push({ k, a: m.index + Math.max(0, m[0].search(/[a-zà-ú\d]/i)), b: m.index + m[0].length });
   hits.sort((x, y) => x.a - y.a || y.b - x.b);
   const H = hits.filter((h, i) => !hits.some((o, j) => j !== i && o.a <= h.a && o.b >= h.b && (o.b - o.a) > (h.b - h.a)));
-  const out = {}, noNum = [];
+  const raw = {}, noNum = [];
   H.forEach((h, i) => {
     if (h.k === "e" || h.k === "x") return;
-    const end = i + 1 < H.length ? H[i + 1].a : T.length, ns = numsIn(T.slice(h.b, end).split("\n")[0]);
+    const end = i + 1 < H.length ? H[i + 1].a : T.length, ts = tokIn(T.slice(h.b, end).split("\n")[0]);
     const nextSameLine = i + 1 < H.length && !T.slice(h.b, H[i + 1].a).includes("\n");
-    if (!ns.length) { if (!nextSameLine) noNum.push(h.k); return; }
-    if (out[h.k] == null) out[h.k] = ns[0];
+    if (!ts.length) { if (!nextSameLine) noNum.push(h.k); return; }
+    if (raw[h.k] == null) raw[h.k] = ts[0];
   });
   // tables read column by column: the names first, then the values in the same order
   if (noNum.length >= 2) {
-    const vals = T.split("\n").map(l => l.trim()).filter(l => /^[<\s]*\d+(?:[.,]\d+)?\s*(g|mg)?$/i.test(l)).map(l => numsIn(l)[0]);
-    noNum.forEach((k, i) => { if (out[k] == null && vals[i] != null) out[k] = vals[i]; });
+    const vals = T.split("\n").map(l => l.trim()).filter(l => /^[<\s]*\d+(?:[.,]\d+)?\s*(g|mg)?$/i.test(l)).map(l => tokIn(l)[0]);
+    noNum.forEach((k, i) => { if (raw[k] == null && vals[i] != null) raw[k] = vals[i]; });
   }
-  const kc = T.match(/(\d{1,4}(?:[.,]\d+)?)\s*k\s*c\s*a\s*[l1i]/i), kj = T.match(/(\d{2,4}(?:[.,]\d+)?)\s*k\s*j/i);
+  // EU labels list the nutrients in a fixed order: rows whose name came out unreadable get their place from it
+  { const ORD = ["f", "sat", "c", "sug", "fib", "p", "salt"], lines = T.split("\n"); let started = false, ptr = 0;
+    for (const ln of lines) {
+      if (/\d\s*(k\s*[jJ)}]|k?\s*[a-z]?cal\b)/i.test(ln) || /energ|brennwert/i.test(ln)) { started = true; continue; } if (!started) continue;
+      const tok = tokIn(ln)[0]; if (tok == null) continue;
+      const at = T.indexOf(ln), hit = H.filter(h => ORD.includes(h.k) && at >= 0 && h.a >= at && h.a < at + ln.length).pop();
+      if (hit) { ptr = ORD.indexOf(hit.k) + 1; continue; }
+      if (/[a-z]{3}/i.test(ln.split(tok)[0] || "") || ln.trim().startsWith(tok)) {
+        let k = ORD[ptr]; if (!k) break;
+        if (/di\s*cu|of\s*which|dont|davon/i.test(ln) && !["sat", "sug"].includes(k)) k = ptr <= 1 ? "sat" : "sug";
+        else if (k === "fib" && !/fib|fas|bal/i.test(ln) && ptr < ORD.length - 1 && raw.p == null) k = "p";
+        if (raw[k] == null) raw[k] = tok; ptr = ORD.indexOf(k) + 1;
+      }
+    } }
+  const out = {};
+  const kc = T.match(/(\d{1,4}(?:[.,]\d+)?)\s*(?:k|[a-z](?=cal))\s*c\s*a\s*[l1i]/i), kj = T.match(/(\d{2,4}(?:[.,]\d+)?)\s*k\s*(?:[jJ}\)l1]|(?=\s*\/))/i);
   if (kc) out.kcal = parseFloat(kc[1].replace(",", ".")); else if (kj) out.kcal = Math.round(parseFloat(kj[1].replace(",", ".")) / 4.184);
+  const kcAlt = kc && kj ? Math.round(parseFloat(kj[1].replace(",", ".")) / 4.184) : null; // checked against the macros below
+  // the main four together: the reading whose energy adds up best
+  const G = k => { const g = raw[k] != null ? numGuesses(raw[k]).filter(([v]) => v >= 0 && v <= 100) : []; return g.length ? g : [[null, 0]]; };
+  let best = null;
+  for (const [p, a] of G("p")) for (const [c, b] of G("c")) for (const [f, d] of G("f")) for (const [fib, e] of G("fib")) {
+    const sum = (p || 0) + (c || 0) + (f || 0) + (fib || 0); if (sum > 101) continue;
+    let cost = (a + b + d + e) * 4;
+    if (out.kcal > 0) { const calc = 4 * (p || 0) + 4 * (c || 0) + 9 * (f || 0) + 2 * (fib || 0); cost += Math.min(60, 100 * Math.abs(calc - out.kcal) / out.kcal); }
+    if (!best || cost < best.cost) best = { cost, p, c, f, fib };
+  }
+  if (best) for (const k of ["p", "c", "f", "fib"]) if (best[k] != null) out[k] = best[k];
+  if (kcAlt && Math.abs(kcAlt - out.kcal) / kcAlt > 0.08) { const calc = 4 * (out.p || 0) + 4 * (out.c || 0) + 9 * (out.f || 0) + 2 * (out.fib || 0); if (calc > 0 && Math.abs(calc - kcAlt) < Math.abs(calc - out.kcal)) out.kcal = kcAlt; }
+  const sub = (k, max) => { if (raw[k] == null) return; const g = numGuesses(raw[k]).filter(([v]) => v <= (max ?? 100)).sort((x, y) => x[1] - y[1]); out[k] = g.length ? g[0][0] : max != null ? max : null; };
+  sub("sat", out.f); sub("sug", out.c); sub("sod");
+  if (raw.salt != null) { const g = numGuesses(raw.salt, true).filter(([v]) => v <= 30).sort((x, y) => x[1] - y[1]); out.salt = g.length ? g[0][0] : null; }
   if (out.salt == null && out.sod != null) out.salt = out.sod > 20 ? out.sod * 2.5 / 1000 : out.sod * 2.5;
-  // a lost decimal comma (15 for 1,5) when the number can't be right
-  for (const k of ["p", "c", "f", "fib", "sug", "sat"]) if (out[k] > 100) out[k] = out[k] / 10;
-  if (out.sat != null && out.f != null && out.sat > out.f) out.sat = out.sat / 10 <= out.f ? out.sat / 10 : out.f;
-  if (out.sug != null && out.c != null && out.sug > out.c) out.sug = out.sug / 10 <= out.c ? out.sug / 10 : out.c;
-  if (out.salt > 30) out.salt = out.salt / 100;
   const calc = 4 * (out.p || 0) + 4 * (out.c || 0) + 9 * (out.f || 0) + 2 * (out.fib || 0);
   if ((!(out.kcal > 0) || out.kcal > 950) && calc > 0) out.kcal = Math.round(calc);
   const unit = /100\s*ml/i.test(T) && !/100\s*g(?![a-z])/i.test(T) ? "ml" : "g";
   const found = ["kcal", "p", "c", "f"].filter(k => out[k] != null).length;
-  return { per: { kcal: r0(out.kcal || 0), p: r1(out.p || 0), c: r1(out.c || 0), f: r1(out.f || 0), fib: r1(out.fib || 0), sug: r1(out.sug || 0), sat: r1(out.sat || 0), salt: Math.round((out.salt || 0) * 100) / 100 }, unit, found };
+  return { per: { kcal: r0(out.kcal || 0), p: r1(out.p || 0), c: r1(out.c || 0), f: r1(out.f || 0), fib: r1(out.fib || 0), sug: r1(out.sug || 0), sat: r1(out.sat || 0), salt: Math.round((out.salt || 0) * 100) / 100 }, unit, found, raw };
 }
 
 /* on-device reading of the photo: Tesseract (Italian model) served from this page's own files, loaded only when you use it.
@@ -4442,40 +4568,142 @@ async function ocrWorker(onProg) {
   })();
   try { return await OCR.busy; } catch (e) { OCR.busy = null; throw e; }
 }
-/* larger, grey and contrasted: what the recogniser reads best */
-function ocrCanvas(img) {
-  const c = drawScaled(img, 2000), ctx = c.getContext("2d", { willReadFrequently: true }), d = ctx.getImageData(0, 0, c.width, c.height), p = d.data;
-  let lo = 255, hi = 0; for (let i = 0; i < p.length; i += 16) { const y = 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]; if (y < lo) lo = y; if (y > hi) hi = y; }
-  const k = 255 / Math.max(40, hi - lo);
-  for (let i = 0; i < p.length; i += 4) { const y = clamp((0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2] - lo) * k, 0, 255); p[i] = p[i + 1] = p[i + 2] = y; }
-  ctx.putImageData(d, 0, 0); return c;
+/* ---- photo → clean black-on-white text, the way the recogniser reads best ----
+   1. grey, scaled so the text is big enough; 2. straightened (the angle where the text lines line up best);
+   3. turned if the photo is sideways; 4. local threshold (survives shadows and glare), white-on-colour inverted;
+   5. table rules erased (they break the lines into fragments). */
+const LBL = {};
+function grayOf(img, maxSide) {
+  const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height, k = Math.min(maxSide / Math.max(W0, H0), 2.5);
+  const w = Math.max(1, Math.round(W0 * k)), h = Math.max(1, Math.round(H0 * k)), c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.imageSmoothingQuality = "high"; x.drawImage(img, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data, g = new Uint8ClampedArray(w * h);
+  for (let i = 0, j = 0; j < g.length; i += 4, j++) g[j] = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8;
+  return { g, w, h };
+}
+function otsu(g) { const H = new Float64Array(256); for (let i = 0; i < g.length; i++) H[g[i]]++; let sum = 0; for (let t = 0; t < 256; t++) sum += t * H[t];
+  let sB = 0, wB = 0, best = 0, th = 128; for (let t = 0; t < 256; t++) { wB += H[t]; if (!wB) continue; const wF = g.length - wB; if (!wF) break; sB += t * H[t]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF); if (v > best) { best = v; th = t; } } return th; }
+/* how well the dark pixels line up in rows at a given angle (higher = text lines are horizontal) */
+function lineScore(pts, w, h, deg) { const r = deg * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r), n = Math.ceil(w + h), P = new Float64Array(n * 2);
+  for (let i = 0; i < pts.length; i += 2) { const y = Math.round(pts[i + 1] * cs - pts[i] * sn) + n; if (y >= 0 && y < P.length) P[y]++; }
+  let s = 0; for (let i = 1; i < P.length; i++) { const d = P[i] - P[i - 1]; s += d * d; } return s; }
+function findAngle(G) {
+  // small copy; ink = pixels clearly darker (or lighter, for white print on colour) than their surroundings
+  const k = Math.min(1, 700 / Math.max(G.w, G.h)), w = Math.max(1, Math.round(G.w * k)), h = Math.max(1, Math.round(G.h * k)), d = new Float64Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) d[y * w + x] = G.g[Math.min(G.h - 1, Math.floor(y / k)) * G.w + Math.min(G.w - 1, Math.floor(x / k))];
+  const W = w + 1, I = new Float64Array(W * (h + 1)); for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += d[y * w + x]; I[(y + 1) * W + x + 1] = I[y * W + x + 1] + s; } }
+  const R = Math.max(4, Math.round(Math.max(w, h) / 60)), mean = new Float64Array(w * h);
+  for (let y = 0; y < h; y++) { const y0 = Math.max(0, y - R), y1 = Math.min(h, y + R + 1); for (let x = 0; x < w; x++) { const x0 = Math.max(0, x - R), x1 = Math.min(w, x + R + 1); mean[y * w + x] = (I[y1 * W + x1] - I[y0 * W + x1] - I[y1 * W + x0] + I[y0 * W + x0]) / ((y1 - y0) * (x1 - x0)); } }
+  // print is thin strokes: next to their surroundings they stand out a lot, the paper only a little.
+  // So the deviations from a small local mean are skewed towards the ink's side.
+  const r = 2; let m3 = 0, m2 = 0;
+  for (let y = r; y < h - r; y++) for (let x = r; x < w - r; x++) { const mn = (I[(y + r + 1) * W + x + r + 1] - I[(y - r) * W + x + r + 1] - I[(y + r + 1) * W + x - r] + I[(y - r) * W + x - r]) / ((2 * r + 1) ** 2), v = d[y * w + x] - mn; if (Math.abs(v) < 6) continue; m2 += v * v; m3 += v * v * v; }
+  const skew = m2 ? m3 / Math.pow(m2, 1.5) : 0, inv = skew > 0, dk = skew, lt = m2;
+  let pts = []; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = d[y * w + x] - mean[y * w + x]; if (inv ? v > 15 : v < -15) pts.push(x, y); }
+  if (pts.length > 160000) { const keep = [], step = Math.ceil(pts.length / 160000) * 2; for (let i = 0; i < pts.length; i += step) keep.push(pts[i], pts[i + 1]); pts = keep; }
+  let best = 0, bs = -1; for (let a = -15; a <= 15; a += 1) { const v = lineScore(pts, w, h, a); if (v > bs) { bs = v; best = a; } }
+  for (let a = best - 1; a <= best + 1; a += .25) { const v = lineScore(pts, w, h, a); if (v > bs) { bs = v; best = a; } }
+  const side = lineScore(pts, w, h, 90) > bs * 1.15;
+  return { angle: best, side, inv, dk, lt };
+}
+function rotateGray(G, deg) { if (!deg) return G;
+  const r = deg * Math.PI / 180, cs = Math.abs(Math.cos(r)), sn = Math.abs(Math.sin(r)), w = Math.round(G.w * cs + G.h * sn), h = Math.round(G.w * sn + G.h * cs);
+  const src = document.createElement("canvas"); src.width = G.w; src.height = G.h; const sx = src.getContext("2d"), id = sx.createImageData(G.w, G.h);
+  for (let i = 0; i < G.g.length; i++) { const v = G.g[i]; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; } sx.putImageData(id, 0, 0);
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true });
+  let m = 0; for (let i = 0; i < G.g.length; i += 97) m += G.g[i]; m = Math.round(m / Math.ceil(G.g.length / 97));
+  x.fillStyle = `rgb(${m},${m},${m})`; x.fillRect(0, 0, w, h); x.translate(w / 2, h / 2); x.rotate(r); x.drawImage(src, -G.w / 2, -G.h / 2);
+  const d = x.getImageData(0, 0, w, h).data, g = new Uint8ClampedArray(w * h); for (let i = 0, j = 0; j < g.length; i += 4, j++) g[j] = d[i]; return { g, w, h };
+}
+/* Sauvola threshold with integral images: black text, white paper, whatever the light */
+function binarize(G, inv) {
+  const { g, w, h } = G, W = w + 1, I = new Float64Array(W * (h + 1)), I2 = new Float64Array(W * (h + 1));
+  for (let y = 0; y < h; y++) { let s = 0, s2 = 0; for (let x = 0; x < w; x++) { const v = inv ? 255 - g[y * w + x] : g[y * w + x]; s += v; s2 += v * v; I[(y + 1) * W + x + 1] = I[y * W + x + 1] + s; I2[(y + 1) * W + x + 1] = I2[y * W + x + 1] + s2; } }
+  const R = Math.max(8, Math.round(Math.max(w, h) / 50)), out = new Uint8ClampedArray(w * h);
+  for (let y = 0; y < h; y++) { const y0 = Math.max(0, y - R), y1 = Math.min(h, y + R + 1);
+    for (let x = 0; x < w; x++) { const x0 = Math.max(0, x - R), x1 = Math.min(w, x + R + 1), n = (y1 - y0) * (x1 - x0);
+      const s = I[y1 * W + x1] - I[y0 * W + x1] - I[y1 * W + x0] + I[y0 * W + x0], s2 = I2[y1 * W + x1] - I2[y0 * W + x1] - I2[y1 * W + x0] + I2[y0 * W + x0];
+      const m = s / n, sd = Math.sqrt(Math.max(0, s2 / n - m * m)), t = m * (1 + 0.2 * (sd / 128 - 1)), v = inv ? 255 - g[y * w + x] : g[y * w + x];
+      out[y * w + x] = v < t && sd > 6 ? 0 : 255; } }
+  return { g: out, w, h };
+}
+/* erase table rules: long, thin, nearly straight runs of black (a pixel of drift either way is allowed);
+   only the thin part is erased, so a letter touching a rule keeps its stroke */
+function dropRules(B) {
+  const { g, w, h } = B, minH = Math.round(w / 9), minV = Math.round(h / 9), T = Math.max(3, Math.round(Math.max(w, h) / 400));
+  const blk = (x, y) => x >= 0 && y >= 0 && x < w && y < h && !g[y * w + x];
+  const erase = [];
+  // horizontal: follow the run, letting it step one pixel up or down
+  for (let y0 = 0; y0 < h; y0 += 1) for (let x0 = 0; x0 < w; x0++) {
+    if (!blk(x0, y0) || blk(x0 - 1, y0)) continue;
+    let x = x0, y = y0, gap = 0, len = 0; const path = [];
+    while (x < w && gap <= 3) { if (blk(x, y)) { gap = 0; } else if (blk(x, y - 1)) { y--; gap = 0; } else if (blk(x, y + 1)) { y++; gap = 0; } else gap++; path.push(x, y); x++; len++; }
+    if (len - gap >= minH) for (let i = 0; i < path.length; i += 2) { const px = path[i], py = path[i + 1]; let up = py, dn = py; while (up > 0 && blk(px, up - 1) && py - up < T * 3) up--; while (dn < h - 1 && blk(px, dn + 1) && dn - py < T * 3) dn++; if (dn - up <= T * 2) for (let yy = up; yy <= dn; yy++) erase.push(yy * w + px); }
+  }
+  for (const i of erase) g[i] = 255; erase.length = 0;
+  for (let x0 = 0; x0 < w; x0++) for (let y0 = 0; y0 < h; y0++) {
+    if (!blk(x0, y0) || blk(x0, y0 - 1)) continue;
+    let x = x0, y = y0, gap = 0, len = 0; const path = [];
+    while (y < h && gap <= 3) { if (blk(x, y)) { gap = 0; } else if (blk(x - 1, y)) { x--; gap = 0; } else if (blk(x + 1, y)) { x++; gap = 0; } else gap++; path.push(x, y); y++; len++; }
+    if (len - gap >= minV) for (let i = 0; i < path.length; i += 2) { const px = path[i], py = path[i + 1]; let l = px, r = px; while (l > 0 && blk(l - 1, py) && px - l < T * 3) l--; while (r < w - 1 && blk(r + 1, py) && r - px < T * 3) r++; if (r - l <= T * 2) for (let xx = l; xx <= r; xx++) erase.push(py * w + xx); }
+  }
+  for (const i of erase) g[i] = 255;
+  return B;
+}
+function grayCanvas(G) { const c = document.createElement("canvas"); c.width = G.w; c.height = G.h; const x = c.getContext("2d"), id = x.createImageData(G.w, G.h);
+  for (let i = 0; i < G.g.length; i++) { const v = G.g[i]; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; } x.putImageData(id, 0, 0); return c; }
+function labelVariants(img) {
+  let G = grayOf(img, 1800); const A = findAngle(G);
+  if (A.side) { G = rotateGray(G, 90); const B = findAngle(G); A.angle = B.angle; }
+  G = rotateGray(G, -A.angle);
+  const B = dropRules(binarize(G, A.inv));
+  return { clean: grayCanvas(B), gray: grayCanvas(A.inv ? { ...G, g: G.g.map(v => 255 - v) } : G), side: A.side, angle: A.angle, inv: A.inv, dbg: [A.dk, A.lt], G };
+}
+/* how believable a reading is: values found, energy that matches the macros */
+function labelScore(r) { const p = r.per; let s = r.found * 10 + ["fib", "sug", "sat", "salt"].filter(k => p[k] > 0).length * 3;
+  const calc = 4 * p.p + 4 * p.c + 9 * p.f + 2 * p.fib; if (p.kcal > 0 && calc > 0) s += Math.max(0, 15 - 30 * Math.abs(calc - p.kcal) / p.kcal);
+  if (p.sat > p.f || p.sug > p.c || p.p + p.c + p.f > 100) s -= 15; return s; }
+async function readLabelPhoto(files, onStep) {
+  const w = await ocrWorker(onStep); let best = null, text = "";
+  const run = async (canvas, psm, tag) => { await w.setParameters({ tessedit_pageseg_mode: psm }); const r = await w.recognize(canvas); const t = r?.data?.text || ""; const p = parseLabelText(t); p.score = labelScore(p); p.text = t; p.pass = tag; if (!best || p.score > best.score) best = p; return p; };
+  for (const f of [...files].slice(0, 2)) {
+    const { img } = await fileToImage(f); const V = labelVariants(img);
+    onStep && onStep({ status: "pass", n: 1 });
+    let r = await run(V.clean, "6", "clean");
+    if (r.found < 4 || r.score < 50) { onStep && onStep({ status: "pass", n: 2 }); r = await run(V.gray, "6", "gray"); }
+    if (best.found < 4) { onStep && onStep({ status: "pass", n: 3 }); await run(V.clean, "4", "columns"); }
+    if (best.found < 3 && !V.side) { onStep && onStep({ status: "pass", n: 4 }); const G = rotateGray(V.G, 90); await run(grayCanvas(dropRules(binarize(G, false))), "6", "turned"); }
+    if (best.found >= 4 && best.score >= 55) break;
+  }
+  await w.setParameters({ tessedit_pageseg_mode: "6" });
+  return best;
 }
 /* AI first when it's available (it reads any label, any language); the on-device reader if the AI can't */
 async function handleLabelFiles(files) {
   const sh = UI.sheet; files = [...(files || [])]; if (!sh || !files.length) return; // a copy: the input is cleared right after
-  if (Sync.sampleImages && Sync.sample) return handleLabelClaude(files, true);
+  if (Sync.sampleImages && AIF("label")) return handleLabelClaude(files, true);
   return ocrLabelFiles(files);
 }
 async function ocrLabelFiles(files) {
-  const sh = UI.sheet; if (!sh || !files.length) return;
+  const sh = UI.sheet; files = [...(files || [])]; if (!sh || !files.length) return;
   const url = URL.createObjectURL(files[0]);
-  Object.assign(sh, { stage: "busy", msg: "Reading the label on this device…", url, files: [...files] }); renderSheet();
-  let text = "";
+  Object.assign(sh, { stage: "busy", msg: "Reading the label on this device…", url, files }); renderSheet();
+  let r = null;
   try {
-    const w = await ocrWorker(m => { if (UI.sheet !== sh || !m || m.progress == null) return; const t = $(".result span:last-child"); if (t) t.textContent = m.status === "recognizing text" ? `Reading the label… ${Math.round(m.progress * 100)}%` : "Preparing the reader (first time only)…"; });
-    for (const f of [...files].slice(0, 2)) { const { img } = await fileToImage(f); const r = await w.recognize(ocrCanvas(img)); text += (r?.data?.text || "") + "\n"; }
+    r = await readLabelPhoto(files, m => { if (UI.sheet !== sh || !m) return; const t = $(".result span:last-child"); if (!t) return;
+      t.textContent = m.status === "pass" ? (m.n === 1 ? "Reading the label…" : "Trying again another way…") : m.status === "recognizing text" ? `Reading the label… ${Math.round((m.progress || 0) * 100)}%` : "Preparing the reader (first time only)…"; });
   } catch (e) {
-    OCR.failed = String(e?.message || e || "error");
+    OCR.failed = String(e?.message || e || "error"); console.warn(e);
     if (UI.sheet !== sh) return;
     Object.assign(sh, { stage: "label", ocrOff: true }); renderSheet();
     toast("The photo reader couldn't start here. Paste the label text instead (Live Text or Google Lens)."); return;
   }
   if (UI.sheet !== sh) return;
-  labelFromText(text, sh, true);
+  labelFromText(r?.text || "", sh, true, r);
 }
 /* text (pasted or read from the photo) → values to check in the food editor */
-function labelFromText(text, sh, fromPhoto) {
-  const r = parseLabelText(text);
+function labelFromText(text, sh, fromPhoto, pre) {
+  const r = pre || parseLabelText(text);
   if (r.found < 3) {
     Object.assign(sh, { stage: "label", text: text.trim(), readFail: true }); renderSheet();
     toast(fromPhoto ? "Only part of the table came out. Fix the numbers in the text below, or retake the photo closer." : "Not enough values in that text: it needs energy, fat, carbohydrate and protein.");
@@ -4555,16 +4783,20 @@ Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "gr
   sh.busy = false; if (UI.sheet === sh) renderSheet();
 }
 
-async function claudePicks(dates, meals) {
+async function claudePicks(dates, meals, twinOf = {}) {
   const foods = allFoods().filter(f => f.per && f.role && dietOK(f) && !f.noPlan);
   const recs = allRecipes().filter(r => recipeOK(r) && !r.noPlan);
   const habits = buildHabits();
   const top = foods.sort((a, b) => (habits["*|" + b.id] || 0) - (habits["*|" + a.id] || 0)).slice(0, 160);
   const pantry = Object.entries(S.shop.pantry || {}).filter(([id, p]) => p.g > 0 && getFood(id)).map(([id, p]) => `${id} (${p.g} g${p.exp ? ", use by " + p.exp : ""})`);
   const d = S.settings.diet; const diet = Object.keys(d).filter(k => d[k]).join(", ") || "none";
-  const dayLines = dates.map(dt => { const T = targetsFor(dt); return `${dt} (${T.type.name}, ${T.kcal} kcal): ` + meals.map(m => `${m.id} [${m.kind === "b" ? "breakfast" : m.kind === "s" ? "snack" : "lunch/dinner"}, ~${r0(T.kcal * mealShare(m.id))} kcal]`).join(", "); }).join("\n");
+  const pairs = Object.keys(twinOf).length > 0;
+  const dayLines = dates.map(dt => { const T = targetsFor(dt), ms = twinOf[dt] ? meals.filter(m => (m.kind || "m") !== "m") : meals; if (!ms.length) return ""; return `${dt} (${T.type.name}, ${T.kcal} kcal)${twinOf[dt] ? ` [lunch and dinner = leftovers of ${twinOf[dt]}, plan only these]` : ""}: ` + ms.map(m => `${m.id} [${m.kind === "b" ? "breakfast" : m.kind === "s" ? "snack" : "lunch/dinner"}, ~${r0(T.kcal * mealShare(m.id))} kcal]`).join(", "); }).filter(Boolean).join("\n");
   const prompt = `You plan meals for an athlete. Choose WHICH foods go in each meal; portions are computed afterwards to hit the macros, so give no amounts.
-Use ONLY ids from the lists below.
+Use ONLY ids from the lists below. Build on their habits: keep the breakfasts and snacks they usually have, and make lunches and dinners dishes they would cook, with some variety.
+Their usual meals (most frequent first):
+${habitLines(meals)}
+${pairs ? "They cook once and eat twice: every lunch and dinner you choose is eaten again the next day, so pick dishes that keep well (no fried or crispy things, no raw fish), and make lunch and dinner of the same day clearly different.\n" : ""}
 Cuisines they like: ${S.settings.cuisines.join(", ") || "any"}. Diet restrictions: ${diet}. Never use: ${S.settings.avoid.join(", ") || "nothing"}.
 Use these pantry items first: ${pantry.join("; ") || "none"}.
 Vary the main protein from day to day and avoid repeating yesterday's dish. Make each meal a coherent, real dish with a short name (e.g. "Pasta with tuna and cherry tomatoes").
@@ -4594,27 +4826,33 @@ function quickPlan(date) {
 }
 async function runPlanner() {
   const sh = UI.sheet;
-  const dates = []; const n = sh.scope === "week" ? 7 : 1;
+  rememberPlannerPrefs(sh);
+  const dates = []; const n = sh.scope === "week" ? (sh.pairs ? 8 : 7) : sh.pairs ? 2 : 1;
   for (let i = 0; i < n; i++) dates.push(addDays(UI.date, i));
   const meals = activeMeals();
+  // with pairs, the second day of each pair eats the first day's lunch and dinner
+  const twinOf = {}; if (sh.pairs) for (const [a, b] of pairDates(dates)) if (b) twinOf[b] = a;
   let picks = null;
-  if (sh.claude && Sync.sample) {
-    sh.busy = "Claude is choosing dishes…"; sh.err = ""; renderSheet();
-    try { picks = await claudePicks(dates, meals); } catch (e) { sh.err = sampleErr(e) + " Planned without Claude instead."; }
+  if (sh.claude && AIF("plan")) {
+    sh.busy = "The AI is choosing dishes…"; sh.err = ""; renderSheet();
+    try { picks = await claudePicks(dates, meals, twinOf); } catch (e) { sh.err = sampleErr(e) + " Planned without the AI instead."; }
     if (UI.sheet !== sh) return;
   }
   sh.busy = "Calculating portions…"; renderSheet(); await sleep(30);
   const snap = snapshotDays(dates);
   const ctx = plannerContext({ usePantry: sh.pantry }); seedRecent(ctx, dates[0]);
-  let total = 0;
+  let total = 0; const made = {};
   for (const d of dates) {
-    const picker = picks && picks[d] ? (date, m, MT) => { const pm = picks[d][m.id]; if (!pm) return null; const items = itemsFromIds(pm.items, MT); return items ? { items, dish: pm.dish } : null; } : null;
-    const day = planDay(d, ctx, { mode: sh.mode, picker });
+    const twin = twinOf[d] && made[twinOf[d]];
+    const picker = (date, m, MT) => {
+      if (twin && (m.kind || "m") === "m") { const src = (twin.meals[m.id] || []).filter(it => it.kind !== "quick" && !it.cheat); if (src.length) { const items = itemsFromIds(src.map(it => it.ref), MT); if (items) return { items, dish: twin.dish?.[m.id] || null }; } }
+      const pm = picks?.[d]?.[m.id]; if (!pm) return null; const items = itemsFromIds(pm.items, MT); return items ? { items, dish: pm.dish } : null; };
+    const day = planDay(d, ctx, { mode: sh.mode, picker }); made[d] = day;
     put("days", d, day); total++;
     decayRecent(ctx); for (const [m, it] of dayItems(day)) { ctx.recent[m + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1; }
   }
   const err = sh.err; closeSheet();
-  toast(err || (total === 1 ? `Planned ${relDay(dates[0]).toLowerCase()}` : `Planned ${total} days`), () => restoreDays(snap));
+  toast(err || (total === 1 ? `Planned ${relDay(dates[0]).toLowerCase()}` : `Planned ${total} days${sh.pairs ? " · lunch and dinner in pairs" : ""}`), () => restoreDays(snap));
 }
 
 /* ================= drag & drop (touch + mouse) ================= */
@@ -4721,8 +4959,9 @@ ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo 
 
 /* plan */
 ACT["open-training"] = el => openSheet("training", el.dataset.sched ? { sched: el.dataset.sched, live: true } : { date: el.dataset.date || UI.date, live: true });
-ACT["open-planner"] = () => openSheet("planner", { scope: "day", mode: "fill", pantry: true, claude: false });
-ACT["plan-pantry"] = () => { UI.tab = "plan"; UI.date = todayISO(); scheduleRender(); openSheet("planner", { scope: "week", mode: "fill", pantry: true, claude: false }); };
+const plPrefs = () => ({ pairs: !!S.settings.planPrefs?.pairs, claude: !!S.settings.planPrefs?.ai });
+ACT["open-planner"] = () => openSheet("planner", { scope: "day", mode: "fill", pantry: true, ...plPrefs() });
+ACT["plan-pantry"] = () => { UI.tab = "plan"; UI.date = todayISO(); scheduleRender(); openSheet("planner", { scope: "week", mode: "fill", pantry: true, ...plPrefs() }); };
 ACT["quick-plan"] = () => quickPlan(UI.date);
 ACT["open-copy"] = el => openSheet("copy", { scope: el.dataset.scope || "day", meal: el.dataset.meal, targets: [], mode: "add" });
 ACT["copy-from"] = el => {
@@ -4746,7 +4985,7 @@ ACT["open-item"] = el => {
 ACT["day-menu"] = () => {
   const date = UI.date, has = dayItems(getDay(date)).length;
   const items = [
-    { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, claude: false }) },
+    { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a cheat meal", icon: "star", sub: "Pizza night, dinner out… the plan makes room", run: () => openCheat({ date }) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
@@ -4823,8 +5062,8 @@ ACT["open-describe"] = () => { const sh = S_(); openSheet("describe", { date: sh
 ACT["lb-read"] = () => { const sh = S_(); const t = $("#lb-text")?.value || sh.text || ""; if (!t.trim()) { toast("Paste the text of the nutrition table first."); return; } sh.text = t; labelFromText(t, sh, false); };
 ACT["lb-claude"] = () => { const sh = S_(); if (sh?.files?.length) handleLabelClaude(sh.files); };
 ACT["open-label-here"] = () => { const sh = S_(); Object.assign(sh, { stage: "label", labelOnly: true }); renderSheet(); };
-ACT["open-label"] = () => { const sh = S_(); openSheet("scan", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), stage: "label", code: "", labelOnly: true }); };
-ACT["open-scan"] = () => { const sh = S_(); openSheet("scan", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), stage: "start", back: sh?.type === "add" ? "add" : null }); };
+ACT["open-label"] = () => { const sh = S_(); openSheet("scan", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), stage: "label", code: "", labelOnly: true }); camOpen("label"); };
+ACT["open-scan"] = () => { const sh = S_(); openSheet("scan", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), stage: "start", back: sh?.type === "add" ? "add" : null }); camOpen("barcode"); };
 
 /* qty sheet */
 function updQtyStrip() { const sh = S_(); const el = $("#qty-macros"); if (el) el.innerHTML = macroStrip(qtyMacros(sh)); const im = $("#qty-impact"); if (im) im.innerHTML = qtyImpact(sh); $$('[data-act="qty-set"]').forEach(b => b.setAttribute("aria-pressed", Math.abs(+b.dataset.v - sh.qty) < 0.01)); }
@@ -4890,6 +5129,7 @@ ACT["fd-save"] = () => {
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the food a name."); $("#fd-name")?.focus(); return; }
   for (const k of Object.keys(d.per)) d.per[k] = num(d.per[k]);
   if (!d.per.kcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
+  if (d.mx) { for (const k of Object.keys(d.mx)) { if (d.mx[k] === "" || d.mx[k] == null) delete d.mx[k]; else d.mx[k] = num(d.mx[k]); } if (!Object.keys(d.mx).length) delete d.mx; }
   d.servings = (d.servings || []).map(s => ({ l: (s.l || "").trim() || "1 portion", g: num(s.g) })).filter(s => s.g > 0);
   d.pack = num(d.pack); d.barcode = String(d.barcode || "").replace(/\D/g, "");
   if (!d.meals?.length) d.meals = ["m"];
@@ -5112,6 +5352,7 @@ const INP = {
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
   qty: v => { S_().qty = num(v); updQtyStrip(); },
   fd: (v, el) => { const d = S_().draft; d[el.dataset.k] = v; },
+  "fd-mx": (v, el) => { const d = S_().draft; d.mx = { ...(d.mx || {}), [el.dataset.k]: v }; },
   "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; const calc = kcalFromMacros(d.per);
     if (d.autoKcal && el.dataset.k !== "kcal") { d.per.kcal = calc; const k = $("#fd-kcal"); if (k) k.value = calc; }
     const c = $("#fd-calc"); if (c) c.innerHTML = d.autoKcal ? "" : Math.abs(calc - num(d.per.kcal)) > 15 ? `Macros add up to ${calc} kcal. <button class="link" data-act="fd-usecalc">Use ${calc}</button>` : `Macros add up to ${calc} kcal.`; },
@@ -5163,7 +5404,7 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const el = e.target;
-  if (el.dataset && el.dataset.file) { const files = el.files; if (!files || !files.length) return; if (el.dataset.file === "scan") handleScanFile(files[0]); else handleLabelFiles(files); el.value = ""; return; }
+  if (el.dataset && el.dataset.file) { const files = el.files; if (!files || !files.length) return; if (el.dataset.camclose) camClose(); if (el.dataset.file === "scan") handleScanFile(files[0]); else handleLabelFiles(files); el.value = ""; return; }
   const k = el.dataset && el.dataset.chg; if (k && CHG[k]) CHG[k](el.value, el);
 });
 document.addEventListener("submit", e => { const f = e.target.closest("[data-form]"); if (!f) return; e.preventDefault(); FORMS[f.dataset.form]?.(f); });
@@ -5448,7 +5689,7 @@ SHEETS.cheat = sh => {
       <div class="grid2"><div class="field"><label for="ch-name">Name</label><input id="ch-name" class="inp" value="${esc(d.name || "")}" data-in="ch" data-k="name"></div>
         <div class="field"><label for="ch-kcal">Estimated calories</label><div class="unit-inp"><input id="ch-kcal" class="inp" inputmode="numeric" value="${d.kcal ?? ""}" data-chg="ch-kcal"><span>kcal</span></div></div></div>
       <div class="grid4" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[["c", "Carbs", "carb"], ["p", "Protein", "pro"], ["f", "Fat", "fat"]].map(([k, l, c]) => `<div class="field"><label class="mlabel" for="ch-${k}" style="--c:var(--${c})"><i></i>${l}</label><div class="unit-inp"><input id="ch-${k}" class="inp" inputmode="numeric" value="${d[k] ?? ""}" data-in="ch" data-k="${k}"><span>g</span></div></div>`).join("")}</div>
-      ${Sync.sample ? `<div class="row" style="flex-wrap:nowrap"><input id="ch-desc" class="inp" placeholder="Or describe it: 2 slices of pizza, a beer, tiramisù" value="${esc(sh.desc || "")}" data-in="ch-desc"><button class="btn soft" data-act="ch-claude" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>' : ic("spark", "sm")}Estimate</button></div>` : ""}
+      ${AIF("restaurant") ? `<div class="row" style="flex-wrap:nowrap"><input id="ch-desc" class="inp" placeholder="Or describe it: 2 slices of pizza, a beer, tiramisù" value="${esc(sh.desc || "")}" data-in="ch-desc"><button class="btn soft" data-act="ch-claude" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>' : ic("spark", "sm")}Estimate</button></div>` : ""}
       <div class="field"><span class="flabel">How to make room · ${fmtN(plan.excess)} kcal above this meal's usual ${fmtN(plan.share)}</span>
         <div class="strats">${CHEAT_STRATS.map(([k, l, t]) => `<button class="strat" data-act="ch-strat" data-k="${k}" aria-pressed="${d.strategy === k}"><b>${l}</b><small>${t}</small></button>`).join("")}</div>
         <div class="note">${impact}</div></div>
@@ -6351,12 +6592,16 @@ const holdParts = (e, x) => { const base = e.holdScheme || [e.dur]; const add = 
 let AC = null, WL = null, VOICE_OK = false;
 const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !!w.mute, voice: p.voice !== "off", lang: p.voice === "en" ? "en" : "it", prep: Math.max(3, Math.min(30, +p.prep || 5)), calls: p.calls !== "off" }; };
 const VT = (it, en) => PLAYER().lang === "en" ? en : it;
-function audioOn() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) {} voiceUnlock(); }
+/* one output chain: a limiter in front of the speakers, so overlapping beeps never clip; a larger buffer ("playback") so a busy screen can't make the audio crackle */
+let AOUT = null, SPEAKING = 0;
+function audioOut() { if (AOUT) return AOUT; const g = AC.createGain(); g.gain.value = .85; try { const c = AC.createDynamicsCompressor(); c.threshold.value = -12; c.knee.value = 6; c.ratio.value = 12; c.attack.value = .002; c.release.value = .12; g.connect(c).connect(AC.destination); } catch (e) { g.connect(AC.destination); } return AOUT = g; }
+function audioOn() { try { if (!AC) { const A = window.AudioContext || window.webkitAudioContext; try { AC = new A({ latencyHint: "playback" }); } catch (e) { AC = new A(); } } if (AC.state === "suspended") AC.resume(); const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) {} voiceUnlock(); }
 function haptic(p = 30) { try { navigator.vibrate?.(p); } catch (e) {} }
-function tone(f, d, at, vol = .32) {
+function tone(f, d, at, vol = .28) {
+  if (SPEAKING) vol *= .45; // softer while the voice talks: the two never fight over the speaker
   const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f; o.type = "sine";
-  g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + .008); g.gain.setValueAtTime(vol, at + Math.max(.012, d - .05)); g.gain.exponentialRampToValueAtTime(.0001, at + d);
-  o.connect(g).connect(AC.destination); o.start(at); o.stop(at + d + .03);
+  g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + .012); g.gain.setValueAtTime(vol, at + Math.max(.016, d - .06)); g.gain.exponentialRampToValueAtTime(.0001, at + d);
+  o.connect(g).connect(audioOut()); o.start(at); o.stop(at + d + .05);
 }
 const CUE_SND = { tick: [[880, .11]], go: [[1320, .45]], end: [[1320, .22], [1320, .55, .3]], rest: [[620, .45]], round: [[1047, .08]], half: [[988, .1], [988, .1, .16]] };
 const CUE_VIB = { tick: 45, go: 260, end: [200, 100, 420], rest: 160, round: 25, half: [50, 60, 50] };
@@ -6366,13 +6611,17 @@ function playCue(k, delay = 0) {
   try { if (!AC) return; if (AC.state === "suspended") AC.resume(); const t0 = AC.currentTime + Math.max(0, delay); for (const [f, d, off = 0] of CUE_SND[k] || CUE_SND.tick) tone(f, d, t0 + off); } catch (e) {}
 }
 function beep(f = 880, d = .15, n = 1, gap = .18) { haptic(n > 1 ? [120, 80, 120] : 60); if (PLAYER().mute || !AC) return; try { for (let i = 0; i < n; i++) tone(f, d, AC.currentTime + i * gap); } catch (e) {} }
-function pickVoice(lang) { try { const vs = speechSynthesis.getVoices() || [], L = v => String(v.lang || "").toLowerCase().replace("_", "-"); const mine = vs.filter(v => L(v).startsWith(lang)); return mine.find(v => /enhanced|premium|natural|google|siri/i.test(v.name)) || mine.find(v => v.localService) || mine[0] || null; } catch (e) { return null; } }
+/* a voice on the device first: network voices ("Google italiano" on Android) stutter and crackle when the connection hiccups */
+let VOICE_PICK = {};
+function pickVoice(lang) { if (VOICE_PICK[lang]) return VOICE_PICK[lang]; try { const vs = speechSynthesis.getVoices() || [], L = v => String(v.lang || "").toLowerCase().replace("_", "-"); const mine = vs.filter(v => L(v).startsWith(lang)), loc = mine.filter(v => v.localService);
+  const v = loc.find(v => /enhanced|premium|natural|siri|neural/i.test(v.name)) || loc.find(v => !/compact|espeak/i.test(v.name)) || loc[0] || mine.find(v => /enhanced|premium|natural/i.test(v.name)) || mine[0] || null; if (v) VOICE_PICK[lang] = v; return v; } catch (e) { return null; } }
 function say(text, o = {}) {
   const P = PLAYER(); if (P.mute || !P.voice || !text || !window.speechSynthesis) return;
-  try { if (o.flush) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = P.lang === "en" ? "en-GB" : "it-IT"; const v = pickVoice(P.lang); if (v) u.voice = v; u.rate = o.rate || 1.06; u.volume = 1; speechSynthesis.speak(u); } catch (e) {}
+  try { if (o.flush && speechSynthesis.speaking) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = P.lang === "en" ? "en-GB" : "it-IT"; const v = pickVoice(P.lang); if (v) u.voice = v; u.rate = o.rate || 1; u.pitch = 1; u.volume = 1;
+    u.onstart = () => { SPEAKING++; }; u.onend = u.onerror = () => { SPEAKING = Math.max(0, SPEAKING - 1); }; speechSynthesis.speak(u); } catch (e) {}
 }
 function voiceUnlock() { try { if (VOICE_OK || !window.speechSynthesis) return; VOICE_OK = true; const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } catch (e) {} }
-try { window.speechSynthesis?.addEventListener?.("voiceschanged", () => {}); } catch (e) {}
+try { window.speechSynthesis?.addEventListener?.("voiceschanged", () => { VOICE_PICK = {}; }); } catch (e) {}
 async function wakeOn() { try { if (!WL) { WL = await navigator.wakeLock?.request("screen"); WL?.addEventListener?.("release", () => { WL = null; }); } } catch (e) {} }
 function wakeOff() { try { WL?.release(); } catch (e) {} WL = null; }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && ((UI.tab === "live" && LV()?.phase === "run") || (UI.tab === "timer" && TMR.phase === "run"))) { wakeOn(); scheduleRender(); } });
@@ -6388,7 +6637,7 @@ function runCues(list, nowS, pre) {
     const dt = c.at - nowS; if (dt > CUE_LOOK) continue;
     CUE_DONE.add(id); if (dt < -.7) continue; // stale: the screen was asleep or the clock jumped
     if (c.k) playCue(c.k, Math.max(0, dt));
-    if (c.say) { const ms = Math.max(0, (dt - (c.k ? 0 : .22)) * 1000); if (ms > 15) setTimeout(() => say(c.say, c), ms); else say(c.say, c); }
+    if (c.say) { const ms = Math.max(0, (dt + (c.k ? .16 : -.22)) * 1000); if (ms > 15) setTimeout(() => say(c.say, c), ms); else say(c.say, c); }
   }
 }
 /* cue builders, shared by the live player and the stand-alone timer */
@@ -7598,7 +7847,7 @@ ACT["off-search"] = async () => {
 INP["off-q"] = v => { S_().q = v; };
 FORMS["off-q"] = () => ACT["off-search"]();
 SHEETS.offsearch = sh => {
-  const claude = Sync.sample ? `<button class="btn ${sh.stage === "results" ? "tonal" : "primary"} block" data-act="off-ai">${ic("spark", "sm")}Ask Claude for the values of “${esc(sh.q)}”</button>` : "";
+  const claude = AIF("lookup") ? `<button class="btn ${sh.stage === "results" ? "tonal" : "primary"} block" data-act="off-ai">${ic("spark", "sm")}Ask Claude for the values of “${esc(sh.q)}”</button>` : "";
   const link = `<a class="btn soft block" href="https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(sh.q)}&search_simple=1&action=process" target="_blank" rel="noopener">${ic("search", "sm")}Open the search on openfoodfacts.org</a>`;
   const manual = `<button class="btn ghost block" data-act="new-food" data-name="${esc(sh.q)}">${ic("edit", "sm")}Enter the values myself</button>`;
   const search = `<form class="search" data-form="off-q">${ic("search")}<input id="off-q" type="search" value="${esc(sh.q)}" data-in="off-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Product and brand, e.g. skyr milbona"><button class="btn ink sm" type="submit">Search</button></form>`;
@@ -8169,6 +8418,449 @@ ACT["lv-skipprep"] = () => {
 };
 /* menu position: on phones the section bar can sit at the top (default) — some embedded viewers hide a bar fixed to the bottom */
 ACT["nav-pos"] = el => { S.settings.navPos = el.dataset.k; saveSettings(); scheduleRender(); };
+/* ================= live camera: barcodes read as soon as they're in the frame, labels framed and shot ================= */
+const CAM = { stream: null, mode: null, timer: 0, last: "", hits: 0, det: null, busy: false, torch: false, cv: null };
+function eanOk(c) { if (!/^\d+$/.test(c) || ![8, 12, 13, 14].includes(c.length)) return false; const d = c.split("").map(Number), chk = d.pop(); let s = 0;
+  d.reverse().forEach((v, i) => { s += v * (i % 2 ? 1 : 3); }); return (10 - s % 10) % 10 === chk; }
+function camHTML(mode) {
+  const bc = mode === "barcode";
+  return `<div class="cam-shade"></div><video id="cam-v" playsinline muted autoplay></video>
+    <div class="cam-frame ${bc ? "bc" : "lb"}" id="cam-f"><i></i><i></i><i></i><i></i>${bc ? `<b class="cam-line"></b>` : ""}</div>
+    <div class="cam-top"><button class="cam-btn" data-act="cam-close" aria-label="Close">${ic("close")}</button><span class="cam-t">${bc ? "Scan a barcode" : "Nutrition label"}</span><button class="cam-btn" id="cam-torch" data-act="cam-torch" aria-label="Flash" aria-pressed="false" hidden>${ic("bolt")}</button></div>
+    <div class="cam-bot"><p class="cam-hint" id="cam-hint">${bc ? "Put the barcode inside the frame: it's read by itself" : "Fit the whole table in the frame, flat and sharp, then shoot"}</p>
+      ${bc ? `<div class="cam-row"><button class="cam-pill" data-act="cam-type">${ic("edit", "sm")}Type the number</button><label class="cam-pill">${ic("image", "sm")}Photo<input type="file" accept="image/*" class="sr" data-file="scan" data-camclose="1"></label></div>`
+        : `<div class="cam-row"><label class="cam-pill">${ic("image", "sm")}Gallery<input type="file" accept="image/*" class="sr" data-file="label" data-camclose="1"></label><button class="cam-shutter" data-act="cam-shot" aria-label="Take the photo"><span></span></button><button class="cam-pill" data-act="cam-paste">${ic("type", "sm")}Text</button></div>`}</div>`;
+}
+async function camOpen(mode) {
+  camClose();
+  if (!navigator.mediaDevices?.getUserMedia) { toast("This browser can't open the camera here: take a photo instead."); return false; }
+  const el = document.createElement("div"); el.id = "cam"; el.className = "cam"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.innerHTML = camHTML(mode);
+  document.body.appendChild(el); CAM.mode = mode; CAM.last = ""; CAM.hits = 0; CAM.busy = false; CAM.torch = false;
+  try {
+    CAM.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+  } catch (e) {
+    camClose(); toast(/NotAllowed|Permission/i.test(e?.name + e?.message) ? "Camera not allowed: enable it for this site in the browser settings, or use a photo." : "The camera couldn't start: use a photo instead."); return false;
+  }
+  if (!document.getElementById("cam")) { camStop(); return false; }
+  const v = document.getElementById("cam-v"); v.srcObject = CAM.stream; try { await v.play(); } catch (e) {}
+  const tr = CAM.stream.getVideoTracks()[0];
+  try { const cap = tr.getCapabilities?.() || {}; if (cap.torch) document.getElementById("cam-torch").hidden = false;
+    if ((cap.focusMode || []).includes("continuous")) await tr.applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch (e) {}
+  if (mode === "barcode") { if (!("BarcodeDetector" in window)) loadZXing().catch(() => {}); else try { CAM.det = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] }); } catch (e) { CAM.det = null; loadZXing().catch(() => {}); } camTick(); }
+  return true;
+}
+function camStop() { clearTimeout(CAM.timer); CAM.timer = 0; if (CAM.stream) { for (const t of CAM.stream.getTracks()) try { t.stop(); } catch (e) {} } CAM.stream = null; }
+function camClose() { camStop(); document.getElementById("cam")?.remove(); CAM.mode = null; }
+/* the part of the video under the on-screen frame, in video pixels (the video is shown cropped to fill the screen) */
+function camCrop(maxW) {
+  const v = document.getElementById("cam-v"), f = document.getElementById("cam-f"); if (!v || !f || !v.videoWidth) return null;
+  const vw = v.videoWidth, vh = v.videoHeight, R = v.getBoundingClientRect(), F = f.getBoundingClientRect(), k = Math.max(R.width / vw, R.height / vh);
+  const ox = (vw * k - R.width) / 2, oy = (vh * k - R.height) / 2;
+  let sx = (F.left - R.left + ox) / k, sy = (F.top - R.top + oy) / k, sw = F.width / k, sh = F.height / k;
+  const pad = CAM.mode === "barcode" ? .12 : .04; sx -= sw * pad; sy -= sh * pad; sw *= 1 + 2 * pad; sh *= 1 + 2 * pad;
+  sx = Math.max(0, sx); sy = Math.max(0, sy); sw = Math.min(vw - sx, sw); sh = Math.min(vh - sy, sh);
+  const s = Math.min(1, (maxW || sw) / sw), c = CAM.cv = CAM.cv || document.createElement("canvas"); c.width = Math.round(sw * s); c.height = Math.round(sh * s);
+  c.getContext("2d", { willReadFrequently: true }).drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height); return c;
+}
+async function camTick() {
+  if (CAM.mode !== "barcode" || !CAM.stream) return;
+  let code = null;
+  try {
+    const c = camCrop(CAM.det ? 1280 : 900);
+    if (c) { if (CAM.det) { const r = await CAM.det.detect(c); code = r?.[0]?.rawValue || null; } else if (window.ZXing) code = zxDecode(c, true) || zxDecode(camRot(c), true); }
+  } catch (e) {}
+  if (code) { code = String(code).replace(/\D/g, ""); const ok = eanOk(code);
+    if (ok || (code.length >= 6 && code === CAM.last && ++CAM.hits >= 1)) return camHit(code);
+    CAM.last = code; CAM.hits = 0; }
+  if (CAM.mode === "barcode" && CAM.stream) CAM.timer = setTimeout(camTick, CAM.det ? 90 : 140);
+}
+function camRot(c) { const r = document.createElement("canvas"); r.width = c.height; r.height = c.width; const x = r.getContext("2d", { willReadFrequently: true }); x.translate(r.width / 2, r.height / 2); x.rotate(Math.PI / 2); x.drawImage(c, -c.width / 2, -c.height / 2); return r; }
+function camHit(code) {
+  try { navigator.vibrate?.(70); } catch (e) {} try { audioOn(); playCue("go"); } catch (e) {}
+  document.getElementById("cam-f")?.classList.add("hit"); const h = document.getElementById("cam-hint"); if (h) h.textContent = code;
+  camStop(); setTimeout(() => { camClose(); if (UI.sheet?.type !== "scan") openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); lookupAndAdd(code); }, 260);
+}
+ACT["cam-close"] = () => camClose();
+ACT["cam-type"] = () => { camClose(); setTimeout(() => $("#scan-code")?.focus(), 60); };
+ACT["cam-paste"] = () => { camClose(); setTimeout(() => $("#lb-text")?.focus(), 60); };
+ACT["cam-torch"] = async el => { const tr = CAM.stream?.getVideoTracks()[0]; if (!tr) return; CAM.torch = !CAM.torch; try { await tr.applyConstraints({ advanced: [{ torch: CAM.torch }] }); el.setAttribute("aria-pressed", CAM.torch); } catch (e) { CAM.torch = false; } };
+ACT["cam-shot"] = async () => {
+  const c = camCrop(2400); if (!c) return; document.getElementById("cam-f")?.classList.add("hit");
+  try { navigator.vibrate?.(40); } catch (e) {}
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", .92)); camClose(); if (!blob) return;
+  const f = new File([blob], "label.jpg", { type: "image/jpeg" }); if (UI.sheet?.type === "scan") handleLabelFiles([f]);
+};
+ACT["cam-barcode"] = () => camOpen("barcode");
+ACT["cam-label"] = () => camOpen("label");
+document.addEventListener("visibilitychange", () => { if (document.hidden && CAM.stream) camClose(); });
+
+/* ---------- Built-in foods: the rest of the label and the main micronutrients, per 100 g / 100 ml ----------
+   Typical values (CREA Italian food tables / USDA FoodData Central averages), rounded.
+   sug, sat, mono, poly (g) · salt (g) · K, Ca, Fe, Mg (mg) · vit C (mg) · vit D (µg) · B12 (µg) · folate (µg) · omega-3 (g) */
+const MICRO_KEYS = ["sug", "sat", "mono", "poly", "salt", "k", "ca", "fe", "mg", "vitc", "vitd", "b12", "fol", "om3"];
+const BUILTIN_MICRO = `chicken-breast 0 .4 .5 .3 .17 330 6 .5 29 0 .1 .3 4 .02
+chicken-thigh 0 1.3 1.8 1.1 .23 270 9 .9 24 0 .1 .4 7 .05
+turkey-breast 0 .3 .2 .2 .14 300 9 .7 28 0 .1 .4 7 .01
+beef-mince-5 0 2.3 2.4 .3 .17 330 6 2.2 21 0 .1 2.2 7 .03
+beef-steak 0 3.3 3.5 .4 .14 340 8 1.9 22 0 .1 1.6 6 .03
+pork-loin 0 2.3 2.8 .8 .13 360 5 .7 25 .6 .6 .6 2 .02
+bresaola 0 1 1.1 .2 4.5 500 13 2.8 26 0 0 1.7 6 0
+prosciutto-crudo 0 6.2 8.3 2.3 5.6 470 10 1 20 0 .5 .9 3 .05
+prosciutto-cotto .8 1.9 2.4 .8 2.2 290 7 .7 18 0 .2 .6 2 .02
+turkey-slices .8 .6 .7 .5 1.8 270 10 1 22 0 .1 .4 6 .01
+salmon 0 3.1 4.4 3.9 .15 360 9 .3 27 0 11 3.2 25 2.3
+smoked-salmon 0 1.7 3.9 1.9 3.8 175 11 .9 18 0 14 3.3 2 1.3
+tuna-water 0 .3 .2 .4 .9 240 11 1.5 27 0 1.7 2.9 4 .27
+tuna-oil 0 1.7 4.4 3.2 .9 210 8 1.3 30 0 6.7 2.2 5 .2
+cod 0 .1 .1 .2 .19 410 16 .4 32 1 .9 .9 7 .2
+sea-bass 0 .6 .8 .7 .2 330 15 .3 30 0 6.4 3.8 6 .6
+shrimp 0 .1 .1 .2 .55 170 64 .5 35 0 0 1.1 3 .3
+eggs .4 3.1 3.7 1.9 .36 140 56 1.8 12 0 2 .9 47 .1
+egg-whites .7 0 0 0 .42 160 7 .1 11 0 0 .1 4 0
+tofu .6 1.3 1.9 4.9 .02 240 350 2.7 58 .1 0 0 29 .6
+tempeh 0 2.5 3 3.8 .02 410 110 2.7 81 0 0 .1 24 .2
+seitan .5 .3 .2 .9 .7 40 30 1.6 12 0 0 0 10 .02
+lentils-dry 2 .2 .3 .6 0 680 50 7.5 110 0 0 0 180 .1
+chickpeas .3 .3 .6 1.1 .5 170 40 1.3 30 1 0 0 60 .04
+cannellini .5 .1 .1 .3 .55 330 60 2.2 40 1 0 0 70 .1
+edamame 2.2 .6 1.2 2.8 0 440 63 2.3 64 6 0 0 300 .4
+greek-yogurt-0 3.6 0 0 0 .09 140 110 .1 11 0 0 .5 7 0
+greek-yogurt-2 3.6 1.3 .5 .1 .09 140 110 .1 11 0 0 .5 7 0
+skyr 3.8 .1 .1 0 .1 160 150 0 12 0 0 .6 10 0
+cottage 2.7 2.7 1.2 .1 .9 100 80 .1 8 0 .1 .4 12 .02
+ricotta 3.5 6.9 3 .3 .25 120 210 .4 11 0 .2 .3 12 .05
+mozzarella .7 13 5.6 .6 .7 76 350 .3 19 0 .4 .9 7 .1
+mozzarella-light 1 5.8 2.6 .3 .7 80 400 .3 20 0 .2 .9 7 .05
+parmigiano 0 18 8 .9 1.6 100 1160 .7 44 0 .5 1.2 7 .3
+feta 4 15 4.6 .6 2.7 62 490 .7 19 0 .4 1.7 32 .2
+milk-semi 4.9 1 .4 .1 .1 150 120 0 11 1 .5 .4 5 .01
+milk-skim 5 .1 0 0 .1 150 125 0 11 1 0 .4 5 0
+soy-drink .2 .3 .4 1.1 .1 120 120 .4 15 0 .8 .4 10 .1
+whey 4 2.8 1 .3 .5 500 450 1 160 0 0 1 20 .05
+butter .1 51 21 3 .03 24 24 0 2 0 1.5 .2 3 .3
+pasta 3 .3 .2 .6 0 190 20 1.3 50 0 0 0 18 .02
+pasta-wholewheat 2.5 .4 .3 .9 0 270 25 3.5 140 0 0 0 40 .03
+basmati .2 .2 .2 .2 0 110 10 .8 25 0 0 0 9 .01
+brown-rice .9 .5 1 1 0 250 10 1.5 140 0 0 0 20 .03
+couscous 1 .1 .1 .3 0 170 24 1.1 44 0 0 0 20 .01
+quinoa 4.6 .7 1.6 3.3 0 560 47 4.6 200 0 0 0 180 .3
+farro 1.5 .4 .3 1 0 390 30 4.4 130 0 0 0 40 .05
+gnocchi 1 .1 .1 .2 .9 300 15 .5 20 6 0 0 10 0
+potatoes .8 0 0 0 0 420 10 .8 23 15 0 0 16 .01
+sweet-potato 4.2 0 0 0 .14 340 30 .6 25 2.4 0 0 11 0
+bread 3 .4 .4 .8 1.3 120 30 1.4 25 0 0 0 30 .02
+bread-wholegrain 4 .7 .6 1.5 1.1 250 70 2.5 75 0 0 0 40 .05
+crispbread 2 .3 .3 .9 .9 450 30 2.5 80 0 0 0 30 .05
+rice-cakes .7 .6 1 1.1 .1 290 10 1.5 130 0 0 0 20 .02
+piadina 1.5 3.4 3.5 1.2 1.4 120 25 1.2 20 0 0 0 20 .1
+tortilla 2.5 3 2.5 1 1.3 140 120 3 25 0 0 0 80 .05
+oats 1 1.2 2.2 2.5 0 360 50 4.3 140 0 0 0 30 .1
+granola 20 3 6 6 .5 350 50 2.8 90 0 0 0 30 .2
+corn-flakes 8 .2 .2 .4 1.7 120 5 8 15 0 0 1.3 200 .02
+polenta 1 .5 .9 1.6 0 280 5 1.8 90 0 0 0 30 .05
+broccoli 1.7 .1 0 .1 .08 320 47 .7 21 89 0 0 63 .02
+zucchini 1.7 .1 0 .1 .02 260 16 .4 18 18 0 0 24 .05
+spinach .4 .1 0 .2 .2 560 99 2.7 79 28 0 0 194 .14
+salad 1 0 0 .1 .05 250 50 1 15 10 0 0 50 .05
+tomatoes 2.6 0 0 .1 .01 240 10 .3 11 14 0 0 15 0
+cherry-tomatoes 5 .1 .1 .2 .02 280 11 .4 12 20 0 0 15 0
+carrots 4.7 0 0 .1 .17 320 33 .3 12 6 0 0 19 0
+peppers 4 .1 0 .1 .01 210 7 .4 12 130 0 0 46 .02
+aubergine 3.5 0 0 .1 .01 230 9 .2 14 2 0 0 22 0
+green-beans 3.3 0 0 .1 .01 210 37 1 25 12 0 0 33 .04
+cauliflower 1.9 .1 0 .1 .08 300 22 .4 15 48 0 0 57 .04
+mushrooms 2 .1 0 .2 .01 320 3 .5 9 2 .2 0 17 0
+cucumber 1.7 0 0 0 .01 150 16 .3 13 3 0 0 7 0
+fennel 1 0 0 0 .1 390 50 .7 17 12 0 0 27 0
+asparagus 1.9 0 0 0 .01 200 24 2 14 6 0 0 52 .01
+peas 5.7 .1 0 .2 .01 240 25 1.5 33 40 0 0 65 .03
+mixed-veg 3 .1 0 .2 .1 250 30 .8 20 10 0 0 30 .05
+passata 4 0 0 .1 .1 300 15 .5 15 10 0 0 15 0
+onion 4.2 0 0 0 .01 150 23 .2 10 7 0 0 19 0
+banana 12.2 .1 0 .1 0 360 5 .3 27 9 0 0 20 .03
+apple 10.4 0 0 .1 0 107 6 .1 5 5 0 0 3 .01
+orange 9.4 0 0 0 0 180 40 .1 10 53 0 0 30 .01
+kiwi 9 0 0 .3 0 310 34 .3 17 93 0 0 25 .04
+pear 9.8 0 .1 0 0 116 9 .2 7 4 0 0 7 0
+blueberries 10 0 0 .1 0 77 6 .3 6 10 0 0 6 .06
+strawberries 4.9 0 0 .2 0 150 16 .4 13 59 0 0 24 .07
+grapes 15.5 .1 0 .1 0 190 10 .4 7 3 0 0 2 .01
+dates 66 0 0 0 0 700 64 .9 54 0 0 0 15 0
+olive-oil 0 14 73 10.5 0 1 1 .6 0 0 0 0 0 .8
+avocado .7 2.1 9.8 1.8 .02 485 12 .6 29 10 0 0 81 .1
+almonds 4.4 3.9 33 12 0 730 270 3.7 270 0 0 0 44 0
+walnuts 2.6 6.1 8.9 47 0 440 98 2.9 160 1 0 0 98 9
+mixed-nuts 4 6 30 14 .1 600 100 3 230 0 0 0 50 1
+peanut-butter 9 10 24 13 .9 650 50 1.9 170 0 0 0 90 .03
+hummus .3 2.4 10 5.3 1 230 40 2 50 0 0 0 80 .2
+pesto 4 9 30 9 1.8 300 400 1.5 60 2 0 0 30 .5
+dark-choc 13 27 14 1.4 .02 830 75 12 230 0 0 0 0 .05
+protein-bar 3 6 3 1.5 .5 300 200 2 70 0 0 0 30 .05
+honey 82 0 0 0 .01 52 6 .4 2 .5 0 0 2 0
+jam 50 0 0 0 .05 80 15 .4 6 9 0 0 3 0
+pizza 3 4 2.8 1 1.3 180 190 1 22 2 .1 .4 30 .05
+orange-juice 8.4 0 0 0 0 200 11 .2 11 50 0 0 30 0
+beer .3 0 0 0 .01 30 5 0 6 0 0 0 6 0
+red-wine .6 0 0 0 .01 130 8 .5 12 0 0 0 1 0
+tomato-salad 2.6 0 0 .1 .01 240 10 .3 11 18 0 0 15 0
+tomato-datterino 5 .1 .1 .2 .02 280 11 .4 12 22 0 0 15 0
+delica-squash 6 0 0 0 0 350 25 .6 25 15 0 0 25 .03
+garlic 1 .1 0 .2 .04 400 180 1.7 25 31 0 0 3 .02
+celery 1.3 0 0 .1 .2 260 40 .2 11 3 0 0 36 0
+leek 3.9 0 0 0 .05 180 59 2.1 28 12 0 0 64 .1
+lettuce 1 0 0 .1 .02 190 36 .9 13 9 0 0 38 .06
+rocket 2 .1 0 .3 .07 370 160 1.5 47 15 0 0 97 .17
+radicchio .6 0 0 0 .05 240 36 .3 13 8 0 0 60 0
+cabbage 3.2 0 0 0 .05 170 40 .5 12 37 0 0 43 .02
+savoy 2.3 0 0 0 .07 230 35 .4 28 31 0 0 80 .02
+cavolo-nero 1 .2 .1 .7 .1 490 150 1.5 47 120 0 0 140 .2
+brussels 2.2 .1 0 .2 .06 390 42 1.4 23 85 0 0 61 .1
+artichoke 1 0 0 .1 .23 370 44 1.3 60 12 0 0 68 0
+beetroot 8 0 0 .1 .2 300 16 .8 23 4 0 0 80 0
+pumpkin 2.8 0 0 0 0 340 21 .8 12 10 0 0 16 0
+butternut 2.2 0 0 0 0 350 48 .7 34 21 0 0 27 0
+chard 1.1 0 0 0 .5 380 51 1.8 81 30 0 0 14 0
+radishes 1.9 0 0 0 .1 230 25 .3 10 15 0 0 25 0
+sweetcorn 4.5 .2 .3 .5 .5 220 5 .5 20 5 0 0 40 .02
+peeled-tomatoes 3 0 0 .1 .1 220 30 1 11 9 0 0 8 0
+olives .5 2 11 1.3 3.9 40 52 .5 11 0 0 0 3 .1
+peach 8.4 0 .1 .1 0 190 6 .3 9 7 0 0 4 0
+apricot 9.2 0 .2 .1 0 260 13 .4 10 10 0 0 9 0
+pineapple 10 0 0 0 0 110 13 .3 12 48 0 0 18 .02
+mango 13.7 .1 .1 .1 0 170 11 .2 10 36 0 0 43 .04
+melon 7.9 0 0 .1 .03 270 9 .2 12 37 0 0 21 .02
+watermelon 6.2 0 0 0 0 112 7 .2 10 8 0 0 3 0
+raspberries 4.4 0 .1 .4 0 150 25 .7 22 26 0 0 21 .13
+blackberries 4.9 0 0 .3 0 160 29 .6 20 21 0 0 25 .09
+cherries 12.8 0 0 .1 0 220 13 .4 11 7 0 0 4 .03
+plums 9.9 0 .1 0 0 157 6 .2 7 10 0 0 5 0
+figs 16 .1 .1 .1 0 230 35 .4 17 2 0 0 6 0
+persimmon 12.5 0 0 0 0 160 8 .2 9 7.5 0 0 8 0
+mandarin 10.6 0 .1 .1 0 166 37 .2 12 27 0 0 16 .02
+grapefruit 7 0 0 0 0 135 22 .1 9 31 0 0 13 0
+pomegranate 13.7 .1 .1 .1 0 236 10 .3 12 10 0 0 38 0
+lemon-juice 2.5 0 0 0 0 103 6 .1 6 39 0 0 20 0
+raisins 59 .1 0 0 .03 750 50 1.9 32 2 0 0 5 0
+veal 0 .9 .9 .3 .2 320 9 .9 24 0 .1 1.2 14 .02
+rabbit 0 1.7 1.5 1.1 .1 360 13 1.1 23 0 .1 6.5 8 .2
+beef-mince-15 0 6 6.5 .5 .17 290 18 2 19 0 .1 2.4 7 .05
+sausage .6 9.9 12 3.3 1.8 290 12 .9 17 0 .5 .8 3 .2
+salame .6 12 15 3.5 4.3 380 13 1.5 24 0 .5 1.2 3 .3
+speck .5 7.5 9.5 2.2 4.6 400 9 1.4 22 0 .5 .9 3 .2
+mackerel 0 3.3 5.5 3.4 .2 314 12 1.6 76 0 16 8.7 1 2.7
+anchovies 0 1.3 1.2 1.6 .26 383 147 3.3 41 0 1.7 .6 13 1.4
+sardines-oil 0 1.5 3.9 5.2 .9 400 380 2.9 39 0 4.8 8.9 10 1.5
+chickpeas-dry 10.7 .6 1.4 2.7 0 875 105 6.2 115 4 0 0 557 .1
+lentils-cooked 1.8 .1 .1 .2 0 370 19 3.3 36 1.5 0 0 181 .04
+borlotti .3 .1 0 .2 .55 400 50 2.5 40 0 0 0 80 .1
+rice .1 .2 .2 .2 0 115 28 .8 25 0 0 0 8 .01
+barley .8 .2 .2 .6 0 280 29 2.5 79 0 0 0 23 .06
+pasta-cooked .6 .2 .1 .3 0 44 7 .5 18 0 0 0 7 .01
+rice-cooked .1 .1 .1 .1 0 35 10 .2 12 0 0 0 3 0
+rusks 6 1.6 2.5 1.6 1.1 180 30 1.8 30 0 0 0 30 .05
+crackers 3 2.5 4.5 2.6 1.6 150 25 1.6 25 0 0 0 30 .1
+biscuits 22 6 5.5 2 .6 120 50 1.5 20 0 0 0 20 .1
+croissant 11 11 6.5 1.5 .9 120 37 1.6 18 0 .2 .2 50 .1
+flour .3 .1 .1 .3 0 120 15 .7 22 0 0 0 20 .02
+semola .5 .1 .1 .2 0 186 17 1.2 47 0 0 0 72 .02
+pasta-fresh-home .3 .1 .1 .1 .02 100 10 .7 25 0 0 0 30 .01
+pasta-egg-home 1 1 1.3 .6 .1 120 25 1.3 25 0 .4 .3 40 .03
+pasta-egg-fresh 1 1.2 1.6 .7 .1 130 25 1.4 25 0 .4 .3 40 .03
+pasta-egg-dry 1.5 1.2 1.6 .8 .1 220 30 2 50 0 .4 .3 40 .04
+sugar 100 0 0 0 0 2 1 0 0 0 0 0 0 0
+cocoa 1.8 12.4 6.6 .7 .05 1500 128 13.9 500 0 0 0 32 .01
+milk-whole 4.9 2.3 .9 .1 .1 150 120 0 11 1 .1 .4 5 .02
+yogurt-plain 4.3 2.5 1 .1 .12 155 121 .1 12 .5 .1 .4 7 .03
+greek-yogurt-5 3.8 3.3 1.3 .2 .09 140 100 .1 11 0 0 .5 7 .03
+grana 0 18 8.3 1 1.5 120 1165 .7 40 0 .5 1.2 7 .3
+scamorza 1 15 7 .8 1.2 90 512 .3 20 0 .3 1.2 7 .1
+stracchino 0 16 7 .7 1 120 360 .3 15 0 .3 1 7 .1
+kefir 4 1.5 .6 .1 .1 160 120 0 12 1 .1 .3 5 .02
+almond-drink 0 .1 .7 .3 .1 50 120 .1 6 0 .7 .4 0 0
+hazelnuts 4.3 4.5 46 7.9 0 680 114 4.7 163 6 0 0 113 .09
+cashews 5.9 7.8 24 7.8 .03 660 37 6.7 292 .5 0 0 25 .06
+pistachios 7.7 5.9 24 14 0 1025 105 3.9 121 6 0 0 51 .25
+chia 0 3.3 2.3 23.7 .04 407 631 7.7 335 1.6 0 0 49 17.8
+flaxseed 1.6 3.7 7.5 28.7 .08 813 255 5.7 392 .6 0 0 87 22.8
+sunflower-seeds 2.6 4.5 18.5 23 0 645 78 5.3 325 1.4 0 0 227 .07
+pumpkin-seeds 1.4 8.7 16 21 .02 809 46 8.8 592 1.9 0 0 58 .12
+seed-oil 0 11 25 60 0 0 0 0 0 0 0 0 0 5
+mayonnaise 1 11 18 42 1.5 20 8 .2 1 0 .2 .2 5 4
+milk-choc 52 18 9 1 .2 370 190 2.4 63 0 0 .7 11 .1
+hazelnut-spread 56 10 16 4 .1 400 108 4.4 64 0 0 .2 30 .1
+crisps .5 3.1 7 23 1.3 1270 24 1.6 70 20 0 0 45 2
+gelato 22 7 3 .4 .1 200 130 .1 14 1 .1 .4 5 .1
+ketchup 22 0 0 0 2.3 280 15 .4 13 4 0 0 9 0
+balsamic 15 0 0 0 .05 112 27 .7 12 0 0 0 0 0`;
+const BUILTIN_MX = {};
+for (const ln of BUILTIN_MICRO.split("\n")) { const [id, ...v] = ln.trim().split(/\s+/); BUILTIN_MX[id] = Object.fromEntries(MICRO_KEYS.map((k, i) => [k, +v[i] || 0])); }
+
+/* ================= AI features: each one can be switched off in Settings ================= */
+const AI_FEATS = [
+  ["label", "Read nutrition labels", "Photo of the table → values. If the AI can't, the reader on this device does it."],
+  ["plan", "Weekly meal plan", "Dishes chosen from your habits, cuisines and pantry; portions still calculated here."],
+  ["describe", "Describe a meal", "“A plate of carbonara and a salad” → foods and amounts."],
+  ["restaurant", "Restaurant and cheat meals", "Estimates a meal you didn't cook."],
+  ["lookup", "Values for unknown foods", "When a food isn't in your list or on Open Food Facts."],
+  ["tips", "Nutrition coach", "Reads your week (macros, fibre, salt, vitamins) and suggests concrete swaps."]];
+function AIF(k) { return !!Sync.sample && (S.settings?.aiFeat || {})[k] !== false; }
+function aiFeatCard() {
+  const F = S.settings.aiFeat || {}, on = !!Sync.sample;
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">AI features</span>
+    ${on ? "" : `<div class="note">Add an AI service above to use these.</div>`}
+    ${AI_FEATS.map(([k, l, s]) => `<label class="row sw-row" style="${on ? "" : "opacity:.55"}"><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false}" data-act="aif-toggle" data-k="${k}" aria-label="${esc(l)}" ${on ? "" : "disabled"}></button><span>${l}<small class="faint" style="display:block;font-size:12.5px">${s}</small></span></label>`).join("")}</section>`;
+}
+ACT["aif-toggle"] = el => { const k = el.dataset.k; S.settings.aiFeat = { ...(S.settings.aiFeat || {}), [k]: (S.settings.aiFeat || {})[k] === false }; saveSettings(); scheduleRender(); };
+
+/* ================= cook once, eat twice: lunch and dinner repeat over pairs of days ================= */
+function pairDates(dates) { const out = []; for (let i = 0; i < dates.length; i += 2) out.push(dates.slice(i, i + 2)); return out; }
+/* the usual meals, for the AI: what you eat at each meal, most frequent first */
+function habitLines(meals) {
+  const h = buildHabits(), lines = [];
+  for (const m of meals) {
+    const top = Object.entries(h).filter(([k]) => k.startsWith(m.id + "|")).sort((a, b) => b[1] - a[1]).slice(0, 10)
+      .map(([k]) => { const id = k.slice(m.id.length + 1); return getFood(id)?.name || getRecipe(id)?.name || null; }).filter(Boolean);
+    if (top.length) lines.push(`${mealName(m.id)}: ${top.join(", ")}`);
+  }
+  return lines.join("\n") || "no history yet";
+}
+function rememberPlannerPrefs(sh) { const p = { pairs: !!sh.pairs, ai: !!sh.claude }; if (JSON.stringify(S.settings.planPrefs || {}) !== JSON.stringify(p)) { S.settings.planPrefs = p; saveSettings(); } }
+
+/* ================= Pro nutrients: fibre, sugars, fats, salt and the main micronutrients ================= */
+const proOn = () => !!S.settings?.pro?.on;
+const proMicro = () => proOn() && S.settings.pro.micro !== false;
+const NUTS = [
+  ["fib", "Fibre", "g", "min"], ["sug", "Sugars", "g", "max"], ["sat", "Saturated fat", "g", "max"], ["unsat", "Unsaturated fat", "g", "info"], ["salt", "Salt", "g", "max"],
+  ["om3", "Omega-3", "g", "min", 1], ["k", "Potassium", "mg", "min", 1], ["ca", "Calcium", "mg", "min", 1], ["fe", "Iron", "mg", "min", 1], ["mg", "Magnesium", "mg", "min", 1],
+  ["vitc", "Vitamin C", "mg", "min", 1], ["vitd", "Vitamin D", "µg", "min", 1], ["b12", "Vitamin B12", "µg", "min", 1], ["fol", "Folate", "µg", "min", 1]];
+const NUT = Object.fromEntries(NUTS.map(n => [n[0], { k: n[0], l: n[1], u: n[2], kind: n[3], micro: !!n[4] }]));
+/* reference intakes for an active adult (LARN 2014 / EFSA; salt WHO; sugars and saturated as a share of energy) */
+function nutTargets(kcal) {
+  const F = FIT().profile?.sex === "Female", K = Math.max(1400, kcal || 2200);
+  return { fib: Math.max(25, r0(K / 1000 * 13)), sug: r0(K * 0.15 / 4), sat: r0(K * 0.10 / 9), unsat: null, salt: 5, om3: F ? 1.1 : 1.6,
+    k: 3500, ca: 1000, fe: F ? 18 : 10, mg: F ? 300 : 350, vitc: F ? 85 : 105, vitd: 15, b12: 4, fol: 400 };
+}
+/* one food's values per 100 g; null = not known for this food */
+function foodNut(f) {
+  if (!f) return {};
+  const per = f.per || {}, mx = f.mx || {}, b = BUILTIN_MX[f.id] || null, o = {};
+  for (const k of ["fib", "sug", "sat", "salt"]) o[k] = per[k] != null && (per[k] !== 0 || !b || f.source === "off" || f.source === "label" || f.source === "ocr") ? +per[k] : b ? b[k] : null;
+  const mono = mx.mono ?? b?.mono, poly = mx.poly ?? b?.poly;
+  o.unsat = mono != null && poly != null ? mono + poly : o.sat != null && per.f != null ? Math.max(0, per.f - o.sat) * 0.95 : null;
+  for (const k of ["om3", "k", "ca", "fe", "mg", "vitc", "vitd", "b12", "fol"]) o[k] = mx[k] != null ? +mx[k] : b ? b[k] : null;
+  return o;
+}
+function addNut(acc, f, k) { const n = foodNut(f), kc = (f.per?.kcal || 0) * k; acc.kcal += kc;
+  for (const key of Object.keys(NUT)) { if (n[key] == null) continue; acc.v[key] = (acc.v[key] || 0) + n[key] * k; acc.cov[key] = (acc.cov[key] || 0) + kc; } }
+function itemNut(it, acc, mul = 1) {
+  if (it.kind === "quick") { const m = it.m || {}; acc.kcal += (+m.kcal || 0) * mul; return; }
+  if (it.kind === "recipe") { const r = recipeForItem(it.ref); if (!r) return; for (const ing of r.ingredients || []) addNut(acc, getFood(ing.food) || BUILTIN[ing.food], ing.g / 100 * it.qty / (r.servings || 1) * mul); return; }
+  const f = foodForItem(it.ref); if (f) addNut(acc, f, it.qty / 100 * mul);
+}
+/* a day's nutrients: eaten food, or the plan if nothing is ticked yet */
+function dayNut(date, mode = "auto") {
+  const d = S.days[date], acc = { v: {}, cov: {}, kcal: 0, src: "none" }; if (!d) return acc;
+  const items = dayItems(d).map(x => x[1]), eaten = items.filter(it => it.eaten);
+  const use = mode === "eaten" ? eaten : mode === "plan" ? items : eaten.length ? eaten : items;
+  acc.src = !use.length ? "none" : use === eaten && eaten.length ? "eaten" : "plan";
+  for (const it of use) itemNut(it, acc); return acc;
+}
+/* the last n days with food logged: average per day, and who brought each nutrient */
+function weekNut(end, n = 7) {
+  const days = [], src = {};
+  for (let i = 0; i < n; i++) { const dt = addDays(end, -i), a = dayNut(dt, dt === todayISO() ? "eaten" : "auto"); if (a.kcal < 400) continue; days.push(a);
+    for (const it of dayItems(S.days[dt]).map(x => x[1])) { if (dt < todayISO() || it.eaten) { const one = { v: {}, cov: {}, kcal: 0 }; itemNut(it, one); const name = itemName(it); for (const [k, v] of Object.entries(one.v)) (src[k] = src[k] || {})[name] = ((src[k] || {})[name] || 0) + v; } } }
+  const avg = { v: {}, cov: {}, kcal: 0, days: days.length, src };
+  for (const a of days) { avg.kcal += a.kcal / days.length; for (const k of Object.keys(NUT)) { avg.v[k] = (avg.v[k] || 0) + (a.v[k] || 0) / days.length; avg.cov[k] = (avg.cov[k] || 0) + (a.cov[k] || 0) / days.length; } }
+  return avg;
+}
+function nutStatus(k, v, t) { const N = NUT[k]; if (t == null || !(t > 0)) return "info"; const r = v / t;
+  return N.kind === "min" ? (r < 0.7 ? "bad" : r < 0.9 ? "warn" : "good") : (r > 1.15 ? "bad" : r > 1 ? "warn" : "good"); }
+const fmtNut = (v, u) => v == null ? "—" : u === "g" ? (v < 10 ? r1(v) : fmtN(r0(v))) : fmtN(r0(v));
+function nutRows(a, T, keys) {
+  return keys.map(k => { const N = NUT[k], v = a.v[k] || 0, t = T[k], st = nutStatus(k, v, t), cov = a.kcal ? (a.cov[k] || 0) / a.kcal : 0, pct = t ? clamp(v / t * 100, 0, 100) : 0;
+    return `<div class="nut ${st}"><div class="nut-t"><span>${N.l}${cov < 0.6 && a.kcal ? `<small class="faint" title="Values known for ${r0(cov * 100)}% of the calories"> · partial</small>` : ""}</span><span><b>${fmtNut(v, N.u)}</b>${t ? ` / ${N.kind === "max" ? "≤ " : ""}${fmtNut(t, N.u)}` : ""} ${N.u}</span></div>${t ? `<div class="nut-bar"><i style="width:${pct}%"></i>${N.kind === "max" ? `<em style="left:100%"></em>` : ""}</div>` : ""}</div>`; }).join("");
+}
+/* foods worth adding for a nutrient: dense per 100 kcal, ones you already eat first */
+function nutBoosters(k, n = 3) {
+  const h = buildHabits();
+  return allFoods().filter(f => f.per?.kcal > 15 && dietOK(f) && !f.noPlan).map(f => { const v = foodNut(f)[k]; return v ? { f, s: v / f.per.kcal * 100 * (1 + 0.35 * Math.log1p(h["*|" + f.id] || 0)) } : null; })
+    .filter(Boolean).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.f.name.toLowerCase());
+}
+function nutTips(w, T) {
+  const tips = [];
+  if (!w.days) return tips;
+  for (const k of Object.keys(NUT)) { const N = NUT[k]; if (N.micro && !proMicro()) continue; const v = w.v[k] || 0, t = T[k]; if (!t || (w.cov[k] || 0) < w.kcal * 0.5) continue; const st = nutStatus(k, v, t); if (st === "good") continue;
+    if (N.kind === "min") tips.push({ k, st, r: v / t, t: `${N.l}: ${fmtNut(v, N.u)} of ${fmtNut(t, N.u)} ${N.u} a day`, d: `Low on ${w.days} logged day${w.days > 1 ? "s" : ""}. Easy adds: ${nutBoosters(k).join(", ")}.` });
+    else { const top = Object.entries(w.src[k] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3), tot = Object.values(w.src[k] || {}).reduce((a, b) => a + b, 0) || 1;
+      tips.push({ k, st, r: t / Math.max(v, 0.01), t: `${N.l}: ${fmtNut(v, N.u)} a day, limit ${fmtNut(t, N.u)} ${N.u}`, d: `Most of it came from ${top.map(([n, x]) => `${esc(n.toLowerCase())} (${r0(x / tot * 100)}%)`).join(", ")}. Smaller portions or a swap there make the difference.` }); } }
+  return tips.sort((a, b) => (a.st === "bad" ? 0 : 1) - (b.st === "bad" ? 0 : 1) || a.r - b.r).slice(0, 5);
+}
+/* the nutrients card, at the end of Fuel: the day, the week, tips */
+function nutCard(date) {
+  if (!proOn()) return "";
+  const seg = UI.nutSeg || "day", end = date > todayISO() ? todayISO() : date;
+  const a = seg === "week" ? weekNut(end) : dayNut(date), T = nutTargets(seg === "week" ? (a.kcal || targetsFor(date).kcal) : targetsFor(date).kcal);
+  const main = ["fib", "sug", "sat", "unsat", "salt"], micro = proMicro() ? NUTS.filter(n => n[4]).map(n => n[0]) : [];
+  const empty = seg === "week" ? !a.days : !a.kcal;
+  const tips = seg === "week" ? nutTips(a, T) : [];
+  return `<section class="card pad nut-card" aria-label="Nutrients"><div class="nut-h"><span class="flabel">Nutrients</span><div class="seg sm">${[["day", date === todayISO() ? "Today" : fmtDM(date)], ["week", "Last 7 days"]].map(([k, l]) => `<button data-act="nut-seg" data-k="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div></div>
+    ${empty ? `<div class="faint" style="font-size:13px">${seg === "week" ? "No days with food logged in the last week yet." : "Nothing planned or eaten yet."}</div>` : `
+    <div class="faint" style="font-size:12.5px">${seg === "week" ? `Average of ${a.days} logged day${a.days > 1 ? "s" : ""}` : a.src === "eaten" ? "What you've ticked as eaten" : "From the plan"}</div>
+    <div class="nut-grid">${nutRows(a, T, main)}</div>
+    ${micro.length ? `<details class="nut-more" ${UI.nutMore ? "open" : ""}><summary data-act="nut-more">Vitamins and minerals</summary><div class="nut-grid">${nutRows(a, T, micro)}</div></details>` : ""}
+    ${tips.length ? `<div class="nut-tips">${tips.map(x => `<div class="tip" style="--c:var(--${x.st === "bad" ? "bad" : "warn"})"><span class="tip-ic">${ic(NUT[x.k].kind === "min" ? "plus" : "minus", "sm")}</span><div class="tip-b"><b>${esc(x.t)}</b><span>${x.d}</span></div></div>`).join("")}</div>` : seg === "week" ? `<div class="note">Everything within the reference intakes this week.</div>` : ""}
+    ${seg === "week" && AIF("tips") ? `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="nut-ai" ${UI.nutAi === "busy" ? "disabled" : ""}>${ic("spark", "sm")}${UI.nutAi === "busy" ? "Thinking…" : "Ask the AI coach"}</button></div>${UI.nutAi && UI.nutAi !== "busy" ? `<div class="note ai-coach">${UI.nutAi}</div>` : ""}` : ""}`}
+    <div class="faint" style="font-size:11.5px">Reference intakes for an active adult (LARN/EFSA, salt WHO). Built-in foods use typical values; packaged foods use their label or Open Food Facts.</div></section>`;
+}
+ACT["nut-seg"] = el => { UI.nutSeg = el.dataset.k; scheduleRender(); };
+ACT["nut-more"] = () => { UI.nutMore = !UI.nutMore; };
+ACT["nut-ai"] = async () => {
+  const w = weekNut(todayISO()), T = nutTargets(w.kcal); if (!w.days) return;
+  const mac = { p: 0, c: 0, f: 0 }; let n = 0; for (let i = 0; i < 7; i++) { const dt = addDays(todayISO(), -i), e = eatenFor(dt); if (e.kcal > 400) { mac.p += e.p; mac.c += e.c; mac.f += e.f; n++; } }
+  const tops = Object.entries(w.src.salt || {}).concat(Object.entries(w.src.sat || {})).sort((a, b) => b[1] - a[1]).slice(0, 6).map(x => x[0]);
+  const usual = allFoods().filter(f => buildHabits()["*|" + f.id]).sort((a, b) => (buildHabits()["*|" + b.id] || 0) - (buildHabits()["*|" + a.id] || 0)).slice(0, 40).map(f => f.name);
+  const lines = Object.keys(NUT).filter(k => T[k]).map(k => `${NUT[k].l}: ${fmtNut(w.v[k] || 0, NUT[k].u)} ${NUT[k].u}/day (reference ${NUT[k].kind === "max" ? "max " : ""}${fmtNut(T[k], NUT[k].u)}; data for ${r0((w.cov[k] || 0) / (w.kcal || 1) * 100)}% of calories)`);
+  UI.nutAi = "busy"; scheduleRender();
+  try {
+    const r = await Sync.sample(`You are a sports nutritionist. An athlete (${FIT().profile?.sex || "Male"}, goal: ${S.settings.goal || "maintain"}) logged ${w.days} days. Daily averages: ${r0(w.kcal)} kcal, protein ${r0(mac.p / (n || 1))} g, carbs ${r0(mac.c / (n || 1))} g, fat ${r0(mac.f / (n || 1))} g.
+${lines.join("\n")}
+Main sources of salt and saturated fat: ${tops.join(", ") || "n/a"}.
+Foods they usually eat: ${usual.join(", ")}.
+Write 3 to 5 short, concrete suggestions in Italian (one line each, starting with "• "), using foods they already eat where possible, with amounts. No preamble, no disclaimers.`, { modelTier: "quick" });
+    UI.nutAi = esc(String(r.text || "").trim()).replace(/\n/g, "<br>") || "No answer.";
+  } catch (e) { UI.nutAi = esc(sampleErr(e)); }
+  scheduleRender();
+};
+function proSettingsCard() {
+  const P = S.settings.pro || {};
+  const sw = (k, on, l, s) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="pro-toggle" data-k="${k}" aria-label="${esc(l)}"></button><span>${l}<small class="faint" style="display:block;font-size:12.5px">${s}</small></span></label>`;
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Pro nutrients</span>
+    ${sw("on", !!P.on, "Track fibre, sugars, fats and salt", "A Nutrients card at the end of Fuel, for the day and the week, with tips when you're off.")}
+    ${P.on ? sw("micro", P.micro !== false, "Vitamins and minerals", "Potassium, calcium, iron, magnesium, vitamins C, D, B12, folate and omega-3.") : ""}</section>`;
+}
+ACT["pro-toggle"] = el => { const k = el.dataset.k, P = S.settings.pro || {}; S.settings.pro = { ...P, [k]: k === "micro" ? P.micro === false : !P[k] }; saveSettings(); scheduleRender(); };
+
+/* ================= Fuel: the day's sums stay in view while you scroll the meals ================= */
+function fuelSticky(date, tot, eat, T) {
+  const bar = (l, k, c) => { const pp = clamp(tot[k] / (T[k] || 1) * 100, 0, 100), ep = clamp(eat[k] / (T[k] || 1) * 100, 0, 100);
+    return `<div class="fs-m" style="--c:var(--${c})"><span><b>${r0(tot[k])}</b>/${r0(T[k])}${l}</span><div class="track ${tot[k] > T[k] * 1.08 + 3 ? "over" : ""}"><span class="pl" style="width:${pp}%"></span><span class="ea" style="width:${ep}%"></span></div></div>`; };
+  const kp = clamp(tot.kcal / (T.kcal || 1) * 100, 0, 100), ke = clamp(eat.kcal / (T.kcal || 1) * 100, 0, 100);
+  return `<div id="fuel-sticky" class="fuel-sticky" aria-hidden="true"><div class="fs-k"><span><b>${fmtN(tot.kcal)}</b> / ${fmtN(T.kcal)} kcal</span><div class="track ${tot.kcal > T.kcal * 1.03 ? "over" : ""}"><span class="pl" style="width:${kp}%"></span><span class="ea" style="width:${ke}%"></span></div></div>${bar("C", "c", "carb")}${bar("P", "p", "pro")}${bar("F", "f", "fat")}</div>`;
+}
+let fuelObs = null;
+function afterRender() {
+  if (fuelObs) { fuelObs.disconnect(); fuelObs = null; }
+  const hero = $(".plan-grid .hero"), bar = $("#fuel-sticky"); if (!hero || !bar || !("IntersectionObserver" in window)) return;
+  const place = () => { const m = $("#main").getBoundingClientRect(); bar.style.left = m.left + "px"; bar.style.width = m.width + "px"; };
+  place();
+  fuelObs = new IntersectionObserver(([e]) => { const show = !e.isIntersecting && e.boundingClientRect.top < 0; if (show) place(); bar.classList.toggle("on", show); }, { threshold: 0 });
+  fuelObs.observe(hero.querySelector(".mbars") || hero);
+}
+addEventListener("resize", () => { const bar = $("#fuel-sticky"); if (bar?.classList.contains("on")) { const m = $("#main").getBoundingClientRect(); bar.style.left = m.left + "px"; bar.style.width = m.width + "px"; } });
+ACT["clear-day"] = el => { const date = el.dataset.date || UI.date, n = dayItems(getDay(date)).length; if (!n) return;
+  mutateDay(date, d => { d.meals = {}; delete d.dish; }, { undo: `${n} item${n > 1 ? "s" : ""} cleared` }); };
+
 /* ================= boot ================= */
 (function boot() {
   loadLocal();

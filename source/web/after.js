@@ -39,7 +39,7 @@
     return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Account</span>${acct}
       <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn soft sm" style="cursor:pointer">${ic("download", "sm")}Restore a backup (.json)<input type="file" accept=".json,application/json" data-chg="eg-restore" hidden></label><button class="btn soft sm" data-act="export">${ic("download", "sm")}Download a backup</button></div>
       <div class="faint" style="font-size:12.5px">Moving from Engine on Claude: there, Settings → Full backup (JSON); here, Restore a backup.</div></section>
-      ${aiCard()}`;
+      ${aiCard()}${aiFeatCard()}${proSettingsCard()}`;
   }
   const origSettings = VIEWS.settings;
   VIEWS.settings = function () { const h = origSettings(); return h.replace('<div class="set-group">', '<div class="set-group">' + webCards()); };
