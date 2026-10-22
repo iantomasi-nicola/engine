@@ -123,8 +123,6 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .sq-h{border-bottom:0!important;padding:12px 16px 2px!important}
 .sq-h + .shop-row{border-top:0}
 
-.lrow:has(> .switch) .s,.lrow:has(> .switch) .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
-.lrow:has(> .switch){gap:14px}
 
 .lrow:has(> .switch) .s,.lrow:has(> .switch) .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 .lrow:has(> .switch){gap:14px}
@@ -168,7 +166,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 /* secondary tabs: a tonal track, the picked one fills (M3 connected button group) */
 .subseg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--md-sc-high);width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .subseg::-webkit-scrollbar{display:none}
-.subseg button{flex:0 0 auto;min-height:36px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);transition:background .2s,color .2s,border-radius .2s}
+.subseg button{flex:0 0 auto;min-height:36px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);transition:background .2s,color .2s}
 .subseg button:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)}
 .subseg button[aria-selected="true"]{background:var(--md-primary);color:var(--md-on-primary)}
 .groc-sub{padding:12px 0 2px}
@@ -755,7 +753,7 @@ details.card>summary::-webkit-details-marker{display:none}
 .top-title{font-stretch:125%;font-weight:830;text-transform:uppercase;letter-spacing:-.01em}
 .side-btn[aria-current="page"]{background:var(--ink);color:var(--bg);box-shadow:none}
 .bnav button[aria-current="page"] .nav-ic{background:var(--volt)!important;color:var(--volt-ink)!important}
-.btn.primary,.btn.volt{background:var(--volt);color:var(--volt-ink)}
+.btn.primary{background:var(--volt);color:var(--volt-ink)}
 .fab{background:var(--volt)!important;color:var(--volt-ink)!important}
 .eyebrow{font-size:11.5px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .subnav{display:flex;gap:20px;padding:0 0 8px}
@@ -934,7 +932,6 @@ body:has(.clip-bar) .cv-d:not(.past){cursor:copy}
 
 label.row:has(.switch){flex-wrap:nowrap}
 .sheet a,.sheet-b a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
-.switch[aria-checked="true"]{background:var(--accent)!important}
 .rep-bar .rep-nav{flex:1}
 .icu-r{grid-template-columns:24px minmax(0,1fr) auto}
 .icu-ck{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center}
@@ -990,7 +987,7 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 .lv-top{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:6px;padding:6px 0 8px}
 .lv-ttl{text-align:center;min-width:0}.lv-ttl b{display:block;font-family:var(--display);font-stretch:115%;font-weight:800;text-transform:uppercase;font-size:15px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lv-ttl small{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.lv-prog{height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-bottom:14px}.lv-prog i{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .3s}
+.lv-prog{height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-bottom:14px}.lv-prog i{display:block;height:100%;background:var(--ink);border-radius:99px;transform-origin:left;transition:transform var(--t3,.3s) var(--settle,ease)}
 .lv-card{background:var(--surface);border-radius:24px;box-shadow:var(--shadow);padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px}
 .lv-eb{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.lv-eb .faint{font-size:12px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lv-h{margin:0;font-family:var(--display);font-stretch:118%;font-weight:820;font-size:30px;line-height:1.05;letter-spacing:-.02em;text-transform:uppercase}
@@ -1054,17 +1051,17 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 body{font-family:var(--body);letter-spacing:.1px}
 .num,b.num{font-variant-numeric:tabular-nums}
 /* type: sentence case everywhere */
-.top-title,.lv-h,.lv-h1,.wl-main>b,.sb-main>b,.sess-rest b,.t-big,.lv-ttl b,.dh-big,.brand>span:last-child{text-transform:none!important;font-stretch:100%!important;letter-spacing:0!important}
+.top-title,.lv-h,.lv-h1,.wl-main>b,.t-big,.lv-ttl b,.dh-big,.brand>span:last-child{text-transform:none!important;font-stretch:100%!important;letter-spacing:0!important}
 .top-title{font-family:var(--display);font-size:26px;font-weight:600!important;line-height:1.15}
 .top-sub{font-size:13.5px;color:var(--muted)}
-.eyebrow,.flabel,.field>label,.mc-over,.lv-up small,.am-r small,.lv-subt small,.t-metrics small,.ffw-c small,.lv-lb,.stat small{text-transform:none!important;letter-spacing:.1px!important}
+.eyebrow,.flabel,.field>label,.lv-up small,.am-r small,.lv-subt small,.t-metrics small,.ffw-c small,.lv-lb,.stat small{text-transform:none!important;letter-spacing:.1px!important}
 .eyebrow,.flabel,.field>label{font-size:12.5px;font-weight:600;color:var(--muted)}
 .section-h h2{font-family:var(--display);font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink)}
-.stat b,.ffw-c b,.t-stats b,.sum-stats b,.fuel-k b,.am-r>b,.lv-clock b,.rc-cd b,.stp b,.mini,.pv-h b,.dt b,.streak b,.dh-big{font-family:var(--display);font-stretch:100%!important}
+.stat b,.ffw-c b,.t-stats b,.sum-stats b,.am-r>b,.lv-clock b,.rc-cd b,.stp b,.mini,.pv-h b,.dt b,.streak b,.dh-big{font-family:var(--display);font-stretch:100%!important}
 /* buttons */
 .btn{min-height:40px;padding:0 22px;border-radius:20px;font-weight:500;font-size:14px;letter-spacing:.1px;gap:8px;border:0;transition:background .15s,box-shadow .15s,transform .08s}
 .btn:active{transform:scale(.98)}
-.btn.primary,.btn.ink,.btn.volt{background:var(--accent)!important;color:var(--accent-ink)!important}
+.btn.primary,.btn.ink{background:var(--accent)!important;color:var(--accent-ink)!important}
 .btn.primary:hover{box-shadow:0 1px 3px rgba(0,0,0,.18)}
 .btn.tonal,.btn.soft{background:var(--sec-c);color:var(--on-sec-c)}
 .btn.ghost{background:transparent;border:1px solid var(--faint);color:var(--accent)}
@@ -1106,17 +1103,12 @@ body{font-family:var(--body);letter-spacing:.1px}
 .subnav button{flex:1;font-family:var(--body)!important;text-transform:none!important;letter-spacing:.1px!important;font-size:14px!important;font-weight:500!important;color:var(--muted)!important;padding:10px 0 11px!important;border-bottom:3px solid transparent!important;border-radius:0}
 .subnav button[aria-current="page"]{color:var(--accent)!important;border-bottom-color:var(--accent)!important}
 /* switch */
-.switch{width:52px!important;height:32px!important;border-radius:16px!important;background:var(--surface-3)!important;border:2px solid var(--faint)!important;position:relative;flex:none;transition:background .15s}
-.switch::after{width:16px!important;height:16px!important;top:6px!important;left:6px!important;background:var(--faint)!important;border-radius:50%;box-shadow:none!important;transition:all .15s!important}
-.switch[aria-checked="true"]{background:var(--accent)!important;border-color:var(--accent)!important}
-.switch[aria-checked="true"]::after{width:24px!important;height:24px!important;top:2px!important;left:22px!important;transform:none!important;background:var(--accent-ink)!important}
 .sw-row{gap:12px;font-size:14px;align-items:center;flex-wrap:nowrap}
 /* inputs: outlined text fields */
 .inp{border-radius:8px!important;border:1px solid var(--faint)!important;background:transparent!important;min-height:48px;color:var(--ink)}
 .inp:focus{border-color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
-select.inp{background:var(--surface)!important}
 /* cards & surfaces */
-.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.hero,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner{border-radius:16px!important;box-shadow:var(--shadow)!important}
+.card,.stat,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.hero,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner{border-radius:16px!important;box-shadow:var(--shadow)!important}
 
 
 
@@ -1289,8 +1281,7 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
   .lv-cur .stp button{width:56px!important;height:56px!important}.lv-cur .stp b{min-width:84px!important;font-size:28px!important}
   .lv-cur .rir button{width:56px!important;height:56px!important;font-size:18px!important}
   .lv-cur .lv-row{gap:14px}.lv-cur .lv-row .lab{min-width:56px;font-size:12.5px}
-  .lv-cur .lv-last,.lv-cur .lv-note{font-size:14px}
-  .lv-cur .lv-sg,.lv-cur .lv-subt{max-width:560px}
+  .lv-cur .lv-last,.lv-cur .lv-note{font-size:14px}.lv-cur .lv-subt{max-width:560px}
   .lv-cur .lv-h{font-size:40px!important}
   .lv-cur .lv-tgt{font-size:19px!important}
   .lv-cur .lv-clock{width:320px}
@@ -1338,9 +1329,7 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 /* many tabs on a phone: a row of pills that scrolls sideways, not a squeezed segmented bar */
 @media (max-width:760px){
   .seg.many{border:0!important;gap:6px!important;margin:0 -16px;padding:0 16px!important;scroll-snap-type:x proximity;scroll-padding:0 16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent)}
-  .seg.many button{flex:0 0 auto!important;min-height:36px!important;padding:0 16px!important;border:1px solid color-mix(in srgb,var(--faint) 45%,transparent)!important;border-radius:18px!important;scroll-snap-align:start;font-size:14px!important}
-  .seg.many button:last-child{border-right:1px solid color-mix(in srgb,var(--faint) 45%,transparent)!important;margin-right:16px}
-  .seg.many button[aria-pressed="true"]{background:var(--ink)!important;color:var(--surface)!important;border-color:var(--ink)!important;font-weight:600!important}
+  .seg.many button{flex:0 0 auto!important;min-height:36px!important;padding:0 16px!important;scroll-snap-align:start;font-size:14px!important}
 }
 .col-list{display:flex;flex-direction:column}
 .col-i{display:flex;gap:12px;align-items:center;padding:10px 4px;font-size:15px;text-align:left;color:var(--ink);border-bottom:1px solid var(--line)}
@@ -1619,7 +1608,7 @@ body{background:var(--bg)!important;color:var(--ink);font-family:var(--body);let
 .sheet-h h3{font-family:var(--body)!important;font-size:22px!important;font-weight:400!important;line-height:28px}
 .lv-h,.lv-h1{font-family:var(--body)!important;font-weight:400!important;letter-spacing:0!important}
 /* surfaces: cards are elevated (light) or tonal (dark), corner 16 */
-.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card{background:var(--surface)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;border:0!important}
+.card,.stat,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card{background:var(--surface)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;border:0!important}
 .hero{border-radius:28px!important;box-shadow:none!important}
 .lrow{padding:12px 16px!important;border-top-color:var(--line)!important;transition:background .15s}
 button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
@@ -1634,7 +1623,6 @@ button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,
 .btn.ghost{background:transparent!important;border:1px solid var(--md-outline)!important;color:var(--md-primary)!important}
 .btn.text,.link{color:var(--md-primary)!important}.btn.text:hover{box-shadow:none;background:color-mix(in srgb,var(--md-primary) 8%,transparent)}
 .btn.danger{background:var(--md-error-container)!important;color:var(--md-on-error-container)!important}
-.btn.sm{min-height:32px;border-radius:16px!important;font-size:13px!important}
 .btn.big,.btn.xl{border-radius:28px!important}
 .btn[disabled]{background:color-mix(in srgb,var(--ink) 12%,transparent)!important;color:color-mix(in srgb,var(--ink) 38%,transparent)!important;box-shadow:none}
 .icon-btn{width:40px!important;height:40px!important;border-radius:20px!important;color:var(--muted)!important;transition:background .15s}
@@ -1647,12 +1635,6 @@ button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,
 .td-nudge:first-child{background:var(--md-primary)!important;color:var(--md-on-primary)!important;border-color:transparent!important}
 .chip.sm{min-height:28px!important;font-size:13px!important}
 /* segmented buttons */
-.seg:not(.many){border:1px solid var(--md-outline)!important;border-radius:20px!important;padding:0!important;gap:0!important;background:transparent!important;overflow:hidden}
-.seg:not(.many) button{min-height:40px;border-radius:0!important;border-left:1px solid var(--md-outline)!important;color:var(--ink)!important;font-weight:500!important;font-size:14px!important;background:transparent!important}
-.seg:not(.many) button:first-child{border-left:0!important}
-.seg:not(.many) button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
-.seg.many button{border-radius:8px!important;border:1px solid var(--md-outline-variant)!important;color:var(--muted)!important;font-weight:500!important;background:transparent!important}
-.seg.many button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-color:transparent!important}
 /* tabs (Fuel: Meals / Foods / Shop) */
 .subnav{border-bottom:1px solid var(--line)!important}
 .subnav button{color:var(--muted)!important;font-weight:500!important}
@@ -1665,10 +1647,6 @@ button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--ink) 5%,
 .search input{background:transparent!important;border:0!important}
 input.inp[readonly]{background:var(--md-sc-high)!important}
 /* switch */
-.switch{background:var(--md-sc-highest)!important;border:2px solid var(--md-outline)!important}
-.switch::after{background:var(--md-outline)!important}
-.switch[aria-checked="true"]{background:var(--md-primary)!important;border-color:var(--md-primary)!important}
-.switch[aria-checked="true"]::after{background:var(--md-on-primary)!important}
 /* navigation bar */
 .bnav{background:var(--md-sc)!important;padding-top:12px!important;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;border:0!important;box-shadow:none!important}
 .bnav button,body.nav-top .tnav button{color:var(--muted)!important;font-size:12px!important;font-weight:500!important;letter-spacing:.04em!important;gap:4px!important}
@@ -1690,7 +1668,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .menu-i{border-radius:12px}
 /* status, pills, badges */
 .status.ok{background:color-mix(in srgb,var(--good) 18%,transparent)!important;color:var(--good)!important}
-.badge{background:var(--md-error)!important;color:#fff!important}
+.badge{background:var(--md-error)!important;color:var(--md-sc-lowest)!important}
 /* add sheet toolbar & food tiles in the new palette */
 .aa{background:var(--md-sc)!important;border:0!important;border-radius:16px!important;color:var(--ink)!important}
 .aa.aa-main{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important}
@@ -1712,9 +1690,9 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .card,.btn,.chip,.icon-btn,.lrow,.seg button,.aa,.fh-b,.tm-mode{transition:background .2s cubic-bezier(.2,0,0,1),box-shadow .2s,color .2s,transform .1s}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* sentence case labels (M3) */
-.day-pill small,.kring .lab,.section-h h2,.field>label,.flabel,.macro-strip small,.tbl th,.dr-bal small,.tbl td:not(:first-child)::before,.brand small,.eyebrow,.subnav button,.t-metrics small,.ffw-c small,.lv-row .lab,.lv-subt small,.lv-clock small,.lv-up small,.am-r small,.lv-lb,.td-top .top-sub,.td-ov,.off-h,.dfc-m small,.sq-h,.stat small,.sum-stats small,.mc-over{text-transform:none!important;letter-spacing:.02em!important}
+.day-pill small,.kring .lab,.section-h h2,.field>label,.flabel,.macro-strip small,.tbl th,.dr-bal small,.tbl td:not(:first-child)::before,.brand small,.eyebrow,.subnav button,.t-metrics small,.ffw-c small,.lv-row .lab,.lv-subt small,.lv-clock small,.lv-up small,.am-r small,.lv-lb,.td-top .top-sub,.td-ov,.off-h,.dfc-m small,.sq-h,.stat small,.sum-stats small{text-transform:none!important;letter-spacing:.02em!important}
 .td-ov,.eyebrow,.section-h h2{font-weight:500!important}
-.wl-main>b,.lv-ttl b,.sess-rest b,.sb-main>b,.top-title,.t-big{text-transform:none!important}
+.wl-main>b,.lv-ttl b,.top-title,.t-big{text-transform:none!important}
 .brand{font-family:var(--body)!important;font-stretch:100%!important;font-weight:500!important;font-size:18px!important;letter-spacing:.02em!important}
 .brand-mark{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important;border-radius:12px!important}
 
@@ -1939,141 +1917,253 @@ body.kb-open .add-acts,body.kb-open .add-tip{display:none}
 @media (max-width:640px){.td-nudges{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.td-nudges::-webkit-scrollbar{display:none}.td-nudges>*{flex:none}}
 .seg>button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .acc-sw{display:flex;flex-wrap:wrap;gap:12px}
-.acc-b{width:40px;height:40px;border-radius:50%;background:var(--sw);border:0;position:relative;display:grid;place-items:center;color:#fff;cursor:pointer;transition:border-radius .2s}
+.acc-b{width:40px;height:40px;border-radius:50%;background:var(--sw);border:0;position:relative;display:grid;place-items:center;color:#fff;cursor:pointer;transition:transform var(--t3,.3s) var(--spring,ease)}
 .acc-b[aria-pressed="true"]{border-radius:14px}
 .acc-b.custom{background:conic-gradient(#e5484d,#f5a524,#3fbf6b,#2563eb,#7c3aed,#e5484d)}
 .acc-b.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* ===================================================================================================
-   Design v2 · Material 3 with dynamic colour. The accent you pick in Settings › Look is the seed of the
-   whole palette (primary, containers, tinted surfaces, outlines), computed for light and dark and written
-   as --md-* tokens (see applyLook). Tonal cards without borders or shadows, pill buttons, M3 chips,
-   segmented buttons and navigation, outlined fields, Roboto Flex. Comes last: it sets the look.
+   Design v3 · Apple × Material 2027
+   Apple: system type (SF on Apple devices, Roboto / Google Sans on Android) with tight large titles, grouped
+   grey background with white cards (deep black with lifted cards in dark), continuous corners where the browser
+   can draw them, glass bars, iOS segmented controls and switches, inset hairlines.
+   Material: the colour still grows from the accent you pick (the --md-* tokens from applyLook), tonal chips and
+   containers, motion that follows a spring, skeletons while something is on its way, a state colour on Today.
+   Motion is transform and opacity only. This layer comes last: it sets the look.
    =================================================================================================== */
-:root{--font:"Google Sans","Google Sans Text","Roboto Flex","Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;--head:"Google Sans Display","Google Sans","Roboto Flex","Roboto",system-ui,sans-serif;
-  --r-card:24px;--r-in:16px;--r-field:12px}
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter var","Inter","Google Sans Text","Roboto Flex","Roboto","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --head:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter var","Inter","Google Sans Display","Google Sans","Roboto Flex","Roboto","Segoe UI Variable Display",system-ui,sans-serif;
+  --r-card:22px;--r-in:16px;--r-field:14px;--r-pill:999px;
+  /* a spring with a little overshoot, and a quick settle for small things */
+  --spring:linear(0,.009,.035 2.1%,.141,.281 6.7%,.723 12.9%,.938 16.7%,1.017,1.077 20.4%,1.121,1.149 24.3%,1.159,1.163 27%,1.154,1.129 32.8%,1.051 39.6%,1.017 43.1%,.991,.977 51%,.974 53.8%,.975 57.1%,.997 69.8%,1.003 76.9%,1);
+  --settle:cubic-bezier(.2,.9,.25,1);--t1:.18s;--t2:.32s;--t3:.48s;
+  /* surfaces: light = grouped grey page, white cards */
+  --v-bg:var(--md-sc);--v-card:var(--md-sc-lowest);--v-card2:var(--md-sc-low);--v-sheet:var(--md-sc-low);--v-sheet-card:var(--md-sc-lowest);
+  --v-fill:color-mix(in srgb,var(--md-on-surface) 6.5%,transparent);--v-fill-2:color-mix(in srgb,var(--md-on-surface) 11%,transparent);
+  --v-hair:color-mix(in srgb,var(--md-on-surface) 11%,transparent);
+  --v-glass:color-mix(in srgb,var(--v-bg) 72%,transparent);--v-glass-bar:color-mix(in srgb,var(--md-sc-lowest) 70%,transparent);
+  --v-e1:0 .5px 1px rgb(0 0 0/.04),0 2px 12px rgb(0 0 0/.045);--v-e2:0 4px 14px rgb(0 0 0/.08),0 18px 48px rgb(0 0 0/.12);
+  --v-thumb:var(--md-sc-lowest);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--v-bg:var(--md-sc-lowest);--v-card:var(--md-sc);--v-card2:var(--md-sc-high);--v-sheet:var(--md-sc);--v-sheet-card:var(--md-sc-high);
+  --v-glass-bar:color-mix(in srgb,var(--md-sc-high) 72%,transparent);--v-e1:none;--v-e2:0 18px 48px rgb(0 0 0/.55);--v-thumb:var(--md-sc-highest);--v-hair:color-mix(in srgb,var(--md-on-surface) 13%,transparent)}}
+:root[data-theme="dark"]{--v-bg:var(--md-sc-lowest);--v-card:var(--md-sc);--v-card2:var(--md-sc-high);--v-sheet:var(--md-sc);--v-sheet-card:var(--md-sc-high);
+  --v-glass-bar:color-mix(in srgb,var(--md-sc-high) 72%,transparent);--v-e1:none;--v-e2:0 18px 48px rgb(0 0 0/.55);--v-thumb:var(--md-sc-highest);--v-hair:color-mix(in srgb,var(--md-on-surface) 13%,transparent)}
 :root,:root[data-theme],:root:not([data-theme]){
-  --bg:var(--md-surface);--surface:var(--md-sc);--surface-2:var(--md-sc-high);--surface-3:var(--md-sc-highest);
-  --ink:var(--md-on-surface);--muted:var(--md-on-surface-variant);--faint:var(--md-outline);--line:var(--md-outline-variant);
+  --bg:var(--v-bg);--surface:var(--v-card);--surface-2:var(--v-card2);--surface-3:var(--md-sc-highest);
+  --ink:var(--md-on-surface);--muted:var(--md-on-surface-variant);--faint:var(--md-outline);--line:var(--v-hair);
   --accent:var(--md-primary);--accent-ink:var(--md-on-primary);--accent-soft:var(--md-secondary-container);--sec-c:var(--md-secondary-container);--on-sec-c:var(--md-on-secondary-container);
-  --volt:var(--md-primary);--volt-ink:var(--md-on-primary);--sheet:var(--md-sc-low);--nav:var(--md-sc);--c-fit:var(--md-primary);
+  --volt:var(--md-primary);--volt-ink:var(--md-on-primary);--sheet:var(--v-sheet);--nav:var(--v-glass-bar);--c-fit:var(--md-primary);
   --hero:var(--md-primary-container);--hero-ink:var(--md-on-primary-container);--hero-muted:color-mix(in srgb,var(--md-on-primary-container) 72%,transparent);--hero-line:color-mix(in srgb,var(--md-on-primary-container) 16%,transparent);
-  --shadow:none;--md-elev1:none}
+  --shadow:var(--v-e1);--md-elev1:var(--v-e1)}
 
-/* type: Google Sans where installed, Roboto Flex otherwise */
-body{font-family:var(--font)!important;letter-spacing:0!important;background:var(--bg)!important;color:var(--ink)}
-button,input,select,textarea{font-family:inherit}
-.num,.kring .big,.stat b,.ffw-c b,.meal-name,.day-pill b,.brand,.lv-h,.lv-h1,.cv-sum b,.sum-stats b,.hy-v b,.sl-k b,.wk-k b,.gl-k b,.ph-big{font-family:var(--head)!important;font-stretch:105%!important}
-.top-title{font-family:var(--head)!important;font-size:28px!important;font-weight:450!important;letter-spacing:0!important;line-height:36px!important;font-stretch:105%}
-.top-sub{font-size:14px!important;color:var(--muted)!important;letter-spacing:.1px!important}
-.section-h h2{font-family:var(--head)!important;font-size:16px!important;font-weight:500!important;letter-spacing:.1px!important;color:var(--ink)!important}
-.eyebrow,.flabel,.field>label{font-size:12px!important;font-weight:500!important;letter-spacing:.4px!important;color:var(--muted)!important;text-transform:none!important}
-.sheet-h h3{font-family:var(--head)!important;font-size:22px!important;font-weight:450!important;line-height:28px!important;letter-spacing:0!important}
-.meal-name{font-weight:500!important;font-size:16px!important}
-.stat b,.ffw-c b{font-weight:500!important}
+/* ---------- type: system fonts, tight display tracking, tabular numbers ---------- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{overflow-x:clip} /* decorative layers never widen the page */
+body{font-family:var(--font)!important;letter-spacing:-.006em!important;background:var(--bg)!important;color:var(--ink);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+button,input,select,textarea{font-family:inherit;letter-spacing:inherit}
+.num,.kring .big,.stat b,.ffw-c b,.day-pill b,.lv-h,.lv-h1,.cv-sum b,.sum-stats b,.hy-v b,.sl-k b,.wk-k b,.gl-k b,.ph-big,.td-big,.am-r>b,.lv-clock b{font-family:var(--head)!important;font-stretch:100%!important;font-variant-numeric:tabular-nums;letter-spacing:-.02em!important}
+.brand{font-family:var(--head)!important;letter-spacing:-.01em!important}
+.top-title{font-family:var(--head)!important;font-size:clamp(28px,7.4vw,34px)!important;font-weight:700!important;letter-spacing:-.026em!important;line-height:1.12!important;font-stretch:100%}
+.top-sub{font-size:14.5px!important;color:var(--muted)!important;letter-spacing:-.005em!important}
+.section-h h2{font-family:var(--head)!important;font-size:20px!important;font-weight:650!important;letter-spacing:-.018em!important;color:var(--ink)!important}
+.section-h{gap:10px}.section-h>:not(h2){flex:none;max-width:55%}.section-h h2{min-width:0}
+@media (max-width:420px){.section-h h2{font-size:18.5px!important}}
+.eyebrow,.flabel,.field>label{font-size:13px!important;font-weight:500!important;letter-spacing:-.003em!important;color:var(--muted)!important;text-transform:none!important}
+.sheet-h h3{font-family:var(--head)!important;font-size:20px!important;font-weight:650!important;line-height:26px!important;letter-spacing:-.018em!important}
+.meal-name{font-weight:600!important;font-size:17px!important;letter-spacing:-.012em}
+.stat b,.ffw-c b{font-weight:650!important}
+.lv-h{font-weight:700!important;letter-spacing:-.024em!important}
+.faint{color:var(--muted)}
 
-/* surfaces: tonal containers on a tinted background, large corners, no borders or shadows */
-.card,.stat,.m-card,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card,.cv,.cv-wk,.gl-c,.pp-day,.set-grp,.td-s{background:var(--md-sc-low)!important;border:0!important;border-radius:var(--r-card)!important;box-shadow:none!important}
-.stat,.ffw-c{border-radius:var(--r-in)!important;background:var(--md-sc)!important}
-.sheet-b .card,.set-grp-in>.card,section .gl-c,.set-grp-in>section{background:var(--md-sc)!important;border:0!important;border-radius:var(--r-in)!important}
+/* ---------- surfaces: white cards on the grouped page, nested ones a step down ---------- */
+.card,.stat,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card,.cv,.cv-wk,.gl-c,.pp-day,.set-grp,.td-s{background:var(--v-card)!important;border:0!important;border-radius:var(--r-card)!important;box-shadow:var(--v-e1)!important}
+.stat,.ffw-c{border-radius:var(--r-in)!important}
+:is(.card,.td-card,.lv-card,.meal,.cv,.set-grp,.gl-c,.rc,.coach) :is(.card,.stat,.td-s,.gl-c,.ffw-c,.rc,.lv-nx,.lv-li,.type-card,.pp-day){background:var(--v-card2)!important;box-shadow:none!important;border-radius:var(--r-in)!important}
+.sheet-b .card,.sheet-b .stat,.set-grp-in>.card,section .gl-c,.set-grp-in>section{background:var(--v-sheet-card)!important;border:0!important;border-radius:var(--r-in)!important;box-shadow:none!important}
+.set-grp-in>.card,.set-grp-in>section{background:var(--v-card2)!important}
 .sheet-b .card .card{background:transparent!important}
-.note{background:var(--md-sc-high)!important;color:var(--md-on-surface-variant)!important;border-radius:var(--r-in)!important;border:0!important}
-.note.accent{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
-.note.warn{background:color-mix(in srgb,var(--warn) 16%,var(--md-sc-high))!important;color:var(--ink)!important}
-.lrow{border-top-color:color-mix(in srgb,var(--md-outline-variant) 70%,transparent)!important}
-button.lrow:hover,.lrow>button:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)!important}
-button.lrow:active{background:color-mix(in srgb,var(--md-on-surface) 10%,transparent)!important}
+.note{background:var(--v-fill)!important;color:var(--md-on-surface-variant)!important;border-radius:var(--r-in)!important;border:0!important}
+.note.accent{background:color-mix(in srgb,var(--md-primary) 12%,var(--v-card))!important;color:var(--md-on-surface)!important}
+.note.warn{background:color-mix(in srgb,var(--warn) 15%,var(--v-card))!important;color:var(--ink)!important}
+.lrow{border-top-color:var(--v-hair)!important}
+button.lrow:hover,.lrow>button:hover{background:var(--v-fill)!important}
+button.lrow:active{background:var(--v-fill-2)!important}
+@supports (corner-shape:squircle){
+  /* continuous curvature: a superellipse needs a larger radius to read the same */
+  .card,.stat,.lv-card,.meal,.td-card,.cv,.set-grp,.td-s,.gl-c,.note,.sheet,.btn,.chip,.inp,.search,.fab,.td-gear,.eo-res{corner-shape:squircle}
+  .card,.lv-card,.meal,.td-card,.cv,.set-grp,.gl-c{border-radius:calc(var(--r-card)*1.55)!important}
+  .stat,.td-s,.note,.td-gear{border-radius:calc(var(--r-in)*1.6)!important}
+}
 
-/* buttons: full pill, 40 dp, label large */
-.btn{min-height:40px!important;border-radius:20px!important;font-weight:500!important;font-size:14px!important;letter-spacing:.1px!important;padding:0 24px;transition:background .2s,box-shadow .2s,border-radius .2s;box-shadow:none!important}
-.btn.sm{min-height:32px!important;border-radius:16px!important;font-size:13px!important;padding:0 14px!important}
-.btn:active:not([disabled]){border-radius:12px!important}
-.btn.primary,.btn.ink,.btn.volt{background:var(--md-primary)!important;color:var(--md-on-primary)!important;border:0!important}
-.btn.primary:hover{box-shadow:0 1px 2px rgba(0,0,0,.2),0 1px 3px 1px rgba(0,0,0,.1)!important}
-.btn.tonal{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border:0!important}
-.btn.soft{background:var(--md-sc-highest)!important;color:var(--md-on-surface)!important;border:0!important}
-.btn.ghost{background:transparent!important;border:1px solid var(--md-outline)!important;color:var(--md-primary)!important}
-.btn.text,.link{background:transparent!important;color:var(--md-primary)!important;font-weight:500!important}
-.btn.text{padding:0 12px!important}
-.btn.danger{background:var(--md-error-container,#ffdad6)!important;color:var(--md-on-error-container,#410002)!important}
-.btn[disabled]{opacity:.38}
-.icon-btn{width:40px;height:40px;border-radius:20px!important;color:var(--md-on-surface-variant)!important}
-.icon-btn:hover{background:color-mix(in srgb,var(--md-on-surface) 8%,transparent)!important}
-.icon-btn.tonal{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
-.fab{border-radius:16px!important;background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important;box-shadow:0 3px 6px rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.1)!important}
+/* ---------- buttons: capsules, 44 px to tap, pressed = a spring squeeze ---------- */
+.btn{min-height:44px!important;border-radius:var(--r-pill)!important;font-weight:600!important;font-size:15px!important;letter-spacing:-.01em!important;padding:0 22px;box-shadow:none!important;transition:transform var(--t3) var(--spring),background-color var(--t1),color var(--t1)}
+.btn.sm{min-height:34px!important;font-size:14px!important;padding:0 14px!important;font-weight:600!important;border-radius:var(--r-pill)!important}
+.btn.primary,.btn.ink{background:var(--md-primary)!important;color:var(--md-on-primary)!important;border:0!important}
+.btn.tonal{background:color-mix(in srgb,var(--md-primary) 14%,var(--v-card))!important;color:var(--md-on-primary-container)!important;border:0!important}
+.btn.soft{background:var(--v-fill)!important;color:var(--md-on-surface)!important;border:0!important}
+.btn.ghost{background:transparent!important;border:0!important;color:var(--md-primary)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--md-primary) 35%,transparent)!important}
+.btn.text,.link{background:transparent!important;color:var(--md-primary)!important;font-weight:600!important}
+.btn.text{padding:0 10px!important}
+.btn.danger{background:color-mix(in srgb,var(--bad) 14%,var(--v-card))!important;color:var(--bad)!important}
+.btn[disabled]{opacity:.4}
+.icon-btn{width:40px;height:40px;border-radius:50%!important;color:var(--md-on-surface-variant)!important;transition:transform var(--t3) var(--spring),background-color var(--t1)}
+.icon-btn:hover{background:var(--v-fill)!important}
+.icon-btn.tonal{background:color-mix(in srgb,var(--md-primary) 14%,var(--v-card))!important;color:var(--md-on-primary-container)!important}
+.fab{width:58px!important;height:58px!important;border-radius:50%!important;background:var(--md-primary)!important;color:var(--md-on-primary)!important;box-shadow:0 6px 18px color-mix(in srgb,var(--md-primary) 38%,transparent),0 2px 6px rgb(0 0 0/.14)!important;transition:transform var(--t3) var(--spring)}
+:is(.btn,.icon-btn,.chip,.fab,.td-nudge,.td-q,.aa,.gear-i,.td-go,.chip-a):active:not([disabled]){transform:scale(.95);transition-duration:var(--t1)}
+:is(.td-s-m,.td-row,.td-gear,.lrow,.td-week,.cv-d,.pl-day,.rs-row):active{transform:scale(.985);transition:transform var(--t1) var(--settle)}
+:is(.td-s-m,.td-row,.td-gear,.lrow,.td-week,.cv-d,.pl-day,.rs-row){transition:transform var(--t3) var(--spring),background-color var(--t1)}
 
-/* chips: 8 dp, outlined; selected = secondary container */
-.chip{min-height:32px!important;border-radius:8px!important;border:1px solid var(--md-outline-variant)!important;background:transparent!important;color:var(--md-on-surface-variant)!important;font-weight:500!important;font-size:13.5px!important;padding:0 14px!important;letter-spacing:.1px}
+/* ---------- chips: tonal fills, no outlines; picked = primary tint ---------- */
+.chip{min-height:34px!important;border-radius:var(--r-pill)!important;border:0!important;background:var(--v-fill)!important;color:var(--md-on-surface)!important;font-weight:500!important;font-size:14px!important;padding:0 14px!important;letter-spacing:-.005em;transition:transform var(--t3) var(--spring),background-color var(--t1),color var(--t1)}
 .chip.sm{min-height:30px!important;font-size:13px!important;padding:0 12px!important}
-.chip[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-color:transparent!important}
-.chip:hover{background:color-mix(in srgb,var(--md-on-surface) 6%,transparent)!important}
-.chip[aria-pressed="true"]:hover{background:color-mix(in srgb,var(--md-on-secondary-container) 8%,var(--md-secondary-container))!important}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--md-primary) 16%,var(--v-card))!important;color:var(--md-on-primary-container)!important;font-weight:600!important}
+.chip:hover{background:var(--v-fill-2)!important}
+.chip[aria-pressed="true"]:hover{background:color-mix(in srgb,var(--md-primary) 22%,var(--v-card))!important}
+.chip-a{border-radius:var(--r-pill)!important}
 
-/* segmented buttons: one outlined pill; the picked segment fills */
-.seg{background:transparent!important;border:1px solid var(--md-outline)!important;border-radius:20px!important;padding:0!important;gap:0!important;overflow:hidden}
-.seg button{min-height:38px!important;border:0!important;border-right:1px solid var(--md-outline)!important;border-radius:0!important;font-weight:500!important;font-size:13.5px!important;color:var(--md-on-surface)!important;background:transparent!important;box-shadow:none!important;padding:0 12px!important}
+/* ---------- segmented controls (iOS): a track with a floating thumb ---------- */
+.seg,.subseg{background:var(--v-fill)!important;border:0!important;border-radius:var(--r-pill)!important;padding:3px!important;gap:2px!important;overflow:hidden;box-shadow:none!important}
+.seg button,.subseg button{min-height:34px!important;border:0!important;border-radius:var(--r-pill)!important;font-weight:500!important;font-size:14px!important;color:var(--md-on-surface)!important;background:transparent!important;box-shadow:none!important;padding:0 12px!important;transition:background-color var(--t2) var(--settle),color var(--t1),box-shadow var(--t2)}
 .seg button:last-child{border-right:0!important}
-.seg button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
-.seg.sm button{min-height:32px!important;font-size:12.5px!important}
-/* the section tabs at the top of a screen: chips that scroll */
-header.top .seg{border:0!important;border-radius:0!important;gap:8px!important;overflow-x:auto}
-header.top .seg button{flex:0 0 auto;border:1px solid var(--md-outline-variant)!important;border-radius:8px!important;min-height:32px!important;color:var(--md-on-surface-variant)!important;padding:0 14px!important}
-header.top .seg button[aria-pressed="true"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;border-color:transparent!important}
+.seg button[aria-pressed="true"],.subseg button[aria-selected="true"]{background:var(--v-thumb)!important;color:var(--md-on-surface)!important;font-weight:600!important;box-shadow:0 1px 2px rgb(0 0 0/.08),0 3px 8px rgb(0 0 0/.08)!important}
+.seg.sm button{min-height:30px!important;font-size:13px!important}
+/* the section tabs at the top of a screen: capsules; the open one in the accent */
+header.top .seg{background:transparent!important;padding:0!important;border-radius:0!important;gap:8px!important;overflow-x:auto}
+header.top .seg button{flex:0 0 auto;background:var(--v-fill)!important;border:0!important;border-radius:var(--r-pill)!important;min-height:34px!important;color:var(--md-on-surface)!important;padding:0 15px!important;box-shadow:none!important}
+header.top .seg button[aria-pressed="true"]{background:var(--md-primary)!important;color:var(--md-on-primary)!important;box-shadow:none!important}
 
-/* fields: outlined, 12 dp; focus is a 2 dp primary outline */
-.inp{background:transparent!important;border:1px solid var(--md-outline)!important;border-radius:var(--r-field)!important;min-height:48px;color:var(--md-on-surface)!important;transition:border-color .15s,box-shadow .15s}
-.inp:hover{border-color:var(--md-on-surface)!important}
-.inp:focus{border-color:var(--md-primary)!important;box-shadow:inset 0 0 0 1px var(--md-primary)!important}
-select.inp{background:transparent!important}
+/* ---------- fields: filled, no outline; focus = a soft ring in the accent ---------- */
+.inp{background:var(--v-fill)!important;border:1px solid transparent!important;border-radius:var(--r-field)!important;min-height:48px;color:var(--md-on-surface)!important;transition:box-shadow var(--t1),background-color var(--t1)}
+.inp:hover{background:var(--v-fill-2)!important}
+.inp:focus{background:var(--v-card)!important;border-color:var(--md-primary)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--md-primary) 18%,transparent)!important}
+.sheet-b .inp:focus{background:var(--v-sheet-card)!important}
+select.inp{background-color:var(--v-fill)!important}
 .unit-inp>span{color:var(--md-on-surface-variant)}
-.search{background:var(--md-sc-highest)!important;border:0!important;border-radius:28px!important;min-height:52px}
+.search{background:var(--v-fill)!important;border:0!important;border-radius:var(--r-pill)!important;min-height:48px}
 .search input{background:transparent!important;border:0!important;box-shadow:none!important}
-.search:focus-within{box-shadow:inset 0 0 0 2px var(--md-primary)!important}
+.search:focus-within{background:var(--v-card)!important;box-shadow:0 0 0 2px var(--md-primary),0 0 0 6px color-mix(in srgb,var(--md-primary) 16%,transparent)!important}
+.sheet-b .search:focus-within{background:var(--v-sheet-card)!important}
 .ci-main .inp{font-family:var(--head)}
 
-/* switch: the M3 track and thumb come from the layer above, recoloured by the palette */
-.switch{background:var(--md-sc-highest)!important;border-color:var(--md-outline)!important}
-.switch[aria-checked="true"]{background:var(--md-primary)!important;border-color:var(--md-primary)!important}
-.switch[aria-checked="true"]::after{background:var(--md-on-primary)!important}
+/* ---------- switch (iOS): 51 × 31, white thumb that springs across ---------- */
+.switch{width:51px!important;height:31px!important;border-radius:16px!important;border:0!important;background:var(--v-fill-2)!important;position:relative;flex:none;transition:background-color var(--t2) var(--settle)!important}
+.switch::after{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:27px!important;height:27px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 8px rgb(0 0 0/.15),0 1px 1px rgb(0 0 0/.16)!important;transform:none;transition:transform var(--t3) var(--spring)!important}
+.switch[aria-checked="true"]{background:var(--md-primary)!important}
+.switch[aria-checked="true"]::after{top:2px!important;left:2px!important;width:27px!important;height:27px!important;background:#fff!important;transform:translateX(20px)!important}
+.switch:active::after{transform:scaleX(1.12);transform-origin:left}.switch[aria-checked="true"]:active::after{transform:translateX(17px) scaleX(1.12)!important}
 
-/* pills and tags */
-.pill{border-radius:8px!important;font-weight:500!important;text-transform:none!important;letter-spacing:.1px!important;font-size:12px!important}
-.tag{border-radius:6px!important;letter-spacing:.3px!important;font-weight:500!important}
+/* ---------- pills and tags ---------- */
+.pill{border-radius:var(--r-pill)!important;font-weight:600!important;text-transform:none!important;letter-spacing:-.003em!important;font-size:12px!important}
+.tag{border-radius:6px!important;letter-spacing:.02em!important;font-weight:600!important}
 
-/* navigation bar and rail */
-.bnav{background:var(--md-sc)!important;border-top:0!important;box-shadow:none!important;backdrop-filter:none!important}
-.bnav button{color:var(--md-on-surface-variant)!important;font-weight:500!important;font-size:12px!important;letter-spacing:.4px}
-.bnav button[aria-current="page"]{color:var(--md-on-surface)!important;font-weight:600!important}
-.bnav .nav-ic{width:64px!important;height:32px!important;border-radius:16px!important;display:grid;place-items:center}
-.bnav button[aria-current="page"] .nav-ic{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important}
-.side-btn{border-radius:28px!important;color:var(--md-on-surface-variant)!important;font-weight:500!important;min-height:56px;padding:0 16px!important}
-.side-btn[aria-current="page"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;box-shadow:none!important}
-.side{background:var(--md-surface)!important}
-.subnav button{font-weight:500!important}
-.subnav button[aria-current="page"]{color:var(--md-primary)!important;border-color:var(--md-primary)!important}
+/* ---------- navigation: a floating glass capsule on phones, a glass rail / sidebar on bigger screens ---------- */
+.bnav{background:var(--v-glass-bar)!important;-webkit-backdrop-filter:saturate(1.8) blur(24px)!important;backdrop-filter:saturate(1.8) blur(24px)!important;border:0!important;box-shadow:0 0 0 .5px var(--v-hair),0 10px 32px rgb(0 0 0/.14)!important;
+  left:max(12px,env(safe-area-inset-left))!important;right:max(12px,env(safe-area-inset-right))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;border-radius:32px!important;padding:6px!important;min-height:62px;align-items:center}
+.bnav button{color:var(--md-on-surface-variant)!important;font-weight:600!important;font-size:11px!important;letter-spacing:-.003em;gap:2px!important;padding:2px 0!important;border-radius:24px}
+.bnav button[aria-current="page"]{color:var(--md-primary)!important}
+.bnav .nav-ic{width:56px!important;height:30px!important;border-radius:15px!important;display:grid;place-items:center;transition:transform var(--t3) var(--spring)}
+.bnav button[aria-current="page"] .nav-ic{background:color-mix(in srgb,var(--md-primary) 16%,transparent)!important;color:var(--md-primary)!important;animation:navPop var(--t3) var(--spring)}
+.bnav button:active .nav-ic{transform:scale(.88)}
+@keyframes navPop{from{transform:scale(.6);opacity:.4}}
+.side{background:transparent!important}
+.side-btn{border-radius:var(--r-pill)!important;color:var(--md-on-surface-variant)!important;font-weight:600!important;min-height:48px;padding:0 16px!important;transition:background-color var(--t1),transform var(--t3) var(--spring)}
+.side-btn:hover{background:var(--v-fill)!important}
+.side-btn[aria-current="page"]{background:color-mix(in srgb,var(--md-primary) 15%,transparent)!important;color:var(--md-primary)!important;box-shadow:none!important}
+.side-btn:active{transform:scale(.96)}
+/* Fuel's three places: one segmented control across the top */
+.subnav{background:var(--v-fill)!important;border:0!important;border-radius:var(--r-pill)!important;padding:3px!important;gap:2px!important;margin:8px 0 12px!important}
+.subnav button{flex:1;min-height:34px;border:0!important;border-radius:var(--r-pill)!important;padding:0 10px!important;font-weight:500!important;font-size:14px!important;color:var(--md-on-surface)!important;transition:background-color var(--t2) var(--settle),box-shadow var(--t2)}
+.subnav button[aria-current="page"]{background:var(--v-thumb)!important;color:var(--md-on-surface)!important;font-weight:600!important;box-shadow:0 1px 2px rgb(0 0 0/.08),0 3px 8px rgb(0 0 0/.08)!important}
+/* Today's quick actions: small cards, the first one (what's due) in the accent */
+.td-q,.td-nudge{background:var(--v-card)!important;border:0!important;box-shadow:var(--v-e1)!important;color:var(--md-on-surface)!important;border-radius:var(--r-in)!important;font-weight:600!important}
+.td-q .ic,.td-nudge .ic{color:var(--md-primary)}
+.td-nudge:first-child{background:var(--md-primary)!important;color:var(--md-on-primary)!important}.td-nudge:first-child .ic{color:inherit}
+@media (max-width:599px){
+  #main{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+  .fab{bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
+  .toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+}
+/* the big screens' sidebar sits on the page colour; the open item is a tinted capsule */
+@media (min-width:600px){.side{border-right:.5px solid var(--v-hair)}}
 
-/* sheets: bottom sheet / dialog */
-.sheet{background:var(--md-sc-low)!important;border-radius:28px 28px 0 0!important;box-shadow:0 -2px 12px rgba(0,0,0,.12)!important}
-@media (min-width:720px){.sheet{border-radius:28px!important;box-shadow:0 8px 32px rgba(0,0,0,.24)!important}}
-.sheet-f{background:var(--md-sc-low)!important;border-top:0!important}
-.add-top{background:var(--md-sc-low)!important;border-bottom:0!important}
-.scrim{background:var(--scrim)!important}
+/* ---------- top bar: transparent at rest, glass once the page moves under it ---------- */
+header.top{background:transparent!important;transition:background-color var(--t2),box-shadow var(--t2)}
+body.scrolled header.top{background:var(--v-glass)!important;-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 .5px 0 var(--v-hair)}
+@supports not (backdrop-filter:blur(1px)){body.scrolled header.top{background:var(--v-bg)!important}}
 
-/* snackbar */
-#toast>.toast,.toast{background:var(--md-inverse-surface)!important;color:var(--md-inverse-on-surface)!important;border-radius:8px!important;box-shadow:0 3px 8px rgba(0,0,0,.22)!important}
-#toast .toast button,.toast button{color:var(--md-inverse-primary)!important}
+/* ---------- sheets: a card that springs up, a scrim that blurs what's behind ---------- */
+.sheet{background:var(--v-sheet)!important;border-radius:28px 28px 0 0!important;box-shadow:var(--v-e2)!important;animation:none!important}
+@media (min-width:720px){.sheet{border-radius:28px!important}}
+.sheet.enter{animation:sheetUp var(--t3) var(--spring)!important}
+@media (min-width:720px){.sheet.enter{animation:sheetPop var(--t2) var(--settle)!important}}
+@keyframes sheetUp{from{translate:0 100%}}
+@keyframes sheetPop{from{opacity:0;scale:.96}}
+.scrim{background:color-mix(in srgb,#000 30%,transparent)!important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:none!important}
+.scrim.enter{animation:fade var(--t2) var(--settle)!important}
+.sheet-f,.add-top{background:var(--v-sheet)!important;border:0!important}
+.sheet-h{border:0!important}
 
-/* rings, bars and other colours follow the palette */
+/* ---------- snackbar: a glass capsule ---------- */
+#toast>.toast,.toast{background:color-mix(in srgb,var(--md-inverse-surface) 92%,transparent)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:var(--md-inverse-on-surface)!important;border-radius:20px!important;box-shadow:0 8px 28px rgb(0 0 0/.22)!important;animation:toastIn var(--t3) var(--spring)!important}
+@keyframes toastIn{from{opacity:0;translate:0 14px;scale:.96}}
+#toast .toast button,.toast button{color:var(--md-inverse-primary)!important;font-weight:600}
+
+/* ---------- skeletons: the shape of what's coming, with a soft sheen ---------- */
+.skel{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.skel i{position:relative;display:block;height:14px;border-radius:7px;background:var(--v-fill);overflow:hidden}
+.skel i:nth-child(3n+1){width:92%}.skel i:nth-child(3n+2){width:74%}.skel i:nth-child(3n){width:58%}
+.skel i.row{height:44px;width:100%;border-radius:14px}
+.skel i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--v-card) 70%,transparent),transparent);transform:translateX(-100%);animation:sheen 1.25s var(--settle) infinite}
+.skel small{color:var(--muted);font-size:13px}
+@keyframes sheen{to{transform:translateX(100%)}}
+
+/* ---------- Today: the page is tinted by the day (readiness, or the accent) ---------- */
+.main.ctx{position:relative;isolation:isolate}
+.main.ctx::before{content:"";position:absolute;z-index:-1;left:-24px;right:-24px;top:calc(-1 * env(safe-area-inset-top,0px) - 40px);height:360px;pointer-events:none;
+  background:radial-gradient(60% 75% at 35% 0%,color-mix(in srgb,var(--ctx,var(--md-primary)) 20%,transparent),transparent 72%);opacity:.9}
+
+/* ---------- focus: always visible on keyboard, never on tap ---------- */
+:focus-visible{outline:2px solid var(--md-primary)!important;outline-offset:2px}
+.inp:focus-visible,.search input:focus-visible{outline:0!important}
+
+/* ---------- page changes: a short fade and lift (View Transitions) ---------- */
+#main{view-transition-name:main}
+::view-transition-old(main){animation:vtOut var(--t1) var(--settle) both}
+::view-transition-new(main){animation:vtIn var(--t2) var(--settle) both}
+::view-transition-old(root),::view-transition-new(root){animation:none}
+@keyframes vtOut{to{opacity:0;transform:translateY(-4px)}}
+@keyframes vtIn{from{opacity:0;transform:translateY(10px)}}
+html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transition-new(main){animation-name:vtInR}
+@keyframes vtInL{from{opacity:0;transform:translateX(28px)}}@keyframes vtInR{from{opacity:0;transform:translateX(-28px)}}
+
+/* ---------- the phone: compact rhythm (12 px between blocks, 14–16 px inside) ---------- */
+@media (max-width:599px){
+  #main{gap:12px!important}
+  .card.pad,.td-card{padding:14px 16px!important}
+  .section-h{margin-top:4px!important;margin-bottom:-2px}
+  .stat{padding:12px 12px!important}
+  header.top{padding-bottom:2px}
+}
+.card.pad.sl-slim{padding:0!important}
+.sl-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 16px;color:var(--ink)}
+.sl-row>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.sl-row b{font-weight:600;font-size:15px}.sl-row small{color:var(--muted);font-size:12.5px}
+.sl-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--md-primary) 14%,var(--v-card));color:var(--md-primary);flex:none}
+.sl-slim .wk-tips{margin:0;padding:0 16px 12px 60px}
+.gkg{display:flex;flex-direction:column;gap:10px}.gkg-r{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.gkg-r>span{display:flex;flex-direction:column;gap:2px}.gkg-r small{color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px}.gkg-r small i{width:8px;height:8px;border-radius:50%;background:var(--c)}.gkg-r b{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+/* ---------- colours that follow the palette ---------- */
 .kring .fg,.lv-clock .fg{stroke:var(--md-primary)}
-.fu-strip,.ci-calc,.ci-more,.cv-row,.ck-c,.hy-bar,.gl-bar,.sp-bar{background:var(--md-sc-high)!important}
+.fu-strip,.ci-calc,.ci-more,.cv-row,.ck-c,.hy-bar,.gl-bar,.sp-bar{background:var(--v-fill)!important}
 .ci-more{border:0!important}
 .cv-d.sel{background:color-mix(in srgb,var(--md-primary) 10%,transparent)!important}
 .cv-d.sel::after{border-color:var(--md-primary)!important;border-radius:12px!important}
 .cv-d.now .cv-n>span{background:var(--md-primary)!important;color:var(--md-on-primary)!important}
-::selection{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+::selection{background:color-mix(in srgb,var(--md-primary) 28%,transparent)}
+@media (prefers-reduced-motion:reduce){.sheet.enter,.scrim.enter,.toast,.bnav .nav-ic,.skel i::after{animation:none!important}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
 
 #main{gap:16px}
 .section-h{margin-top:8px}
-@media (max-width:520px){.top-title{font-size:24px!important;line-height:32px!important}}
 .today-grid.one{display:flex;flex-direction:column;gap:14px}
 .bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;background:var(--md-sc);color:var(--md-on-surface-variant);font-size:13px}
 .bk-due>span{flex:1;min-width:0}
@@ -2111,6 +2201,17 @@ select.inp{background:transparent!important}
   .st-ctl .seg{flex:1 1 auto}.st-ctl .seg button{padding:0 10px!important;flex:1 1 auto}
 }
 @media (max-width:380px){.plan-side .toolbar .btn .ic{display:none}.plan-side .toolbar .btn{padding:0 10px!important}}
+/* the narrowest phones (folded, 280–340 px): labels may take two lines, rows wrap instead of running off */
+@media (max-width:340px){
+  .seg:not(.many) button,.subseg button{white-space:normal!important;line-height:1.15;padding:4px 8px!important;font-size:13px!important}
+  .fuel-sticky{gap:6px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}.fs-m{min-width:0}.fs-m>span{font-size:11.5px;white-space:nowrap}
+  .lrow .t{white-space:normal!important}.lrow .t .tag{white-space:nowrap}
+  form.row[style*="nowrap"]{flex-wrap:wrap!important}form.row>.btn{flex:1 1 100%}
+  .field>.btn,.btn[style*="align-self"]{max-width:100%;white-space:normal;height:auto;min-height:34px;padding-block:6px!important}
+  .card>.row,.card.pad>.row{flex-wrap:wrap}
+  .cv-wk b,.wk-s b,.pl-ss b{white-space:normal!important;overflow-wrap:anywhere}
+  .top-title{font-size:26px!important}
+}
 @media (max-width:599px){
   .cv-top{flex-direction:column-reverse;align-items:stretch;gap:8px}
   .cv-top .subseg{width:100%;max-width:none}.cv-top .subseg button{flex:1 1 0}
@@ -3546,6 +3647,8 @@ function navHTML(side) {
 
 /* ================= render loop ================= */
 let rq = 0;
+/* the same markup twice is a no-op: no layout, no paint, scroll and open <details> stay as they are */
+function setHTML(el, html) { if (el._h === html) return false; el._h = html; el.innerHTML = html; return true; }
 function scheduleRender() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; render(); }); }
 function captureFocus() {
   const a = document.activeElement;
@@ -3560,14 +3663,15 @@ function render() {
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
   if (DRAG.active) return;
   const f = captureFocus();
-  $("#side").innerHTML = `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}`;
-  $("#bnav").innerHTML = navHTML(false);
+  setHTML($("#side"), `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}`);
+  setHTML($("#bnav"), navHTML(false));
   document.body.classList.toggle("live-mode", UI.tab === "live" || UI.tab === "timer");
   const v = VIEWS[UI.tab] || VIEWS.plan;
   $("#main").className = "main" + (UI.tab === "plan" || UI.tab === "today" ? " wide" : "");
   const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && UI.tab !== "timer";
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
-  $("#main").innerHTML = (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + v();
+  if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
+  setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + v());
   // long tab rows scroll sideways on phones: keep the current tab in view
   for (const s of $$(".seg.many")) { const b = s.querySelector('[aria-pressed="true"]'); if (b && s.scrollWidth > s.clientWidth) s.scrollLeft = b.offsetLeft - (s.clientWidth - b.offsetWidth) / 2; }
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
@@ -4140,23 +4244,12 @@ function overviewView() {
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
     <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${kpi(G.eta ? fmtDM(G.eta) : "—", "ETA", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week` : G.deficit > 0 ? "" : "no deficit planned")}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
-  h += `<div class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Weekly check</span><div>${esc(C.weekly)}</div>${C.brk ? `<div class="${C.weeksIn >= E.dietBreakWeeks && C.phase.phase === "Cut" ? "note accent" : "muted"}" style="font-size:13.5px">${esc(C.brk)}</div>` : ""}</div>`;
   h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "watch-based")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
+  const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
   h += `<div class="section-h"><h2>How am I doing · last 7 days</h2><span class="faint" style="font-size:12px">${esc(C.summary)}</span></div><div class="card">${C.ind.map(i => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${i.k}</span><span class="s" style="white-space:normal">${esc(i.d)}</span></span><span class="end">${pill(i.st)}</span></div>`).join("")}</div>`;
-  h += `<div class="section-h"><h2>Weight · last 30 days</h2><span class="legend"><span><i style="background:var(--faint);height:6px;width:6px;border-radius:50%"></i>Weigh-in</span><span><i style="background:var(--accent)"></i>Trend</span></span></div><div class="card pad">${weight30Chart()}</div>`;
   h += `<div class="grid2 stack" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Expected vs actual change</h2></div><div class="card pad">${changeChart()}</div></div><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Weekly balance</h2></div><div class="card pad">${balanceChart()}</div></div></div>`;
-  h += macroGkg();
+  if (C.brk) h += `<div class="${C.weeksIn >= E.dietBreakWeeks && C.phase.phase === "Cut" ? "note accent" : "note"}">${esc(C.brk)}</div>`;
   return h;
-}
-function weight30Chart() {
-  const s = energySeries(), today = todayISO(), rows = []; for (let i = 29; i >= 0; i--) { const d = addDays(today, -i); rows.push(s.rows[d] || { d, trend: null }); }
-  const vals = rows.flatMap(r => [r.trend, r.real].filter(v => v != null)); if (!vals.length) return `<div class="faint">Log your weight to see the trend.</div>`;
-  const W = chartW(), H = 190, L = 36, R = 8, Tp = 10, B = 22, lo = Math.floor(Math.min(...vals) - 0.3), hi = Math.ceil(Math.max(...vals) + 0.3);
-  const x = i => L + (W - L - R) * i / 29, y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1)); let g = "";
-  for (let v = lo; v <= hi; v += Math.max(0.5, Math.ceil((hi - lo) / 4 * 2) / 2)) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r1(v)}</text>`;
-  g += `<path d="${rows.map((r, i) => r.trend ? (i && rows[i - 1].trend ? "L" : "M") + x(i) + " " + y(r.trend) : "").join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/>`;
-  rows.forEach((r, i) => { if (r.real) g += `<circle cx="${x(i)}" cy="${y(r.real)}" r="3" fill="var(--faint)"><title>${fmtDM(r.d)}: ${r.real} kg</title></circle>`; if (i % 7 === 1 || i === 29) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${fmtDM(r.d)}</text>`; });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight in the last 30 days">${g}</svg>`;
 }
 function changeChart() {
   const s = energySeries(), today = todayISO(), base = s.rows[addDays(today, -30)] || s.rows[s.start]; const pts = []; let cum = 0;
@@ -4176,11 +4269,12 @@ function balanceChart() {
   W8.forEach((w, i) => { const v = w.balance || 0, x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${Math.min(y(v), y(0))}" width="${bw * 0.6}" height="${Math.abs(y(v) - y(0))}" rx="2" fill="var(--${v < 0 ? "fat" : "pro"})"><title>${fmtDM(w.ws)}: ${fmtN(v)} kcal</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly energy balance">${g}</svg><div class="faint" style="font-size:12px">Intake minus TDEE over logged days</div>`;
 }
+/* grams per kg of trend weight: the one number the averages above don't give */
 function macroGkg() {
-  const today = todayISO(), r = energyAt(today), T = targetsFor(today), it = intakeFor(today);
-  const last = []; for (let i = 0; i < 7; i++) { const x = intakeFor(addDays(today, -i)); if (x) last.push(x); }
-  const av = k => last.length ? last.reduce((a, x) => a + (x[k] || 0), 0) / last.length : null;
-  return `<div class="section-h"><h2>Macros · grams per kg of trend weight</h2></div>${tbl(["", "Target", "g/kg", "Today", "7-day avg", "g/kg"], [["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"]].map(([l, k, c]) => `<tr><td><span class="mlabel" style="--c:var(--${c})"><i></i>${l}</span></td><td class="n">${T[k]} g</td><td class="n">${r1(T[k] / r.trend)}</td><td class="n">${it ? r0(it[k]) + " g" : "—"}</td><td class="n">${av(k) != null ? r0(av(k)) + " g" : "—"}</td><td class="n">${av(k) != null ? r1(av(k) / r.trend) : ""}</td></tr>`))}`;
+  const today = todayISO(), r = energyAt(today), T = targetsFor(today), last = [];
+  for (let i = 0; i < 7; i++) { const x = intakeFor(addDays(today, -i)); if (x) last.push(x); }
+  const av = k => last.length ? last.reduce((a, x) => a + (x[k] || 0), 0) / last.length : null; if (!r?.trend) return "";
+  return `<div class="card pad gkg"><span class="flabel">Per kg of body weight (${r1(r.trend)} kg trend) · target → 7-day average</span><div class="gkg-r">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"]].map(([l, k, c]) => `<span style="--c:var(--${c})"><small><i></i>${l}</small><b>${r1(T[k] / r.trend)} → ${av(k) != null ? r1(av(k) / r.trend) : "—"}</b><small>g/kg</small></span>`).join("")}</div></div>`;
 }
 function bodyView() {
   const M = measureTable();
@@ -4224,8 +4318,8 @@ function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; return; }
   const f = captureFocus(); const sc = $(".sheet-b")?.scrollTop || 0;
-  const def = SHEETS[sh.type](sh);
-  root.innerHTML = `<div class="scrim" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
+  const def = SHEETS[sh.type](sh), enter = sh._new ? " enter" : "";
+  root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
     <div class="sheet-h"><h3>${esc(def.title)}</h3>${def.head || ""}<button class="icon-btn" data-act="close-sheet" aria-label="Close">${ic("close")}</button></div>
     <div class="sheet-b">${def.body}</div>${def.foot ? `<div class="sheet-f">${def.foot}</div>` : ""}</div>`;
   document.body.style.overflow = "hidden";
@@ -6337,16 +6431,16 @@ function periodStats(P) {
     pbs: RACE_DIST.map(([k, km]) => ({ k, pb: pbFor(km) })).filter(x => x.pb && x.pb.date >= P.a && x.pb.date <= end) });
   return R;
 }
-function reportHighlights(R, Q) {
+function reportHighlights(R, Q, screen) {
   const out = [], pp = FIT().phaseParams[R.phase];
-  if (R.nI) out.push(`You logged intake on ${R.nI} of ${R.days} days and ${R.onT} landed within ±10% of target.`);
-  if (R.nI) out.push(`Energy balance ${R.bal < 0 ? "−" : "+"}${fmtN(Math.abs(R.bal))} kcal, worth about ${sgn(R.expKg, 1)} kg; the trend weight moved ${R.trendChg == null ? "—" : sgn(R.trendChg, 1) + " kg"}.`);
+  if (R.nI && !screen) out.push(`You logged intake on ${R.nI} of ${R.days} days and ${R.onT} landed within ±10% of target.`);
+  if (R.nI && !screen) out.push(`Energy balance ${R.bal < 0 ? "−" : "+"}${fmtN(Math.abs(R.bal))} kcal, worth about ${sgn(R.expKg, 1)} kg; the trend weight moved ${R.trendChg == null ? "—" : sgn(R.trendChg, 1) + " kg"}.`);
   if (R.avgP != null && R.tP) { const pc = R.avgP / R.tP; out.push(pc >= 0.9 ? `Protein on point: ${r0(R.avgP)} g a day (${r0(pc * 100)}% of target).` : `Protein short: ${r0(R.avgP)} g a day vs ${r0(R.tP)} g. Add a lean protein to one meal.`); }
-  if (R.sess) out.push(`${R.sess} sessions, ${Math.floor(R.mins / 60)}h ${r0(R.mins % 60)}′ of training${R.km ? `, ${r1(R.km)} km run` : ""}, ${R.hard} hard day${R.hard === 1 ? "" : "s"}.`);
-  else out.push("No training logged in this period.");
+  if (R.sess && !screen) out.push(`${R.sess} sessions, ${Math.floor(R.mins / 60)}h ${r0(R.mins % 60)}′ of training${R.km ? `, ${r1(R.km)} km run` : ""}, ${R.hard} hard day${R.hard === 1 ? "" : "s"}.`);
+  else if (!R.sess) out.push("No training logged in this period.");
   if (R.pbs.length) out.push(`New personal best${R.pbs.length > 1 ? "s" : ""}: ${R.pbs.map(x => `${x.k} ${fmtClock(x.pb.sec)}`).join(", ")}.`);
   if (R.cheats) out.push(`${R.cheats} cheat meal${R.cheats > 1 ? "s" : ""}.`);
-  if (Q && Q.nI && R.nI && Q.avgI) { const d = R.avgI - Q.avgI; if (Math.abs(d) > 50) out.push(`Average intake ${d > 0 ? "up" : "down"} ${fmtN(Math.abs(d))} kcal vs the previous ${R.kind}.`); }
+  if (!screen && Q && Q.nI && R.nI && Q.avgI) { const d = R.avgI - Q.avgI; if (Math.abs(d) > 50) out.push(`Average intake ${d > 0 ? "up" : "down"} ${fmtN(Math.abs(d))} kcal vs the previous ${R.kind}.`); }
   if (R.weigh < (R.kind === "week" ? 4 : 16)) out.push(`Only ${R.weigh} weigh-ins: aim for 5 a week so the trend stays reliable.`);
   return out;
 }
@@ -6357,7 +6451,7 @@ function reportsView() {
   let h = `<div class="rep-bar"><div class="rep-nav"><button class="icon-btn" data-act="rep-off" data-d="-1" aria-label="Previous">${ic("chevL")}</button><b>${esc(P.label)}</b><button class="icon-btn" data-act="rep-off" data-d="1" aria-label="Next" ${off >= 0 ? "disabled" : ""}>${ic("chevR")}</button></div></div>`;
   if (!R.days) return h + `<div class="empty"><h3>This ${kind} hasn't started yet</h3></div>`;
   h += `<div class="card pad rep-hl"><div class="row" style="justify-content:space-between"><span class="flabel">${kind === "week" ? "Weekly" : "Monthly"} report · ${esc(R.phase)}${R.end < P.b ? " · in progress" : ""}</span><button class="link" data-act="rep-copy">${ic("copy", "sm")} Copy</button></div>
-    <ul>${reportHighlights(R, Q).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+    ${(H => H.length ? `<ul>${H.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "")(reportHighlights(R, Q, true))}</div>`;
   h += `<div class="stat-grid four">
     ${kpi(R.avgI ? fmtN(R.avgI) : "—", "avg kcal a day", R.avgT ? `target ${fmtN(R.avgT)} ${dlt(R.avgI, Q.avgI, 0, null)}` : "")}
     ${kpi(R.trendChg == null ? "—" : sgn(R.trendChg, 1) + " kg", "trend weight", R.trendB ? `${r1(R.trendA)} → ${r1(R.trendB)} kg` : "")}
@@ -7274,7 +7368,7 @@ VIEWS.live = function () {
   const t = L.tasks[L.cur], r = L.res[L.cur] || (initTask(L.cur), L.res[L.cur]), n = L.tasks.length, done = Object.values(L.res).filter(x => x.done).length;
   const left = L.tasks.slice(L.cur).reduce((a, x) => a + estimateTask(x), 0);
   let h = topBar(`<button class="icon-btn" data-act="lv-menu" aria-label="Workout menu">${ic("more")}</button>`, esc(L.name), `<span data-tick="tot">${fmtDur((nowMs() - L.t0) / 1000)}</span> · ≈ ${Math.max(1, Math.round(left / 60))}′ left`, `<button class="icon-btn mob-only" data-act="lv-list" aria-label="All steps">${ic(UI.liveList ? "close" : "list")}</button>`);
-  h += `<div class="lv-prog" role="progressbar" aria-valuenow="${done}" aria-valuemax="${n}" aria-label="Steps done"><i style="width:${done / n * 100}%"></i></div>`;
+  h += `<div class="lv-prog" role="progressbar" aria-valuenow="${done}" aria-valuemax="${n}" aria-label="Steps done"><i style="transform:scaleX(${(done / n).toFixed(4)})"></i></div>`;
   if (UI.liveList) return h + liveList(L);
   const T = liveTask(L, t, r);
   const up = L.tasks.slice(L.cur + 1, L.cur + 3);
@@ -7946,7 +8040,6 @@ ACT["icu-now"] = () => icuKick("Sync now", true);
 ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pushwell"] = () => { icuSet({ pushWell: S.settings.intervals?.pushWell === false }); scheduleRender(); if (UI.sheet) renderSheet(); };
-CHG["icu-aid-m"] = v => { icuSet({ aid: v.trim() }); renderSheet(); };
 CHG["icu-aid"] = v => { icuSet({ aid: v.trim() }); toast("Athlete ID saved"); scheduleRender(); };
 ACT["icu-disc"] = () => openSheet("confirm", { title: "Disconnect intervals.icu?", text: "Imported workouts stay. The key is removed from your settings.", yes: "Disconnect", danger: true, run: icuDisconnect });
 ACT["icu-push"] = () => { icuSet({ push: !icuState().push }); scheduleRender(); if (UI.sheet) renderSheet(); };
@@ -10214,9 +10307,8 @@ function sleepCard() {
     const hard = sessionsFor(d).list.some(w => sessionIntensity(w) === "Hard"); if (hard) lines.push(Ld.ready === "red" ? "Swap today's hard session for an easy one, or move it." : "Keep today's hard session, but shorter: cut the last interval set."); }
   else if (last && last >= P.t - .25) lines.push("Well rested: a good day for the key session.");
   if (K.sHeavy != null && K.sLight != null && K.sLight - K.sHeavy > .3) lines.push(`You sleep ${r1(K.sLight - K.sHeavy)} h less after heavy days: wind down earlier tonight${P.why.includes("heavy day") ? "" : " when the load is high"}.`);
-  return `<section class="card pad sl"><div class="row" style="justify-content:space-between;gap:8px"><span class="flabel">Sleep</span><button class="link" data-act="sl-open">Details</button></div>
-    <div class="sl-k"><span><b>${last ? r1(last) : "—"}</b><small>h last night</small></span><span><b>${r1(P.t)}</b><small>h tonight</small></span><span><b>${P.bed}</b><small>in bed by</small></span></div>
-    ${P.why.length ? `<small class="faint">Tonight +${r1(P.t - SLP().target)} h: ${esc(P.why.join(", "))}.</small>` : ""}${lines.length ? `<ul class="wk-tips">${lines.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</section>`;
+  // last night is in the Body card: this one is only about tonight
+  return `<section class="card pad sl sl-slim"><button class="sl-row" data-act="sl-open"><span class="sl-ic">${ic("moon", "sm")}</span><span><b>Tonight ${r1(P.t)} h · in bed by ${P.bed}</b>${P.why.length ? `<small>+${r1(P.t - SLP().target)} h: ${esc(P.why.join(", "))}</small>` : ""}</span>${ic("chevR", "sm")}</button>${lines.length ? `<ul class="wk-tips">${lines.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</section>`;
 }
 TODAY_CARDS.push({ col: "b", o: 2, fn: sleepCard });
 SHEETS.sleep = () => { const K = sleepLinks(), P = sleepTonight(), S2 = SLP();
@@ -10357,7 +10449,7 @@ SHEETS.eatout = sh => {
     ${can ? `<div class="field"><span class="flabel">What did you have?</span><div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn tonal sm">${ic("camera", "sm")}Photo of the plate<input type="file" accept="image/*" capture="environment" class="sr" data-chg="eo-photo"></label><label class="btn soft sm">${ic("image", "sm")}From gallery<input type="file" accept="image/*" class="sr" data-chg="eo-photo"></label>` : ""}</div>
       ${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your plate">` : ""}
       <textarea id="eo-desc" class="inp" rows="2" placeholder="e.g. carbonara, half a margherita, a beer and a tiramisù" data-in="eo-desc">${esc(sh.desc || "")}</textarea>
-      <button class="btn primary" data-act="eo-est" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Estimating…' : ic("spark", "sm") + "Estimate"}</button></div>` : `<div class="note">Add an AI service in Settings to estimate from a photo or a description. Meanwhile pick the closest dish:</div>`}
+      <button class="btn primary" data-act="eo-est" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Estimating…' : ic("spark", "sm") + "Estimate"}</button>${sh.busy ? skel(sh.photo ? "Looking at the plate…" : "Estimating the meal…", 2) : ""}</div>` : `<div class="note">Add an AI service in Settings to estimate from a photo or a description. Meanwhile pick the closest dish:</div>`}
     <div class="field"><span class="flabel">${can ? "Or pick the closest" : "Typical portions"}</span><div class="chips">${OUT_PRESETS.map(([n, k], i) => `<button class="chip sm" data-act="eo-pre" data-i="${i}" aria-pressed="${E?.pre === i}">${esc(n)} <span class="faint">~${fmtN(k)}</span></button>`).join("")}</div></div>
     ${E ? `<div class="card pad eo-res"><div class="row" style="justify-content:space-between"><b>${esc(E.name)}</b><b>${fmtN(r0(E.kcal * por))} kcal</b></div><small class="faint">${r0(E.c * por)} g carbs · ${r0(E.p * por)} g protein · ${r0(E.f * por)} g fat${E.conf ? ` · ${esc(E.conf)} confidence` : ""}</small>${E.items?.length ? `<small class="faint">${esc(E.items.join(" · "))}</small>` : ""}
       <div class="field"><span class="flabel">Portion</span><div class="seg sm">${[[.75, "Small"], [1, "Normal"], [1.3, "Big"], [1.6, "Huge"]].map(([v, l]) => `<button data-act="eo-por" data-v="${v}" aria-pressed="${por === v}">${l}</button>`).join("")}</div></div></div>` : ""}`,
@@ -10852,7 +10944,7 @@ function mdPalette(hex) { const [h, s0] = hexHsl(hex), s = Math.min(s0, .85), n 
     tertiary: hsl((h + 60) % 360, s * .45, 36), "tertiary-container": hsl((h + 60) % 360, s * .5, 88), "on-tertiary-container": hsl((h + 60) % 360, s * .5, 14),
     error: "#B3261E", "error-container": "#F9DEDC", "on-error-container": "#410E0B",
     surface: hsl(h, n, 98.2), "sc-lowest": "#fff", "sc-low": hsl(h, n, 96.4), sc: hsl(h, n, 94.4), "sc-high": hsl(h, n, 92.2), "sc-highest": hsl(h, n, 89.8),
-    "on-surface": hsl(h, n * 1.2, 11), "on-surface-variant": hsl(h, n, 30), outline: hsl(h, n * .8, 47), "outline-variant": hsl(h, n, 80),
+    "on-surface": hsl(h, n * 1.2, 11), "on-surface-variant": hsl(h, n, 27), outline: hsl(h, n * .8, 46), "outline-variant": hsl(h, n, 80),
     "inverse-surface": hsl(h, n, 19), "inverse-on-surface": hsl(h, n, 95), "inverse-primary": hsl(h, s * .8, 78) };
   const dark = { primary: hsl(h, s * .75 + .1, 78), "on-primary": hsl(h, s, 17), "primary-container": hsl(h, s * .8, 27), "on-primary-container": hsl(h, s * .8 + .1, 89),
     secondary: hsl(h, s * .3, 76), "secondary-container": hsl(h, s * .3 + .04, 25), "on-secondary-container": hsl(h, s * .35 + .1, 88),
@@ -10863,14 +10955,17 @@ function mdPalette(hex) { const [h, s0] = hexHsl(hex), s = Math.min(s0, .85), n 
     "inverse-surface": hsl(h, n, 89), "inverse-on-surface": hsl(h, n, 19), "inverse-primary": hsl(h, s * .95, 34) };
   const css = o => Object.entries(o).map(([k, v]) => `--md-${k}:${v}`).join(";");
   const D = `${css(dark)};--good:#8BD69B;--warn:#EBC06A;--bad:#F2B8B5;--pro:#FFB59E;--carb:#E4C46A;--fat:#80D5C8;--scrim:rgba(0,0,0,.5);color-scheme:dark`;
-  const Lt = `${css(light)};--good:#1E7A3B;--warn:#8A5A00;--bad:#B3261E;--pro:#A5492F;--carb:#8E6C00;--fat:#21756A;--scrim:rgba(0,0,0,.32);color-scheme:light`;
-  return `:root,:root[data-theme="light"]{${Lt}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${D}}}:root[data-theme="dark"]{${D}}`; }
+  const Lt = `${css(light)};--good:#1E7A3B;--warn:#8A5A00;--bad:#B3261E;--pro:#A5492F;--carb:#765900;--fat:#21756A;--scrim:rgba(0,0,0,.32);color-scheme:light`;
+  // html:root… outranks the fallback palette in the stylesheet wherever this <style> sits (the head, before first paint)
+  return `html:root,html:root[data-theme="light"]{${Lt}}@media (prefers-color-scheme: dark){html:root:not([data-theme="light"]){${D}}}html:root[data-theme="dark"]{${D}}`; }
 let LOOK_KEY = "";
 function applyLook() { const P = LOOK(), k = P.theme + P.accent; if (k === LOOK_KEY) return; LOOK_KEY = k; const R = document.documentElement, css = mdPalette(P.accent);
-  let st = document.getElementById("md-dyn"); if (!st) { st = document.createElement("style"); st.id = "md-dyn"; document.head.appendChild(st); } st.textContent = css;
+  let st = document.getElementById("md-dyn"); if (!st) { st = document.createElement("style"); st.id = "md-dyn"; }
+  // last in the document: the palette from your accent beats the fallback palette written in the stylesheet
+  if (st.parentNode !== document.body || st.nextElementSibling?.tagName === "STYLE") document.body.appendChild(st); st.textContent = css;
   if (P.theme === "system") R.removeAttribute("data-theme"); else R.setAttribute("data-theme", P.theme);
   const darkNow = P.theme === "dark" || (P.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches), [h, s] = hexHsl(P.accent);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", darkNow ? hsl(h, Math.min(s, .5) * .32, 11.5).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)") : hsl(h, Math.min(s, .5) * .32, 94.4).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)"));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", darkNow ? hsl(h, Math.min(s, .5) * .32, 4).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)") : hsl(h, Math.min(s, .5) * .32, 94.4).replace(/hsl\((\d+) (\d+)% ([\d.]+)%\)/, "hsl($1,$2%,$3%)"));
   try { localStorage.setItem("engine.look", JSON.stringify({ css, theme: P.theme })); } catch (e) {} }
 const _renderLook = render; render = function () { applyLook(); _renderLook(); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { LOOK_KEY = ""; applyLook(); });
@@ -10902,7 +10997,7 @@ const trainHead = (sub) => `<header class="top"><div class="top-row"><div><div c
     <div style="padding:10px 0 12px">${segBar("train-seg", UI.trainSeg, [["cal", "Calendar"], ["wk", "Workouts"], ["season", FEAT("period") ? "Season" : "Races"], ["perf", "Stats"]])}</div></header>`;
 VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
   if (seg === "wk") return trainHead("Programs, workouts and history") + trainWorkouts();
-  if (seg === "season") return trainHead(FEAT("period") ? "Blocks, deloads, races and the plan to them" : "Races, countdowns and results") + (FEAT("period") ? trainSeason() + `<div class="section-h"><h2>Races</h2></div>` : "") + trainRaces();
+  if (seg === "season") return trainHead(FEAT("period") ? "Blocks, deloads, races and the plan to them" : "Races, countdowns and results") + (FEAT("period") ? trainSeason() : "") + trainRaces();
   if (seg === "perf") { const p = UI.perfSeg || "fitness"; return trainHead("Fitness, running, strength and records") + subBar("perf-seg", p, [["fitness", "Fitness"], ["running", "Running"], ["strength", "Strength"], ["records", "Records"]]) + (p === "running" ? trainRunning() : p === "strength" ? trainingProgressView() : p === "records" ? trainRecords() : trainFitness()); }
   const v = UI.calView || "month";
   return trainHead("Your training calendar") + (v === "week" ? `<div class="cv-top">${subBar("cal-view", "week", [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>` + trainWeek() : trainCalendar());
@@ -10914,7 +11009,7 @@ VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${sub}</div></div>${settingsBtn()}</div><div style="padding:10px 0 12px">${segBar("prog-seg", seg, segs)}</div></header>`;
   if (seg === "goals" && FEAT("goals")) return h + goalsView();
   if (seg === "body") return h + bodyView();
-  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"]]) + (f === "energy" ? energyView() : VIEWS.stats(true)); }
+  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"]]) + (f === "energy" ? energyView() : VIEWS.stats(true) + macroGkg()); }
   if (seg === "reports") { const r = UI.repSeg || "week"; UI.dashSeg = r === "month" ? "month" : "week";
     if (r === "hist") { const hs = UI.histSeg || "days"; return h + subBar("rep-seg", r, REP_SEGS) + `<div class="hist-sub chips">${[["days", "Days"], ["weeks", "Weeks"]].map(([k, l]) => `<button class="chip" data-act="hist-seg" data-k="${k}" aria-pressed="${hs === k}">${l}</button>`).join("")}</div>` + (hs === "weeks" ? weeksView() : daysView()); }
     return h + subBar("rep-seg", r, REP_SEGS) + (r === "all" ? recapView() : reportsView()); }
@@ -10977,7 +11072,7 @@ SHEETS.homemade = sh => {
     foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="hm-edit">Type the values</button>` };
   return { title: "Homemade or no label", focus: E ? null : "hm-desc",
     body: `<textarea id="hm-desc" class="inp" rows="3" placeholder="e.g. Grandma's lasagna with ragù and béchamel · ciambellone: 250 g flour, 3 eggs, 150 g sugar, 100 ml oil · loose almonds" data-in="hm-desc" aria-label="Describe the food">${esc(sh.desc || "")}</textarea>
-    ${sh.busy ? `<div class="result"><span class="spinner"></span><span>Estimating…</span></div>` : ""}
+    ${sh.busy ? skel("Estimating the values…", 2) : ""}
     ${E ? `<div class="card pad eo-res"><input id="hm-name" class="inp" value="${esc(sh.name || E.name)}" data-in="hm-name" aria-label="Name">
       <div class="row" style="justify-content:space-between;align-items:baseline"><b style="font-size:20px">${fmtN(r0(E.kcal))} <small class="faint" style="font-size:13px">kcal / 100 g</small></b>${E.portion ? `<small class="faint">portion ~${fmtN(E.portion)} g · ${fmtN(r0(E.kcal * E.portion / 100))} kcal</small>` : ""}</div>
       <small class="faint">${r1(E.p)} g protein · ${r1(E.c)} g carbs · ${r1(E.f)} g fat${E.conf ? ` · ${esc(E.conf)} confidence` : ""}</small>
@@ -11053,7 +11148,7 @@ SHEETS.describe = sh => { const o = _describeSheet(sh), img = !!Sync.sampleImage
   o.title = "Photo or description";
   const pick = img ? `<div class="row snap-pick">${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Your meal">` : ""}<label class="btn tonal sm">${ic("camera", "sm")}${sh.photo ? "New photo" : "Take a photo"}<input type="file" accept="image/*" capture="environment" class="sr" data-chg="ds-photo"></label><label class="btn soft sm">${ic("image", "sm")}Gallery<input type="file" accept="image/*" class="sr" data-chg="ds-photo"></label></div>` : "";
   o.body = o.body.replace('<div class="field"><label for="ds-text">What did you eat or plan to eat?</label>', pick + `<div class="field"><label for="ds-text">${img ? "Or describe it (or add details to the photo)" : "What did you eat or plan to eat?"}</label>`)
-    .replace("Claude is working out the portions…", sh.photo ? "Looking at the plate…" : "Working out the portions…")
+    .replace('<div class="result"><span class="spinner"></span><span>Claude is working out the portions…</span></div>', skel(sh.photo ? "Looking at the plate…" : "Working out the portions…", 3))
     .replace("Amounts are Claude's estimates.", "Amounts are estimates: check them. Your usual foods are used where they fit.");
   o.foot = o.foot.replace("Work it out", "Estimate");
   return o; };
@@ -11087,6 +11182,7 @@ ACT["sw-pick"] = el => { const sh = S_(), L = LV(), to = String(el.dataset.n || 
       const r = L.res[i]?.ex?.[xi]; if (r && !(r.done || (i === L.cur && r.mini))) r.load = null; }); }
   L.swaps = [...(L.swaps || []), { from, to, at: L.cur, n }]; saveWK(); closeSheet(); haptic(10); toast(`${from} → ${to}${n > 1 ? ` · ${n} sets` : ""}`); scheduleRender(); };
 ACT["lv-swap"] = el => openSheet("lvswap", { x: +el.dataset.x || 0, q: "", live: true });
+ICONS.moon = `<path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Z"/>`;
 ICONS.bag = `<path d="M280-80q-33 0-56.5-23.5T200-160v-480q0-64 40-109.5T340-806v-34q0-17 11.5-28.5T380-880h200q17 0 28.5 11.5T620-840v34q60 11 100 56.5T760-640v480q0 33-23.5 56.5T680-80H280Zm0-80h400v-480q0-33-23.5-56.5T600-720H360q-33 0-56.5 23.5T280-640v480Zm80-160h240v-80H360v80Zm40-406h160v-54H400v54Z"/>`;
 /* ================= what to bring: the gear a workout needs, read from its exercises =================
    Ring push-ups → rings, a pull-up or dip with load (in the script, or in your last log of it) → dip belt and the
@@ -11155,6 +11251,46 @@ function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date
 const _livePreviewG = livePreview, _runPreviewG = runPreview;
 livePreview = L => gearInPreview(_livePreviewG(L), L);
 runPreview = L => gearInPreview(_runPreviewG(L), L);
+/* ================= v3 interactions: page changes that glide, swipes between sections, glass on scroll =================
+   Section changes (bottom bar, section tabs) go through a View Transition: the old page fades, the new one lifts in,
+   sideways when the move has a direction. A horizontal swipe on the page moves to the next or previous section
+   (not where the page already swipes: the meal day, the calendar month, tables, sliders). Tapping the open tab again
+   scrolls to the top. The top bar turns to glass once content runs under it. */
+let VT_NEXT = null;
+scheduleRender = function () { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; const d = VT_NEXT; VT_NEXT = null;
+  if (d && document.startViewTransition && !UI.sheet && !matchMedia("(prefers-reduced-motion: reduce)").matches) { const R = document.documentElement; R.classList.toggle("vt-l", d === "l"); R.classList.toggle("vt-r", d === "r");
+    try { document.startViewTransition(() => render()); return; } catch (e) {} }
+  render(); }); };
+/* the sections a swipe walks through, for the screen that's open */
+function secList() {
+  if (UI.tab === "train") return { k: "trainSeg", act: "train-seg", list: ["cal", "wk", "season", "perf"] };
+  if (UI.tab === "progress") return { k: "progSeg", act: "prog-seg", list: ["overview", ...(FEAT("goals") ? ["goals"] : []), "body", "food", "reports"] };
+  if (["foods", "shop", "pantry"].includes(UI.tab)) return { k: "tab", act: "fuel-tab", list: ["plan", "foods", UI.groc || "shop"], cur: UI.tab === "pantry" || UI.tab === "shop" ? UI.groc || UI.tab : UI.tab };
+  return null; }
+const TAB_ORDER = () => TABS.map(t => t[0]);
+const tabIdx = t => { const o = TAB_ORDER(), x = ["foods", "shop", "pantry"].includes(t) ? "plan" : t; return o.indexOf(x); };
+const dirOf = (a, b) => a < 0 || b < 0 || a === b ? "fade" : b > a ? "l" : "r";
+{ const _tab = ACT.tab; ACT.tab = el => { const to = el.dataset.tab, same = to === UI.tab || (to === (UI.fuelTab || "plan") && ["plan", "foods", "shop", "pantry"].includes(UI.tab));
+    if (same && scrollY > 4 && !UI.sheet) { scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
+    VT_NEXT = dirOf(tabIdx(UI.tab), tabIdx(to)); return _tab(el); }; }
+for (const [act, key] of [["train-seg", "trainSeg"], ["prog-seg", "progSeg"]]) { const f = ACT[act]; if (!f) continue;
+  ACT[act] = el => { const S2 = secList(), a = S2 ? S2.list.indexOf(UI[key]) : -1, b = S2 ? S2.list.indexOf(el.dataset.k) : -1; VT_NEXT = dirOf(a, b); return f(el); }; }
+{ const f = ACT["fuel-tab"]; if (f) ACT["fuel-tab"] = el => { const L = ["plan", "foods", "shop"], n = k => L.indexOf(k === "pantry" ? "shop" : k); VT_NEXT = dirOf(n(UI.tab), n(el.dataset.k)); return f(el); }; }
+/* swipe between sections */
+{ let T0 = null; const NO = ".seg,.subseg,.chips,.td-nudges,.toolbar,.tbl-wrap,.tbl-box,.cv,.cv-split,.week,.ph-strip,.plan-grid,input,textarea,select,canvas,.sheet,.lv-wrap,[data-noswipe],.add-acts,.gear-l,.minis,.rir,.stp";
+  addEventListener("touchstart", e => { const t = e.touches[0]; T0 = e.touches.length === 1 && !UI.sheet && !e.target.closest(NO) && e.target.closest("#main") ? { x: t.clientX, y: t.clientY, t: Date.now() } : null; }, { passive: true });
+  addEventListener("touchend", e => { if (!T0) return; const t = e.changedTouches[0], dx = t.clientX - T0.x, dy = t.clientY - T0.y, dt = Date.now() - T0.t; T0 = null;
+    if (dt > 650 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .45 || getSelection()?.toString()) return;
+    const S2 = secList(); if (!S2) return; const cur = S2.cur ?? UI[S2.k], i = S2.list.indexOf(cur), j = i + (dx < 0 ? 1 : -1); if (i < 0 || j < 0 || j >= S2.list.length) return;
+    haptic(6); ACT[S2.act]({ dataset: { k: S2.list[j], tab: S2.list[j] } }); }, { passive: true }); }
+/* the top bar: glass once something scrolls under it */
+{ let on = false, q = 0; const upd = () => { q = 0; const v = scrollY > 6; if (v !== on) { on = v; document.body.classList.toggle("scrolled", v); } };
+  addEventListener("scroll", () => { if (!q) q = requestAnimationFrame(upd); }, { passive: true }); }
+/* Today is tinted by the day: readiness green / amber / red, otherwise the accent */
+{ const _ar = afterRender; afterRender = function () { _ar(); const m = $("#main"); if (!m) return; const on = UI.tab === "today";
+  m.classList.toggle("ctx", on); if (on) { const st = $("#main .td-dot")?.getAttribute("style") || "", c = st.match(/var\(--(good|warn|bad)\)/); m.style.setProperty("--ctx", c ? `var(--${c[1]})` : "var(--md-primary)"); } }; }
+/* skeleton: the shape of an answer that's on its way */
+const skel = (label, rows = 3) => `<div class="skel" role="status" aria-live="polite">${Array.from({ length: rows }, () => `<i class="row"></i>`).join("")}<small>${esc(label)}</small></div>`;
 /* ================= boot ================= */
 (function boot() {
   loadLocal();

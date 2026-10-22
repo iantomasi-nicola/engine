@@ -102,7 +102,6 @@
     try { const j = await E.sample.json('Reply with {"ok": true, "kcal_100g_banana": number}'); toast(`AI works · ${E.lastRun?.model || ""} · banana ${j?.kcal_100g_banana ?? "?"} kcal/100 g`); }
     catch (e) { toast("No service answered: " + String(e?.message || e).slice(0, 80)); }
     AIV.chain = (E.lastRun?.tried || []).slice(-12); scheduleRender(); };
-  CHG["eg-restore"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; } restoreOpen(j, "file"); }; rd.readAsText(f); };
 
   /* ---- AI ready if a key is saved (also when it was added on another device) ---- */
   setInterval(() => { const on = E.anyAI(); if (on !== !!Sync.sample) { aiReady(); scheduleRender(); } }, 3000);
