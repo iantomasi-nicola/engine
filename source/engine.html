@@ -6030,7 +6030,7 @@ ACT["export-xlsx"] = async el => {
       X.utils.book_append_sheet(wb, ws, name);
     }
     const buf = X.write(wb, { type: "array", bookType: "xlsx", cellDates: true });
-    const name = `fuel-export-${todayISO()}.xlsx`;
+    const name = `engine-export-${todayISO()}.xlsx`;
     if (!(await saveFile(name, new Uint8Array(buf), "Excel file saved"))) toast("Saving files isn't available in this view. Use the JSON backup instead.");
   } catch (e) { toast("Excel export couldn't start. Check your connection and try again."); }
   btn.disabled = false; btn.innerHTML = old;
@@ -10489,6 +10489,21 @@ const _remPrefsP = reminderPrefs;
 reminderPrefs = function () { const R = S.settings.reminders || {}, can = pushCan(), signed = !!window.ENGINE?.uid;
   return _remPrefsP().replace('<button class="btn soft sm" data-act="rem-ics"', `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${pushOn()}" data-act="push-toggle" aria-label="Also with the app closed" ${can ? "" : "disabled"}></button><span>Also with the app closed<small class="faint" style="display:block;font-size:12.5px">${!can ? "This browser can't receive push." : !signed ? "Needs your account: sign in above." : !pushCfg() ? "Needs a one-time set-up in your Supabase project (supabase/PUSH.md)." : R.pushErr ? `Not working: ${esc(R.pushErr)}` : pushOn() ? "On: sent from your Supabase project." : "Push through your Supabase project."}</small></span></label>${pushOn() ? `<button class="btn text sm" data-act="push-test" style="align-self:flex-start">Send a test</button>` : ""}
     <button class="btn soft sm" data-act="rem-ics"`); };
+/* ================= Excel export: the sheets of the newer features ================= */
+const _exportSheets = exportSheets;
+exportSheets = function () {
+  const L = _exportSheets(), today = todayISO(), water = [], runs = [];
+  for (const d of allLogDates()) { const x = logGet(d) || {};
+    if (x.water || x.caff?.length) water.push({ Date: xd(d), "Water ml": x.water || null, "Goal ml": HYD().on ? waterGoal(d) : null, "Caffeine mg": (x.caff || []).reduce((a, c) => a + c[1], 0) || null, Drinks: (x.caff || []).map(c => `${c[0]} ${c[2] || ""} ${c[1]} mg`).join(" · "), "Sleep h": x.sleep || null });
+    for (const s of x.wsess || []) if (s.gps) runs.push({ Date: xd(d), Session: s.name, "Km (GPS)": s.gps.km, "Moving time": fmtDur(s.gps.sec), "Pace /km": fmtPace(s.gps.sec / 60 / s.gps.km), "Climb m": s.gps.elev || null, Splits: (s.gps.splits || []).map(p => `${p.km}: ${fmtPace(p.sec / 60 / (p.len || 1))}`).join(" · "), RPE: s.rpe ?? null }); }
+  const goals = GOALS().map(g => { const G = goalProg(g); return { Goal: g.name || goalLabel(g), Kind: GOAL_KINDS.find(k => k[0] === g.kind)?.[1] || g.kind, Started: g.start ? xd(g.start) : null, Start: goalFmt(g, G.s0), Now: goalFmt(g, G.cur), Target: g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv), "Progress %": r0(G.prog * 100), Forecast: G.eta ? xd(G.eta) : null, By: g.due ? xd(g.due) : null, Reached: G.done ? "yes" : "" }; });
+  const season = []; const cur = weekStartOf(today); for (let k = -12; k <= 20; k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), dn = ws <= today ? weekDone(ws) : null; season.push({ "Week of": xd(ws), Phase: PH[p.ph][0], Why: p.why || "", "Set by hand": p.manual ? "yes" : "", "Target load": t.base ? r0(t.load) : null, "Done load": dn ? r0(dn.l) : null, "Target km": t.baseKm ? r1(t.km) : null, "Done km": dn ? r1(dn.km) : null, Note: PER().weeks[ws]?.note || "" }); }
+  const pantry = Object.entries(S.shop.pantry || {}).map(([id, p]) => { const f = getFood(id) || BUILTIN[id]; if (!f) return null; const q = pantryQty(f, p); return { Food: f.name, Amount: q.v, Unit: q.u, [`In ${f.unit || "g"}`]: p.g, "Use by": p.exp ? xd(p.exp) : null }; }).filter(Boolean);
+  const buys = (S.shop.buys || []).map(b => ({ Date: xd(b.d), Item: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", Amount: b.g || null, "€": b.eur ?? null, Estimated: b.est ? "yes" : "" }));
+  const supp = (S.settings.supps || []).map(x => ({ Supplement: x.name, Dose: x.dose || "", Times: (x.times || []).join(", "), Days: x.days?.length && x.days.length < 7 ? x.days.map(d => DOW[d]).join(" ") : "every day", Stock: x.stock ?? null, Active: x.on === false ? "paused" : "yes" }));
+  const photos = (S.body.photos || []).map(p => ({ Date: xd(p.date), Pose: p.pose, "Weight kg": bodyAt(p.date).w ? r1(bodyAt(p.date).w) : null, "In the cloud": p.cloud ? "yes" : "no" }));
+  return [...L, ["GPS runs", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
+};
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
