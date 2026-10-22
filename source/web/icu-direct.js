@@ -101,11 +101,11 @@ async function icuSyncDirect() {
     for (const w of ws) {
       const xid = w._xid, st = w._start || ""; const ren = w._ren, dup = w._dup; delete w._xid; delete w._start; delete w._src; delete w._ren; delete w._dup;
       if (dup) w.dups = dup; if (ren) lst = lst.map(o => o.ext === w.ext ? { ...o, note: w.note } : o);
-      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, w, ["kcal", "hr", "load", "pev", "km", "dups"]) : o); continue; }
+      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, o.sid ? { ...w, wmin: w.min } : w, ["kcal", "hr", "load", "pev", "km", "dups", "wmin"]) : o); continue; }
       let k = xid ? lst.findIndex(o => o.sid === xid) : -1;
       if (k < 0) for (let n = 0; n < lst.length; n++) { const o = lst[n]; if (!o.sid || o.ext || o.sport !== sp) continue;
         try { const A = new Date(st).getTime(), B = new Date(String(wss[o.sid]?.start || "")).getTime(); if (isFinite(A) && isFinite(B) && Math.abs(A - B) > 3 * 3600e3) continue; } catch (e) {} k = n; break; }
-      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, w); known.add(w.ext); continue; }
+      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, { ...w, wmin: w.min }, ["kcal", "hr", "load", "pev", "km", "wmin"]); known.add(w.ext); continue; }
       neu.push(w); }
     const loc = lst.map((o, i) => [o, i]).filter(([o]) => o.sport === sp && !o.ext && !o.sid).map(([, i]) => i);
     if (neu.length && loc.length) {

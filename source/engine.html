@@ -220,6 +220,24 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .sc-ai{display:flex;flex-direction:column;gap:8px}
 .pan-tag{display:inline-grid;place-items:center;color:var(--md-primary);margin-right:4px;vertical-align:-2px}.pan-tag .ic{width:15px;height:15px}
 .pan-use{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ov-x{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 0;padding:9px 12px;border-radius:12px;background:var(--v-fill,var(--surface2));font-size:13px;line-height:1.35}
+.ov-x>span:first-child{min-width:0}.ov-x small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.ov-x.warn{background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.ov-x .ov-a{display:flex;align-items:center;gap:12px;flex:0 0 auto}.ov-x .link{flex:0 0 auto}
+.wx-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--v-fill,var(--surface2));font-size:13px}
+.wx-row.wet{background:color-mix(in srgb,var(--carb) 14%,transparent)}
+.wx-m{display:flex;align-items:center;gap:8px;min-width:0}.wx-m>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wx-ic{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.wx-row.wet .wx-ic{color:var(--carb)}
+.wx-t{font:inherit;font-weight:600;color:inherit;background:none;border:0;padding:0;min-width:0;width:auto;font-variant-numeric:tabular-nums}
+.wx-t::-webkit-calendar-picker-indicator{display:none}
+.wx-v{color:var(--muted)}.wx-v b{color:var(--text)}
+.wx-row>small{flex:1 1 100%;color:var(--text);font-size:12.5px}
+.wx-bars{position:relative;flex:1 1 100%;height:22px;margin-top:4px}
+.wx-bars i{position:absolute;bottom:0;border-radius:2px;background:var(--line,rgba(127,127,127,.25));}
+.wx-bars i.wet{background:color-mix(in srgb,var(--carb) 55%,transparent)}
+.wx-bars i.on{background:var(--muted)}.wx-bars i.on.wet{background:var(--carb)}
+.wx-ax{flex:1 1 100%;display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:-2px}
 </style></head><body>
 <title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -3064,6 +3082,27 @@ function itemsFromIds(ids, MT) {
   for (const v of vars) v.q = roundQty(v);
   return vars.map(v => v.kind === "recipe" ? newItem("recipe", v.rec.id, v.q) : newItem("food", v.food.id, v.q));
 }
+/* the AI's dish, made to fit: the roles a meal needs (lunch/dinner protein + carb + veg, breakfast carb + protein or
+   dairy) are added from your usual foods when the AI left one out, then portions are solved to the meal's share of the
+   day. If the dish still can't get within 12% of its calories, the regular planner's meal is used instead. */
+const NEED_ROLES = { m: [["P"], ["C"], ["V"]], b: [["C"], ["D", "P"]], s: [] };
+function balancedFromIds(ids, MT, meal, ctx) {
+  if (MT.kcal < 80) return null; const kind = meal.kind || "m", vars = [], used = new Set();
+  for (const id of ids || []) { const r = getRecipe(id);
+    if (r && recipeOK(r)) { const ps = recipePerServing(r); vars.push({ kind: "recipe", rec: r, roles: new Set(["P", "C"]), a: { p: ps.p, c: ps.c, f: ps.f, kcal: ps.kcal }, lo: 0.5, hi: 2.5, q0: 1 }); used.add(id); continue; }
+    const f = getFood(id); if (!f?.per || !dietOK(f) || used.has(id)) continue; const [lo, hi] = boundsFor(f); used.add(id);
+    vars.push({ kind: "food", food: f, roles: new Set([f.role]), a: { p: f.per.p / 100, c: f.per.c / 100, f: f.per.f / 100, kcal: f.per.kcal / 100 }, lo: f.role === "X" ? 5 : lo, hi: f.role === "X" ? 150 : hi, q0: clamp(f.servings?.[0]?.g || (lo + hi) / 2, lo, hi) }); }
+  if (!vars.length) return null;
+  const have = new Set(vars.flatMap(v => [...v.roles]));
+  for (const need of NEED_ROLES[kind] || []) { if (need.some(r => have.has(r))) continue;
+    const cand = ctx.foods.filter(f => need.includes(f.role) && !used.has(f.id) && (f.meals || ["m", "s", "b"]).includes(kind)).map(f => ({ f, s: scoreFood(ctx, f, meal.id) })).sort((a, b) => b.s - a.s);
+    const f = cand[0]?.f; if (!f) continue; const [lo, hi] = boundsFor(f); used.add(f.id); have.add(f.role);
+    vars.push({ kind: "food", food: f, roles: new Set([f.role]), added: true, a: { p: f.per.p / 100, c: f.per.c / 100, f: f.per.f / 100, kcal: f.per.kcal / 100 }, lo, hi, q0: clamp(f.servings?.[0]?.g || (lo + hi) / 2, lo, hi) }); }
+  solveQty(vars, MT); for (const v of vars) v.q = clamp(roundQty(v), v.kind === "recipe" ? 0.5 : 1, v.kind === "recipe" ? 3 : v.hi * 1.15);
+  const kc = vars.reduce((a, v) => a + v.a.kcal * v.q, 0);
+  if (Math.abs(kc / MT.kcal - 1) > .12) { const alt = planMeal(meal, MT, ctx); if (alt) return alt; }
+  return vars.map(v => v.kind === "recipe" ? newItem("recipe", v.rec.id, v.q) : newItem("food", v.food.id, v.q));
+}
 /* best swaps for an item: same role, scaled to match its calories (protein for protein foods) */
 function swapOptions(it, mealId) {
   const f = it.kind === "food" ? getFood(it.ref) : null; if (!f) return [];
@@ -4042,7 +4081,7 @@ VIEWS.settings = function () {
       <div class="faint" style="font-size:12.5px">The planner learns from what you plan and eat: foods you use often in a meal come back there, favourites (★) and pantry items get priority, and nothing repeats from yesterday.</div>
     </div>`)],
     [50, setGrp("icu", "intervals.icu", icuState().key ? (icuFail() ? "Sync failed" : icuAgo() + " · syncs by itself") : "Not connected", icuSettingsCard())],
-    [60, setGrp("live", "Live workouts & timer", "Voice, sounds, screen and cycling", `<div class="set-in">${playerSettings()}</div>`)],
+    [60, setGrp("live", "Live workouts & timer", "Voice, sounds, gear, weather, cycling", `<div class="set-in">${playerSettings()}</div>`)],
     [95, setGrp("data", "Data", "Excel export, full backup, setup again", `    <div class="card">
       <div class="lrow"><span><span class="t">Sync</span><span class="s">${Sync.db ? "Saved to your Claude account and synced on every device where you open this page." : "Saved in this browser only. Open the page inside Claude while signed in to sync."}</span></span><span class="end">${syncPill()}</span></div>
       <button class="lrow" data-act="export-xlsx"><span><span class="t">Export to Excel</span><span class="s">Daily log, workouts, meals, weekly table, tests, records, measurements and your foods, one sheet each</span></span><span class="end">${ic("download")}</span></button>
@@ -4270,7 +4309,7 @@ function overviewView() {
   let h = "";
   h += `<div class="card pad goal"><div class="row" style="justify-content:space-between"><span class="flabel">Goal</span><button class="link" data-act="tab" data-tab="settings">Edit</button></div>
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
-    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${kpi(G.eta ? fmtDM(G.eta) : "—", "ETA", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week` : G.deficit > 0 ? "" : "no deficit planned")}</div>
+    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${etaKpi(G)}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
   h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "watch-based")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
   const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
@@ -4756,7 +4795,7 @@ SHEETS.session = sh => {
           <textarea id="ss-script" class="inp mono" rows="${w.script ? Math.min(14, Math.max(5, String(w.script).split("\n").length + 1)) : 5}" spellcheck="false" data-in="ss-script" placeholder="${isStrength(w.sport) ? "A1/A2 Pull + Push 4x\n- 5 Pull-up +10kg\n- 8 Dip\n- 90s Rest" : "Warmup\n- 15m Z2\n\n5x\n- 3m Z4\n- 2m Z1\n\n- 10m Z1"}">${esc(w.script || "")}</textarea>
           <div id="ss-gist" class="faint" style="font-size:12.5px">${g?.text ? `${esc(g.text)}${g.min ? ` · ≈ ${g.min} min` : ""}` : "Steps start with “-”, a line like “5x” repeats the steps under it."}</div>
           ${isStrength(w.sport) && w.script ? `<details class="card wo-pv"><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad" id="ss-prev">${scriptPreview(w.script)}</div></details>` : ""}</div>` : ""}`}
-      <div class="note" id="ss-est">Estimated <b>${fmtN(est.kcal)} kcal</b> · ${{ watch: "your watch value", device: "recorded by your watch (intervals.icu)", load: "from the planned intervals.icu load and your own kcal vs load", logged: "logged value", km: "from distance (your kcal per km)", hr: "from average heart rate (Keytel, calibrated on your watch)", own: "from your own kcal per minute", met: "from the MET table until you have enough sessions with watch kcal", none: "add minutes", rest: "" }[est.how]}</div>`}`,
+      <div class="note" id="ss-est">Estimated <b>${fmtN(est.kcal)} kcal</b> · ${{ watch: "your watch value", device: "recorded by your watch (intervals.icu)", load: "from the planned intervals.icu load and your own kcal vs load", logged: "logged value", km: "from distance (your kcal per km)", hr: "from average heart rate (Keytel, calibrated on your watch)", own: "from your own kcal per minute", met: "from the MET table until you have enough sessions with watch kcal", none: "add minutes", rest: "", trimmed: "watch kcal cut to Engine's session time (the watch kept running)" }[est.how]}</div>`}`,
     foot: `${sh.idx != null ? `<button class="btn danger" data-act="ss-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="ss-save">${isPlan && pm ? "Save · update intervals.icu" : "Save"}</button>`
   };
 };
@@ -5369,7 +5408,7 @@ ${pairs ? "They cook once and eat twice: every lunch and dinner you choose is ea
 Cuisines they like: ${S.settings.cuisines.join(", ") || "any"}. Diet restrictions: ${diet}. Never use: ${S.settings.avoid.join(", ") || "nothing"}.
 Food at home, most urgent first (plan the urgent ones in the first days, in amounts that use them up): ${pantry.join("; ") || "none"}.
 Vary the main protein from day to day and avoid repeating yesterday's dish. Make each meal a coherent, real dish with a short name (e.g. "Pasta with tuna and cherry tomatoes").
-Lunch/dinner: 3-5 ids (a protein, a carb, vegetables, optionally olive oil or cheese) or one recipe plus a side. Breakfast: 2-4 ids. Snacks: 1-2 ids.
+Every lunch and dinner MUST have one main protein (role P), one carb (role C) and one vegetable (role V), optionally olive oil or cheese (3-5 ids), or one recipe plus a vegetable side. Breakfast: a carb (C) plus a protein or dairy (P or D), optionally fruit (2-4 ids). Snacks: 1-2 ids, a protein or dairy when the day is high in protein. Each day must be able to reach its kcal target with normal portions: no meal made only of fat or only of vegetables.
 Days and meals:
 ${dayLines}
 Foods (id | name | role P=protein C=carb V=veg F=fat R=fruit D=dairy S=snack X=other | kcal, P/C/F per 100 g):
@@ -5415,7 +5454,7 @@ async function runPlanner() {
     const twin = twinOf[d] && made[twinOf[d]];
     const picker = (date, m, MT) => {
       if (twin && (m.kind || "m") === "m") { const src = (twin.meals[m.id] || []).filter(it => it.kind !== "quick" && !it.cheat); if (src.length) { const items = itemsFromIds(src.map(it => it.ref), MT); if (items) return { items, dish: twin.dish?.[m.id] || null }; } }
-      const pm = picks?.[d]?.[m.id]; if (!pm) return null; const items = itemsFromIds(pm.items, MT); return items ? { items, dish: pm.dish } : null; };
+      const pm = picks?.[d]?.[m.id]; if (!pm) return null; const items = balancedFromIds(pm.items, MT, m, ctx); return items ? { items, dish: pm.dish } : null; };
     const day = planDay(d, ctx, { mode: sh.mode, picker }); made[d] = day;
     put("days", d, day); total++;
     decayRecent(ctx); for (const [m, it] of dayItems(day)) { ctx.recent[m + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1; }
@@ -7981,7 +8020,7 @@ function icuApplyActivities(acts) {
   for (const [k, ws] of Object.entries(groups)) {
     const [d, sport] = k.split("|"), L = logGet(d) || {}, lst = clone(L.workouts || []), before = JSON.stringify(lst);
     const known = new Set(lst.flatMap(o => [o.ext, ...(o.exts || [])]).filter(Boolean)); let fresh = [];
-    for (const { w, xid } of ws) { if (known.has(w.ext)) continue; const i = xid ? lst.findIndex(o => o.sid === xid) : -1; if (i >= 0) { lst[i] = wClean({ ...lst[i], ext: w.ext, kcal: lst[i].kcal ?? w.kcal, hr: lst[i].hr ?? w.hr }); continue; } fresh.push(w); }
+    for (const { w, xid } of ws) { if (known.has(w.ext)) continue; const i = xid ? lst.findIndex(o => o.sid === xid) : -1; if (i >= 0) { lst[i] = wClean({ ...lst[i], ext: w.ext, kcal: lst[i].kcal ?? w.kcal, hr: lst[i].hr ?? w.hr, wmin: lst[i].wmin ?? w.min }); continue; } fresh.push(w); }
     const loc = lst.map((o, i) => [o, i]).filter(([o]) => o.sport === sport && !o.ext && !o.sid).map(([, i]) => i);
     if (fresh.length && loc.length) {
       const tn = fresh.reduce((a, w) => a + (w.min || 0), 0), tl = loc.reduce((a, i) => a + (lst[i].min || 0), 0);
@@ -8070,6 +8109,7 @@ ACT["icu-now"] = () => icuKick("Sync now", true);
 ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pushwell"] = () => { icuSet({ pushWell: S.settings.intervals?.pushWell === false }); scheduleRender(); if (UI.sheet) renderSheet(); };
+CHG["map-key"] = v => { S.settings.mapKey = v.trim() || null; saveSettings(); toast(v.trim() ? "Map key saved" : "Map key removed: free maps are used"); };
 CHG["icu-aid"] = v => { icuSet({ aid: v.trim() }); toast("Athlete ID saved"); scheduleRender(); };
 ACT["icu-disc"] = () => openSheet("confirm", { title: "Disconnect intervals.icu?", text: "Imported workouts stay. The key is removed from your settings.", yes: "Disconnect", danger: true, run: icuDisconnect });
 ACT["icu-push"] = () => { icuSet({ push: !icuState().push }); scheduleRender(); if (UI.sheet) renderSheet(); };
@@ -8170,6 +8210,8 @@ VIEWS.today = function () {
   else if (ready === "yellow" && hardLeft) say = `Readiness reduced (${esc(readyWhy(L))}): keep the hard part short.`;
   const sum = items.length ? [hm(allDone ? doneIt.reduce((a, x) => a + (+x.w.min || 0), 0) : minLeft), kcalTrain ? `${fmtN(kcalTrain)} kcal` : ""].filter(Boolean).join(" · ") : "";
   let tr = `<section class="td-card td-train"><div class="td-ov"><span><i class="td-dot" style="background:var(--${rTone})"></i>${kind}${items.length > 1 && doneIt.length && !allDone ? ` · ${doneIt.length} of ${items.length} done` : ""}</span><span>${sum}</span></div>`;
+  const wxH = typeof wxRow !== "function" ? "" : (() => { const pend = left.map(x => x.p || x.w).filter(w => OUTDOOR(w.sport)), tm = addDays(today, 1);
+    return pend.length ? wxRow(today, pend) : nowHM() >= "14:00" ? wxRow(tm, plannedFor(tm).list) : ""; })();
   if (items.length) {
     tr += items.map((x, i) => { const w = x.w, p = x.p, isDone = x.st === "done", t = (p || w).tpl ? tplById((p || w).tpl) : null, title = t?.name || p?.note || w.note || w.sport;
       const k = sessionKcal(w, today).kcal, sess = isDone && w.sid ? (Lg.wsess || []).find(s => s.id === w.sid) : null, g = workoutGist(isDone ? (p || w) : w);
@@ -8180,10 +8222,12 @@ VIEWS.today = function () {
           <span class="td-s-b"><b>${esc(title)}</b><small>${esc(meta)}</small>${!isDone && g.text ? `<span class="td-g">${esc(g.text)}</span>` : ""}${extra ? `<span class="td-x">${esc(extra)}</span>` : ""}</span></button>
         <div class="td-s-a">${isDone ? `<span class="td-done">Done</span>` : `${x.ri >= 0 ? `<button class="td-edit" data-act="edit-session" data-list="planned" data-date="${today}" data-i="${x.ri}" aria-label="Edit ${esc(title)}">${ic("edit", "sm")}</button>` : ""}<button class="td-go" data-act="wo-start" data-date="${today}" data-i="${i}" aria-label="Start ${esc(title)}">${LV() && LV().planDate === today ? "Resume" : "Start"}</button>`}</div></div>`; }).join("");
     const si = items.findIndex(x => x.st === "planned" && (x.w.script || x.w.tpl || isStrength(x.w.sport)));
+    if (typeof ovNote === "function") tr += items.filter(x => x.st === "done").map(x => ovNote(x.w, today, x.wi)).join("");
+    tr += wxH;
     if (say) tr += `<p class="td-say">${say}</p>`;
     if (!allDone && typeof gearToday === "function") tr += gearToday(left.map(x => x.p || x.w), today);
     if (!allDone) tr += `<div class="td-cta"><button class="btn text sm" data-act="done-as-planned" data-date="${today}">${left.length > 1 ? "Mark all done" : "Mark done"}</button></div>`;
-  } else tr += `<p class="td-say big">${say}</p><div class="td-cta"><button class="btn tonal" data-act="plan-wo" data-date="${today}">${ic("plus", "sm")}Plan a workout</button></div>`;
+  } else tr += `<p class="td-say big">${say}</p>${wxH}<div class="td-cta"><button class="btn tonal" data-act="plan-wo" data-date="${today}">${ic("plus", "sm")}Plan a workout</button></div>`;
   tr += `</section>`;
 
   /* ---- body ---- */
@@ -9436,7 +9480,7 @@ ACT["shop-done"] = () => {
     const g = r0(c.g || (r ? buyG(r) : f.pack || 0)); if (!(g > 0)) continue;
     const eur = c.eur != null ? c.eur : eurPerG(id) != null ? Math.round(eurPerG(id) * g * 100) / 100 : null;
     const p = S.shop.pantry[id] || { g: 0 }, shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[f.cat] || 14;
-    S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : addDays(today, shelf) };
+    S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : null }; // no use-by unless you set one
     if (c.eur != null) S.shop.prices[id] = { eur: c.eur, g, at: today };
     S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null }); if (eur != null) tot += eur; n++; }
   for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null }); if (x.eur != null) tot += +x.eur; n++; }
@@ -9537,7 +9581,7 @@ CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {})
 function destPick(food) {
   const dest = UI.dest; UI.dest = null; if (!food) return;
   if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = food.source === "homemade" ? 4 : { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
-    openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || addDays(todayISO(), shelf), u: p?.u || (food.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk }); return; }
+    openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || "", u: p?.u || (food.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk }); return; }
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === food.id && x.buy > 0), c = S.shop.checked?.[food.id];
   if (UI.tab !== "shop") { UI.tab = UI.fuelTab = "shop"; scheduleRender(); }
   openSheet("buy", { id: food.id, g: c?.g ?? (r ? buyG(r) : food.pack || defaultQty(food)), eur: c?.eur ?? "", extra: !r });
@@ -9656,10 +9700,7 @@ function energyView() {
   const age = prof.dob ? Math.floor(daysBetween(prof.dob, today) / 365.25) : 30, w = r.trend, h = prof.height || 175, F = prof.sex === "Female", bf = r.bf;
   const mif = 10 * w + 6.25 * h - 5 * age + (F ? -161 : 5), hb = F ? 655.1 + 9.563 * w + 1.85 * h - 4.676 * age : 66.5 + 13.75 * w + 5.003 * h - 6.775 * age, km = bf != null ? 370 + 21.6 * w * (1 - bf / 100) : null;
   const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
-  const L7 = last(7), L14 = last(14), avg = (a, k) => a.length ? a.reduce((p, x) => p + (x[k] || 0), 0) / a.length : null;
-  const withI = L14.filter(x => x.intake && !x.intake.est), maint = withI.length >= 7 ? avg(withI, "tdee") : null;
-  const trend14 = (() => { const a = s.rows[addDays(today, -14)], b = r; return a && b ? b.trend - a.trend : null; })();
-  const fromScale = withI.length >= 7 && trend14 != null ? withI.reduce((p, x) => p + x.intake.kcal, 0) / withI.length - trend14 * E.kcalPerKg / 14 : null;
+  const L7 = last(7);
   const parts = [["BMR", r.bmr, "var(--accent)"], ["Daily activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
   let hh = `<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
     <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
@@ -9668,9 +9709,7 @@ function energyView() {
     <div class="stat-grid four">${kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (r.phase?.kcal ? ` · ${r.phase.kcal > 0 ? "+" : ""}${fmtN(r.phase.kcal)}` : ""))}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
   hh += `<div class="section-h"><h2>Basal metabolism (BMR)</h2><span class="faint" style="font-size:12.5px">in use: ${esc(E.bmr)}</span></div>
     <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", E.bmr === "Mifflin-St Jeor" ? "in use" : "")}${kpi(fmtN(hb), "Harris-Benedict", E.bmr === "Harris-Benedict" ? "in use" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(r.bmr), "used today", `${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}`)}</div>`;
-  hh += `<div class="section-h"><h2>Maintenance</h2></div>
-    <div class="stat-grid four">${kpi(fmtN(avg(L7, "tdee")), "TDEE, 7-day average")}${kpi(maint ? fmtN(maint) : "—", "TDEE, 14-day average", "days with food logged")}${kpi(fromScale ? fmtN(fromScale) : "—", "from intake and the scale", trend14 != null ? `trend ${trend14 >= 0 ? "+" : ""}${r1(trend14)} kg in 14 days` : "needs 7 logged days")}${kpi(r.factor.toFixed(2), "calibration", r.factor !== 1 ? "formulas adjusted to your data" : "not enough data yet")}</div>
-    <div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The calibration compares what you ate with how your trend weight moved (${fmtN(E.kcalPerKg)} kcal per kg) over the last 14 days.</div>`;
+  hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
   hh += `<div class="section-h"><h2>Last 6 weeks</h2></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: pts("tdee") }, { name: "Eaten", color: "var(--carb)", pts: last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)]) }, { name: "Target", color: "var(--faint)", pts: pts("target"), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target", minPad: 50 })}</div>`;
   hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">BMR ${fmtN(x.bmr)} · NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
@@ -9817,20 +9856,29 @@ const STORY_ACC = { lime: "#B5E36B", orange: "#FF9F43", cyan: "#4FD1E8", pink: "
 const STORY_ACC_D = { lime: "#4F7A16", orange: "#C2560A", cyan: "#0E7C93", pink: "#C2185B", white: "#111111" };
 const storyOpt = sh => { const o = { hide: {}, title: sh.data.title, caption: "", pos: "bottom", ink: "white", acc: "lime", size: "m", route: true, lines: true, date: true, sport: true, map: "dark", ...(sh.opt || {}) };
   o.bg = sh.bg || (sh.photo ? "photo" : sh.data.track?.length > 3 ? "map" : "none"); return o; };
-/* map tiles (OpenStreetMap data, CARTO style) behind the route, Web Mercator; the route is fitted into the free area */
+/* map tiles behind the route, Web Mercator; the route is fitted into the free area. Free providers without a key,
+   tried in order until one answers (CARTO, OpenStreetMap, Esri); with a free MapTiler key (Settings › Live workouts)
+   MapTiler comes first. All draw OpenStreetMap data, credited on the picture. */
+const tileProviders = () => [...(S.settings?.mapKey ? ["maptiler"] : []), "carto", "osm", "esri"];
+function tileURL(p, style, z, x, y, sub) { const dark = style !== "light";
+  if (p === "maptiler") return `https://api.maptiler.com/maps/${dark ? "dataviz-dark" : "dataviz"}/256/${z}/${x}/${y}@2x.png?key=${encodeURIComponent(S.settings.mapKey)}`;
+  if (p === "osm") return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  if (p === "esri") return `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${dark ? "World_Dark_Gray_Base" : "World_Light_Gray_Base"}/MapServer/tile/${z}/${y}/${x}`;
+  return `https://${sub}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/${z}/${x}/${y}@2x.png`; }
 const MAP_T = 512;
 const mX = (lon, z) => (lon + 180) / 360 * MAP_T * 2 ** z, mY = (lat, z) => { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * MAP_T * 2 ** z; };
-async function drawMap(x, T, W, H, area, style) {
+async function drawMap(x, T, W, H, area, style, provs = tileProviders()) { const prov = provs[0];
   const la = T.map(p => p[0]), lo = T.map(p => p[1]), a0 = Math.min(...la), a1 = Math.max(...la), o0 = Math.min(...lo), o1 = Math.max(...lo);
   let z = 17; while (z > 3 && (mX(o1, z) - mX(o0, z) > area.w * .82 || mY(a0, z) - mY(a1, z) > area.h * .82)) z--;
   const cx = (mX(o0, z) + mX(o1, z)) / 2, cy = (mY(a0, z) + mY(a1, z)) / 2, ox = cx - (area.x + area.w / 2), oy = cy - (area.y + area.h / 2);
   const tx0 = Math.floor(ox / MAP_T), ty0 = Math.floor(oy / MAP_T), tx1 = Math.floor((ox + W) / MAP_T), ty1 = Math.floor((oy + H) / MAP_T), n = 2 ** z, sub = "abcd";
   const jobs = []; for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { if (ty < 0 || ty >= n) continue; const X = ((tx % n) + n) % n;
     jobs.push(new Promise(ok => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => { x.drawImage(im, tx * MAP_T - ox, ty * MAP_T - oy, MAP_T, MAP_T); ok(1); }; im.onerror = () => ok(0);
-      im.src = `https://${sub[(X + ty) % 4]}.basemaps.cartocdn.com/${style === "light" ? "light_all" : "dark_all"}/${z}/${X}/${ty}@2x.png`; setTimeout(() => ok(0), 8000); })); }
+      im.src = tileURL(prov, style, z, X, ty, sub[(X + ty) % 4]); setTimeout(() => ok(0), 8000); })); }
   const got = (await Promise.all(jobs)).filter(Boolean).length;
+  if (!got && provs.length > 1) { console.warn("map tiles: " + prov + " didn't answer, trying " + provs[1]); return drawMap(x, T, W, H, area, style, provs.slice(1)); }
   const P = p => [mX(p[1], z) - ox, mY(p[0], z) - oy];
-  return { ok: got > 0, P };
+  return { ok: got > 0, P, prov };
 }
 async function storyCanvas(D, photo, layout, O) {
   const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
@@ -9864,7 +9912,7 @@ async function storyCanvas(D, photo, layout, O) {
     x.strokeStyle = lightMap ? "rgba(255,255,255,.95)" : "rgba(0,0,0,.55)"; x.lineWidth = 18; x.beginPath(); pts.forEach(([X, Y], i) => i ? x.lineTo(X, Y) : x.moveTo(X, Y)); x.stroke();
     x.strokeStyle = accent; x.lineWidth = 10; x.beginPath(); pts.forEach(([X, Y], i) => i ? x.lineTo(X, Y) : x.moveTo(X, Y)); x.stroke();
     for (const [[X, Y], c2] of [[pts[0], "#3fbf6b"], [pts[pts.length - 1], "#e5484d"]]) { x.fillStyle = "#fff"; x.beginPath(); x.arc(X, Y, 16, 0, 7); x.fill(); x.fillStyle = c2; x.beginPath(); x.arc(X, Y, 10, 0, 7); x.fill(); }
-    if (m.ok) { x.font = F(500, 20); x.fillStyle = lightMap ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.6)"; x.textBaseline = "alphabetic"; const at = "© OpenStreetMap contributors © CARTO"; x.fillText(at, W - 24 - x.measureText(at).width, H - 24); } }
+    if (m.ok) { x.font = F(500, 20); x.fillStyle = lightMap ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.6)"; x.textBaseline = "alphabetic"; const at = { maptiler: "© MapTiler © OpenStreetMap contributors", osm: "© OpenStreetMap contributors", esri: "© Esri · OpenStreetMap contributors" }[m.prov] || "© OpenStreetMap contributors © CARTO"; x.fillText(at, W - 24 - x.measureText(at).width, H - 24); } }
   // a shade behind the text so it reads on any photo
   if (bg) { const y0 = Math.max(0, y - 260), y1 = Math.min(H, y + total + 200), sh = x.createLinearGradient(0, y0, 0, y1), col = dark ? "255,255,255" : "0,0,0";
     sh.addColorStop(0, `rgba(${col},0)`); sh.addColorStop(.3, `rgba(${col},.62)`); sh.addColorStop(.75, `rgba(${col},.62)`); sh.addColorStop(1, `rgba(${col},0)`); x.fillStyle = sh; x.fillRect(0, y0, W, y1 - y0); }
@@ -10950,7 +10998,7 @@ const routeInput = (extra = "") => `<input type="file" accept=".gpx,.tcx,.fit,ap
 async function icuRoute(w) {
   const id = String(w?.ext || "").match(/^icu-a-(.+)$/)?.[1], key = (S.settings.intervals?.key || "").trim(); if (!id || !key) return null;
   const r = await fetch(`${ICU_API}/activity/${encodeURIComponent(id)}/streams.json?types=latlng,time,distance,altitude,heartrate`, { headers: { Authorization: "Basic " + btoa("API_KEY:" + key), Accept: "application/json" } });
-  if (!r.ok) return null; const S2 = await r.json(), by = Object.fromEntries((Array.isArray(S2) ? S2 : []).map(x => [x.type, x])), ll = by.latlng; if (!ll?.data?.length) return null;
+  if (!r.ok) { const e = new Error("intervals.icu route " + r.status); e.status = r.status; throw e; } const S2 = await r.json(), by = Object.fromEntries((Array.isArray(S2) ? S2 : []).map(x => [x.type, x])), ll = by.latlng; if (!ll?.data?.length) return null;
   const lat = ll.data2 ? ll.data : ll.data.map(p => p?.[0]), lon = ll.data2 || ll.data.map(p => p?.[1]), t = by.time?.data, dist = by.distance?.data, alt = by.altitude?.data, hr = by.heartrate?.data;
   const pts = lat.map((a, i) => ({ lat: a, lon: lon[i], t: t ? t[i] * 1000 : null, dist: dist ? dist[i] : null, ele: alt ? alt[i] : null, hr: hr ? hr[i] : null })).filter(p => p.lat != null && p.lon != null && (p.lat || p.lon));
   if (pts.length < 3) return null; const st = trackStats(pts, isBike(w.sport)); return { ...st, sport: w.sport };
@@ -10961,7 +11009,8 @@ ACT["story-open"] = async el => { const d = el.dataset.date, L = logGet(d) || {}
   if (!s && w?.sid) s = (L.wsess || []).find(x => x.id === w.sid) || null;
   if (w && !trackOf(s) && ENDUR(w.sport) && String(w.ext || "").startsWith("icu-a-") && S.settings.intervals?.key) {
     toast("Getting the route from intervals.icu…");
-    try { const R = await icuRoute(w); if (R) { const i = (L.workouts || []).indexOf(w), sid = routeAttach(d, i, R, w.note); const L2 = logGet(d); s = L2.wsess.find(x => x.id === sid); w = L2.workouts.find(x => x.sid === sid); } } catch (e) {} }
+    try { const R = await icuRoute(w); if (R) { const i = (L.workouts || []).indexOf(w), sid = routeAttach(d, i, R, w.note); const L2 = logGet(d); s = L2.wsess.find(x => x.id === sid); w = L2.workouts.find(x => x.sid === sid); } else toast("No GPS track for this activity on intervals.icu: import the .gpx or .fit (Route, in the calendar)."); }
+    catch (e) { toast([401, 403, 404, 422].includes(e.status) ? "intervals.icu doesn't share this activity's GPS (it happens when it came from Strava). Import the .gpx or .fit from your watch app: Route, in the calendar." : "Couldn't get the route from intervals.icu right now."); } }
   storyOpen(d, w, s); };
 /* ================= look: theme and a seed colour; the whole Material palette is derived from the seed =================
    Tones from HSL (close to Material's tonal palettes): primary 40/80, containers 90/30, surfaces tinted with the
@@ -11264,7 +11313,7 @@ ACT["gear-tick"] = el => { gearTick(el.dataset.date, el.dataset.id); haptic(8); 
 ACT["gear-set"] = () => { closeSheet(); UI.tab = "settings"; UI.setOpen = { ...(UI.setOpen || {}), live: true }; scheduleRender(); setTimeout(() => $("#gear-set")?.scrollIntoView({ block: "start", behavior: "smooth" }), 200); };
 /* settings, in Live workouts & timer */
 function gearSettings() { const G = GEARS();
-  return `<div class="field" id="gear-set"><span class="flabel">What to bring</span>
+  return `<div class="field"><label for="map-key">Story maps · MapTiler key <span class="faint">(optional, free)</span></label><input id="map-key" class="inp" type="password" autocomplete="off" value="${esc(S.settings.mapKey || "")}" placeholder="Not needed: free maps without a key are used" data-chg="map-key"><span class="faint" style="font-size:12.5px">Without a key the story map uses CARTO, then OpenStreetMap, then Esri, whichever answers. A free key from maptiler.com (Account › Keys) gives sharper maps.</span></div>` + `<div class="field" id="gear-set"><span class="flabel">What to bring</span>
     <div class="faint" style="font-size:12.5px">Found in the workout's exercises. Switch off what you never carry (e.g. rings that live at the park).</div>
     <div class="chips">${[...GEAR_RULES.map(([id, l]) => [id, l]), ["belt", "Dip belt"]].map(([id, l]) => `<button class="chip sm" data-act="gear-rule" data-id="${id}" aria-pressed="${!G.off.includes(id)}">${l}</button>`).join("")}</div>
     <span class="flabel" style="margin-top:6px">Always bring</span><div class="chips">${G.always.map((a, i) => `<button class="chip sm" data-act="gear-al-del" data-i="${i}" aria-label="Remove ${esc(a)}">${esc(a)} ${ic("close", "sm")}</button>`).join("")}</div>
@@ -11597,6 +11646,220 @@ ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 
 { const _vs = VIEWS.shop; VIEWS.shop = function () { const h = _vs(), R = shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0 && r.free > 0); if (!R.length) return h;
   const i = h.indexOf("</header>"); return i < 0 ? h : h.slice(0, i + 9) + `<div class="note accent pan-use"><span><b>${R.length} at home already</b> · ${esc(R.slice(0, 4).map(r => `${r.f.name} ${fmtN(r.free)} ${r.f.unit || "g"}`).join(", "))}${R.length > 4 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use what's at home</button></div>` + h.slice(i + 9); }; }
 { const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && (!Sync.db || Sync.ready)) panMigrate(); }; }
+/* ================= learning without AI: real pace on the scale, measured TDEE, own burn rates, watch left running ================= */
+const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+/* kg per week from the real weigh-ins of the last N days (least squares), with its standard error */
+function obsRate(days = 28) {
+  return memo("obs" + days, () => {
+    const s = energySeries(), today = todayISO(), P = [];
+    for (let i = days - 1; i >= 0; i--) { const r = s.rows[addDays(today, -i)]; if (r?.real) P.push([-i, r.real]); }
+    if (P.length < 8 || P[P.length - 1][0] - P[0][0] < 14) return null;
+    const n = P.length, mx = P.reduce((a, p) => a + p[0], 0) / n, my = P.reduce((a, p) => a + p[1], 0) / n;
+    const sxx = P.reduce((a, p) => a + (p[0] - mx) ** 2, 0), b = P.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0) / sxx;
+    const res = P.reduce((a, p) => a + (p[1] - (my + b * (p[0] - mx))) ** 2, 0), se = Math.sqrt(res / Math.max(1, n - 2) / sxx);
+    return { n, days, kgDay: b, kgWk: b * 7, seWk: se * 7 * 1.5 };
+  });
+}
+/* the goal at the pace the scale really shows, with a range */
+{ const _g = goalState; goalState = function () {
+  const G = _g(), o = obsRate(), today = todayISO();
+  if (o && G.toLose != null && Math.abs(G.toLose) >= 0.2) {
+    const v = -o.kgWk * Math.sign(G.toLose), d = Math.abs(G.toLose), at = x => addDays(today, Math.round(d / x * 7));
+    G.obs = { ...o, toward: v };
+    if (v > 0.05) Object.assign(G.obs, { weeks: d / v, eta: at(v), lo: at(v + o.seWk), hi: v - o.seWk > 0.03 ? at(v - o.seWk) : null });
+  }
+  return G; }; }
+const etaKpi = G => G.obs?.eta ? kpi(fmtDM(G.obs.eta), "ETA · real pace", `${r1(G.obs.toward)} kg/week · ${fmtDM(G.obs.lo)}–${G.obs.hi ? fmtDM(G.obs.hi) : "?"}${G.eta ? ` · plan ${fmtDM(G.eta)}` : ""}`)
+  : kpi(G.eta ? fmtDM(G.eta) : "—", "ETA", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week${G.obs ? ` · scale ${sgn(G.obs.kgWk)} kg/week` : ""}` : G.deficit > 0 ? "" : "no deficit planned");
+
+/* ---------- watch left running ---------- */
+/* what your clean sessions look like: minutes, kcal per minute, pace and kcal per km, by sport */
+function ovStats() {
+  return memo("ovst", () => {
+    const today = todayISO(), from = addDays(today, -(FIT().learn.window - 1)), by = {};
+    for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) {
+      if (d < from || d > today) continue;
+      for (const w of day.workouts || []) { if (!(w.min > 0) || !fromDevice(w) || w.raw || (w.wmin > w.min * 1.15 + 4)) continue;
+        const b = by[w.sport] = by[w.sport] || { min: [], kpm: [], pace: [], kkm: [] };
+        b.min.push(+w.min); if (w.kcal > 0) b.kpm.push(w.kcal / w.min);
+        if (w.km > 0.5) { b.pace.push(w.min / w.km); if (w.kcal > 0) b.kkm.push(w.kcal / w.km); } }
+    }
+    const out = {}; for (const [k, b] of Object.entries(by)) out[k] = { n: b.min.length, min: med(b.min), kpm: b.kpm.length >= 3 ? med(b.kpm) : null, pace: b.pace.length >= 3 ? med(b.pace) : null, kkm: b.kkm.length >= 3 ? med(b.kkm) : null };
+    return out;
+  });
+}
+/* null, or why this session's watch numbers look too big and what they'd be without the extra time */
+function ovCheck(w, date, any) {
+  if (!w || !(w.kcal > 0) || !(w.min > 0) || !fromDevice(w) || w.raw || (w.keepW && !any)) return null;
+  const st = ovStats()[w.sport] || {}, kc = +w.kcal;
+  const byMin = (to, from) => r0(Math.min(kc, st.kpm ? st.kpm * to : kc * to / from));
+  // live session in Engine: Engine's clock is the truth, the watch ran on after it
+  if (w.sid && w.wmin > w.min * 1.15 + 4) return { kind: "app", from: +w.wmin, to: +w.min, kcalTo: byMin(+w.min, +w.wmin), why: `the watch ran ${r0(w.wmin)} min, the session in Engine ${r0(w.min)}` };
+  if (w.sid) return null;
+  // distance sessions: moving time stops with you, the calories don't
+  if (w.km > 0.5 && st.kkm && kc > w.km * st.kkm * 1.4 + 60) return { kind: "kcal", from: +w.min, to: +w.min, kcalTo: r0(w.km * st.kkm), why: `${r1(w.km)} km usually cost you ${fmtN(w.km * st.kkm)} kcal` };
+  if (w.km > 0.5 && st.pace && w.min > w.km * st.pace * 1.35 + 8) { const to = r0(w.km * st.pace); return { kind: "long", from: +w.min, to, kcalTo: byMin(to, +w.min), why: `${r1(w.km)} km at your usual pace take about ${to} min` }; }
+  if (w.km > 0.5) return null;
+  const p = plannedFor(date).list.find(x => x.sport && x.min > 0 && ((w.pev && x.ext === w.pev) || sportFam(x.sport) === sportFam(w.sport)));
+  if (p && w.min > p.min * 1.5 + 10) { const to = r0(p.min * 1.1); return { kind: "long", from: +w.min, to, kcalTo: byMin(to, +w.min), why: `the plan was ${r0(p.min)} min` }; }
+  if (st.n >= 4 && w.min > Math.max(st.min * 1.6, st.min + 25)) { const to = r0(st.min); return { kind: "long", from: +w.min, to, kcalTo: byMin(to, +w.min), why: `your ${w.sport.toLowerCase()} sessions usually last ${to} min` }; }
+  return null;
+}
+/* Engine's own clock wins on live sessions; inflated sessions stay out of the learning */
+{ const _rk = realKcal; realKcal = function (w, date) { return w.raw || ovCheck(w, date, true) ? 0 : _rk(w, date); }; }
+{ const _sk = sessionKcal; sessionKcal = function (w, date, kg) {
+  const o = w && w.kcal > 0 ? ovCheck(w, date) : null; if (o?.kind === "app") return { kcal: o.kcalTo, how: "trimmed" };
+  // rides: your own kcal per km once there are enough of them
+  if (w && !(w.kcal > 0) && !(w.watch > 0) && !(w.hr > 0) && w.km > 0 && sportFam(w.sport) === "ride") { const k = rideKm(); if (k.src === "own") return { kcal: r0(w.km * k.rate), how: "km" }; }
+  return _sk(w, date, kg); }; }
+function rideKm() {
+  return memo("ridekm", () => {
+    const fit = FIT(), today = todayISO(), from = addDays(today, -(fit.learn.window - 1)); let k = 0, km = 0;
+    for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) if (d >= from && d <= today) for (const w of day.workouts || []) {
+      if (sportFam(w.sport) !== "ride" || !(w.km > 0)) continue; const rk = realKcal(w, d); if (rk > 0) { k += rk; km += +w.km; } }
+    return km >= fit.learn.minKm * 3 ? { rate: k / km, km, src: "own" } : { rate: null, km, src: "none" };
+  });
+}
+function ovFind(date, wi) { const w = (logGet(date)?.workouts || [])[wi]; return w ? { w, o: ovCheck(w, date, true) } : null; }
+/* one line under the session: what happened and one tap to fix or keep it */
+function ovNote(w, date, wi) {
+  if (!w || wi < 0) return "";
+  if (w.raw) return `<div class="ov-x"><span>Trimmed to ${r0(w.min)} min · ${fmtN(w.kcal)} kcal <small>watch said ${r0(w.raw.min)} min · ${fmtN(w.raw.kcal)} kcal</small></span><button class="link" data-act="ov-undo" data-date="${date}" data-wi="${wi}">Undo</button></div>`;
+  const o = ovCheck(w, date, true); if (!o) return "";
+  const q = `data-date="${date}" data-wi="${wi}"`;
+  if (w.keepW) return `<div class="ov-x"><span>Watch value kept <small>${esc(o.why)}</small></span><button class="link" data-act="ov-keep" ${q}>Use ${o.kind === "app" ? "Engine's time" : "the trim"}</button></div>`;
+  if (o.kind === "app") return `<div class="ov-x warn"><span>Watch left running? Counting ${fmtN(o.kcalTo)} of ${fmtN(w.kcal)} kcal <small>${esc(o.why)}</small></span><button class="link" data-act="ov-keep" ${q}>Keep watch</button></div>`;
+  return `<div class="ov-x warn"><span>Watch left running? ${o.kind === "kcal" ? `${fmtN(w.kcal)} kcal for ${r1(w.km)} km` : `${r0(o.from)} min on the watch`} <small>${esc(o.why)} · trim to ${o.to !== o.from ? r0(o.to) + " min · " : ""}${fmtN(o.kcalTo)} kcal</small></span><span class="ov-a"><button class="link" data-act="ov-keep" ${q}>Keep</button><button class="btn tonal sm" data-act="ov-trim" ${q}>Trim</button></span></div>`;
+}
+ACT["ov-trim"] = el => { const d = el.dataset.date, wi = +el.dataset.wi, f = ovFind(d, wi); if (!f?.o) return;
+  mutateLog(d, day => { const w = day.workouts[wi]; w.raw = { min: w.min, kcal: w.kcal }; w.min = f.o.to; w.kcal = f.o.kcalTo; delete w.keepW; });
+  haptic(10); toast(`Trimmed to ${r0(f.o.to)} min · ${fmtN(f.o.kcalTo)} kcal`); scheduleRender(); if (UI.sheet) renderSheet(); };
+ACT["ov-undo"] = el => { const d = el.dataset.date, wi = +el.dataset.wi;
+  mutateLog(d, day => { const w = day.workouts[wi]; if (!w?.raw) return; w.min = w.raw.min; w.kcal = w.raw.kcal; delete w.raw; w.keepW = true; });
+  scheduleRender(); if (UI.sheet) renderSheet(); };
+ACT["ov-keep"] = el => { const d = el.dataset.date, wi = +el.dataset.wi, f = ovFind(d, wi); if (!f) return;
+  if (f.w.keepW && f.o?.kind !== "app") { ACT["ov-trim"](el); return; }
+  mutateLog(d, day => { const w = day.workouts[wi]; if (w.keepW) delete w.keepW; else w.keepW = true; });
+  scheduleRender(); if (UI.sheet) renderSheet(); };
+{ const _wo = SHEETS.wo; SHEETS.wo = sh => { const R = sh.r, L = logGet(R.date)?.workouts || [];
+  // after a trim the log holds a new object: follow it by its watch id
+  let wi = R.w ? L.indexOf(R.w) : -1; if (R.w && wi < 0) { wi = L.findIndex(x => (R.w.ext && x.ext === R.w.ext) || (R.w.sid && x.sid === R.w.sid)); if (wi >= 0) R.w = L[wi]; }
+  const def = _wo(sh), w = R.w; if (!w || !R.logged) return def;
+  const n = ovNote(w, R.date, wi); if (n) def.body = def.body.replace(/(<div class="wo-meta">[\s\S]*?<\/div>)/, `$1${n}`); return def; }; }
+
+/* ---------- Progress › Energy: is the model right, and what it learned ---------- */
+function modelCheck(days = 28) {
+  return memo("mcheck" + days, () => {
+    const s = energySeries(), today = todayISO(), E = FIT().energy, o = obsRate(days); const L = [];
+    for (let i = days; i >= 1; i--) { const r = s.rows[addDays(today, -i)]; if (r?.intake && !r.intake.est) L.push(r); }
+    if (L.length < 10 || !o) return { nI: L.length, nW: o?.n || 0 };
+    const av = f => L.reduce((a, r) => a + f(r), 0) / L.length;
+    const eat = av(r => r.intake.kcal), formula = av(r => r.tdeeW), used = av(r => r.tdee), measured = eat - o.kgDay * E.kcalPerKg;
+    const plan = av(r => +r.phase?.kcal || 0);
+    return { nI: L.length, nW: o.n, eat, formula, used, measured, real: eat - measured, plan, expKg: (eat - formula) * days / E.kcalPerKg, actKg: o.kgDay * days, gap: measured - formula };
+  });
+}
+function accuracyHTML() {
+  const M = modelCheck(), R = learnedRates(), fit = FIT(), today = todayISO(), r = energyAt(today), st = ovStats();
+  let h = `<div class="section-h"><h2>Is the model right? · 28 days</h2></div>`;
+  if (M.measured == null) h += `<div class="note">Needs 10 days of logged food and 8 weigh-ins in the last 4 weeks (now ${M.nI} and ${M.nW}). Until then Engine uses the formulas as they are.</div>`;
+  else {
+    const pct = M.gap / M.formula * 100, sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
+    h += `<div class="stat-grid four">${kpi(fmtN(M.formula), "TDEE, formulas")}${kpi(fmtN(M.measured), "TDEE, measured", `intake − scale · ${M.nI} days · ${M.nW} weigh-ins`)}${kpi(sg(M.real), "real balance / day", `planned ${sg(M.plan)}`)}${kpi(`×${r.factor.toFixed(2)}`, "correction in use", Math.abs(pct) < 4 ? "formulas match you" : `formulas ${pct < 0 ? "too high" : "too low"} by ${r0(Math.abs(pct))}%`)}</div>
+    <div class="faint" style="font-size:12.5px">Intake vs formulas predicted ${sgn(M.expKg)} kg, the scale shows ${sgn(M.actKg)} kg. ${Math.abs(M.gap) < 80 ? "Your log and the formulas agree." : `That's about ${fmtN(Math.abs(M.gap))} kcal/day ${M.gap < 0 ? "fewer burned (or eaten but not logged)" : "more burned than the formulas say"}: the correction already accounts for it.`}</div>`;
+  }
+  const rows = fit.sports.filter(sp => R[sp.name] && (R[sp.name].n > 0 || sp.name === fit.runSport)).map(sp => { const x = R[sp.name], own = x.source === "own";
+    const km = sp.name === fit.runSport ? ` · ${fmtN(x.kmRate)} kcal/km${x.kmSource === "own" ? "" : " (formula)"}` : "";
+    return `<div class="lrow"><span style="min-width:0"><span class="t">${esc(sp.name)}</span><span class="s" style="white-space:normal">${own ? `your watch · ${x.n} session${x.n > 1 ? "s" : ""}` : `MET table${x.n ? ` · ${x.n} of ${fit.learn.minSessions} sessions` : ""}`}${km}${st[sp.name]?.pace && ENDUR(sp.name) ? ` · ${fmtPace(st[sp.name].pace)}/km` : ""}</span></span><b class="num">${r1(x.Moderate)}<small class="faint"> kcal/min</small></b></div>`; });
+  const rk = rideKm(); if (rk.src === "own") rows.push(`<div class="lrow"><span><span class="t">Cycling per km</span><span class="s">your watch · ${fmtN(rk.km)} km</span></span><b class="num">${r1(rk.rate)}<small class="faint"> kcal/km</small></b></div>`);
+  h += `<div class="section-h"><h2>What Engine learned from your watch</h2></div><div class="card">${rows.join("") || `<div class="lrow"><span class="s">No sessions with watch kcal yet: MET tables in use.</span></div>`}</div>
+    <div class="faint" style="font-size:12.5px">Last ${fit.learn.window} days. Sessions where the watch kept running are left out. Planned sessions use these rates.</div>`;
+  return h;
+}
+/* ================= weather at training time (Open-Meteo: free, no key) ================= */
+const WX = () => { const x = S.settings.wx = S.settings.wx || {}; x.time = x.time || "18:00"; return x; };
+const WXC = { data: null, at: 0, key: "", busy: false };
+try { Object.assign(WXC, JSON.parse(localStorage.getItem("engine.wx") || "{}"), { busy: false }); } catch (e) {}
+const wxKey = () => { const x = WX(); return x.lat != null ? `${(+x.lat).toFixed(2)},${(+x.lon).toFixed(2)}` : ""; };
+const OUTDOOR = sp => sp && sp !== "Rest" && !/strength|gym|weight|swim|nuot|yoga|pilates|indoor|trainer|treadmill/i.test(sp);
+async function wxFetch(force) {
+  const x = WX(), k = wxKey(); if (!k || WXC.busy || !navigator.onLine) return;
+  if (!force && WXC.key === k && Date.now() - WXC.at < 45 * 60e3) return;
+  WXC.busy = true;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${(+x.lat).toFixed(3)}&longitude=${(+x.lon).toFixed(3)}&hourly=temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m&forecast_days=3&timezone=auto`);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json(), h = j.hourly || {};
+    Object.assign(WXC, { key: k, at: Date.now(), data: { t: h.time || [], mm: h.precipitation || [], pr: h.precipitation_probability || [], c: h.temperature_2m || [], code: h.weather_code || [], wind: h.wind_speed_10m || [] } });
+    try { localStorage.setItem("engine.wx", JSON.stringify({ key: WXC.key, at: WXC.at, data: WXC.data })); } catch (e) {}
+    scheduleRender();
+  } catch (e) { WXC.at = Date.now() - 40 * 60e3; } finally { WXC.busy = false; }
+}
+const hmMin = t => { const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+const minHM = m => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+/* the hours a session at `start` for `dur` minutes covers: rain in mm, chance, temperature, wind */
+function wxSlot(date, start, dur) {
+  const D = WXC.key === wxKey() ? WXC.data : null; if (!D) return null;
+  const a = hmMin(start), b = a + Math.max(30, dur), out = { mm: 0, pr: 0, c: [], wind: 0, code: 0, n: 0 };
+  D.t.forEach((t, i) => { if (t.slice(0, 10) !== date) return; const h = hmMin(t.slice(11, 16)); if (h + 60 <= a || h >= b) return;
+    const part = (Math.min(b, h + 60) - Math.max(a, h)) / 60; out.mm += (D.mm[i] || 0) * part; out.peak = Math.max(out.peak || 0, D.mm[i] || 0); out.pr = Math.max(out.pr, D.pr[i] || 0); out.c.push(D.c[i]); out.wind = Math.max(out.wind, D.wind[i] || 0); out.code = Math.max(out.code, D.code[i] || 0); out.n++; });
+  if (!out.n) return null; out.c = out.c.reduce((p, q) => p + q, 0) / out.c.length; return out;
+}
+const wxWet = s => s && (s.mm >= 0.3 || (s.pr >= 60 && s.mm >= 0.1));
+/* nearest dry start before and after the planned one, same day, daylight-ish hours */
+function wxDry(date, start, dur) {
+  const a = hmMin(start), now = date === todayISO() ? hmMin(nowHM()) + 20 : 0, pick = dir => {
+    for (let m = a + dir * 60; m >= 6 * 60 && m + dur <= 23 * 60; m += dir * 60) { if (m < now) { if (dir < 0) break; continue; } const s = wxSlot(date, minHM(m), dur); if (s && s.mm < 0.2 && s.pr < 45) return m; }
+    return null; };
+  return { early: pick(-1), late: pick(1) };
+}
+const WX_IC = { sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>',
+  cloud: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
+  rain: '<path d="M7 15h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 6.1a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5"/>' };
+const wxIcon = s => `<svg class="wx-ic" viewBox="0 0 24 24" aria-hidden="true">${WX_IC[wxWet(s) || s.code >= 51 ? "rain" : s.code >= 3 ? "cloud" : "sun"]}</svg>`;
+/* tiny bars of rain through the day, the session's hours highlighted */
+function wxBars(date, start, dur) {
+  const D = WXC.data, a = hmMin(start), b = a + dur; let g = "";
+  const hrs = D.t.map((t, i) => [t, i]).filter(([t]) => t.slice(0, 10) === date && hmMin(t.slice(11, 16)) >= 6 * 60 && hmMin(t.slice(11, 16)) <= 22 * 60);
+  if (!hrs.some(([, i]) => (D.mm[i] || 0) >= 0.1)) return "";
+  const mx = Math.max(1, ...hrs.map(([, i]) => D.mm[i] || 0)), W = 100 / hrs.length;
+  hrs.forEach(([t, i], k) => { const h = hmMin(t.slice(11, 16)), on = h + 60 > a && h < b, v = D.mm[i] || 0, ht = v > 0 ? Math.max(8, v / mx * 100) : 4;
+    g += `<i class="${on ? "on" : ""}${v >= 0.1 ? " wet" : ""}" style="left:${k * W}%;width:${W}%;height:${ht}%" title="${t.slice(11, 16)} · ${r1(v)} mm · ${D.pr[i] || 0}%"></i>`; });
+  return `<div class="wx-bars" aria-hidden="true">${g}</div><div class="wx-ax"><span>${hrs[0][0].slice(11, 13)}</span><span>${hrs[Math.floor(hrs.length / 2)][0].slice(11, 13)}</span><span>${hrs[hrs.length - 1][0].slice(11, 13)}</span></div>`;
+}
+/* one row in Today's training card: forecast at the session's time, and a better time if it rains */
+function wxRow(date, sessions) {
+  const out = sessions.filter(w => OUTDOOR(w.sport)); if (!out.length) return "";
+  if (!wxKey()) return `<div class="wx-row"><span class="faint">Rain alerts at training time</span><button class="link" data-act="wx-locate">Set location</button></div>`;
+  wxFetch();
+  const L = logGet(date) || {}, set = L.wxAt || WX().time, nm = date === todayISO() ? Math.ceil(hmMin(nowHM()) / 30) * 30 : 0, at = hmMin(set) + 30 < nm ? minHM(nm) : set, dur = Math.max(30, Math.min(240, out.reduce((a, w) => a + (+w.min || workoutGist(w).min || 60), 0)));
+  const s = wxSlot(date, at, dur), day = date === todayISO() ? "" : "Tomorrow ";
+  const tin = `<input class="wx-t" type="time" value="${esc(at)}" data-chg="wx-at" data-date="${date}" aria-label="Training time">`;
+  if (!s) return `<div class="wx-row"><span>${day}${tin}</span><span class="faint">${WXC.busy ? "Loading the forecast…" : navigator.onLine ? "Forecast not available yet" : "Offline"}</span></div>`;
+  const wet = wxWet(s), main = `${r0(s.c)}°${wet ? ` · ${s.peak >= 4 ? "heavy" : s.peak >= 1 ? "moderate" : "light"} rain, <b>${r1(s.mm)} mm</b> in ${dur}′` : s.mm >= 0.1 ? ` · ${r1(s.mm)} mm` : " · dry"}${s.pr ? ` · ${r0(s.pr)}%` : ""}${s.wind >= 25 ? ` · wind ${r0(s.wind)} km/h` : ""}`;
+  let tip = "";
+  if (wet) { const D = wxDry(date, at, dur), a = hmMin(at), fmt = m => `${minHM(m)} (${Math.abs(m - a) / 60 | 0} h ${m < a ? "earlier" : "later"})`;
+    const opts = [D.early, D.late].filter(m => m != null).sort((x, y) => Math.abs(x - a) - Math.abs(y - a));
+    tip = opts.length ? `Dry at ${opts.map(fmt).join(" or ")}` : "No dry window today: take a jacket or go indoors"; }
+  return `<div class="wx-row${wet ? " wet" : ""}"><span class="wx-m">${wxIcon(s)}<span>${day}${tin}<span class="wx-v">${main}</span></span></span>${tip ? `<small>${esc(tip)}</small>` : ""}${wxBars(date, at, dur)}</div>`;
+}
+CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; mutateLog(d, day => { day.wxAt = v === WX().time ? null : v; }); scheduleRender(); };
+CHG["wx-time"] = v => { if (v) { WX().time = v; saveSettings(); scheduleRender(); } };
+ACT["wx-locate"] = () => {
+  if (!navigator.geolocation) { toast("Location isn't available here: type your city in Settings › Live workouts & timer."); return; }
+  navigator.geolocation.getCurrentPosition(p => { const x = WX(); x.lat = +p.coords.latitude.toFixed(3); x.lon = +p.coords.longitude.toFixed(3); x.place = "Current location"; saveSettings(); WXC.at = 0; wxFetch(true); toast("Location saved for the forecast"); scheduleRender(); },
+    () => toast("No location permission: type your city in Settings › Live workouts & timer."), { timeout: 10000, maximumAge: 6 * 3600e3 });
+};
+CHG["wx-city"] = async v => { const q = v.trim(), x = WX(); if (!q) { delete x.lat; delete x.lon; delete x.place; saveSettings(); scheduleRender(); return; }
+  try { const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&format=json`), j = await r.json(), g = j.results?.[0];
+    if (!g) { toast(`No place called “${q}”`); return; }
+    Object.assign(x, { lat: +g.latitude.toFixed(3), lon: +g.longitude.toFixed(3), place: [g.name, g.admin1, g.country_code].filter(Boolean).join(", ") }); saveSettings(); WXC.at = 0; wxFetch(true); toast(`Forecast for ${x.place}`); scheduleRender();
+  } catch (e) { toast("Couldn't look up the place: check the connection."); } };
+function wxSettings() { const x = WX();
+  return `<span class="flabel" style="margin-top:6px">Weather</span><div class="grid2"><div class="field"><label for="wx-city">Place</label><input id="wx-city" class="inp" value="${esc(x.place || "")}" placeholder="City, e.g. Milano" data-chg="wx-city" autocomplete="off"></div>
+    <div class="field"><label for="wx-time">Usual training time</label><input id="wx-time" class="inp" type="time" value="${esc(x.time)}" data-chg="wx-time"></div></div>
+    <div class="faint" style="font-size:12.5px">Open-Meteo forecast, free, no key. Today shows the rain at that time for outdoor sessions; change the time there for a single day. <button class="link" data-act="wx-locate">Use my location</button></div>`; }
+{ const _ps = playerSettings; playerSettings = function () { return _ps() + wxSettings(); }; }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
