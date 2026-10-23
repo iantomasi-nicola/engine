@@ -10,6 +10,7 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
 (async () => {
   let s = fs.readFileSync(path.join(SRC, "engine.html"), "utf8");
   const R = (a, b) => { if (!s.includes(a)) throw new Error("missing: " + a.slice(0, 60)); s = s.split(a).join(b); };
+  R('<script src="web/inventory.js"></script>\n', "");
   R("Saved to your Claude account and synced on every device where you open this page.", "Saved to your Engine account and synced on every device where you sign in.");
   R("Saved in this browser only. Open the page inside Claude while signed in to sync.", "Saved on this device only. Sign in (Settings → Account) to sync phone and computer.");
   R('"https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"', 'new URL("vendor/tesseract.min.js", location.href).href');
@@ -19,7 +20,7 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   if (MIN) { const cm = css.transform({ filename: "a.css", code: Buffer.from(s.slice(a + 7, b)), minify: true, errorRecovery: true }); s = s.slice(0, a + 7) + cm.code.toString() + s.slice(b); }
   const j = s.indexOf("<script>"), k = s.lastIndexOf("</script>");
   let main = s.slice(j + 8, k);
-  const pre = fs.readFileSync(W + "/shim.js", "utf8"), post = fs.readFileSync(W + "/icu-direct.js", "utf8") + "\n" + fs.readFileSync(W + "/after.js", "utf8");
+  const pre = fs.readFileSync(W + "/inventory.js", "utf8") + "\n" + fs.readFileSync(W + "/shim.js", "utf8"), post = fs.readFileSync(W + "/icu-direct.js", "utf8") + "\n" + fs.readFileSync(W + "/after.js", "utf8");
   const mz = async c => MIN ? (await minify(c, { compress: { passes: 1, keep_fnames: true, keep_classnames: true }, mangle: { toplevel: false }, format: { comments: false }, ecma: 2020 })).code : c;
   main = await mz(main);
   s = s.slice(0, j) + `<script>${await mz(pre)}</script>\n<script>` + main + `</script>\n<script>${await mz(post)}</script>` + s.slice(k + 9);

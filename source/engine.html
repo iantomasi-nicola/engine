@@ -2378,6 +2378,7 @@ html .ov-x .btn.tonal,html .pan-use .btn.tonal{background:var(--md-primary)!impo
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
+<script src="web/inventory.js"></script>
 <script>
 /* ---------- Built-in food reference (per 100 g / 100 ml, EU label convention: carbs exclude fibre) ----------
    [id, name, kcal, protein, carbs, fat, fibre, aisle, role, meals, servingLabel, servingG, packG, flags]
@@ -2725,13 +2726,43 @@ function normalizeSettings(s) {
 
 /* ================= state ================= */
 const LS_KEY = "fuelplanner.v1";
+const INV = EngineInventory;
+const fmtStock = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 3 });
+let inventoryTx = null;
+function storageWarning(on) {
+  let el = document.getElementById("storage-warning");
+  if (!on) { el?.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "storage-warning"; el.setAttribute("role", "alert"); el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:1000;background:#742020;color:white;padding:12px 16px;font:14px sans-serif"; document.body.appendChild(el); }
+  el.textContent = "Changes could not be saved on this device. Free storage space and try again; keep this page open.";
+}
+function inventoryBackup() {
+  const scope = Sync.uid || "local", key = "engine.inventory.backup.v1." + scope;
+  const existing = localStorage.getItem(key);
+  if (existing) { const b = JSON.parse(existing); if (b.version !== 1 || b.scope !== scope || !b.shop || typeof b.shop !== "object" || Array.isArray(b.shop) || !b.days || typeof b.days !== "object" || Array.isArray(b.days)) throw new Error("Inventory backup could not be verified."); return; }
+  const raw = JSON.stringify({ version: 1, scope, at: new Date().toISOString(), shop: S.shop, days: S.days });
+  localStorage.setItem(key, raw);
+  if (localStorage.getItem(key) !== raw) throw new Error("Inventory backup could not be verified.");
+}
+function inventoryChange(change) {
+  if (inventoryTx) { change(); return true; }
+  const before = { shop: clone(S.shop), days: clone(S.days) };
+  try { inventoryBackup(); } catch (e) { storageWarning(true); return false; }
+  const jobs = new Map(); jobs.after = []; inventoryTx = jobs;
+  try { change(); if (S.shop.inventoryV !== 1) { S.shop.inventoryV = 1; put("shop", "", S.shop); } if (!saveLocal()) throw new Error("storage"); }
+  catch (e) { S.shop = before.shop; S.days = before.days; inventoryTx = null; scheduleRender(); if (e.message !== "storage") toast(e.message); return false; }
+  inventoryTx = null;
+  for (const job of jobs.values()) queueCloud(job.kind, job.id, job.data);
+  for (const done of jobs.after) done();
+  scheduleRender(); return true;
+}
 const S = { settings: null, foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: { checked: {}, extras: [], pantry: {}, range: 7 }, body: { w: {}, m: {} }, train: { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [] } };
 const UI = { trainSeg: "cal", progSeg: "overview", dashSeg: "all", tab: "today", date: todayISO(), sheet: null, foodsSeg: "all", foodsQ: "", shopStart: todayISO(), statsRange: 7, statsBasis: null, addMeal: null, pantryQ: "", pantrySort: "exp", sideOpen: (() => { try { return localStorage.getItem("engine.sideOpen") !== "0"; } catch (e) { return true; } })() };
 const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), inflight: new Set(), timers: new Map(), retry: new Set(), known: {}, sample: null, downloads: null, ready: false };
 
 function saveLocal() {
   DATA_V++;
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); } catch (e) {}
+  try { const raw = JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train }); localStorage.setItem(LS_KEY, raw); if (localStorage.getItem(LS_KEY) !== raw) throw new Error("storage"); storageWarning(false); return true; }
+  catch (e) { storageWarning(true); return false; }
 }
 function loadLocal() {
   try {
@@ -2760,11 +2791,16 @@ const SYNC_LABEL = { local: "On this device", saving: "Saving", synced: "Synced"
 
 function put(kind, id, data) {
   setLocal(kind, id, data);
-  saveLocal();
+  if (inventoryTx) { inventoryTx.set(kind + "|" + (id || ""), { kind, id, data }); return true; }
+  const saved = saveLocal();
   scheduleRender();
+  if (!saved) return false;
+  queueCloud(kind, id, data); return true;
+}
+function queueCloud(kind, id, data) {
   if (!Sync.db) return;
   const key = kind + "|" + (id || "");
-  Sync.pending.set(key, { kind, id, data });
+  Sync.pending.set(key, { kind, id, data: clone(data) });
   clearTimeout(Sync.timers.get(key));
   Sync.timers.set(key, setTimeout(() => flush(key), 380));
   setSync("saving");
@@ -2855,15 +2891,18 @@ function activeMeals() { return S.settings.meals.filter(m => m.on); }
 function emptyDay(date) { return { date, meals: {} }; }
 function getDay(date) { return S.days[date] || emptyDay(date); }
 function mutateDay(date, fn, opts = {}) {
+  if (!inventoryTx) return inventoryChange(() => mutateDay(date, fn, opts));
   const before = S.days[date] ? clone(S.days[date]) : null;
   const d = clone(getDay(date)); d.date = date; d.meals = d.meals || {};
   fn(d);
+  const stock = INV.reconcile(before, d, S.shop.pantry, recipeForItem, todayISO(), !!opts.restoreReceipts);
+  if (JSON.stringify(stock) !== JSON.stringify(S.shop.pantry)) { S.shop.pantry = stock; put("shop", "", S.shop); }
   for (const k of Object.keys(d.meals)) if (!d.meals[k] || !d.meals[k].length) delete d.meals[k];
   if (d.adj && !Object.keys(d.adj).length) delete d.adj;
   const isEmpty = !Object.keys(d.meals).length && !d.training && !d.override && !d.note && !d.adj;
   if (isEmpty && !before) return;
   put("days", date, isEmpty ? null : d);
-  if (opts.undo) toast(opts.undo, () => put("days", date, before));
+  if (opts.undo) inventoryTx.after.push(() => toast(opts.undo, () => mutateDay(date, next => { for (const key of Object.keys(next)) delete next[key]; Object.assign(next, clone(before || emptyDay(date))); }, { restoreReceipts: true })));
 }
 function dayItems(day) { const out = []; for (const [m, items] of Object.entries(day.meals || {})) for (const it of items) out.push([m, it]); return out; }
 function dayTotals(day, eatenOnly = false) {
@@ -2910,17 +2949,6 @@ function mealName(id) { return S.settings.meals.find(m => m.id === id)?.name || 
 function newItem(kind, ref, qty, extra = {}) { return { id: uid(), kind, ref, qty, eaten: false, ...extra }; }
 function defaultQty(f) { return f.servings?.[0]?.g || (f.role === "F" ? 10 : 100); }
 
-/* pantry */
-function pantryAdjust(it, sign) {
-  const touch = (id, g) => {
-    const p = S.shop.pantry[id]; if (!p) return false;
-    p.g = Math.max(0, r0((p.g || 0) - sign * g)); return true;
-  };
-  let changed = false;
-  if (it.kind === "food") changed = touch(it.ref, it.qty) || changed;
-  else if (it.kind === "recipe") { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) changed = touch(ing.food, ing.g * it.qty / (r.servings || 1)) || changed; }
-  if (changed) put("shop", "", S.shop);
-}
 
 /* diet & search */
 function dietOK(f) {
@@ -4717,20 +4745,21 @@ SHEETS.qty = sh => {
   const isRec = sh.kind === "recipe";
   const x = isRec ? getRecipe(sh.ref) : getFood(sh.ref);
   if (!x) return { title: "Not found", body: `<div class="note">This item no longer exists in your library.</div>` };
-  const unit = isRec ? "srv" : (x.unit || "g");
+  const unit = isRec ? "srv" : (x.unit || "g"), pack = !isRec && (S.shop.pantry[x.id]?.pk || x.pack);
   const presets = isRec ? [0.5, 1, 1.5, 2].map(v => ({ l: `${v} srv`, v })) :
-    [...(x.servings || []).flatMap(s => [{ l: s.l, v: s.g }, ...(x.countable ? [{ l: "2 × " + s.l.replace(/^1\s+/, ""), v: s.g * 2 }] : [])]), ...[50, 100, 150, 200].map(v => ({ l: `${v} ${unit}`, v }))];
-  const editing = !!sh.itemId;
+    [...(x.servings || []).flatMap(s => [{ l: s.l, v: s.g }, ...(x.countable ? [{ l: "2 × " + s.l.replace(/^1\s+/, ""), v: s.g * 2 }] : [])]), ...(pack ? [[.25, "¼ pack"], [.5, "½ pack"], [1, "1 pack"]].map(([k,l]) => ({l, v: INV.amount(pack*k)})) : []), ...[50, 100, 150, 200].map(v => ({ l: `${v} ${unit}`, v }))];
+  const editing = !!sh.itemId, prior = editing && (getDay(sh.date).meals[sh.origMeal] || []).find(it => it.id === sh.itemId);
   const swaps = !isRec && editing && sh.showSwap ? swapOptions({ kind: "food", ref: sh.ref, qty: sh.qty }, sh.meal) : null;
   return {
     title: x.name,
     head: `${sh.back === "add" ? `<button class="icon-btn" data-act="qty-back" aria-label="Back to search" style="order:-1">${ic("chevL")}</button>` : ""}<button class="icon-btn" data-act="fav" data-kind="${sh.kind}" data-id="${x.id}" aria-label="${x.fav ? "Remove from favourites" : "Add to favourites"}" style="color:${x.fav ? "var(--carb)" : "var(--faint)"}">${ic("star")}</button>`,
-    body: `<div id="qty-macros">${macroStrip(qtyMacros(sh))}</div>
+    body: `${prior?.eaten && !prior.stockUsed ? `<div class="note">This older eaten entry has no stock receipt. Editing it will keep your current pantry amount unchanged.</div>` : ""}<div id="qty-macros">${macroStrip(qtyMacros(sh))}</div>
       <div class="qty"><button class="step" data-act="qty-step" data-d="-1" aria-label="Less">${ic("minus")}</button>
-        <div class="unit-inp" style="flex:1"><input id="qty-in" class="inp" inputmode="decimal" enterkeyhint="done" value="${fmtQ(sh.qty)}" data-in="qty" aria-label="Amount"><span>${unit}</span></div>
+        <div class="unit-inp" style="flex:1"><input id="qty-in" class="inp" inputmode="decimal" enterkeyhint="done" value="${sh.qty}" data-in="qty" aria-label="Amount"><span>${unit}</span></div>
         <button class="step" data-act="qty-step" data-d="1" aria-label="More">${ic("plus")}</button></div>
       <div id="qty-impact" class="impact">${qtyImpact(sh)}</div>
       <div class="chips">${presets.map(p => `<button class="chip" data-act="qty-set" data-v="${p.v}" aria-pressed="${Math.abs(p.v - sh.qty) < 0.01}">${esc(p.l)}</button>`).join("")}</div>
+      ${pack ? `<div class="field"><label for="qty-pack-fraction">Fraction of a ${fmtN(pack)} ${unit} pack</label><input id="qty-pack-fraction" class="inp" inputmode="text" placeholder="e.g. 1/3" data-in="qty-pack-fraction"></div>` : ""}
       <div class="field"><span class="flabel">${editing ? "Meal" : "Add to"}</span>${mealChips(sh.meal)}</div>
       ${x.brand ? `<div class="faint" style="font-size:13px">${esc(x.brand)}</div>` : ""}
       ${!isRec ? `<div class="faint" style="font-size:13px">${foodSub(x)}${x.per.fib ? ` · ${r1(x.per.fib)} g fibre` : ""}</div>` : `<div class="faint" style="font-size:13px">${x.ingredients.map(i => esc(getFood(i.food)?.name || "?")).join(", ")}</div>`}
@@ -4903,38 +4932,49 @@ SHEETS.typeedit = sh => {
 };
 
 /* ---------- pantry item ---------- */
-/* pantry units: stored in the food's own unit (g or ml); shown and typed in g, kg, ml, l, cl, spoons, pieces or packs.
-   g and ml swap 1:1 (water-like), which is close enough for milk, juice, oil-free sauces and yogurt */
+/* Pantry is stored in the food's own unit. Never infer density for mass/volume conversion. */
 const PA_U = { g: [1, "g"], kg: [1000, "kg"], ml: [1, "ml"], cl: [10, "cl"], l: [1000, "l"], tbsp: [15, "tbsp"], tsp: [5, "tsp"] };
 function pantryUnits(f, p) { const pw = p?.pw || (f.countable || /\b(egg|uov|piece|pezz|fillet|filetto|slice|fett|can|scatolett|bar|barrett|jar|vasett|bottle|bottigli|pot|yogurt)/i.test(f.servings?.[0]?.l || "") ? f.servings?.[0]?.g : null) || null;
-  return { base: f.unit || "g", pw, pack: p?.pk || f.pack || null }; }
+  return { base: f.unit || "g", pw, pack: p?.pk || f.pack || null,
+    tbsp: (f.servings || []).find(x => /^1\s*(tbsp|tablespoon|cucchiaio)\b/i.test(x.l))?.g || null,
+    tsp: (f.servings || []).find(x => /^1\s*(tsp|teaspoon|cucchiaino)\b/i.test(x.l))?.g || null }; }
 /* how many base units (g or ml) one of unit u is */
-function paFac(U, u) { return u === "pz" ? U.pw || 0 : u === "pack" ? U.pack || 0 : !u || u === "base" ? 1 : PA_U[u]?.[0] || 1; }
+function paFac(U, u) {
+  if (!u || u === "base" || u === U.base) return 1;
+  if (u === "pz") return U.pw || 0;
+  if (u === "pack") return U.pack || 0;
+  if (u === "tbsp" || u === "tsp") return U[u] || (U.base === "ml" ? PA_U[u][0] : 0);
+  if (U.base === "g" && u === "kg") return 1000;
+  if (U.base === "ml" && ["l", "cl"].includes(u)) return PA_U[u][0];
+  return 0;
+}
 const paLabel = (U, u, n) => u === "pz" ? (n === 1 ? "piece" : "pieces") : u === "pack" ? (n === 1 ? "pack" : "packs") : !u || u === "base" ? U.base : PA_U[u]?.[1] || U.base;
 function pantryQty(f, p) { const U = pantryUnits(f, p), u = p?.u, fac = paFac(U, u);
-  if (!u || u === "base" || !fac) return { v: fmtN(p.g), u: U.base };
-  const n = p.g / fac, v = Math.abs(n - Math.round(n)) < 0.05 ? Math.round(n) : n < 10 ? Math.round(n * 100) / 100 : r1(n); return { v: v.toLocaleString("en-US"), u: paLabel(U, u, v) }; }
-function paUnitOpts(U) { const liq = U.base === "ml"; return [["base", U.base], ...(liq ? [["l", "l"], ["cl", "cl"], ["g", "g"]] : [["kg", "kg"], ["ml", "ml"], ["l", "l"]]), ["pz", "pieces"], ["pack", "packs"], ["tbsp", "tbsp"], ["tsp", "tsp"]]; }
+  if (!u || u === "base" || !fac) return { v: fmtStock(p.g), u: U.base };
+  const v = Math.round(p.g / fac * 1e6) / 1e6; return { v: v.toLocaleString("en-US", { maximumFractionDigits: 6 }), u: paLabel(U, u, v) }; }
+function paUnitOpts(U) { return [["base", U.base], ...(U.base === "ml" ? [["l", "l"], ["cl", "cl"]] : [["kg", "kg"]]), ["pz", "pieces"], ["pack", "packs"], ...["tbsp", "tsp"].filter(u => paFac(U, u)).map(u => [u, u])]; }
 SHEETS.pantry = sh => {
   const f = sh.food ? getFood(sh.food) || BUILTIN[sh.food] : null; const q = sh.q || "";
   const res = !f && q ? foodSearch(q, "all").filter(r => r.t === "food").slice(0, 8) : [];
   if (!f) return { title: "Add to pantry", focus: "pa-q", body: `<div class="search">${ic("search")}<input id="pa-q" type="search" placeholder="Which food?" value="${esc(q)}" data-in="pa-q" autocomplete="off"></div>
         <div class="card">${res.map(r => `<button class="lrow" data-act="pa-pick" data-id="${r.x.id}"><span class="t">${esc(r.x.name)}</span><span class="end">${ic("chevR")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type to search your foods.</span></div>`}</div>`, foot: "" };
   const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u);
-  const shown = sh.n ?? (sh.g !== "" && sh.g != null && fac ? Math.round(num(sh.g) / fac * 100) / 100 : "");
-  const opts = paUnitOpts(U), cross = (U.base === "g" && ["ml", "l", "cl"].includes(u)) || (U.base === "ml" && u === "g");
+  const shown = sh.n ?? (sh.g !== "" && sh.g != null && fac ? Math.round(num(sh.g) / fac * 1e6) / 1e6 : "");
+  const opts = paUnitOpts(U);
   return { title: f.name, focus: "pa-n",
     body: `<div class="field"><span class="flabel">Counted in</span><div class="chips pa-units">${opts.map(([k, l]) => `<button class="chip" data-act="pa-unit" data-k="${k}" aria-pressed="${u === k}">${l}</button>`).join("")}</div></div>
       ${u === "pz" ? `<div class="field"><label for="pa-pw">One piece weighs</label><div class="unit-inp" style="max-width:180px"><input id="pa-pw" class="inp" inputmode="decimal" value="${esc(String(sh.pw ?? U.pw ?? ""))}" placeholder="e.g. 60" data-in="pa" data-k="pw"><span>${U.base}</span></div></div>` : ""}
-      ${u === "pack" && !(f.pack > 0) ? `<div class="field"><label for="pa-pk">One pack contains</label><div class="unit-inp" style="max-width:180px"><input id="pa-pk" class="inp" inputmode="decimal" value="${esc(String(sh.pk ?? U.pack ?? ""))}" placeholder="e.g. 500" data-in="pa" data-k="pk"><span>${U.base}</span></div></div>` : ""}
+      <div class="field"><label for="pa-pk">One pack contains</label><div class="unit-inp" style="max-width:180px"><input id="pa-pk" class="inp" inputmode="decimal" value="${esc(String(sh.pk ?? U.pack ?? ""))}" placeholder="e.g. 500" data-in="pa" data-k="pk"><span>${U.base}</span></div></div>
       <div class="grid2"><div class="field"><label for="pa-n">Amount at home</label><div class="unit-inp"><input id="pa-n" class="inp" inputmode="decimal" value="${esc(String(shown))}" data-in="pa" data-k="n"><span>${u === "pz" ? "pcs" : paLabel(U, u, 2)}</span></div></div>
         <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div></div>
-      ${u !== "base" && fac && num(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtN(r0(num(shown) * fac))} ${U.base}${cross ? " · 1 g ≈ 1 ml" : ""}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : u === "pack" && !fac ? `<div class="faint" style="font-size:12.5px">Type how much one pack contains.</div>` : ""}
+      ${u !== "base" && fac && INV.parseQuantity(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtStock(INV.parseQuantity(shown) * fac)} ${U.base}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : u === "pack" && !fac ? `<div class="faint" style="font-size:12.5px">Type how much one pack contains.</div>` : ""}
+      <div class="grid2"><div class="field"><label for="pa-price">Price (€)</label><input id="pa-price" class="inp" inputmode="decimal" value="${esc(String(sh.price ?? priceOf(f.id)?.eur ?? ""))}" data-in="pa" data-k="price" placeholder="Unknown"></div><div class="field"><label for="pa-price-g">Price is for (${U.base})</label><input id="pa-price-g" class="inp" inputmode="decimal" value="${esc(String(sh.priceG ?? priceOf(f.id)?.g ?? U.pack ?? 1000))}" data-in="pa" data-k="priceG"></div></div>
+      <div class="faint">Use the pack quantity for a pack price, or 1000 ${U.base} for a price per ${U.base === "ml" ? "litre" : "kg"}. Fractions such as 1/2 are accepted in Amount at home.</div>
       <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>`,
     foot: `${S.shop.pantry[f.id] ? `<button class="btn danger" data-act="pa-del" style="flex:0 0 auto" aria-label="Remove from pantry">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pa-save">Save</button>` };
 };
 function paGrams(sh) { const f = getFood(sh.food) || BUILTIN[sh.food], U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base";
-  if (sh.n == null) return num(sh.g); const fac = paFac(U, u); return fac ? num(sh.n) * fac : 0; }
+  if (sh.n == null) return INV.parseQuantity(sh.g); const fac = paFac(U, u); return fac ? INV.parseQuantity(sh.n) * fac : NaN; }
 
 /* ---------- onboarding ---------- */
 SHEETS.onboard = sh => ({
@@ -5653,12 +5693,13 @@ Reply with only JSON: {"days":[{"date":"YYYY-MM-DD","meals":{"<meal id>":{"dish"
 
 /* ================= planner actions ================= */
 function snapshotDays(dates) { const o = {}; for (const d of dates) o[d] = S.days[d] ? clone(S.days[d]) : null; return o; }
-function restoreDays(snap) { for (const [d, v] of Object.entries(snap)) put("days", d, v); }
+function replacePlannedDay(date, value, opts = {}) { return mutateDay(date, next => { for (const k of Object.keys(next)) delete next[k]; Object.assign(next, clone(value || emptyDay(date))); }, opts); }
+function restoreDays(snap) { return inventoryChange(() => { for (const [d, v] of Object.entries(snap)) replacePlannedDay(d, v, { restoreReceipts: true }); }); }
 function quickPlan(date) {
   const snap = snapshotDays([date]);
   const ctx = plannerContext(); seedRecent(ctx, date);
   const day = planDay(date, ctx, { mode: "fill" });
-  put("days", date, day);
+  if (!replacePlannedDay(date, day)) return;
   toast(`Planned ${relDay(date).toLowerCase()} · ${fmtN(dayTotals(day).kcal)} kcal`, () => restoreDays(snap));
 }
 async function runPlanner() {
@@ -5687,7 +5728,7 @@ async function runPlanner() {
       if (twin && (m.kind || "m") === "m") { const src = (twin.meals[m.id] || []).filter(it => it.kind !== "quick" && !it.cheat); if (src.length) { const items = itemsFromIds(src.map(it => it.ref), MT); if (items) return { items, dish: twin.dish?.[m.id] || null }; } }
       const pm = picks?.[d]?.[m.id]; if (!pm) return null; const items = balancedFromIds(pm.items, MT, m, ctx); return items ? { items, dish: pm.dish } : null; };
     const day = planDay(d, ctx, { mode: sh.mode, picker }); made[d] = day;
-    put("days", d, day); total++;
+    if (!replacePlannedDay(d, day)) { sh.busy = null; renderSheet(); return; } total++;
     decayRecent(ctx); for (const [m, it] of dayItems(day)) { ctx.recent[m + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1; }
   }
   const err = sh.err; closeSheet();
@@ -5795,7 +5836,7 @@ ACT["side-toggle"] = () => { UI.sideOpen = !UI.sideOpen; try { localStorage.setI
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
 ACT["close-sheet"] = () => closeSheet();
-ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo = null; if (u) { u(); toast("Undone"); } };
+ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo = null; if (u && u() !== false) toast("Undone"); };
 
 /* plan */
 ACT["open-training"] = el => openSheet("training", el.dataset.sched ? { sched: el.dataset.sched, live: true } : { date: el.dataset.date || UI.date, live: true });
@@ -5809,11 +5850,11 @@ ACT["copy-from"] = el => {
   mutateDay(UI.date, d => { for (const [m, items] of Object.entries(src.meals || {})) d.meals[m] = (d.meals[m] || []).concat(items.map(it => ({ ...clone(it), id: uid(), eaten: false }))); if (src.dish) d.dish = { ...(d.dish || {}), ...src.dish }; }, { undo: "Copied yesterday's meals" });
 };
 ACT["all-eaten"] = () => {
-  mutateDay(UI.date, d => { for (const [, it] of dayItems(d)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }, { undo: "Marked everything as eaten" });
+  mutateDay(UI.date, d => { for (const [, it] of dayItems(d)) if (!it.eaten) { it.eaten = true; } }, { undo: "Marked everything as eaten" });
 };
 ACT["toggle-eaten"] = el => {
   const { meal, id } = el.dataset;
-  mutateDay(UI.date, d => { const it = (d.meals[meal] || []).find(x => x.id === id); if (it) { it.eaten = !it.eaten; pantryAdjust(it, it.eaten ? 1 : -1); } });
+  mutateDay(UI.date, d => { const it = (d.meals[meal] || []).find(x => x.id === id); if (it) { it.eaten = !it.eaten; } });
 };
 ACT["open-add"] = el => openSheet("add", { date: UI.date, meal: el.dataset.meal || (UI.date === todayISO() ? suggestMeal() : (activeMeals().find(m => !(getDay(UI.date).meals[m.id] || []).length) || activeMeals()[0]).id), seg: "recent", q: "" });
 ACT["open-item"] = el => {
@@ -5831,7 +5872,7 @@ ACT["day-menu"] = () => {
     { label: "Share the day as a picture", icon: "image", run: () => ACT["plan-share"]({ dataset: { date } }) },
     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
     ...(has ? [
-      { label: "Mark all as not eaten", icon: "undo", run: () => mutateDay(date, d => { for (const [, it] of dayItems(d)) if (it.eaten) { it.eaten = false; pantryAdjust(it, -1); } }, { undo: "Unmarked all" }) },
+      { label: "Mark all as not eaten", icon: "undo", run: () => mutateDay(date, d => { for (const [, it] of dayItems(d)) if (it.eaten) { it.eaten = false; } }, { undo: "Unmarked all" }) },
       { label: "Clear the day", icon: "trash", danger: true, sub: "Removes every planned food", run: () => mutateDay(date, d => { d.meals = {}; delete d.dish; }, { undo: "Day cleared" }) }] : [])
   ];
   openSheet("menu", { title: fmtLong(date), items });
@@ -5842,11 +5883,11 @@ ACT["meal-menu"] = el => {
     { label: items.length ? "Fill the rest of this meal" : "Plan this meal", icon: "spark", sub: "Uses this meal's share of the day's targets", run: () => {
       const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
       const day = planDay(UI.date, ctx, { mode: "fill", meals: [mid] });
-      put("days", UI.date, day); toast(`Planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
+      if (!replacePlannedDay(UI.date, day)) return; toast(`Planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
     ...(items.length ? [
       { label: "Re-plan from scratch", icon: "swap", sub: "Keeps items already eaten", run: () => {
         const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
-        const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
+        const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); if (!replacePlannedDay(UI.date, day)) return; toast(`Re-planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
       { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
       ...activeMeals().filter(m => m.id !== mid).map(m => ({ label: `Swap with ${m.name.toLowerCase()}`, icon: "swap", sub: `${mealName(mid)} ↔ ${m.name}`, run: () => {
         mutateDay(UI.date, d => {
@@ -5857,7 +5898,7 @@ ACT["meal-menu"] = el => {
       } })),
       { label: "Make it a cheat meal", icon: "star", sub: "Estimate it and let the plan make room", run: () => openCheat({ date: UI.date, meal: mid }) },
       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
-      { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }) },
+      { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; } }) },
       { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => mutateDay(UI.date, d => { delete d.meals[mid]; if (d.dish) delete d.dish[mid]; }, { undo: `${mealName(mid)} cleared` }) }] : [])
   ];
   openSheet("menu", { title: mealName(mid), items: list });
@@ -5883,8 +5924,8 @@ ACT.pick = el => { const sh = S_(); openSheet("qty", { kind: el.dataset.kind, re
 const backToAdd = sh => openSheet("add", { date: sh.date, meal: sh.meal, seg: sh.addSeg || "recent", q: sh.addQ || "" });
 ACT["qty-back"] = () => backToAdd(S_());
 ACT["add-rm"] = el => { const sh = S_(), date = sh.date || UI.date, id = el.dataset.id; const it = (getDay(date).meals[sh.meal] || []).find(x => x.id === id); if (!it) return;
-  mutateDay(date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== id); }); refreshAdd();
-  toast(`Removed ${itemName(it)}`, () => { mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }); refreshAdd(); }); };
+  if (!mutateDay(date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== id); })) return; refreshAdd();
+  toast(`Removed ${itemName(it)}`, () => { const ok = mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(clone(it)); }, { restoreReceipts: true }); refreshAdd(); return ok; }); };
 ACT["quick-add"] = el => {
   const sh = S_(); const kind = el.dataset.kind, ref = el.dataset.id;
   const qty = +el.dataset.qty || (kind === "recipe" ? 1 : defaultQty(getFood(ref)));
@@ -5920,9 +5961,10 @@ ACT["qty-step"] = el => {
   let step = sh.kind === "recipe" ? 0.25 : 5;
   if (sh.kind === "food") { const f = getFood(sh.ref); if (f?.countable && f.servings?.[0]) step = f.servings[0].g; else if (sh.qty >= 100) step = 10; }
   sh.qty = Math.max(sh.kind === "recipe" ? 0.25 : 1, Math.round((sh.qty + d * step) * 100) / 100);
-  $("#qty-in").value = fmtQ(sh.qty); updQtyStrip();
+  $("#qty-in").value = sh.qty; updQtyStrip();
 };
-ACT["qty-set"] = el => { const sh = S_(); sh.qty = +el.dataset.v; $("#qty-in").value = fmtQ(sh.qty); updQtyStrip(); };
+
+ACT["qty-set"] = el => { const sh = S_(); sh.qty = +el.dataset.v; $("#qty-in").value = sh.qty; updQtyStrip(); };
 ACT["show-swap"] = () => { S_().showSwap = !S_().showSwap; renderSheet(); };
 ACT["do-swap"] = el => {
   const sh = S_(); const nf = getFood(el.dataset.id); const q = +el.dataset.q;
@@ -5935,19 +5977,19 @@ ACT["item-del"] = () => {
   closeSheet();
 };
 ACT["qty-save"] = () => {
-  const sh = S_(); const qty = num($("#qty-in")?.value) || sh.qty;
-  if (!(qty > 0)) { toast("Enter an amount above zero."); return; }
+  const sh = S_(); const qty = INV.parseQuantity($("#qty-in")?.value ?? sh.qty);
+  if (!(qty > 0) || !Number.isSafeInteger(Math.round(qty * 1000))) { toast("Enter a valid amount above zero."); return; }
   if (sh.itemId) {
-    mutateDay(sh.date, d => {
+    if (!mutateDay(sh.date, d => {
       const src = d.meals[sh.origMeal] || []; const i = src.findIndex(x => x.id === sh.itemId); if (i < 0) return;
-      const it = src[i]; if (it.eaten) pantryAdjust({ ...it }, -1);
-      it.qty = qty; if (it.eaten) pantryAdjust(it, 1);
+      const it = src[i];
+      it.qty = qty;
       if (sh.meal !== sh.origMeal) { src.splice(i, 1); (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }
-    });
+    })) return;
     closeSheet(); return;
   }
   const it = newItem(sh.kind, sh.ref, qty);
-  mutateDay(sh.date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); });
+  if (!mutateDay(sh.date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); })) return;
   const undo = () => mutateDay(sh.date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== it.id); });
   if (sh.date !== UI.date && UI.tab === "plan") UI.date = sh.date;
   if (sh.back === "add") backToAdd(sh); else closeSheet();
@@ -6139,16 +6181,27 @@ ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
-ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: p.u || "base", pw: p.pw, pk: p.pk }); };
-ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food], f = getFood(sh.food) || BUILTIN[sh.food]; sh.g = p?.g ?? (f.pack || ""); sh.exp = p?.exp || ""; sh.u = p?.u || (f.countable ? "pz" : "base"); sh.pw = p?.pw; sh.pk = p?.pk; sh._new = true; renderSheet(); };
+ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: paFac(pantryUnits(getFood(el.dataset.id) || BUILTIN[el.dataset.id], p), p.u) ? p.u || "base" : "base", pw: p.pw, pk: p.pk }); };
+ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food], f = getFood(sh.food) || BUILTIN[sh.food]; sh.g = p?.g ?? (f.pack || ""); sh.exp = p?.exp || ""; sh.u = p?.u && paFac(pantryUnits(f, p), p.u) ? p.u : f.countable ? "pz" : "base"; sh.pw = p?.pw; sh.pk = p?.pk; sh._new = true; renderSheet(); };
 ACT["pa-unit"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; const g = paGrams(sh); sh.u = el.dataset.k; sh.n = undefined; if (g > 0) sh.g = g; renderSheet(); };
 ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
-ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", pw = num(sh.pw) || null, pk = num(sh.pk) || null, F = getFood(sh.food) || BUILTIN[sh.food];
-  if (u === "pz" && !pw && !pantryUnits(F).pw) { toast("Type the weight of one piece."); $("#pa-pw")?.focus(); return; }
-  if (u === "pack" && !pk && !pantryUnits(F, S.shop.pantry[sh.food]).pack) { toast("Type how much one pack contains."); $("#pa-pk")?.focus(); return; }
-  const old = S.shop.pantry[sh.food] || {};
-  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
-ACT["pa-del"] = () => { const sh = S_(); delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
+ACT["pa-save"] = () => {
+  const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return;
+  const g = paGrams(sh), old = S.shop.pantry[sh.food] || {}, u = sh.u || "base";
+  const pw = sh.pw == null || sh.pw === "" ? old.pw : INV.parseQuantity(sh.pw), pk = sh.pk == null || sh.pk === "" ? old.pk : INV.parseQuantity(sh.pk);
+  const priceText = sh.price ?? priceOf(f.id)?.eur ?? "", eur = priceText === "" ? null : INV.parseQuantity(priceText);
+  const priceG = INV.parseQuantity(sh.priceG ?? priceOf(f.id)?.g ?? pk ?? f.pack ?? 1000);
+  if (!Number.isFinite(g) || g < 0 || !Number.isSafeInteger(Math.round(g * 1000)) || (g > 0 && !INV.amount(g)) || (pw != null && !(pw > 0)) || (pk != null && !(pk > 0)) || (eur != null && (!Number.isFinite(eur) || !(priceG > 0)))) { toast("Enter a valid quantity and price basis. Pieces and packs need a known size."); return; }
+  const ok = inventoryChange(() => {
+    S.shop.pantry[sh.food] = clean0({ ...old, g: INV.amount(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || null, pk: pk || null });
+    S.shop.prices ||= {};
+    if (eur == null) delete S.shop.prices[f.id];
+    else S.shop.prices[f.id] = { ...(S.shop.prices[f.id] || {}), eur: Math.round(eur * 100) / 100, g: priceG, at: todayISO(), manual: true };
+    put("shop", "", S.shop);
+  });
+  if (ok) closeSheet();
+};
+ACT["pa-del"] = () => { const sh = S_(); removeInventory(sh.food); if (!S.shop.pantry[sh.food]) closeSheet(); };
 
 /* stats */
 ACT["stats-range"] = el => { UI.statsRange = +el.dataset.n; scheduleRender(); };
@@ -6207,7 +6260,7 @@ ACT["ob-done"] = () => {
   const plan = sh.plan; closeSheet();
   if (plan) {
     const ctx = plannerContext(); const start = todayISO();
-    for (let i = 0; i < 7; i++) { const d = addDays(start, i); const day = planDay(d, ctx, { mode: "fill" }); put("days", d, day); decayRecent(ctx); for (const [m, it] of dayItems(day)) ctx.recent[m + "|" + it.ref] = 1; }
+    for (let i = 0; i < 7; i++) { const d = addDays(start, i); const day = planDay(d, ctx, { mode: "fill" }); replacePlannedDay(d, day); decayRecent(ctx); for (const [m, it] of dayItems(day)) ctx.recent[m + "|" + it.ref] = 1; }
     UI.date = start; UI.tab = "plan"; toast("Your next 7 days are planned. Tap any food to change it.");
   } else toast("Targets saved");
   scheduleRender();
@@ -6220,7 +6273,7 @@ const INP = {
   // typing only refreshes the results: the field keeps focus, the keyboard and what you're composing
   "lb-text": v => { const sh = S_(); if (sh) sh.text = v; },
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
-  qty: v => { S_().qty = num(v); updQtyStrip(); },
+  qty: v => { S_().qty = INV.parseQuantity(v) || 0; updQtyStrip(); },
   fd: (v, el) => { const d = S_().draft; d[el.dataset.k] = v; },
   "fd-mx": (v, el) => { const d = S_().draft; d.mx = { ...(d.mx || {}), [el.dataset.k]: v }; },
   "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; const calc = kcalFromMacros(d.per);
@@ -6677,7 +6730,7 @@ ACT["ch-del"] = () => {
   clearCheatAdj(id); mutateDay(sh.date, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); });
   for (const day of touched) if (day !== sh.date && dayItems(getDay(day)).length) rebalanceDayFn(day);
   // refill the meal the cheat was in
-  if (sh.date >= todayISO() && !(getDay(sh.date).meals[sh.meal] || []).length) { const ctx = plannerContext(); put("days", sh.date, planDay(sh.date, ctx, { mode: "fill", meals: [sh.meal] })); }
+  if (sh.date >= todayISO() && !(getDay(sh.date).meals[sh.meal] || []).length) { const ctx = plannerContext(); replacePlannedDay(sh.date, planDay(sh.date, ctx, { mode: "fill", meals: [sh.meal] })); }
   closeSheet(); toast("Cheat meal removed · the meal was planned again", () => restoreDays(snap));
 };
 
@@ -9767,39 +9820,34 @@ function shoppingNeeds(start, n) {
     for (const [m, it] of dayItems(d)) {
       if (it.eaten || it.kind === "quick") continue;
       if (it.kind === "food") add(it.ref, it.qty, `${d.dish?.[m] || mealName(m)} ${dd}`);
-      else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1), `${r.name} ${dd}`); }
+      else { const r = recipeForItem(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1), `${r.name} ${dd}`); }
     }
   }
   return { need, src };
 }
 function shoppingRows(start, n) {
-  const { need, src } = shoppingNeeds(start, n), rows = [];
-  for (const [id, g] of Object.entries(need)) {
-    const f = getFood(id) || BUILTIN[id]; if (!f) continue;
-    const have = S.shop.pantry[id]?.g || 0, buy = Math.max(0, r0(g - have));
-    const packs = f.pack && buy > 0 ? Math.ceil(buy / f.pack - 0.02) : 0, left = packs ? r0(packs * f.pack - buy) : 0;
-    rows.push({ id, f, need: r0(g), have, buy, packs, left, cat: f.cat || "other", src: [...(src[id] || [])] });
-  }
-  return rows;
+  const { src } = shoppingNeeds(start, n);
+  return INV.rows({ days: S.days, pantry: S.shop.pantry, start, end: addDays(start, n - 1), today: todayISO(), food: foodForItem, recipe: recipeForItem })
+    .map(r => ({ ...r, src: [...(src[r.id] || [])] }));
 }
 /* prices: the last price paid for a food, per gram */
 const priceOf = id => { const p = S.shop.prices?.[id]; return p && p.g > 0 && p.eur >= 0 ? p : null; };
 /* price per gram: the middle of your last purchases, so a cheap or dear week doesn't swing the estimate */
-const eurPerG = id => { const p = priceOf(id); if (!p) return null; const h = (p.hist || []).filter(x => x.g > 0 && x.eur >= 0).slice(-5); if (h.length >= 2) { const v = h.map(x => x.eur / x.g).sort((a, b) => a - b); return v[v.length >> 1]; } return p.eur / p.g; };
+const eurPerG = id => { const p = priceOf(id); if (!p) return null; if (p.manual) return p.eur / p.g; const h = (p.hist || []).filter(x => x.g > 0 && x.eur >= 0).slice(-5); if (h.length >= 2) { const v = h.map(x => x.eur / x.g).sort((a, b) => a - b); return v[v.length >> 1]; } return p.eur / p.g; };
 const fmtEur = v => v == null ? "" : "€" + (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : fmtN(r0(v))).replace(".", ",");
 /* what you'd actually carry home: whole packs when the food comes in packs */
 const buyG = r => r.packs ? r.packs * r.f.pack : r.buy;
-function rowCost(r) { const c = S.shop.checked?.[r.id]; if (c && c.eur != null) return +c.eur; const k = eurPerG(r.id); return k == null ? null : k * buyG(r); }
+function rowCost(r) { const c = S.shop.checked?.[r.id]; if (c && c.eur != null) return +c.eur; const k = eurPerG(r.id); return k == null ? null : k * (c?.g ?? buyG(r)); }
 function shopToBuy() { return shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0); }
 function shopBadge() { const n = shopToBuy().filter(r => !S.shop.checked?.[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length; return n ? `<span class="badge">${n > 99 ? "99+" : n}</span>` : ""; }
 const shopBtn = () => `<button class="icon-btn has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart")}${shopBadge()}</button>`;
 function shopRowHTML(r, compact) {
   const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
-  const packTxt = r.packs ? `${r.packs} pack${r.packs > 1 ? "s" : ""} of ${fmtN(r.f.pack)} ${u}${r.left >= 10 ? ` · ${fmtN(r.left)} ${u} to the pantry` : ""}` : "";
-  const sub = compact ? [packTxt, got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ") : [r.src.slice(0, 3).join(", ") + (r.src.length > 3 ? ` +${r.src.length - 3}` : ""), packTxt, r.have ? `${fmtN(r.have)} ${u} at home` : "", got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ");
+  const packTxt = r.packs ? `${r.packs} pack${r.packs > 1 ? "s" : ""} of ${fmtStock(r.f.pack)} ${u}${r.left >= 10 ? ` · ${fmtN(r.left)} ${u} to the pantry` : ""}` : "";
+  const sub = compact ? [packTxt, got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ") : [r.src.slice(0, 3).join(", ") + (r.src.length > 3 ? ` +${r.src.length - 3}` : ""), packTxt, r.have ? `${fmtStock(r.have)} ${u} at home` : "", got ? `got ${fmtN(got)} ${u}` : ""].filter(Boolean).join(" · ");
   return `<div class="shop-row ${done ? "done" : ""}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
     <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</button>
-    <button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button></div>`;
+    <button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtStock(r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button></div>`;
 }
 function shopListHTML(rows, compact) {
   let h = ""; const ck = S.shop.checked || {};
@@ -9816,11 +9864,11 @@ function shopTotals(rows) { let est = 0, known = 0, inCart = 0; for (const r of 
 ACT["shopq-open"] = () => openSheet("shopq", { live: true });
 /* in the shop: how much you took, what it cost */
 SHEETS.buy = sh => {
-  const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); const f = getFood(sh.id) || BUILTIN[sh.id]; if (!f) return { title: "Not found", body: "" };
+  const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); const base = getFood(sh.id) || BUILTIN[sh.id], f = base && { ...base, pack: S.shop.pantry[sh.id]?.pk || base.pack }; if (!f) return { title: "Not found", body: "" };
   const u = f.unit || "g", p = priceOf(sh.id), k = eurPerG(sh.id), g = num(sh.g), est = k != null && g ? k * g : null;
-  const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtN(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean);
+  const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtStock(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean);
   return { title: f.name, focus: "by-g",
-    body: `${r ? `<div class="faint" style="font-size:13px">Planned: ${fmtN(r.need)} ${u}${r.have ? ` · ${fmtN(r.have)} ${u} at home` : ""}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}</div>` : ""}
+    body: `${r ? `<div class="faint" style="font-size:13px">Planned: ${fmtStock(r.need)} ${u}${r.have ? ` · ${fmtStock(r.have)} ${u} at home` : ""}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}</div>` : ""}
       <div class="grid2"><div class="field"><label for="by-g">You're taking</label><div class="unit-inp"><input id="by-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="by" data-k="g"><span>${u}</span></div></div>
       <div class="field"><label for="by-eur">Price paid</label><div class="unit-inp"><input id="by-eur" class="inp" inputmode="decimal" value="${sh.eur ?? ""}" placeholder="${est != null ? est.toFixed(2) : ""}" data-in="by" data-k="eur"><span>€</span></div></div></div>
       <div class="chips">${chips.map(([v, l]) => `<button class="chip" data-act="by-set" data-v="${v}">${l}</button>`).join("")}</div>
@@ -9831,31 +9879,18 @@ SHEETS.buy = sh => {
 ACT["shop-buy"] = el => { const id = el.dataset.id, c = S.shop.checked?.[id], r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === id);
   openSheet("buy", { id, g: c?.g ?? (r ? buyG(r) : ""), eur: c?.eur ?? "" }); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
-ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
-  S.shop.checked[sh.id] = { g: g || null, eur: eur != null && eur >= 0 ? Math.round(eur * 100) / 100 : null }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
-ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
+ACT["by-ok"] = () => { const sh = S_(), g = INV.parseQuantity(sh.g), eur = sh.eur === "" || sh.eur == null ? null : INV.parseQuantity(sh.eur);
+  if (!INV.amount(g) || (eur != null && !Number.isFinite(eur))) { toast("Enter a valid amount and price."); return; }
+  if (!inventoryChange(() => { S.shop.checked ||= {}; S.shop.checked[sh.id] = { g: INV.amount(g), eur: eur == null ? null : Math.round(eur * 100) / 100 }; put("shop", "", S.shop); })) return;
+  closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true });
+};
+ACT["by-out"] = () => { const sh = S_(); if (inventoryChange(() => { delete S.shop.checked[sh.id]; put("shop", "", S.shop); })) closeSheet(); };
 INP.by = (v, el) => { S_()[el.dataset.k] = v; };
 ACT["shop-check"] = el => { const id = el.dataset.id; S.shop.checked = S.shop.checked || {}; if (S.shop.checked[id]) delete S.shop.checked[id]; else S.shop.checked[id] = true; put("shop", "", S.shop); };
 CHG["extra-eur"] = (v, el) => { const x = (S.shop.extras || []).find(e => e.id === el.dataset.id); if (!x) return; const e = num(v); if (e > 0) { x.eur = Math.round(e * 100) / 100; put("shop", "", S.shop); } };
-/* finish: what was taken goes to the pantry (leftovers included), prices are remembered, spending is logged */
-ACT["shop-done"] = () => {
-  const rows = shoppingRows(UI.shopStart, S.shop.range || 7), today = todayISO(); let n = 0, tot = 0; S.shop.buys = S.shop.buys || []; S.shop.prices = S.shop.prices || {};
-  for (const [id, c] of Object.entries(S.shop.checked || {})) { if (!c) continue; const r = rows.find(x => x.id === id), f = getFood(id) || BUILTIN[id]; if (!f) continue;
-    const g = r0(c.g || (r ? buyG(r) : f.pack || 0)); if (!(g > 0)) continue;
-    const eur = c.eur != null ? c.eur : eurPerG(id) != null ? Math.round(eurPerG(id) * g * 100) / 100 : null;
-    const p = S.shop.pantry[id] || { g: 0 }, shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[f.cat] || 14;
-    S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : null }; // no use-by unless you set one
-    if (c.eur != null) { const old = S.shop.prices[id]; S.shop.prices[id] = { eur: c.eur, g, at: today, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: c.eur, g, at: today }].slice(-8) }; }
-    S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null }); if (eur != null) tot += eur; n++; }
-  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null }); if (x.eur != null) tot += +x.eur; n++; }
-  S.shop.buys = S.shop.buys.filter(b => b.d >= addDays(today, -730));
-  S.shop.checked = {}; S.shop.extras = (S.shop.extras || []).filter(x => !x.done);
-  put("shop", "", S.shop); if (UI.sheet?.type === "shopq") closeSheet();
-  toast(`${n} item${n === 1 ? "" : "s"} in the pantry${tot ? ` · ${fmtEur(tot)} spent` : ""}`);
-};
 ACT["copy-list"] = async () => {
   const rows = shopToBuy().filter(r => !S.shop.checked?.[r.id]), lines = [];
-  for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat); if (!g.length) continue; lines.push(label.toUpperCase()); for (const r of g) lines.push(`- ${r.f.name}: ${fmtN(r.buy)} ${r.f.unit || "g"}${r.packs ? ` (${r.packs} × ${fmtN(r.f.pack)})` : ""}`); lines.push(""); }
+  for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat); if (!g.length) continue; lines.push(label.toUpperCase()); for (const r of g) lines.push(`- ${r.f.name}: ${fmtStock(r.buy)} ${r.f.unit || "g"}${r.packs ? ` (${r.packs} × ${fmtStock(r.f.pack)})` : ""}`); lines.push(""); }
   for (const x of (S.shop.extras || []).filter(x => !x.done)) lines.push(`- ${x.text}`);
   const txt = lines.join("\n").trim() || "Nothing to buy.";
   try { await navigator.clipboard.writeText(txt); toast("Shopping list copied"); } catch (e) { openSheet("confirm", { title: "Copy this list", text: txt, yes: "Done", run: () => {} }); }
@@ -9884,6 +9919,7 @@ function spendCard() {
 
 /* ================= pantry: what's at home, leftovers included, editable ================= */
 VIEWS.pantry = function () {
+<<<<<<< HEAD
   const today = todayISO(), q = UI.pantryQ, sort = UI.pantrySort || "exp", nq = norm(q).trim();
   let ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
   if (nq) ids = ids.filter(id => { const f = getFood(id) || BUILTIN[id]; return norm(f.name).includes(nq) || norm(f.brand || "").includes(nq) || norm(f.alias || ALIAS_IT[f.id] || "").includes(nq); });
@@ -9907,12 +9943,40 @@ VIEWS.pantry = function () {
   return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
     let prefix = ""; if (catH && (f.cat || "other") !== lastCat) { lastCat = f.cat || "other"; prefix = `<div class="lrow sub-h"><span class="s">${esc(AISLE_NAME[lastCat] || lastCat)}</span></div>`; }
     return prefix + `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} set aside for the plan` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
+=======
+  const pref = S.shop.view || {}, query = pref.q || "", sort = pref.sort || "expiry";
+  const today = todayISO(), ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
+  const need = panLinked(today, 14); // forecast only; real stock does not move
+  ids.sort((a, b) => sort === "az" || sort === "za" ? (sort === "za" ? -1 : 1) * (getFood(a) || BUILTIN[a]).name.localeCompare((getFood(b) || BUILTIN[b]).name) : (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
+  const visible = ids.filter(id => !query || pantryMatches((getFood(id) || BUILTIN[id]).name, query));
+  const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
+  let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
+  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
+    <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open" aria-label="What can I cook?">${ic("plate", "sm")}<span class="hide-xs">What can I cook?</span><span class="show-xs">Cook</span></button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
+  h += `<div class="toolbar" style="flex-wrap:wrap"><div class="search" style="flex:1;min-width:160px">${ic("search")}<input id="pantry-search" type="search" aria-label="Search pantry" placeholder="Search pantry" value="${esc(query)}" data-in="pantry-search"></div><select class="inp" style="width:auto" aria-label="Sort pantry" data-chg="pantry-sort">${[["expiry", "Use-by date"], ["az", "A–Z"], ["za", "Z–A"]].map(([k,l]) => `<option value="${k}" ${sort === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>`;
+  h += expiryCard("pantry");
+  if (spare.length) h += `<div class="note accent">${spare.length ? `<b>Not in the plan yet:</b> ${spare.slice(0, 6).map(id => `${esc((getFood(id) || BUILTIN[id]).name)} ${fmtN(r0(S.shop.pantry[id].g - (need[id] || 0)))} ${(getFood(id) || BUILTIN[id]).unit || "g"}`).join(", ")}. ` : ""}${expiryList().soon.length ? "" : `<button class="link" data-act="plan-pantry">Plan meals with these</button>`}</div>`;
+  if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>Purchases move here. Planned food and recipes reserve the available amount; stock is withdrawn only when you mark a meal as eaten.</p></div>`;
+  if (!visible.length) return h + `<div class="empty"><h3>No matching foods</h3><p>Try a shorter name or clear the search.</p></div>`;
+  return h + `<div class="card">${visible.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
+    return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} set aside for the plan` : ""}${sp <= 0 && need[id] ? " · Expected to run out" : sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
+>>>>>>> fix/storage-shopping-m1
       <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q => `<b>${q.v}<small>${q.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
 };
 INP["pantry-q"] = v => { UI.pantryQ = v; scheduleRender(); };
 ACT["pantry-sort"] = el => { UI.pantrySort = el.dataset.k; scheduleRender(); };
 ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
-  const U = pantryUnits(f, p), fac = paFac(U, p.u), step = p.u && p.u !== "base" && fac > 1 ? (["kg", "l"].includes(p.u) ? fac / 10 : fac) : f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
+  const U = pantryUnits(f, p), fac = paFac(U, p.u), step = p.u && p.u !== "base" && fac > 1 ? (["kg", "l"].includes(p.u) ? fac / 10 : fac) : f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10;
+  inventoryChange(() => { p.g = INV.amount(p.g + step * +el.dataset.d); put("shop", "", S.shop); });
+};
+function pantryMatches(name, query) {
+  const words = norm(name).split(/\s+/), tokens = norm(query).split(/\s+/).filter(Boolean);
+  const near = (a, b) => { if (Math.abs(a.length - b.length) > 1) return false; let prev = Array.from({length: b.length + 1}, (_, i) => i); for (let i = 1; i <= a.length; i++) { const row = [i]; for (let j = 1; j <= b.length; j++) row[j] = Math.min(row[j-1]+1, prev[j]+1, prev[j-1]+(a[i-1] !== b[j-1])); prev = row; } return prev[b.length] <= 1; };
+  return tokens.every(t => words.some(w => w.includes(t) || (t.length >= 4 && near(w, t))));
+}
+INP["pantry-search"] = v => { clearTimeout(INP._pantryT); INP._pantryT = setTimeout(() => inventoryChange(() => { S.shop.view = { ...(S.shop.view || {}), q: v }; put("shop", "", S.shop); }), 120); };
+CHG["pantry-sort"] = v => { if (["expiry", "az", "za"].includes(v)) inventoryChange(() => { S.shop.view = { ...(S.shop.view || {}), sort: v }; put("shop", "", S.shop); }); };
+
 /* leftovers you have and the plan doesn't use: offered first when adding food */
 function pantrySpare(days = 7) { const need = panLinked(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
@@ -9943,10 +10007,23 @@ function expiryCard(where) {
     ${[...E.expired, ...E.soon].slice(0, where === "today" ? 4 : 50).map(row).join("")}
     ${E.soon.length ? `<button class="btn tonal sm" data-act="plan-pantry" style="align-self:flex-start">${ic("spark", "sm")}Plan meals with these</button>` : ""}</section>`;
 }
-ACT["xp-toss"] = el => { const id = el.dataset.id, prev = clone(S.shop.pantry[id]), f = getFood(id) || BUILTIN[id];
-  S.shop.waste = S.shop.waste || []; S.shop.waste.push({ d: todayISO(), id, n: f?.name, g: prev?.g || 0, eur: eurPerG(id) != null ? Math.round(eurPerG(id) * (prev?.g || 0) * 100) / 100 : null });
-  delete S.shop.pantry[id]; put("shop", "", S.shop); toast(`${f?.name || "Item"} removed`, () => { S.shop.pantry[id] = prev; S.shop.waste.pop(); put("shop", "", S.shop); }); };
-ACT["xp-keep"] = el => { const p = S.shop.pantry[el.dataset.id]; if (!p) return; p.exp = addDays(todayISO(), 2); put("shop", "", S.shop); toast("Use-by moved to the day after tomorrow"); };
+function removeInventory(id, waste = false) {
+  const prev = clone(S.shop.pantry[id] || null), f = getFood(id) || BUILTIN[id]; if (!prev) return;
+  const tx = uid();
+  const ok = inventoryChange(() => {
+    if (waste) { S.shop.waste ||= []; S.shop.waste.push({ transactionId: tx, d: todayISO(), id, n: f?.name, g: prev.g || 0, eur: eurPerG(id) == null ? null : Math.round(eurPerG(id) * (prev.g || 0) * 100) / 100 }); }
+    delete S.shop.pantry[id]; put("shop", "", S.shop);
+  });
+  if (!ok) return;
+  let undone = false;
+  toast(`${f?.name || "Item"} removed`, () => { if (undone) return; undone = inventoryChange(() => {
+    const current = S.shop.pantry[id]; S.shop.pantry[id] = { ...prev, ...(current || {}), g: INV.amount((current?.g || 0) + prev.g) };
+    if (waste) S.shop.waste = (S.shop.waste || []).filter(x => x.transactionId !== tx);
+    put("shop", "", S.shop);
+  }); return undone; });
+}
+ACT["xp-toss"] = el => removeInventory(el.dataset.id, true);
+ACT["xp-keep"] = el => { const p = S.shop.pantry[el.dataset.id]; if (!p) return; if (inventoryChange(() => { p.exp = addDays(todayISO(), 2); put("shop", "", S.shop); })) toast("Use-by moved to the day after tomorrow"); };
 ACT["xp-use"] = el => { const id = el.dataset.id, f = getFood(id); if (!f) return; const p = S.shop.pantry[id];
   UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender();
   openSheet("qty", { kind: "food", ref: id, qty: Math.min(p?.g || defaultQty(f), Math.max(defaultQty(f), 0)), date: todayISO(), meal: suggestMeal() }); };
@@ -9972,8 +10049,13 @@ SHEETS.prodadd = sh => {
   return { title: dest === "pantry" ? "Add to the pantry" : "Bought something", focus: "pd-q",
     body: `<div class="search">${ic("search")}<input id="pd-q" type="search" placeholder="Search your foods" value="${esc(q)}" data-in="pd-q" autocomplete="off"><button class="btn ink sm" data-act="pd-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
       <div class="add-acts"><button class="aa aa-main" data-act="pd-new">${ic("plus")}<span>New food</span></button><button class="aa" data-act="pd-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="pd-scan">${ic("scan")}<span>Barcode</span></button></div>
+<<<<<<< HEAD
       <div class="card">${q ? (res.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${shoppingRows(UI.shopStart, S.shop.range || 7).some(x => x.id === r.x.id && x.buy > 0) ? "On your list" : r.x.brand ? esc(r.x.brand) : foodSub(r.x)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") || `<div class="lrow"><span><span class="t">No food called "${esc(q)}"</span><span class="s">Create it, scan its barcode or photograph the label.</span></span><span class="end"><button class="btn tonal sm" data-act="pd-new" data-name="${esc(q)}">Create</button></span></div>`)
         : list.length ? `<div class="lrow sub-h"><span class="s">Still on the list</span></div>` + list.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.id}"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.buy)} ${r.f.unit || "g"}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") : `<div class="lrow"><span class="s">Type to search, or scan the barcode.</span></div>`}</div>` };
+=======
+      <div class="card">${q ? (res.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${shoppingRows(UI.shopStart, S.shop.range || 7).some(x => x.id === r.x.id && x.buy > 0) ? "On your list" : r.x.brand ? esc(r.x.brand) : foodSub(r.x)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") || `<div class="lrow"><span><span class="t">No food called “${esc(q)}”</span><span class="s">Create it, scan its barcode or photograph the label.</span></span><span class="end"><button class="btn tonal sm" data-act="pd-new" data-name="${esc(q)}">Create</button></span></div>`)
+        : list.length ? `<div class="lrow sub-h"><span class="s">Still on the list</span></div>` + list.map(r => `<button class="lrow" data-act="pd-pick" data-id="${r.id}"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtStock(r.buy)} ${r.f.unit || "g"}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") : `<div class="lrow"><span class="s">Type to search, or scan the barcode.</span></div>`}</div>` };
+>>>>>>> fix/storage-shopping-m1
 };
 INP["pd-q"] = v => { const sh = S_(); sh.q = v; renderSheet(); };
 const pdOpen = dest => { UI.dest = dest; openSheet("prodadd", {}); };
@@ -10870,7 +10952,7 @@ function planRows(start, n) { const out = []; for (let i = 0; i < n; i++) { cons
 function planText(rows, o) { const L = [`Meal plan · ${fmtDM(rows[0].d)}${rows.length > 1 ? " – " + fmtDM(rows[rows.length - 1].d) : ""}`];
   for (const r of rows) { L.push("", `${DOWL[dow(r.d)]} ${fmtDM(r.d)}${o.macros && r.t ? ` · ${fmtN(r.t.kcal)} kcal · C${r0(r.t.c)} P${r0(r.t.p)} F${r0(r.t.f)}` : ""}`); if (!r.meals.length) L.push("  (nothing planned)");
     for (const x of r.meals) { L.push(`  ${x.m.name}`); for (const it of x.items) L.push(`   - ${it.n} · ${it.q}`); } }
-  if (o.shop) { const s = planShop(rows[0].d, rows.length); if (s.length) { L.push("", "Shopping list"); for (const r of s) L.push(`  - ${r.f.name}: ${fmtN(r.buy)} ${r.f.unit || "g"}`); } }
+  if (o.shop) { const s = planShop(rows[0].d, rows.length); if (s.length) { L.push("", "Shopping list"); for (const r of s) L.push(`  - ${r.f.name}: ${fmtStock(r.buy)} ${r.f.unit || "g"}`); } }
   return L.join("\n"); }
 async function planImage(rows, o) {
   const W = 1080, font = getComputedStyle(document.body).fontFamily || "system-ui", P = 56, lh = 40;
@@ -10885,13 +10967,13 @@ async function planImage(rows, o) {
     for (const m of r.meals) { x.fillStyle = "#4e6a1f"; x.font = F(700, 30); x.fillText(m.m.name, P, y); y += 46;
       for (const it of m.items) { x.fillStyle = "#1b1c17"; x.font = F(500, 29); x.fillText(it.n, P + 20, y, W * .55); x.fillStyle = "#5c5f52"; x.font = F(500, 26); const q = it.q.length > 34 ? it.q.slice(0, 33) + "…" : it.q; x.fillText(q, W - P - x.measureText(q).width, y + 2); y += lh; } y += 4; }
     y += 20; }
-  if (o.shop) { const s = planShop(rows[0].d, rows.length); x.fillStyle = "#1b1c17"; x.font = F(750, 36); x.fillText("Shopping list", P, y); y += 56; x.font = F(500, 27); for (const r of s) { x.fillText(`• ${r.f.name}`, P, y, W * .6); const q = `${fmtN(r.buy)} ${r.f.unit || "g"}`; x.fillText(q, W - P - x.measureText(q).width, y); y += 36; } }
+  if (o.shop) { const s = planShop(rows[0].d, rows.length); x.fillStyle = "#1b1c17"; x.font = F(750, 36); x.fillText("Shopping list", P, y); y += 56; x.font = F(500, 27); for (const r of s) { x.fillText(`• ${r.f.name}`, P, y, W * .6); const q = `${fmtStock(r.buy)} ${r.f.unit || "g"}`; x.fillText(q, W - P - x.measureText(q).width, y); y += 36; } }
   const out = document.createElement("canvas"); out.width = W; out.height = Math.min(c.height, Math.ceil(y + P)); out.getContext("2d").drawImage(c, 0, 0);
   return new Promise(r => out.toBlob(r, "image/png")); }
 function planPrint(rows, o) {
   const css = `body{font:13px/1.45 system-ui,-apple-system,sans-serif;color:#1b1c17;margin:24px}h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:18px 0 6px;padding:6px 10px;background:#eef0e4;border-radius:8px;display:flex;justify-content:space-between}h2 small{font-weight:500;color:#555}h3{font-size:13px;margin:8px 0 2px;color:#4e6a1f}table{width:100%;border-collapse:collapse}td{padding:2px 0;border-bottom:1px solid #eee}td+td{text-align:right;color:#555;white-space:nowrap}.day{break-inside:avoid}@page{margin:14mm}`;
   const body = rows.map(r => `<div class="day"><h2>${DOWL[dow(r.d)]} ${fmtDM(r.d)}${o.macros && r.t ? `<small>${fmtN(r.t.kcal)} kcal · C${r0(r.t.c)} P${r0(r.t.p)} F${r0(r.t.f)}</small>` : ""}</h2>${r.meals.map(m => `<h3>${esc(m.m.name)}</h3><table>${m.items.map(it => `<tr><td>${esc(it.n)}</td><td>${esc(it.q)}</td></tr>`).join("")}</table>`).join("") || "<p>Nothing planned</p>"}</div>`).join("");
-  const shop = o.shop ? `<div class="day"><h2>Shopping list</h2><table>${planShop(rows[0].d, rows.length).map(r => `<tr><td>${esc(r.f.name)}</td><td>${fmtN(r.buy)} ${r.f.unit || "g"}</td></tr>`).join("")}</table></div>` : "";
+  const shop = o.shop ? `<div class="day"><h2>Shopping list</h2><table>${planShop(rows[0].d, rows.length).map(r => `<tr><td>${esc(r.f.name)}</td><td>${fmtStock(r.buy)} ${r.f.unit || "g"}</td></tr>`).join("")}</table></div>` : "";
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Meal plan ${rows[0].d}</title><style>${css}</style></head><body><h1>Meal plan</h1><div>${fmtDM(rows[0].d)}${rows.length > 1 ? " – " + fmtDM(rows[rows.length - 1].d) : ""}</div>${body}${shop}</body></html>`;
   const f = document.createElement("iframe"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0"; document.body.appendChild(f);
   f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
@@ -11970,46 +12052,11 @@ SHEETS.pantry = sh => { const o = _pantrySheet(sh), f = sh.food ? getFood(sh.foo
   const P = f.per || {}, info = `<button class="pa-food" data-act="pa-food-edit">${f.img ? `<img data-blob="${esc(f.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="pa-fi">${ic("plate", "sm")}</span>`}<span><b>${fmtN(r0(P.kcal || 0))} kcal</b> per 100 ${f.unit || "g"} · ${r1(P.p || 0)}P ${r1(P.c || 0)}C ${r1(P.f || 0)}F${f.pack ? ` · pack ${fmtN(f.pack)} ${f.unit || "g"}` : ""}${f.est ? " · estimated" : ""}<small>Edit values, pack and portions</small></span>${ic("chevR", "sm")}</button>`;
   o.body = info + o.body; return o; };
 ACT["pa-food-edit"] = () => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; UI.dest = "pantry"; openSheet("food", { draft: clone(f), isNew: false, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = "pantry"; };
-/* ================= pantry ↔ plan: only what you take from the pantry comes off it =================
-   A planned food is either "from the pantry" (it.pan) or something to buy. From the pantry: set aside as soon as
-   it's planned (the pantry shows what's still free) and taken off the stock when you eat it. Everything else in the
-   plan never touches the pantry and goes on the shopping list. Links are made when you add from Add › Pantry,
-   when a shopping trip is finished (what you bought for the plan is linked to it), by the planner when it plans
-   from the pantry, with "Use what's at home" on the list, or by hand in the food's sheet. */
-let NEW_PAN = false;
-{ const _ni = newItem; newItem = function (kind, ref, qty, extra = {}) { const it = _ni(kind, ref, qty, extra); if (NEW_PAN && kind === "food" && S.shop.pantry[ref]) it.pan = true; return it; }; }
-function panLinked(start = todayISO(), n = 14) { const o = {};
-  for (let i = 0; i < n; i++) { const d = S.days[addDays(start, i)]; if (!d) continue; for (const [, it] of dayItems(d)) if (it.pan && !it.eaten && it.kind === "food") o[it.ref] = (o[it.ref] || 0) + (+it.qty || 0); }
-  return o; }
-const panFree = (id, L = panLinked()) => Math.max(0, r0((S.shop.pantry[id]?.g || 0) - (L[id] || 0)));
-/* the stock moves only for food taken from the pantry */
-{ const _pa = pantryAdjust; pantryAdjust = function (it, sign) { if (!it?.pan) return; return _pa(it, sign); }; }
-/* the list: plan food to buy in full; from the pantry only what's missing */
-shoppingNeeds = function (start, n) {
-  const need = {}, src = {}, linked = {}, add = (id, g, why) => { if (!(g > 0)) return; need[id] = (need[id] || 0) + g; (src[id] = src[id] || new Set()).add(why); };
-  for (let i = 0; i < n; i++) { const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; const dd = DOW[dow(dt)];
-    for (const [m, it] of dayItems(d)) { if (it.eaten || it.kind === "quick") continue; const why = `${d.dish?.[m] || mealName(m)} ${dd}`;
-      if (it.kind === "food") { if (it.pan) (linked[it.ref] = linked[it.ref] || { g: 0, why: new Set() }), linked[it.ref].g += +it.qty || 0, linked[it.ref].why.add(why); else add(it.ref, it.qty, why); }
-      else { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) add(ing.food, ing.g * it.qty / (r.servings || 1), `${r.name} ${dd}`); } } }
-  for (const [id, L] of Object.entries(linked)) { const short = L.g - (S.shop.pantry[id]?.g || 0); if (short > 0) for (const w of L.why) add(id, short / L.why.size, w + " (pantry short)"); }
-  return { need, src };
+/* ================= inventory projection: plans reserve; only eaten items withdraw ================= */
+function panLinked(start = todayISO(), n = 14) { return INV.demand(S.days, start, addDays(start, n - 1), recipeForItem); }
+const panFree = (id, L = panLinked()) => {
+  const p = S.shop.pantry[id]; return p?.exp && p.exp < todayISO() ? 0 : INV.amount((p?.g || 0) - (L[id] || 0));
 };
-{ const _sr = shoppingRows; shoppingRows = function (start, n) { const L = panLinked(start, n);
-  return _sr(start, n).map(r => { const free = panFree(r.id, L), buy = r0(r.need), packs = r.f.pack && buy > 0 ? Math.ceil(buy / r.f.pack - 0.02) : 0;
-    return { ...r, have: free, free, buy, packs, left: packs ? r0(packs * r.f.pack - buy) : 0 }; }); }; }
-/* link unlinked plan food to what's free at home, earliest days first (ids: only these foods) */
-function linkFromPantry(start = todayISO(), n = 7, ids = null, budget = null) { const L = panLinked(); let k = 0;
-  const free = {}; for (const id of Object.keys(S.shop.pantry || {})) free[id] = budget?.[id] ?? panFree(id, L);
-  for (let i = 0; i < n; i++) { const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; let ch = false;
-    const next = clone(d); for (const [, it] of dayItems(next)) { if (it.kind !== "food" || it.pan || it.eaten || (ids && !ids.includes(it.ref)) || !(free[it.ref] >= (+it.qty || 0) - 0.5)) continue; it.pan = true; free[it.ref] -= +it.qty || 0; ch = true; k++; }
-    if (ch) put("days", dt, next); }
-  return k; }
-/* finishing a trip: what you bought for the plan is linked to it */
-{ const _sd = ACT["shop-done"]; ACT["shop-done"] = (...a) => { const ids = Object.entries(S.shop.checked || {}).filter(([, c]) => c).map(([id]) => id), st = UI.shopStart, n = S.shop.range || 7; const out = _sd(...a); if (ids.length) linkFromPantry(st, n, ids); scheduleRender(); return out; }; }
-/* the planner, when it plans from the pantry */
-{ const _rp = runPlanner; runPlanner = async function (...a) { const sh = UI.sheet; const out = await _rp(...a); if (sh?.pantry) { const k = linkFromPantry(todayISO(), 7); if (k) toast(`${k} planned food${k > 1 ? "s" : ""} set aside from the pantry`); } return out; }; }
-/* once: the plans made before this keep using what's at home */
-function panMigrate() { if (S.shop.panV) return; S.shop.panV = 1; const k = linkFromPantry(addDays(todayISO(), -1), 15); put("shop", "", S.shop); if (k) console.info(`pantry: linked ${k} planned foods to the stock`); }
 /* Add › Pantry: what's free at home; adding from here sets it aside */
 function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m";
   const xs = Object.entries(S.shop.pantry || {}).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], p, free: panFree(id, L) })).filter(x => x.f && x.free > 0 && getFood(x.id))
@@ -12019,17 +12066,8 @@ function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m
     return `<div class="lrow add-r"><button data-act="pick" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" style="text-align:left;min-width:0"><span class="t">${ic("jar", "sm")} ${esc(f.name)}</span><span class="s">${fmtN(free)} ${f.unit || "g"} free${dl != null && dl <= 3 ? ` · <b style="color:var(--warn)">use by ${fmtDM(p.exp)}</b>` : ""} · ${fmtQ(q)} ${f.unit || "g"} = ${fmtN(m.kcal)} kcal</span></button>
       <span class="end"><button class="plus-btn" data-act="quick-add" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" aria-label="Add ${esc(f.name)} from the pantry">${ic("plus")}</button></span></div>`; }).join(""); }
 { const _ar = addRowsFor; addRowsFor = sh => (sh.seg === "pantry" && !(sh.q || "").trim()) ? pantryAddRows(sh) : _ar(sh); }
-{ const _qa = ACT["quick-add"]; ACT["quick-add"] = el => { NEW_PAN = el?.dataset?.pan === "1"; try { return _qa(el); } finally { NEW_PAN = false; } }; }
-{ const _pk = ACT.pick; ACT.pick = el => { const r = _pk(el); if (el?.dataset?.pan === "1" && UI.sheet?.type === "qty") UI.sheet.pan = true; return r; }; }
-{ const _qs = ACT["qty-save"]; ACT["qty-save"] = (...a) => { const sh = S_(); NEW_PAN = !!sh?.pan && !sh.itemId; try { return _qs(...a); } finally { NEW_PAN = false; } }; }
-/* the item: a jar when it comes from the pantry; its sheet can link or unlink it */
-{ const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId); return it.pan ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="From the pantry">${ic("jar", "sm")}</span>`) : h; }; }
-{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (!sh.itemId || sh.kind !== "food" || !S.shop.pantry[sh.ref]) return o; const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return o;
-  o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? "Set aside at home, taken off when you eat it" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; return o; }; }
-ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
-/* the list: what's free at home for food you'd otherwise buy */
-ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
-{ const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && (!Sync.db || Sync.ready)) panMigrate(); }; }
+/* Stock is shared by all planned foods and recipes. Historical pan flags remain readable,
+   but never make a second reservation or withdrawal. */
 /* ================= learning without AI: real pace on the scale, measured TDEE, own burn rates, watch left running ================= */
 const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 /* kg per week from the real weigh-ins of the last N days (least squares), with its standard error */
@@ -12467,14 +12505,14 @@ ACT["wi-plan"] = () => { const R = S_().res; if (!R?.script) return; const t = t
 /* ================= pantry: amounts in one tap (packs, pieces, grams) and a stepper, no keyboard needed ================= */
 function paQuick(sh) { const f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return "";
   const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u);
-  const cur = sh.n != null && sh.n !== "" ? num(sh.n) : fac ? Math.round(num(sh.g) / fac * 100) / 100 : 0;
-  const opts = U.pack && !varPack(f) ? [1, 2, 3, 4, 6].map(n => ["pack", n, `${n} pack${n > 1 ? "s" : ""}`]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
+  const cur = sh.n != null && sh.n !== "" ? INV.parseQuantity(sh.n) : fac ? Math.round(num(sh.g) / fac * 1e6) / 1e6 : 0;
+  const opts = U.pack && !varPack(f) ? [.25, .5, 1, 2, 3].map(n => ["pack", n, `${n === .25 ? "¼" : n === .5 ? "½" : n} pack${n > 1 ? "s" : ""}`]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
   const on = (k, n) => (u === k || (k === "base" && !sh.u)) && Math.abs(cur - n) < 1e-6;
   return `<div class="pa-q"><button class="icon-btn" data-act="pa-step" data-d="-1" aria-label="Less">${ic("minus")}</button><div class="chips">${opts.map(([k, n, l]) => `<button class="chip" data-act="pa-quick" data-k="${k}" data-n="${n}" aria-pressed="${on(k, n)}">${l}</button>`).join("")}</div><button class="icon-btn" data-act="pa-step" data-d="1" aria-label="More">${ic("plus")}</button></div>`; }
 ACT["pa-quick"] = el => { const sh = S_(); sh.u = el.dataset.k; sh.n = +el.dataset.n; haptic(8); renderSheet(); };
 ACT["pa-step"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return;
   const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u), d = +el.dataset.d;
-  const cur = sh.n != null && sh.n !== "" ? num(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pack" || u === "pz" ? 1 : .5;
+  const cur = sh.n != null && sh.n !== "" ? INV.parseQuantity(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pack" || u === "pz" ? 1 : .5;
   sh.n = Math.max(0, Math.round((cur + d * step) / step) * step); haptic(6); renderSheet(); };
 { const _ps = SHEETS.pantry; SHEETS.pantry = sh => { const o = _ps(sh); if (!sh.food) return o;
   o.body = o.body.replace(/(<div class="grid2"><div class="field"><label for="pa-n">)/, paQuick(sh) + "$1"); o.focus = null; return o; }; }
@@ -12509,7 +12547,7 @@ function yesterdayCard() { const G = yGaps(); if (!G) return ""; const d = G.d, 
 FORMS["yd-w"] = () => { const v = num($("#yd-w")?.value), d = addDays(todayISO(), -1); if (!(v > 20 && v < 400)) { toast("Enter your weight in kg."); return; }
   mutateLog(d, day => { day.weight = r1(v); }); toast(`${r1(v)} kg logged for yesterday`); scheduleRender(); };
 ACT["yd-ok"] = () => { mutateLog(addDays(todayISO(), -1), day => { day.yok = true; }); scheduleRender(); };
-ACT["yd-eaten"] = () => { const d = addDays(todayISO(), -1); mutateDay(d, day => { for (const [, it] of dayItems(day)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }, { undo: "Yesterday marked as eaten" }); scheduleRender(); };
+ACT["yd-eaten"] = () => { const d = addDays(todayISO(), -1); mutateDay(d, day => { for (const [, it] of dayItems(day)) if (!it.eaten) { it.eaten = true; } }, { undo: "Yesterday marked as eaten" }); scheduleRender(); };
 ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab = "plan"; scheduleRender(); window.scrollTo(0, 0); };
 /* water moves up with the supplements: both are taps you do during the day */
 { const c = TODAY_CARDS.find(x => x.fn === hydraCard); if (c) c.col = "c"; }
@@ -12517,11 +12555,11 @@ ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab 
 /* a row: tick = in the cart; packs get a − n + stepper for when you take more or fewer than the plan needs */
 shopRowHTML = function (r) {
   const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
-  const sub = [r.have ? `${fmtN(r.have)} ${u} at home` : "", r.left >= 10 && !got ? `${fmtN(r.left)} ${u} left over` : ""].filter(Boolean).join(" · ");
+  const sub = [r.covered ? `${fmtStock(r.covered)} ${u} covered at home` : "", r.reserved ? `${fmtStock(r.reserved)} ${u} reserved earlier` : "", r.expired ? "Expired stock excluded" : "", r.exhausted ? "Expected to run out" : "", r.left >= 10 && !got ? `${fmtN(r.left)} ${u} left over` : ""].filter(Boolean).join(" · ");
   let q;
-  if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack), dn = got ? n - r.packs : 0;
-    q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${r.id}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
-  else q = `<button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
+  if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack * 1e6) / 1e6, dn = got ? Math.round((n - r.packs) * 1e6) / 1e6 : 0;
+    q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${r.id}"><b>${n}×</b><small>${fmtStock(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
+  else q = `<button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtStock(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
   return `<div class="shop-row ${done ? "done" : ""}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
     <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</button>${q}</div>`;
 };
@@ -12531,13 +12569,13 @@ ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.i
   haptic(8); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
 function shopPanel(inSheet) {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy), ck = S.shop.checked || {};
-  const atHome = rows.filter(r => r.buy > 0 && r.free > 0), covered = rows.filter(r => r.buy <= 0);
+  const covered = rows.filter(r => r.buy <= 0);
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
-  let h = `<div class="sq-top"><div class="chips">${[[1, "1 d"], [3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
-  if (atHome.length) h += `<div class="pan-use"><span><b>${atHome.length} at home already</b> · ${esc(atHome.slice(0, 3).map(r => r.f.name).join(", "))}${atHome.length > 3 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use them</button></div>`;
+  let h = `<div class="sq-top"><div class="chips">${[[1, "1 d"], [3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label></div><span class="faint">${T.known ? `≈ ${fmtEur(T.est)}` : ""}${toBuy.length > T.known ? ` · ${toBuy.length - T.known} prices missing` : ""}</span></div>`;
+
   h += toBuy.length || (S.shop.extras || []).length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
-  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
-  if (covered.length) h += `<details class="shop-covered"><summary>${covered.length} planned, already at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.need)} ${r.f.unit || "g"} planned · ${fmtN(r.have)} at home</span></span></div>`).join("")}</details>`;
+  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtStock(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
+  if (covered.length) h += `<details class="shop-covered"><summary>${covered.length} planned, already at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtStock(r.need)} ${r.f.unit || "g"} planned · ${fmtStock(r.available)} available${r.reserved ? ` · ${fmtStock(r.reserved)} reserved for earlier meals` : ""}${r.exhausted ? " · Expected to run out" : ""}</span></span></div>`).join("")}</details>`;
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || (S.shop.extras || []).some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
 VIEWS.shop = function () {
@@ -12778,7 +12816,7 @@ function catFix() { let n = 0;
 { const _af = afterRender; afterRender = function () { _af(); if (!CATFIX_DONE && S.foods && (!Sync.db || Sync.ready)) { CATFIX_DONE = true; try { const n = catFix(); if (n) toast(`${n} food${n > 1 ? "s" : ""} moved to the right aisle`); } catch (e) { console.warn(e); } } }; }
 /* ================= loose food (apples, courgettes…): no fixed pack, you take what you need and the price is per kg ================= */
 const varPack = f => !!f && (f.varPack ?? (f.cat === "produce" && !(f.countable && f.pack > 0 && f.pack <= 30)));
-{ const _sr = shoppingRows; shoppingRows = function (start, n) { return _sr(start, n).map(r => varPack(r.f) ? { ...r, packs: 0, left: 0, vary: true } : r); }; }
+
 { const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh), d = sh.draft, on = varPack(d);
   o.body = o.body.replace(/(<div class="grid2"><div class="field"><label for="fd-pack">)/, `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="fd-vary" aria-label="Weight and price vary"></button><span>Weight and price vary<small class="faint" style="display:block;font-size:12.5px">Loose fruit and veg: the list asks for grams, the price is averaged per kg.</small></span></label>$1`); return o; }; }
 ACT["fd-vary"] = () => { const d = S_().draft; d.varPack = !varPack(d); renderSheet(); };
@@ -12825,9 +12863,9 @@ ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.o
 })();
 function rowGone(r) { haptic(15);
   if (r.matches(".item")) { const meal = r.dataset.meal, id = r.dataset.item, date = UI.date, it = (getDay(date).meals?.[meal] || []).find(x => x.id === id);
-    mutateDay(date, d => { const L = d.meals[meal] || []; const x = L.find(y => y.id === id); if (x?.eaten) pantryAdjust({ ...x }, -1); d.meals[meal] = L.filter(y => y.id !== id); }, { undo: `${it ? itemName(it) : "Item"} removed` }); return; }
-  const id = r.querySelector("[data-act='pantry-edit']")?.dataset.id; if (!id || !S.shop.pantry[id]) { scheduleRender(); return; } const prev = clone(S.shop.pantry[id]), n = (getFood(id) || BUILTIN[id])?.name || "Item";
-  delete S.shop.pantry[id]; put("shop", "", S.shop); toast(`${n} out of the pantry`, () => { S.shop.pantry[id] = prev; put("shop", "", S.shop); });
+    mutateDay(date, d => { const L = d.meals[meal] || []; d.meals[meal] = L.filter(y => y.id !== id); }, { undo: `${it ? itemName(it) : "Item"} removed` }); return; }
+  const id = r.querySelector("[data-act='pantry-edit']")?.dataset.id; if (!id || !S.shop.pantry[id]) { scheduleRender(); return; }
+  removeInventory(id);
 }
 /* ================= Settings on a computer: the groups on the left, one open on the right — no stack of accordions ================= */
 const setWide = () => innerWidth >= 1000;
@@ -12899,16 +12937,50 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   const x = d => L + (W - L - R) * daysBetween(d0, d) / span, y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   const hp = series.filter(s => s.pts.length).flatMap(s => s.pts.map(p => `<circle class="hp" cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="0"><title>${fmtDM(p[0])} · ${esc(s.name || "")} ${(o.fmt || r1)(p[1])}</title></circle>`)).join("");
   return h.replace("</svg>", hp + "</svg>"); }; }
-/* ================= ticking an item in the list puts it in the pantry right away: the list for the range drops it ================= */
-{ const _ck = ACT["shop-check"]; ACT["shop-check"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id), c = S.shop.checked?.[id];
-  if (!r || (c && c !== true && !c.g && false)) return _ck(el);
-  if (c) return _ck(el);
-  const g = r0(buyG(r)); if (!(g > 0)) return _ck(el); const before = clone(S.shop.pantry[id] || null), nb = (S.shop.buys || []).length;
-  const p = S.shop.pantry[id] || { g: 0 }; S.shop.pantry[id] = { ...p, g: r0((p.g || 0) + g), exp: p.g > 0 ? p.exp || null : null };
-  const k = eurPerG(id); S.shop.buys = [...(S.shop.buys || []), { d: todayISO(), id, n: r.f.name, g, eur: k != null ? Math.round(k * g * 100) / 100 : null, est: true }];
-  put("shop", "", S.shop); try { linkFromPantry(UI.shopStart, S.shop.range || 7, [id]); } catch (e) {} haptic(10);
-  toast(`${r.f.name} · ${fmtN(g)} ${r.f.unit || "g"} in the pantry`, () => { if (before) S.shop.pantry[id] = before; else delete S.shop.pantry[id]; S.shop.buys = (S.shop.buys || []).slice(0, nb); put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); });
-  scheduleRender(); if (UI.sheet) renderSheet(); }; }
+/* ================= purchases: one transaction for quick tick and cart checkout ================= */
+function recordPurchases(entries, extras = []) {
+  let receipt;
+  const ok = inventoryChange(() => {
+    const result = INV.purchase(S.shop, entries, todayISO(), uid()); receipt = result.receipt; S.shop = result.shop;
+    receipt.extras = clone(extras);
+    for (const x of extras) S.shop.buys.push({ d: todayISO(), n: x.text, eur: x.eur ?? null, transactionId: receipt.id, extraId: x.id });
+    S.shop.extras = (S.shop.extras || []).filter(x => !extras.some(y => x.id === y.id));
+    put("shop", "", S.shop);
+  });
+  if (!ok) return false;
+  toast("Purchase saved in the pantry", () => {
+    const saved = inventoryChange(() => {
+      if (!entries.length && !(S.shop.buys || []).some(b => b.transactionId === receipt.id)) throw new Error("This purchase has already been undone.");
+      S.shop = INV.undoPurchase(S.shop, receipt);
+      for (const x of receipt.extras) if (!(S.shop.extras || []).some(y => y.id === x.id)) S.shop.extras.push({ ...x, done: false });
+      put("shop", "", S.shop);
+    });
+    if (UI.sheet) renderSheet();
+    return saved;
+  });
+  if (UI.sheet) renderSheet(); return true;
+}
+ACT["shop-check"] = el => {
+  const id = el.dataset.id, c = S.shop.checked?.[id];
+  if (c) { inventoryChange(() => { delete S.shop.checked[id]; put("shop", "", S.shop); }); if (UI.sheet) renderSheet(); return; }
+  const r = shopToBuy().find(x => x.id === id); if (!r) return;
+  const g = buyG(r), k = eurPerG(id);
+  recordPurchases([{ id, name: r.f.name, g, eur: k == null ? null : Math.round(k * g * 100) / 100, est: true }]);
+};
+ACT["shop-done"] = () => {
+  const rows = shoppingRows(UI.shopStart, S.shop.range || 7), entries = [];
+  for (const [id, c] of Object.entries(S.shop.checked || {})) {
+    if (!c) continue; const f = foodForItem(id), r = rows.find(x => x.id === id); if (!f) { toast("A cart food is unavailable. Review the cart before finishing."); return; }
+    const g = c.g ?? (r ? buyG(r) : f.pack || 0), k = eurPerG(id);
+    entries.push({ id, name: f.name, g, eur: c.eur ?? (k == null ? null : Math.round(k * g * 100) / 100), est: c.eur == null });
+  }
+  const extras = (S.shop.extras || []).filter(x => x.done);
+  if (!entries.length && !extras.length) return;
+  if (recordPurchases(entries, extras) && UI.sheet?.type === "shopq") closeSheet();
+};
+INP["qty-pack-fraction"] = v => { const sh = S_(), f = getFood(sh.ref), pack = S.shop.pantry[sh.ref]?.pk || f?.pack, fraction = INV.parseQuantity(v); if (pack && fraction > 0) { sh.qty = INV.amount(pack * fraction); $("#qty-in").value = sh.qty; updQtyStrip(); } };
+for (const name of ["shop-pk", "extra-check", "extra-del"]) { const act = ACT[name]; ACT[name] = el => inventoryChange(() => act(el)); }
+{ const change = CHG["extra-eur"]; CHG["extra-eur"] = (v, el) => inventoryChange(() => change(v, el)); }
 /* ================= boot ================= */
 (function boot() {
   loadLocal();
