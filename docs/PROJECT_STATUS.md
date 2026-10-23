@@ -1,7 +1,55 @@
-# Stato del progetto e verifica iniziale
+# Stato del progetto
+
+## M1 Storage/Shopping — aggiornamento del 23 ottobre 2026
+
+Implementazione sul branch `fix/storage-shopping-m1`, con checkpoint precedente
+`restore/pre-storage-shopping-m1-2026-10-23` (`f88c1e0`). Il resoconto tecnico e il
+rollback dati sono in [M1_STORAGE_SHOPPING.md](M1_STORAGE_SHOPPING.md).
+Commit requisiti/perimetro: `5d62145`; implementazione, test e output: `f4c1c90`.
+
+Introdotti dominio inventario puro, fabbisogno alimenti/ricette meno scorte,
+ricevute di consumo, acquisti/annullamenti coerenti, quantità e prezzi espliciti,
+ricerca/ordinamento e backup verificato prima delle transazioni locali inventario.
+Compatibilità legacy conservativa; nessuna formula nutrizionale o integrazione nuova.
+
+**Milestone completata e verificata localmente.** Checkpoint annotato
+`checkpoint/storage-shopping-m1-2026-10-23`. Nessun dato reale o schema remoto
+modificato; nessun push, deploy o merge. Le milestone successive non sono iniziate.
+
+| Verifica finale eseguita | Esito | Limite |
+| --- | --- | --- |
+| Build minificata esterna, ID `202610232021` | Superata; `index.html` e `sw.js` copiati alla radice e confrontati | Timestamp, toolchain esterna; manifest identico, config preservato |
+| `node --test tests/inventory/domain.test.cjs` | 23 superati, 0 falliti | Dominio puro su fixture |
+| `tests/inventory/browser.cjs` sulla build | 51 superati, 0 falliti: 17 scenari × 3 viewport | Chromium, dati sintetici, richieste esterne bloccate |
+| `tests/handover/smoke.cjs` sugli output finali alla radice | Superato | Avvio locale, peso/reload, 5 tab, service worker, offline, nessuna eccezione JS |
+| Sintassi build e 5 script web | 6 controlli superati | Sintassi soltanto |
+| `tests/handover/queue-isolation.cjs` | Fallito, exit 1: `DATA-01` confermato | Difetto preesistente, non mascherato né corretto in M1 |
+| Diff whitespace | Superato | Non sostituisce i test di comportamento |
+
+Prima delle correzioni i tre riproduttori browser sulla baseline hanno fallito come
+atteso. La revisione ha inoltre riprodotto e corretto tre casi di ripristino delle
+ricevute (consumo parziale dopo acquisto, legacy, scorta insufficiente). Le prove UI
+coprono anche errore quota/backup, recupero mirato e reload, mancato accodamento cloud
+dopo un errore e ricezione coerente di due documenti tramite adapter simulato.
+Verificata anche la visualizzazione di `0.4×` confezioni per 200 g su una confezione da 500 g.
+
+Non eseguiti: account/RLS Supabase reali, retry/conflitti multi-device, restore cloud,
+Safari/iOS, dispositivi fisici e servizi esterni. I dettagli storici sotto non vanno
+interpretati come test aggiuntivi dell'ultima build.
+
+`DATA-01` resta riprodotto: il test coda invia il dato sintetico di A con UID di B.
+`DATA-02` è mitigato per l'inventario e reso visibile da `saveLocal`, non risolto per
+tutti i flussi legacy/shim. `DATA-03`, `PUSH-01`, toolchain/CI e test cloud reali
+restano aperti. La suite M1 amplia `TEST-01` senza certificare il prodotto intero.
+
+Raccomandazione: correggere l'isolamento account su intervento separato, poi verificare
+restore generale e sync multi-device su ambiente dedicato prima di un nuovo rilascio.
+
+## Rapporto storico della presa in carico
 
 Data: 23 ottobre 2026 (Europe/Rome). Stato della presa in carico: analisi e preparazione
-completate; runtime applicativo invariato; difetti elencati sotto ancora aperti.
+completate; runtime applicativo invariato in quella fase. Le evidenze sottostanti sono
+storiche; per le mitigazioni M1 fa fede l'aggiornamento sopra.
 
 ## Provenienza e protezione
 

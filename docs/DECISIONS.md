@@ -1,5 +1,25 @@
 # Registro delle decisioni
 
+## ADR-005 — Inventario deterministico e ricevute di consumo (2026-10-23, adottata)
+
+**Contesto:** alimenti già presenti comparivano negli acquisti; ricette e scorte parziali
+non erano riconciliate; annullare un consumo insufficiente poteva creare quantità.
+La richiesta autorizza M1 Storage/Shopping e la riconciliazione necessaria di M4.
+
+**Decisione:** estrarre solo il dominio inventario in un modulo puro, condiviso tra
+app e test. Il piano riserva ma non consuma; la spesa sottrae disponibilità una volta;
+`stockUsed` registra il prelievo reale. Acquisti con ID e annullamenti per differenza
+preservano operazioni successive. Nessuna conversione massa/volume senza dati.
+
+**Dati:** backup verificato di `shop`/`days` prima delle scritture M1, versione additiva
+alla prima operazione, snapshot locale unico prima del cloud. Conservare campi storici;
+non inferire rimborsi o nuovi prelievi per consumi legacy privi di ricevuta.
+
+**Conseguenze:** nessuna migrazione massiva o nuova infrastruttura. Cloud multi-documento,
+isolamento account e restore generale restano problemi separati. Compatibilità con un
+vecchio client richiede un rollback dei dati verificato e assenza di scrittori concorrenti.
+Dettagli, evidenze e procedura in [M1_STORAGE_SHOPPING.md](M1_STORAGE_SHOPPING.md).
+
 ## ADR-001 — Presa in carico conservativa (2026-10-23, adottata)
 
 **Contesto:** app già sviluppata con Claude Code, richiesta di presa in carico senza

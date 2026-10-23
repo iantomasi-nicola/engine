@@ -1,7 +1,23 @@
 # Architettura di Engine
 
-Analisi del 23 ottobre 2026, baseline `cae350d409daa68d01f0031298d9de9eff3464c7`.
+Analisi del 23 ottobre 2026, baseline `cae350d409daa68d01f0031298d9de9eff3464c7`,
+aggiornata per M1 Storage/Shopping.
 Descrive il codice disponibile; non certifica la configurazione dei servizi in produzione.
+
+## Aggiornamento M1 — inventario
+
+`source/web/inventory.js` fornisce funzioni pure per fabbisogno, scorte, consumi,
+acquisti e annullamenti. Il build lo incorpora prima dello shim e dell'applicazione.
+La UI usa una transazione locale su `shop` e `days`: backup iniziale verificato,
+snapshot durevole unico, poi accodamento cloud. `shop.inventoryV = 1` identifica
+l'adozione del formato additivo alla prima scrittura; `stockUsed` registra il prelievo
+effettivo dei nuovi consumi. I flag legacy `pan` sono conservati ma ignorati nel
+calcolo della copertura. Nessuno schema/server nuovo.
+
+Il backup `engine.inventory.backup.v1.<uid|local>` contiene solo `shop` e `days`.
+Le scritture cloud restano documenti separati: questa atomicità è locale e non
+risolve conflitti tra dispositivi o isolamento account. Contratti, compatibilità e
+rollback sono descritti in [M1_STORAGE_SHOPPING.md](M1_STORAGE_SHOPPING.md).
 
 ## Struttura e flusso
 

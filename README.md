@@ -40,5 +40,7 @@ For validation, pass an output directory outside the checkout to avoid overwriti
 - [Development, validation and rollback](docs/DEVELOPMENT.md)
 - [Project status and known issues](docs/PROJECT_STATUS.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Original product requirements](docs/PRODUCT_REQUIREMENTS.md)
+- [M1 Storage/Shopping: behavior, validation and recovery](docs/M1_STORAGE_SHOPPING.md)
 - [Decisions](docs/DECISIONS.md)
 - [Changelog](CHANGELOG.md)

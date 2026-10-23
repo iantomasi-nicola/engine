@@ -8,11 +8,19 @@ storage e lista della spesa e committa» autorizza **M1 — Integrità Storage/S
 nel checkout. Il suo elenco M0–M11 resta il backlog di prodotto, non un'autorizzazione
 a implementare tutte le funzionalità. M0 è la presa in carico già conclusa.
 
-**M1: in corso.** Anticipa la riconciliazione inventario di M4 perché necessaria alla
-correttezza di M1. Include §4.1–4.3 per gestione inventario e quantità e §9.1/9.5 per
+**M1: completata e verificata localmente il 23 ottobre 2026.** Anticipa la riconciliazione
+inventario di M4 perché necessaria alla correttezza di M1. Include §4.1–4.3 per gestione
+inventario e quantità e §9.1/9.5 per
 fabbisogno, acquisto, consumo e annullamento; corregge i prezzi nei flussi esistenti.
 Non include nuove integrazioni OFF/AI, recipe engine, pianificazione, formule nutrizionali,
 nuove analytics dei costi, extras riutilizzabili o filtri temporali di M4.
+
+Esito: 23 test di dominio e 51 controlli browser superati (17 scenari su tre viewport),
+build e smoke offline superati. Il riproduttore `DATA-01` resta fallente e fuori dal
+perimetro M1; nessuna validazione cloud reale implicita. Dettagli e limiti in
+[M1_STORAGE_SHOPPING.md](M1_STORAGE_SHOPPING.md) e [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Checkpoint locale: `checkpoint/storage-shopping-m1-2026-10-23`; versione precedente:
+`restore/pre-storage-shopping-m1-2026-10-23`. Nessun merge, deploy o push.
 
 ### Criteri di accettazione M1
 

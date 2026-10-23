@@ -97,6 +97,35 @@ Non esiste una suite storica versionata nella baseline; `tests/handover/` è sta
 aggiunta durante la presa in carico. Lo smoke non sostituisce test di dominio,
 integrazione cloud, migrazione o compatibilità mobile.
 
+## Verifiche aggiunte da M1 Storage/Shopping
+
+```bash
+node --test tests/inventory/domain.test.cjs
+NODE_MODULES=/workspace/engine-tools/node_modules \
+  node source/build-web.js /workspace/engine-m1-site
+python3 -m http.server 8014 --bind 127.0.0.1 --directory /workspace/engine-m1-site
+```
+
+Con il server attivo, in un altro terminale:
+
+```bash
+ENGINE_TEST_URL=http://localhost:8014 NODE_PATH=/workspace/engine-tools/node_modules \
+  node tests/inventory/browser.cjs
+ENGINE_TEST_URL=http://localhost:8014 NODE_PATH=/workspace/engine-tools/node_modules \
+  node tests/handover/smoke.cjs
+```
+
+La suite inventario usa tre viewport Chromium, fixture sintetiche, reload offline,
+errori storage e adapter cloud simulato. `ENGINE_SCREENSHOT_DIR` opzionale salva
+screenshot in una directory esistente esterna al repository. `BASELINE=1` esegue solo
+i tre riproduttori iniziali contro un server con la versione precedente: l'esito rosso
+su quella versione è atteso, non è un comando di validazione della milestone.
+
+Per aggiornare gli output versionati dopo verifica, copiare `index.html` e `sw.js`
+dall'output testato; controllare separatamente il manifest e preservare `config.js`.
+Backup, versione dati e rollback M1 sono descritti in
+[M1_STORAGE_SHOPPING.md](M1_STORAGE_SHOPPING.md#backup-e-ritorno-alla-versione-precedente).
+
 ## Protezione dati e migrazioni future
 
 Prima di una modifica ai dati reali, censire localStorage, IndexedDB, documenti cloud,

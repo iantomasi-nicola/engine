@@ -2,6 +2,21 @@
 
 Le voci descrivono modifiche verificate nel repository; non attestano una pubblicazione.
 
+## Unreleased — M1 Storage/Shopping del 2026-10-23
+
+- Fabbisogno unificato di alimenti/ricette meno scorte disponibili, copertura parziale,
+  articoli coperti richiudibili, riserve precedenti ed esaurimento previsto.
+- Consumo con ricevuta del prelievo reale; annullamenti di consumi/acquisti senza
+  inventare scorte o cancellare acquisti successivi. Gestione conservativa dei dati legacy.
+- Quantità precise, frazioni di confezione, unità coerenti, prezzi con riferimento
+  esplicito; ricerca tollerante e ordinamento persistente della dispensa.
+- Backup inventario verificato, versione additiva e transazioni locali con avvisi
+  di errore; cloud accodato solo dopo il salvataggio locale riuscito.
+- Test di dominio/browser, output statici rigenerati, requisiti originali, roadmap,
+  architettura e procedura di rollback aggiornati. Vedere `docs/M1_STORAGE_SHOPPING.md`.
+- Restano aperti isolamento account/coda, restore generale e verifiche cloud reali;
+  nessun deploy, push, merge su main o avvio della milestone successiva.
+
 ## Unreleased — presa in carico del 2026-10-23
 
 ### Aggiunto
