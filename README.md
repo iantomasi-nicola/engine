@@ -23,9 +23,22 @@ and a public key in `config.js`. Steps in `supabase/PUSH.md`.
 - Nutrition labels are also read on the device (Tesseract, Italian model in `ocr/`).
 
 ## Build
-The source of the app lives outside this repository; `index.html` here is the built, minified file.
+The readable source is included in `source/`; `index.html` at the root is the built, minified file.
 
 ## Source
 `source/` keeps the readable source: `engine.html` (the app), `web/` (the web runtime: Supabase layer, direct
 intervals.icu sync, settings for account and AI, service worker) and `build-web.js`, which minifies and assembles
 the files at the root: `npm i terser lightningcss` somewhere, then `NODE_MODULES=<that>/node_modules node source/build-web.js`.
+
+For validation, pass an output directory outside the checkout to avoid overwriting tracked files:
+`NODE_MODULES=<that>/node_modules node source/build-web.js /path/to/separate-output`.
+
+## Engineering documentation
+
+- [Agent rules](AGENTS.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Development, validation and rollback](docs/DEVELOPMENT.md)
+- [Project status and known issues](docs/PROJECT_STATUS.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Decisions](docs/DECISIONS.md)
+- [Changelog](CHANGELOG.md)
