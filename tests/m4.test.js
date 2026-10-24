@@ -10,7 +10,7 @@ test("C8: the recipe icon and the dish name sit on the same line in the Meal Pla
   for (const [n, vp] of Object.entries(H.VIEWPORTS)) {
     const page = await start(F.seed(), vp);
     const r = await page.evaluate(async () => {
-      const d = S.days[todayISO()]; d.meals = { lunch: d.meals.m, dinner: d.meals.d }; d.meals.lunch[0].pan = true; S.shop.pantry["t-rice"] = { g: 500 }; DATA_V++; UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender(); await new Promise(r => setTimeout(r, 500));
+      const d = S.days[todayISO()]; d.meals = { lunch: d.meals.m, dinner: d.meals.d }; S.shop.pantry["t-rice"] = { g: 500 }; DATA_V++; UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender(); await new Promise(r => setTimeout(r, 500));
       const out = [];
       for (const row of document.querySelectorAll(".item-name")) { const icons = row.querySelectorAll(".ic"); if (!icons.length) continue;
         const rng = document.createRange(); const txt = [...row.childNodes].reverse().find(x => x.nodeType === 3 ? x.textContent.trim() : x.classList?.contains("nm")); if (!txt) continue; rng.selectNodeContents(txt);
@@ -85,7 +85,7 @@ test("G2: weekly running goal — progress, history judged by the goal of each w
   await app.reload(); assert.equal(await page.evaluate(() => kmGoalFor(weekStartOf(todayISO()))), 25);
 });
 
-test("I2: most-used foods and recipes — counts, amounts, meals, last use, cost per use; eaten counts, the plan stands in when nothing was ticked", async () => {
+test("I2: food habits report (Progress › Nutrition › Habits) — counts, amounts, meals, last use, cost per use; eaten counts, the plan stands in when nothing was ticked", async () => {
   const page = await start(F.seed({ withPlan: false }), H.VIEWPORTS.phone);
   const r = await page.evaluate(async () => {
     const t = todayISO(), bowl = (id, eaten) => ({ id, kind: "recipe", ref: "t-bowl", qty: 2, eaten }), rice = (id, eaten) => ({ id, kind: "food", ref: "t-rice", qty: 100, eaten });
@@ -97,15 +97,15 @@ test("I2: most-used foods and recipes — counts, amounts, meals, last use, cost
     for (const d of Object.values(S.days)) for (const [, it] of dayItems(d)) it.eaten = false; DATA_V++;
     const planned = { basis: foodUsage(60).basis, bowl: foodUsage(60).rows.find(x => x.key === "recipe:t-bowl").n };
     for (const d of Object.values(S.days)) for (const [, it] of dayItems(d)) it.eaten = d.date !== addDays(t, -1); DATA_V++;
-    UI.tab = "foods"; UI.foodsSeg = "top"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
-    const html = document.querySelector("#main")?.innerText || "";
-    return { eaten, wide, planned, html: html.slice(0, 600), sw: document.documentElement.scrollWidth <= innerWidth, seg: !!document.querySelector('[data-act="foods-seg"][data-seg="top"]') };
+    UI.tab = "progress"; UI.progSeg = "food"; UI.foodSeg = "habits"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
+    const html = document.body.innerText || "";
+    return { eaten, wide, planned, html, sw: document.documentElement.scrollWidth <= innerWidth, seg: !!document.querySelector('[data-act="foods-seg"][data-seg="top"]') };
   });
   assert.equal(r.eaten.basis, "eaten"); assert.deepEqual(r.eaten.bowl, [2, { lunch: 2 }]); assert.deepEqual(r.eaten.rice, [1, 100, { dinner: 1 }, 0.48]);
   assert.deepEqual(r.eaten.bowlCost, [1.92, true], "cost counts the priced ingredient only and says so"); assert.equal(r.eaten.first, "recipe:t-bowl"); assert.equal(r.eaten.lastBowl, true);
   assert.equal(r.wide, 3, "a longer period includes older days"); assert.deepEqual(r.planned, { basis: "planned", bowl: 3 });
-  assert.match(r.html, /Test bowl/); assert.match(r.html, /2×/); assert.ok(r.sw && r.seg); assert.deepEqual(app.errors, []);
-  await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "top-foods.png") });
+  assert.match(r.html, /Test bowl/); assert.match(r.html, /2×/); assert.ok(r.sw && !r.seg, "the report lives in Progress now, not in Foods"); assert.deepEqual(app.errors, []);
+  await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "food-habits.png") });
 });
 
 test("F1: the forecast says where it is for; 'Use my current location' asks, names the place with its coordinates, and the place can be changed", async () => {

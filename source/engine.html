@@ -222,8 +222,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pa-food>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pa-food small{color:var(--md-primary);font-weight:600;font-size:12.5px}
 .pa-food img,.pa-fi{width:40px;height:40px;border-radius:12px;object-fit:cover;flex:none;display:grid;place-items:center;background:var(--v-card,var(--surface));color:var(--md-primary)}
 .sc-ai{display:flex;flex-direction:column;gap:8px}
+.pa-fh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.pa-fh span{display:flex;flex-direction:column;gap:2px;min-width:0}.pa-fh .faint{font-size:12.5px;font-weight:400}
+.pa-how{margin:8px 0;padding:10px 12px}.pa-how-l{margin:10px 0 2px;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.4}
 .pan-tag{display:inline-grid;place-items:center;color:var(--md-primary);margin-right:4px;vertical-align:-2px}.pan-tag .ic{width:15px;height:15px}
-.pan-use{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .ov-x{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 0;padding:9px 12px;border-radius:12px;background:var(--v-fill,var(--surface2));font-size:13px;line-height:1.35}
 .ov-x>span:first-child{min-width:0}.ov-x small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
 .ov-x.warn{background:color-mix(in srgb,var(--warn) 12%,transparent)}
@@ -261,7 +262,6 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:30px;height:30px;min-width:30px;background:var(--v-fill,var(--surface2))}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
-.pan-use{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;margin:6px 0 4px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,transparent);font-size:13px}
 .shop-covered{margin-top:8px;font-size:13px}.shop-covered summary{cursor:pointer;color:var(--muted);padding:6px 0}
 .glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .gl-t{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:16px;background:var(--v-card,var(--card));min-width:0;text-align:left}
@@ -833,12 +833,16 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .hm-g{display:grid;grid-template-rows:repeat(7,1fr);grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-auto-flow:column;gap:3px}
 .hm-g i{aspect-ratio:1;border-radius:3px;background:var(--surface-2);min-width:0}
 .hm-g i.now{outline:2px solid var(--ink);outline-offset:-1px}
+.hab-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.4}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
 .jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
 .jr-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .jr-row button{min-height:48px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:17px;font-weight:600;cursor:pointer}
 .jr-row.emo button{font-size:26px;line-height:1}
 .jr-row button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.jr-face{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}.jr-face .e{fill:currentColor;stroke:none}
+.jr-face.sm{display:inline-block;width:20px;height:20px;vertical-align:-4px;margin:0}.jr-d .jr-face{width:20px;height:20px}
+.td-pend{width:7px;height:7px;border-radius:50%;background:var(--bad);display:inline-block;margin-left:2px;flex:none}
 .jr-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 .jr-card .jr-row{margin-top:8px}
 .jr-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
@@ -2370,7 +2374,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 html .subseg{background:transparent!important;padding:0!important;gap:6px!important;border-radius:0!important}
 html .subseg button{background:transparent!important;color:var(--md-on-surface-variant)!important;min-height:32px!important;box-shadow:none!important;font-weight:500!important}
 html .subseg button[aria-selected="true"]{background:color-mix(in srgb,var(--md-primary) 14%,transparent)!important;color:var(--md-primary)!important;font-weight:600!important;box-shadow:none!important}
-html .ov-x .btn.tonal,html .pan-use .btn.tonal{background:var(--md-primary)!important;color:var(--md-on-primary)!important}
+html .ov-x .btn.tonal{background:var(--md-primary)!important;color:var(--md-on-primary)!important}
 /* session rows are cards now: room on both sides */
 .td-s{padding:12px 14px!important}.td-s.done .td-s-a{right:14px!important}
 .td-nudge,.td-q{min-width:0}.td-nudge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2920,17 +2924,20 @@ function itemStockLines(it) {
   if (it.kind === "recipe") { const r = getRecipe(it.ref); return r ? r.ingredients.map(ing => [ing.food, ing.g * (+it.qty || 0) / (r.servings || 1)]) : []; }
   return [];
 }
-/* the stock moves only for what's taken from the pantry (it.pan). Eating takes off what the pantry really had and
-   remembers it (it.took), so un-eating gives back exactly that and never more than was taken */
-function pantryAdjust(it, sign) {
-  if (!it?.pan) return;
+/* eating takes what is at home off the stock, whatever the food was planned as: it takes only what the pantry really had and
+   remembers it (it.took), so un-eating gives back exactly that and never more. A day logged long after the fact (more than
+   3 days ago) leaves today's stock alone: the stock says what is at home now. it.pan is an old flag: an item eaten under it
+   without a record gives back its full amount. */
+function pantryAdjust(it, sign, date) {
+  if (!it || it.kind === "quick") return;
   let changed = false;
   if (sign > 0) {
+    if (date && date < addDays(todayISO(), -3)) return;
     const took = {};
-    for (const [id, g] of itemStockLines(it)) { const p = S.shop.pantry[id]; if (!p || !(g > 0)) continue; const before = +p.g || 0; p.g = Math.max(0, r0(before - g)); const t = before - p.g; if (t > 0) took[id] = (took[id] || 0) + t; changed = true; }
-    it.took = took;
+    for (const [id, g] of itemStockLines(it)) { const p = S.shop.pantry[id]; if (!p || !(g > 0)) continue; const before = +p.g || 0; p.g = Math.max(0, r0(before - g)); const t = before - p.g; if (t > 0) { took[id] = (took[id] || 0) + t; changed = true; } }
+    if (changed) it.took = took; else delete it.took;
   } else {
-    const back = it.took || Object.fromEntries(itemStockLines(it));
+    const back = it.took || (it.pan ? Object.fromEntries(itemStockLines(it)) : {});
     for (const [id, g] of Object.entries(back)) { const p = S.shop.pantry[id]; if (!p) continue; p.g = r0((+p.g || 0) + g); changed = true; }
     delete it.took;
   }
@@ -4105,8 +4112,7 @@ VIEWS.foods = function () {
     <div class="row"><button class="btn soft sm" data-act="new-recipe">${ic("recipe", "sm")}Recipe</button><button class="btn ink sm" data-act="new-food">${ic("plus", "sm")}Food</button></div></div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:10px 0 12px">
     <div class="search">${ic("search")}<input id="foods-q" type="search" placeholder="Search foods and recipes" value="${esc(q)}" data-in="foods-q" autocomplete="off"><button class="icon-btn" data-act="open-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
-    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ["top", "Top"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div></div></header>`;
-  if (seg === "top") return h + topFoodsHTML();
+    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div></div></header>`;
   if (seg === "hidden") { const hf = hiddenFoods().filter(f => !q || matchScore(foodKeys(f), q) > 0).sort((a, b) => a.name.localeCompare(b.name));
     return h + `<div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px"><span class="faint" style="font-size:13px">Deleted foods stay here 3 days, then they're gone for good.</span>${hf.length > 1 ? `<button class="btn soft sm" data-act="fd-unhide-all">Restore all</button>` : ""}</div>
       <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${f.id}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
@@ -4118,29 +4124,61 @@ VIEWS.foods = function () {
   return h;
 };
 
-/* what you actually eat: per food and recipe, how often, how much, in which meals, when last, and what a use costs. Counts what you ticked as eaten;
-   when nothing in the period was ticked, the plan stands in. Cost counts the ingredients that have a price and says so when some don't. */
+/* what you actually eat, for the Habits report in Progress › Nutrition: per food and recipe how often, how much, in which meals, when last,
+   what it gives (kcal, protein) and what a use costs. Counts what you ticked as eaten; when nothing in the period was ticked, the plan stands in.
+   Cost counts the ingredients that have a price and says so when some don't. */
 function foodUsage(n = 60) {
   const today = todayISO(), from = addDays(today, -(n - 1)), dates = Object.keys(S.days).filter(d => d >= from && d <= today).sort();
-  const basis = dates.some(d => dayItems(S.days[d]).some(([, it]) => it.eaten)) ? "eaten" : "planned", rows = new Map(), weeks = {};
+  const basis = dates.some(d => dayItems(S.days[d]).some(([, it]) => it.eaten)) ? "eaten" : "planned", rows = new Map(), weeks = {}, mealDays = {}, dayKcal = {};
   for (const d of dates) for (const [m, it] of dayItems(S.days[d])) {
     if (it.kind === "quick" || (basis === "eaten" && !it.eaten)) continue;
-    const key = it.kind + ":" + it.ref, r = rows.get(key) || { key, kind: it.kind, ref: it.ref, n: 0, qty: 0, last: "", meals: {}, cost: 0, priced: 0, lines: 0 };
-    r.n++; r.qty += +it.qty || 0; r.last = d > r.last ? d : r.last; r.meals[m] = (r.meals[m] || 0) + 1;
+    const key = it.kind + ":" + it.ref, r = rows.get(key) || { key, kind: it.kind, ref: it.ref, n: 0, qty: 0, last: "", meals: {}, cost: 0, priced: 0, lines: 0, kcal: 0, p: 0 }, mc = itemMacros(it);
+    r.n++; r.qty += +it.qty || 0; r.last = d > r.last ? d : r.last; r.meals[m] = (r.meals[m] || 0) + 1; r.kcal += mc.kcal || 0; r.p += mc.p || 0;
     for (const [id, g] of itemStockLines(it)) { r.lines++; const k = eurPerG(id); if (k != null) { r.cost += k * g; r.priced++; } }
-    rows.set(key, r); (weeks[weekStartOf(d)] = weeks[weekStartOf(d)] || new Set()).add(key);
+    rows.set(key, r); (weeks[weekStartOf(d)] = weeks[weekStartOf(d)] || new Set()).add(key); (mealDays[m] = mealDays[m] || new Set()).add(d); dayKcal[d] = (dayKcal[d] || 0) + (mc.kcal || 0);
   }
   const out = [...rows.values()].map(r => ({ ...r, partial: r.priced > 0 && r.priced < r.lines, cost: r.priced ? r.cost : null })).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last));
   const uses = out.reduce((a, r) => a + r.n, 0), top5 = out.slice(0, 5).reduce((a, r) => a + r.n, 0);
-  return { basis, n, rows: out, uses, top5share: uses ? top5 / uses : 0, variety: Object.keys(weeks).length ? Object.values(weeks).reduce((a, w) => a + w.size, 0) / Object.keys(weeks).length : 0 };
+  return { basis, n, rows: out, uses, days: Object.keys(dayKcal).length, dayKcal, mealDays, top5share: uses ? top5 / uses : 0, variety: Object.keys(weeks).length ? Object.values(weeks).reduce((a, w) => a + w.size, 0) / Object.keys(weeks).length : 0 };
 }
-function topFoodsHTML() {
-  const n = UI.topDays || 60, U = foodUsage(n), today = todayISO(), nm = r => r.kind === "recipe" ? getRecipe(r.ref)?.name : (getFood(r.ref) || BUILTIN[r.ref])?.name;
-  const chips = `<div class="chips">${[30, 60, 90].map(k => `<button class="chip sm" data-act="top-days" data-n="${k}" aria-pressed="${n === k}">${k} days</button>`).join("")}</div>`;
-  if (!U.rows.length) return chips + `<div class="empty"><h3>No data yet</h3><p>Plan a few days, or tick what you eat, and your most-used foods and recipes appear here.</p></div>`;
-  const ins = [`${r0(U.top5share * 100)}% of what you ${U.basis === "eaten" ? "ate" : "planned"} comes from your top 5`, `about ${r1(U.variety)} different foods and recipes a week`, ...(U.basis === "planned" ? ["based on the plan: nothing was ticked as eaten in this period"] : [])];
-  return chips + `<div class="faint" style="font-size:12.5px;padding:4px 2px">${esc(ins.join(" · "))}</div><div class="card">${U.rows.filter(r => nm(r)).slice(0, 40).map(r => { const u = r.kind === "recipe" ? "srv" : (getFood(r.ref)?.unit || "g"), meals = Object.entries(r.meals).sort((a, b) => b[1] - a[1]).map(([m, c]) => `${esc(mealName(m))} ${c}`).join(", "), d = daysBetween(r.last, today);
+const habitName = r => r.kind === "recipe" ? getRecipe(r.ref)?.name : (getFood(r.ref) || BUILTIN[r.ref])?.name;
+/* the numbers behind the report and the sentences that read them out */
+function foodHabits(n = 60) {
+  const U = foodUsage(n), rows = U.rows.filter(r => habitName(r)), pTot = rows.reduce((a, r) => a + r.p, 0), kTot = rows.reduce((a, r) => a + r.kcal, 0);
+  const share = (k, tot) => rows.filter(r => r[k] > 0).sort((a, b) => b[k] - a[k]).slice(0, 5).map(r => ({ ref: r.ref, kind: r.kind, v: r[k], share: tot ? r[k] / tot : 0 }));
+  const byMeal = {}; for (const r of rows) for (const [m, c] of Object.entries(r.meals)) (byMeal[m] = byMeal[m] || []).push({ ref: r.ref, kind: r.kind, n: c, days: U.mealDays[m]?.size || 0 });
+  for (const m of Object.keys(byMeal)) byMeal[m] = byMeal[m].sort((a, b) => b.n - a.n).slice(0, 3);
+  const priced = rows.filter(r => r.cost != null), total = priced.reduce((a, r) => a + r.cost, 0);
+  const cost = { total: Math.round(total * 100) / 100, perDay: U.days ? total / U.days : 0, covered: priced.length, of: rows.length };
+  const pPerEur = priced.filter(r => !r.partial && r.cost > 0 && r.p > 0).map(r => ({ ref: r.ref, kind: r.kind, v: r.p / r.cost })).sort((a, b) => b.v - a.v).slice(0, 5);
+  const wk = [], we = []; for (const [d, k] of Object.entries(U.dayKcal)) (dow(d) >= 5 ? we : wk).push(k); const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const weekend = wk.length >= 3 && we.length >= 3 ? { wk: mean(wk), we: mean(we), nWk: wk.length, nWe: we.length } : null;
+  const H = { ...U, rows, protein: share("p", pTot), kcalSrc: share("kcal", kTot), byMeal, cost, pPerEur, weekend, lines: [] }, nm = x => habitName(x) || "";
+  if (!U.rows.length) return H;
+  const L = H.lines, w = U.basis === "eaten" ? "ate" : "planned";
+  L.push(U.top5share >= .6 ? `A tight circle: 5 foods and recipes make up ${r0(U.top5share * 100)}% of what you ${w}.` : `Plenty of variety: your top 5 are only ${r0(U.top5share * 100)}% of what you ${w}, about ${r1(U.variety)} different items a week.`);
+  for (const m of Object.keys(byMeal)) { const t = byMeal[m][0], x = rows.find(r => r.ref === t.ref); if (t.days >= 5 && t.n / t.days >= .6 && x) L.push(`${mealName(m)} is almost always ${nm(x)}: ${t.n} of ${t.days} days${t.n === t.days ? " (every day)" : ""}.`); }
+  const pr = H.protein[0], px = pr && rows.find(r => r.ref === pr.ref); if (px && pr.share >= .25) L.push(`${nm(px)} gives ${r0(pr.share * 100)}% of the protein you ${w}.`);
+  if (weekend) { const d = (weekend.we - weekend.wk) / weekend.wk; if (Math.abs(d) >= .08) L.push(`On Saturday and Sunday you ${d > 0 ? "eat" : "plan"} about ${r0(Math.abs(d) * 100)}% ${d > 0 ? "more" : "less"} than on weekdays (${fmtN(r0(weekend.we))} vs ${fmtN(r0(weekend.wk))} kcal).`); }
+  if (cost.covered >= 3) L.push(`About ${fmtEur(cost.perDay)} a day on the foods that have a price (${cost.covered} of ${cost.of} items).`);
+  const bp = pPerEur[0], bx = bp && rows.find(r => r.ref === bp.ref); if (pPerEur.length >= 3 && bx) L.push(`Best protein for the money: ${nm(bx)}, about ${r0(bp.v)} g per €.`);
+  return H;
+}
+function habitsView() {
+  const n = UI.habDays || 60, Hb = foodHabits(n), nm = habitName, today = todayISO();
+  const chips = `<div class="chips">${[30, 60, 90].map(k => `<button class="chip sm" data-act="hab-days" data-n="${k}" aria-pressed="${n === k}">${k} days</button>`).join("")}</div>`;
+  if (!Hb.rows.length) return chips + `<div class="empty"><h3>No data yet</h3><p>Plan a few days, or tick what you eat, and your habits appear here.</p></div>`;
+  const item = (ref, kind) => { const x = Hb.rows.find(r => r.ref === ref && r.kind === kind); return x ? nm(x) : ""; };
+  const tile = (v, l) => `<div class="stat"><b>${v}</b><small>${l}</small></div>`, bars = (list, fmt) => list.map(x => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 54px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(item(x.ref, x.kind))}</span><span class="bar"><i style="width:${clamp(x.share * 100, 0, 100)}%;opacity:.8"></i></span><span class="v">${fmt(x)}</span></div>`).join("");
+  let h = chips + `<div class="faint" style="font-size:12.5px;padding:2px 2px 8px">${Hb.basis === "eaten" ? `From what you ticked as eaten, ${Hb.days} day${Hb.days === 1 ? "" : "s"} counted.` : `Nothing was ticked as eaten in this period: this is your plan (${Hb.days} day${Hb.days === 1 ? "" : "s"}).`}</div>
+    <div class="stat-grid four">${tile(Hb.days, "days counted")}${tile(r1(Hb.variety), "items a week")}${tile(r0(Hb.top5share * 100) + "%", "from your top 5")}${tile(Hb.cost.covered >= 3 ? fmtEur(Hb.cost.perDay) : "–", "a day, priced foods")}</div>
+    <div class="section-h"><h2>What stands out</h2></div><div class="card pad"><ul class="hab-l">${Hb.lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div>
+    <div class="section-h"><h2>By meal</h2></div><div class="card">${activeMeals().filter(m => Hb.byMeal[m.id]).map(m => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${esc(m.name)}</span><span class="s" style="white-space:normal">${Hb.byMeal[m.id].map(x => `${esc(item(x.ref, x.kind))} ${x.n}×`).join(" · ")}</span></span></div>`).join("")}</div>
+    <div class="section-h"><h2>Main sources</h2></div><div class="card pad"><div class="flabel" style="margin-bottom:6px">Protein</div>${bars(Hb.protein, x => r0(x.share * 100) + "%")}<div class="flabel" style="margin:12px 0 6px">Calories</div>${bars(Hb.kcalSrc, x => r0(x.share * 100) + "%")}</div>`;
+  if (Hb.cost.covered) h += `<div class="section-h"><h2>Cost</h2></div><div class="card pad"><div class="faint" style="font-size:12.5px;margin-bottom:6px">${fmtEur(Hb.cost.total)} on ${Hb.cost.covered} of ${Hb.cost.of} items that have a price; the rest isn't counted.</div>${Hb.pPerEur.length >= 3 ? `<div class="flabel" style="margin-bottom:6px">Protein per €</div>${Hb.pPerEur.map(x => `<div class="lrow" style="padding:6px 0"><span class="t">${esc(item(x.ref, x.kind))}</span><span class="end num">${r0(x.v)} g/€</span></div>`).join("")}` : ""}</div>`;
+  h += `<div class="section-h"><h2>Most used</h2></div><div class="card">${Hb.rows.slice(0, 40).map(r => { const u = r.kind === "recipe" ? "srv" : (getFood(r.ref)?.unit || "g"), meals = Object.entries(r.meals).sort((a, b) => b[1] - a[1]).map(([m, c]) => `${esc(mealName(m))} ${c}`).join(", "), d = daysBetween(r.last, today);
     return `<div class="lrow top-row"><button data-act="${r.kind === "recipe" ? "edit-recipe" : "edit-food"}" data-id="${esc(r.ref)}" style="text-align:left;min-width:0"><span class="t">${r.kind === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(nm(r))}</span><span class="s">${r.n}× · avg ${fmtN(r0(r.qty / r.n))} ${u} · ${meals} · last ${d === 0 ? "today" : d === 1 ? "yesterday" : d + " days ago"}${r.cost != null ? ` · ${r.partial ? "≥ " : "≈ "}${fmtEur(r.cost / r.n)} a time` : ""}</span></button><span class="end num">${r.n}×</span></div>`; }).join("")}</div>`;
+  return h;
 }
 function hiddenFoods() { return Object.values(S.foods || {}).filter(x => x && x.hidden && BUILTIN[x.id]).map(x => BUILTIN[x.id]); }
 /* ================= stats view ================= */
@@ -5000,7 +5038,8 @@ SHEETS.checkin = sh => {
   const food = S.days[d] ? dayTotals(S.days[d], true) : ZERO();
   let body = "";
   const wl = E.watchMode === "active" ? "Watch AEE" : E.watchMode === "neat" ? "Watch NEAT" : "Watch total";
-  if (past && FEAT("journal")) body += `<button class="ci-more" data-act="jr-open" data-date="${d}"><span><b>Journal</b><small>${jrFilled(d) ? esc(JR_KEYS.filter(k => jrHas(jrOf(d), k)).map(k => `${JR_NAME[k]} ${k === "m" ? jrMoodOf(jrOf(d).m)[0] : jrOf(d)[k]}`).join(" · ") || "One sentence") : "Mood, energy, productivity, stress · ten seconds"}</small></span>${ic("book", "sm")}</button>`;
+  if (past && SUPPS().length) body += suppCard(d);
+  if (past && FEAT("journal")) body += `<button class="ci-more" data-act="jr-open" data-date="${d}"><span><b>Journal</b><small>${jrFilled(d) ? esc(JR_KEYS.filter(k => jrHas(jrOf(d), k)).map(k => `${JR_NAME[k]} ${k === "m" ? jrMoodOf(jrOf(d).m).toLowerCase() : jrOf(d)[k]}`).join(" · ") || "One sentence") : "Mood, energy, productivity, stress · ten seconds"}</small></span>${ic("book", "sm")}</button>`;
   if (past) {
     // the three numbers you type; the rest comes from intervals.icu and the plan
     body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
@@ -5830,7 +5869,7 @@ function endDrag(cancel) {
 (function initFabScroll() { let y = scrollY, t = 0; addEventListener("scroll", () => { if (t) return; t = requestAnimationFrame(() => { t = 0; const f = $("#fab"); if (!f) return; const ny = scrollY; if (Math.abs(ny - y) > 8) { f.classList.toggle("away", ny > y && ny > 200); y = ny; } }); }, { passive: true }); })();
 /* ================= actions ================= */
 const ACT = {};
-ACT["top-days"] = el => { UI.topDays = +el.dataset.n; scheduleRender(); };
+ACT["hab-days"] = el => { UI.habDays = +el.dataset.n; scheduleRender(); };
 ACT["side-toggle"] = () => { try { localStorage.setItem(SIDE_KEY, sideMode() === "rail" ? "full" : "rail"); } catch (e) {} applySide(); scheduleRender(); };
 const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
@@ -5854,11 +5893,11 @@ ACT["copy-from"] = el => {
   mutateDay(UI.date, d => { for (const [m, items] of Object.entries(src.meals || {})) d.meals[m] = (d.meals[m] || []).concat(items.map(it => ({ ...clone(it), id: uid(), eaten: false }))); if (src.dish) d.dish = { ...(d.dish || {}), ...src.dish }; }, { undo: "Copied yesterday's meals" });
 };
 ACT["all-eaten"] = () => {
-  mutateDay(UI.date, d => { for (const [, it] of dayItems(d)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }, { undo: "Marked everything as eaten" });
+  mutateDay(UI.date, d => { for (const [, it] of dayItems(d)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }, { undo: "Marked everything as eaten" });
 };
 ACT["toggle-eaten"] = el => {
   const { meal, id } = el.dataset;
-  mutateDay(UI.date, d => { const it = (d.meals[meal] || []).find(x => x.id === id); if (it) { it.eaten = !it.eaten; pantryAdjust(it, it.eaten ? 1 : -1); } });
+  mutateDay(UI.date, d => { const it = (d.meals[meal] || []).find(x => x.id === id); if (it) { it.eaten = !it.eaten; pantryAdjust(it, it.eaten ? 1 : -1, UI.date); } });
 };
 ACT["open-add"] = el => openSheet("add", { date: UI.date, meal: el.dataset.meal || (UI.date === todayISO() ? suggestMeal() : (activeMeals().find(m => !(getDay(UI.date).meals[m.id] || []).length) || activeMeals()[0]).id), seg: "recent", q: "" });
 ACT["open-item"] = el => {
@@ -5895,7 +5934,7 @@ ACT["meal-menu"] = el => {
       { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
       { label: "Make it a cheat meal", icon: "star", sub: "Estimate it and let the plan make room", run: () => openCheat({ date: UI.date, meal: mid }) },
       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
-      { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }) },
+      { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }) },
       { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => mutateDay(UI.date, d => { delete d.meals[mid]; if (d.dish) delete d.dish[mid]; }, { undo: `${mealName(mid)} cleared` }) }] : [])
   ];
   openSheet("menu", { title: mealName(mid), items: list });
@@ -5978,7 +6017,7 @@ ACT["qty-save"] = () => {
     mutateDay(sh.date, d => {
       const src = d.meals[sh.origMeal] || []; const i = src.findIndex(x => x.id === sh.itemId); if (i < 0) return;
       const it = src[i]; if (it.eaten) pantryAdjust({ ...it }, -1);
-      it.qty = qty; if (it.eaten) pantryAdjust(it, 1);
+      it.qty = qty; if (it.eaten) pantryAdjust(it, 1, sh.date);
       if (sh.meal !== sh.origMeal) { src.splice(i, 1); (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }
     });
     closeSheet(); return;
@@ -8502,9 +8541,8 @@ VIEWS.today = function () {
   let h = `<header class="top td-top"><div class="top-row"><div><div class="top-sub">${fmtLong(today)}${SMART() ? ` · ${esc(phaseFor(today).phase)}` : ""}</div><div class="top-title">${greeting()}</div></div>
     <div class="row">${shopBtn()}${settingsBtn()}</div></div></header>`;
   h += liveBanner();
-  const nudges = [
-    // one way in: the check-in holds the weight first, then sleep and vitals
-    !(Lg.weight > 0) || (!(Lg.sleep > 0) && !(Lg.hrv > 0) && !(Lg.rhr > 0)) ? `<button class="td-nudge" data-act="open-checkin" data-date="${today}">${ic(Lg.weight > 0 ? "pulse" : "weight", "sm")}${Lg.weight > 0 ? "Check in" : "Weigh in"}</button>` : ""].filter(Boolean);
+  /* the Check-in is always one tap away, first in the row; the dot says something is still missing today */
+  const nudges = [`<button class="td-nudge" data-act="open-checkin" data-date="${today}">${ic("pulse", "sm")}Check-in${!(Lg.weight > 0) || (!(Lg.sleep > 0) && !(Lg.hrv > 0) && !(Lg.rhr > 0)) ? `<i class="td-pend" aria-label="to do"></i>` : ""}</button>`];
 
   /* ---- training ---- */
   const kind = !items.length ? "Rest day" : allDone ? "Done" : hardLeft ? "Key session" : minLeft >= 90 ? "Big day" : "Training";
@@ -9674,13 +9712,14 @@ ACT["clear-day"] = el => { const date = el.dataset.date || UI.date, n = dayItems
 /* ================= shopping: what the plan needs, what's left over, what it costs ================= */
 /* needs for the days in range, with where each one comes from (a recipe's ingredients show up here too) */
 /* ---- one model for stock, plan and list ----
-   The real stock (S.shop.pantry) is never touched here. Planned food linked to the pantry (it.pan) is covered by the
-   stock from today on, earliest day first, so a later day or week only sees what the meals before it leave. What isn't
-   covered goes on the list; the covered part is listed apart, with the day the stock runs out. Recipes count too. */
+   The real stock (S.shop.pantry) is never touched here. Every planned food that is at home is covered by the stock
+   from today on, earliest day first, so a later day or week only sees what the meals before it leave. What isn't
+   covered goes on the list; the covered part is listed apart, with the day the stock runs out. Recipes count too.
+   itemCov says, per planned item, how much of it the stock covers (for the jar on the meal plan). */
 function stockPlan(start, n) {
   const today = todayISO(), last = addDays(start, n - 1), hz = last > addDays(today, 14) ? last : addDays(today, 14), from = start < today ? start : today;
   const free = {}, stock = {}; for (const [id, p] of Object.entries(S.shop.pantry || {})) free[id] = stock[id] = +p.g || 0;
-  const need = {}, cov = {}, buyWhy = {}, uses = {}, endsOn = {};
+  const need = {}, cov = {}, buyWhy = {}, uses = {}, endsOn = {}, itemCov = {};
   for (let dt = from; dt <= hz; dt = addDays(dt, 1)) {
     const d = S.days[dt]; if (!d) continue; const win = dt >= start && dt <= last, dd = DOW[dow(dt)];
     for (const [m, it] of dayItems(d)) {
@@ -9689,7 +9728,8 @@ function stockPlan(start, n) {
       for (const [id, g] of itemStockLines(it)) {
         if (!(g > 0)) continue;
         let c = 0;
-        if (it.pan && dt >= today) { c = Math.min(free[id] || 0, g); free[id] = (free[id] || 0) - c; if (stock[id] > 0 && free[id] < 0.5 && !endsOn[id]) endsOn[id] = dt; }
+        if (dt >= today) { c = Math.min(free[id] || 0, g); free[id] = (free[id] || 0) - c; if (stock[id] > 0 && free[id] < 0.5 && !endsOn[id]) endsOn[id] = dt; }
+        const ic2 = itemCov[it.id] || (itemCov[it.id] = { c: 0, g: 0 }); ic2.c += c; ic2.g += g;
         if (!win) continue;
         need[id] = (need[id] || 0) + g; cov[id] = (cov[id] || 0) + c;
         if (c < g - 0.5) (buyWhy[id] = buyWhy[id] || new Set()).add(c > 0 ? why + " (pantry short)" : why);
@@ -9697,7 +9737,7 @@ function stockPlan(start, n) {
       }
     }
   }
-  return { need, cov, buyWhy, uses, endsOn, free, stock };
+  return { need, cov, buyWhy, uses, endsOn, free, stock, itemCov };
 }
 /* the rows still to buy. need = planned in the range, covered = from the linked stock, free = at home and not set aside */
 function shoppingRows(start, n) {
@@ -9721,11 +9761,11 @@ function shoppingCovered(start, n) {
   }
   return out.sort((a, b) => (a.endsOn || "9999").localeCompare(b.endsOn || "9999") || a.f.name.localeCompare(b.f.name));
 }
-/* the stock left at the end of a day, after the meals linked to the pantry up to then (a projection: nothing is written) */
+/* the stock left at the end of a day, after the planned meals up to then (a projection: nothing is written) */
 function stockOn(date) {
   const out = {}; for (const [id, p] of Object.entries(S.shop.pantry || {})) out[id] = +p.g || 0;
   for (let dt = todayISO(); dt <= date; dt = addDays(dt, 1)) { const d = S.days[dt]; if (!d) continue;
-    for (const [, it] of dayItems(d)) { if (!it.pan || it.eaten) continue; for (const [id, g] of itemStockLines(it)) if (out[id] != null) out[id] = Math.max(0, r0(out[id] - g)); } }
+    for (const [, it] of dayItems(d)) { if (it.eaten || it.kind === "quick") continue; for (const [id, g] of itemStockLines(it)) if (out[id] != null) out[id] = Math.max(0, r0(out[id] - g)); } }
   return out;
 }
 /* prices: the last price paid for a food, per gram */
@@ -9754,13 +9794,13 @@ const extraNames = () => Object.values(S.shop.xhist || {}).sort((a, b) => (b.cnt
 /* a recurring extra waits until it is due; it shows once the list window reaches that day */
 const visibleExtras = () => (S.shop.extras || []).filter(x => !x.due || x.due <= addDays(UI.shopStart, (S.shop.range || 7) - 1));
 const EXTRA_RECS = [7, 14, 30];
+const extraFormHTML = () => `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" list="extra-dl" placeholder="Add something else" autocomplete="off"><datalist id="extra-dl">${extraNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
 function shopListHTML(rows, compact) {
-  let h = ""; const ck = S.shop.checked || {};
+  let h = extraFormHTML(); const ck = S.shop.checked || {};
   for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat).sort((a, b) => (!!ck[a.id] - !!ck[b.id]) || a.f.name.localeCompare(b.f.name)); if (!g.length) continue;
     h += `<div class="sq"><div class="sq-h">${esc(label)}<span>${g.filter(r => !ck[r.id]).length}</span></div>${g.map(r => shopRowHTML(r, compact)).join("")}</div>`; }
   const ex = visibleExtras();
   if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span>${x.rec ? `<span class="s">every ${x.rec === 7 ? "week" : x.rec === 14 ? "2 weeks" : "month"}</span>` : ""}</span><span class="shop-q">${x.eur != null && !x.est ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="${x.est ? "~" + fmtEur(+x.eur) : "€"}" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${x.id}">`}<button class="icon-btn sm ${x.rec ? "on" : ""}" data-act="extra-rec" data-id="${x.id}" aria-pressed="${!!x.rec}" aria-label="Repeat ${esc(x.text)}">${ic("sync", "sm")}</button><button class="icon-btn sm" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
-  h += `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" list="extra-dl" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><datalist id="extra-dl">${extraNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
   return h;
 }
 function shopTotals(rows) { let est = 0, known = 0, inCart = 0; for (const r of rows) { const c = rowCost(r); if (c != null) { est += c; known++; if (S.shop.checked?.[r.id]) inCart += c; } }
@@ -9858,7 +9898,7 @@ const PAN_SORTS = [["exp", "Expiry"], ["az", "A–Z"], ["za", "Z–A"], ["cat", 
 const panPrefs = () => ({ sort: "exp", filter: "all", ...(S.settings.pantryPrefs || {}) });
 function setPantryPrefs(o) { const cur = panPrefs(); S.settings.pantryPrefs = { sort: o.sort ?? cur.sort, filter: o.filter ?? cur.filter }; saveSettings(); }
 function pantryList(q, sort, filter) {
-  const today = todayISO(), nq = norm(q || "").trim(), L = panLinked(today, 14), P = S.shop.pantry || {};
+  const today = todayISO(), nq = norm(q || "").trim(), L = planReserved(today, 14), P = S.shop.pantry || {};
   let ids = Object.keys(P).filter(id => (getFood(id) || BUILTIN[id]) && P[id].g > 0);
   if (nq) ids = ids.filter(id => { const f = getFood(id) || BUILTIN[id]; return norm(f.name).includes(nq) || norm(f.brand || "").includes(nq) || norm(f.alias || ALIAS_IT[f.id] || "").includes(nq); });
   if (filter === "soon") ids = ids.filter(id => P[id].exp && daysBetween(today, P[id].exp) <= 3);
@@ -9879,18 +9919,24 @@ function pantryForecast(date) {
   rows.sort((a, b) => (a.endsOn || "9999").localeCompare(b.endsOn || "9999") || a.f.name.localeCompare(b.f.name));
   return { date, rows };
 }
+/* the rule in three lines: what the plan, eating and shopping each do to the stock */
+function pantryHowHTML() {
+  let open = UI.paHow; if (open == null) { try { open = localStorage.getItem("engine.paHow") !== "0"; } catch (e) { open = true; } }
+  return `<section class="pa-how card"><button class="pa-fh" data-act="pa-how-toggle" aria-expanded="${open}"><span><b>How the pantry works</b>${open ? "" : `<span class="faint">Plan sets aside · eating takes off · shopping adds</span>`}</span>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<ol class="pa-how-l"><li><b>The plan sets aside</b> what you have at home for the days ahead, earliest day first. Nothing leaves the pantry yet.</li><li><b>Eating takes off.</b> Tick a food as eaten and what you used comes off the stock; un-tick and it comes back.</li><li><b>The list shows only what is missing.</b> What the plan needs and the pantry can't cover goes on the list; when you shop, it comes here.</li></ol>` : ""}</section>`;
+}
 function forecastHTML(date) {
   const F = pantryForecast(date), today = todayISO(), dayTxt = d => `${DOW[dow(d)]} ${fmtDM(d)}`;
   const chips = [[3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="pa-fdate" data-n="${k}" aria-pressed="${date === addDays(today, k)}">${l}</button>`).join("");
   const body = F.rows.length ? F.rows.slice(0, 12).map(r => { const u = r.f.unit || "g", whys = [...new Set(r.uses.map(x => x.why))];
     return `<div class="lrow"><span style="min-width:0"><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.now)} → ${fmtN(r.then)} ${u}${r.endsOn ? ` · <b style="color:var(--${r.endsOn <= date ? "warn" : "muted"})">runs out ${dayTxt(r.endsOn)}</b>` : ""}${whys.length ? ` · for ${esc(whys.slice(0, 3).join(", "))}${whys.length > 3 ? ` +${whys.length - 3}` : ""}` : ""}</span></span></div>`; }).join("") + (F.rows.length > 12 ? `<div class="lrow"><span class="s">+${F.rows.length - 12} more</span></div>` : "")
-    : `<div class="lrow"><span class="s">Nothing at home is set aside for meals up to ${dayTxt(date)}. Link planned meals to the pantry ("From the pantry") to see it here.</span></div>`;
-  return `<details class="pa-forecast card" ${F.rows.length ? "open" : ""}><summary><b>Stock on ${dayTxt(date)}</b><span class="faint">after the meals set aside up to then</span></summary><div class="chips pa-fchips">${chips}<label class="chip sm date-pick">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div></details>`;
+    : `<div class="lrow"><span class="s">Nothing at home is needed by the plan up to ${dayTxt(date)}.</span></div>`;
+  const open = UI.paFcOpen ?? F.rows.length > 0;
+  return `<section class="pa-forecast card"><button class="pa-fh" data-act="pa-fc-toggle" aria-expanded="${open}"><span><b>Stock on ${dayTxt(date)}</b><span class="faint">after the planned meals up to then</span></span>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<div class="chips pa-fchips">${chips}<label class="chip sm date-pick">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div>` : ""}</section>`;
 }
 VIEWS.pantry = function () {
   const today = todayISO(), P = S.shop.pantry || {}, pref = panPrefs(), q = UI.pantryQ || "", fdate = UI.paDate && UI.paDate >= today ? UI.paDate : addDays(today, 7);
   const all = pantryList("", "exp", "all"), ids = pantryList(q, pref.sort, pref.filter);
-  const need = panLinked(today, 14); // only food planned from the pantry is set aside
+  const need = planReserved(today, 14); // the plan sets aside what is at home
   const spare = all.filter(id => P[id].g - (need[id] || 0) >= 20 && !(P[id].exp && P[id].exp < today));
   let val = 0; for (const id of all) { const k = eurPerG(id); if (k != null) val += k * P[id].g; }
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${all.length} item${all.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
@@ -9898,8 +9944,8 @@ VIEWS.pantry = function () {
   if (all.length) h += `<div class="pa-tools"><div class="search">${ic("search")}<input id="pantry-q" type="search" placeholder="Search pantry" value="${esc(q)}" data-in="pantry-q" autocomplete="off"></div>
     <div class="chips">${PAN_FILTERS.map(([k, l]) => `<button class="chip sm" data-act="pantry-filter" data-k="${k}" aria-pressed="${pref.filter === k}">${l}</button>`).join("")}</div>
     <div class="seg sm" role="group" aria-label="Sort">${PAN_SORTS.map(([k, l]) => `<button data-act="pantry-sort" data-k="${k}" aria-pressed="${pref.sort === k}">${l}</button>`).join("")}</div></div>`;
-  h += expiryCard("pantry");
-  if (!all.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping. Food you plan from here (Add › Pantry) is set aside and comes off when you eat it; the rest of the plan goes on the shopping list.</p></div>`;
+  h += expiryCard("pantry") + pantryHowHTML();
+  if (!all.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping, or add what you have with the + button.</p></div>`;
   h += forecastHTML(fdate);
   if (!ids.length) return h + `<div class="empty slim"><p>${q ? `No items match “${esc(q)}”.` : "Nothing in this filter."}</p></div>`;
   let lastCat = "";
@@ -9910,6 +9956,8 @@ VIEWS.pantry = function () {
 };
 INP["pantry-q"] = v => { UI.pantryQ = v; scheduleRender(); };
 INP["pa-fdate"] = v => { if (v) { UI.paDate = v; scheduleRender(); } };
+ACT["pa-fc-toggle"] = () => { UI.paFcOpen = !(UI.paFcOpen ?? pantryForecast(UI.paDate && UI.paDate >= todayISO() ? UI.paDate : addDays(todayISO(), 7)).rows.length > 0); scheduleRender(); };
+ACT["pa-how-toggle"] = () => { let cur = UI.paHow; if (cur == null) { try { cur = localStorage.getItem("engine.paHow") !== "0"; } catch (e) { cur = true; } } UI.paHow = !cur; try { localStorage.setItem("engine.paHow", UI.paHow ? "1" : "0"); } catch (e) {} scheduleRender(); };
 ACT["pa-fdate"] = el => { UI.paDate = addDays(todayISO(), +el.dataset.n); scheduleRender(); };
 ACT["pantry-sort"] = el => { setPantryPrefs({ sort: el.dataset.k }); scheduleRender(); };
 ACT["pantry-filter"] = el => { setPantryPrefs({ filter: el.dataset.k }); scheduleRender(); };
@@ -9946,7 +9994,7 @@ function priceSet(id, v, unit) {
 }
 function stockBoxHTML(id) {
   const f = getFood(id) || BUILTIN[id]; if (!f) return "";
-  const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(panLinked()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, pr = priceViews(id);
+  const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(planReserved()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, pr = priceViews(id);
   const sub = [res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside` : "", f.pack > 0 ? `pack ${fmtN(f.pack)} ${u}` : "", pr ? [`${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}`, pr.perPack != null ? `${fmtEur(pr.perPack)}/pack` : "", pr.perUnit != null ? `${fmtEur(pr.perUnit)}/piece` : ""].filter(Boolean).join(" · ") : ""].filter(Boolean).join(" · ");
   return `<div class="stock-box" data-stock="${id}"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${id}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span>${sub ? `<span class="faint sb-s">${esc(sub)}</span>` : ""}</div>`;
 }
@@ -9954,7 +10002,7 @@ function stockBoxHTML(id) {
 ACT["stock-open"] = el => { const id = el.dataset.id, f = getFood(id) || BUILTIN[id], p = S.shop.pantry[id]; if (!f) return; const cur = S_(), back = cur && (cur.type === "qty" || cur.type === "food") ? cur : null;
   openSheet("pantry", { food: id, g: p?.g ?? "", exp: p?.exp || "", u: p?.u || (f.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk, back }); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
-function pantrySpare(days = 7) { const need = panLinked(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
+function pantrySpare(days = 7) { const need = planReserved(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
 /* settings: leftovers and budget */
 function shopSettingsCard() {
@@ -10216,7 +10264,7 @@ function suppCard(date = todayISO()) {
 ACT["supp-tick"] = el => { const date = el.dataset.date || todayISO(), k = el.dataset.k, id = k.split("@")[0], x = SUPPS().find(s => s.id === id);
   let was = false; mutateLog(date, day => { const m = { ...(day.supp || {}) }; if (m[k]) { delete m[k]; was = true; } else m[k] = date < todayISO() ? k.split("@")[1] || "late" : nowHM(); day.supp = Object.keys(m).length ? m : undefined; if (!day.supp) delete day.supp; });
   if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock + (was ? 1 : -1)); saveSettings(); }
-  haptic(15); scheduleRender(); };
+  haptic(15); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["supp-shop"] = () => { const low = SUPPS().filter(x => x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3)); S.shop.extras = S.shop.extras || [];
   for (const x of low) if (!S.shop.extras.some(e => !e.done && e.text === x.name)) S.shop.extras.push({ id: uid(), text: x.name, done: false }); put("shop", "", S.shop); toast(`${low.length} added to the shopping list`); };
 /* Settings: the list, with times, days and stock */
@@ -11577,12 +11625,12 @@ VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
 ACT["perf-seg"] = el => { UI.perfSeg = el.dataset.k; scheduleRender(); };
 VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
   const segs = [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["body", "Body"], ["food", "Nutrition"], ["reports", "Reports"], ...(FEAT("journal") ? [["journal", "Journal"]] : [])];
-  const sub = { journal: "Mood, energy, productivity and stress", overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", food: "What you ate, and the energy behind it", reports: "Week, month, all-time and every day" }[seg] || "";
+  const sub = { journal: "Mood, energy, productivity and stress", overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", food: "What you ate, the energy behind it and your habits", reports: "Week, month, all-time and every day" }[seg] || "";
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${sub}</div></div>${settingsBtn()}</div><div style="padding:10px 0 12px">${segBar("prog-seg", seg, segs)}</div></header>`;
   if (seg === "goals" && FEAT("goals")) return h + goalsView();
   if (seg === "journal" && FEAT("journal")) return h + journalView();
   if (seg === "body") return h + bodyView();
-  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"]]) + (f === "energy" ? energyView() : VIEWS.stats(true) + macroGkg()); }
+  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"], ["habits", "Habits"]]) + (f === "energy" ? energyView() : f === "habits" ? habitsView() : VIEWS.stats(true) + macroGkg()); }
   if (seg === "reports") { const r = UI.repSeg || "week"; UI.dashSeg = r === "month" ? "month" : "week";
     if (r === "hist") { const hs = UI.histSeg || "days"; return h + subBar("rep-seg", r, REP_SEGS) + `<div class="hist-sub chips">${[["days", "Days"], ["weeks", "Weeks"]].map(([k, l]) => `<button class="chip" data-act="hist-seg" data-k="${k}" aria-pressed="${hs === k}">${l}</button>`).join("")}</div>` + (hs === "weeks" ? weeksView() : daysView()); }
     return h + subBar("rep-seg", r, REP_SEGS) + (r === "all" ? recapView() : reportsView()); }
@@ -11598,14 +11646,17 @@ ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
    One screen, one tap per answer, saved at once. Today shows a card in the evening while the day is empty;
    past days open with the same day picker as the Check-in. Recaps skip empty days and always say how many count. */
 const JR_FIELDS = [["p", "Productivity", "Little done", "Very productive"], ["m", "Mood", "Awful", "Great"], ["e", "Energy", "Drained", "Fully charged"], ["s", "Stress", "Calm", "Very stressed"]];
-const JR_MOODS = [["😞", "Awful"], ["🙁", "Low"], ["😐", "Okay"], ["🙂", "Good"], ["😄", "Great"]];
+const JR_MOODS = ["Awful", "Low", "Okay", "Good", "Great"];
 const jrMoodOf = v => JR_MOODS[clamp(Math.round(v), 1, 5) - 1];
-const jrShow = (k, v) => v == null ? "–" : k === "m" ? jrMoodOf(v)[0] : r1(v);
+/* five drawn faces, one line weight: the mouth goes from a frown to a smile */
+const JR_MOUTH = ["M8 17.2c1.1-1.7 2.4-2.5 4-2.5s2.9.8 4 2.5", "M8.6 16.4c1-.9 2.1-1.3 3.4-1.3s2.4.4 3.4 1.3", "M9 15.8h6", "M8.6 14.9c1 1 2.1 1.5 3.4 1.5s2.4-.5 3.4-1.5", "M8 14.4c1.1 2 2.4 3 4 3s2.9-1 4-3"];
+const jrFace = (v, cls = "") => `<svg class="jr-face ${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><circle class="e" cx="9" cy="9.8" r=".9"/><circle class="e" cx="15" cy="9.8" r=".9"/><path d="${JR_MOUTH[clamp(Math.round(v), 1, 5) - 1]}"/></svg>`;
+const jrShow = (k, v) => v == null ? "–" : k === "m" ? jrFace(v) : r1(v);
 SHEETS.journal = sh => {
   const d = sh.date, j = jrOf(d) || {}, L = logGet(d) || {}, nW = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest").length;
   const ctx = [L.sleep > 0 ? `${r1(L.sleep)} h sleep` : "", L.hrv > 0 ? `HRV ${L.hrv}` : "", L.steps > 0 ? `${fmtN(L.steps)} steps` : "", nW ? `${nW} workout${nW > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
-  const q = ([k, l, lo, hi]) => `<div class="jr-q"><div class="jr-qh"><span class="flabel">${l}</span>${k === "m" && jrHas(j, "m") ? `<small class="faint">${jrMoodOf(j.m)[1]}</small>` : ""}</div>
-    <div class="jr-row${k === "m" ? " emo" : ""}" role="group" aria-label="${l}">${[1, 2, 3, 4, 5].map(v => `<button type="button" data-act="jr-set" data-k="${k}" data-v="${v}" aria-pressed="${j[k] === v}" aria-label="${l} ${v} of 5${k === "m" ? ", " + JR_MOODS[v - 1][1] : ""}">${k === "m" ? JR_MOODS[v - 1][0] : v}</button>`).join("")}</div>
+  const q = ([k, l, lo, hi]) => `<div class="jr-q"><div class="jr-qh"><span class="flabel">${l}</span>${k === "m" && jrHas(j, "m") ? `<small class="faint">${jrMoodOf(j.m)}</small>` : ""}</div>
+    <div class="jr-row${k === "m" ? " emo" : ""}" role="group" aria-label="${l}">${[1, 2, 3, 4, 5].map(v => `<button type="button" data-act="jr-set" data-k="${k}" data-v="${v}" aria-pressed="${j[k] === v}" aria-label="${l} ${v} of 5${k === "m" ? ", " + JR_MOODS[v - 1] : ""}">${k === "m" ? jrFace(v) : v}</button>`).join("")}</div>
     <div class="jr-ends"><span>${lo}</span><span>${hi}</span></div></div>`;
   return { title: "Journal", titleHTML: dayNavHTML(d, "jr-go"),
     body: `${JR_FIELDS.map(q).join("")}
@@ -11621,7 +11672,7 @@ CHG["jr-note"] = v => { const sh = S_(); if (sh?.type === "journal") jrNote(sh.d
 function journalCard(hour = new Date().getHours()) {
   const t = todayISO(); if (!FEAT("journal") || hour < JR_FROM_H || jrFilled(t)) return "";
   return `<section class="card pad jr-card"><div class="row" style="justify-content:space-between"><span class="flabel">How was today?</span><button class="link" data-act="jr-open" data-date="${t}">Journal</button></div>
-    <div class="jr-row emo" role="group" aria-label="Mood">${JR_MOODS.map(([e, l], i) => `<button type="button" data-act="jr-quick" data-v="${i + 1}" aria-label="Mood ${i + 1} of 5, ${l}">${e}</button>`).join("")}</div></section>`;
+    <div class="jr-row emo" role="group" aria-label="Mood">${JR_MOODS.map((l, i) => `<button type="button" data-act="jr-quick" data-v="${i + 1}" aria-label="Mood ${i + 1} of 5, ${l}">${jrFace(i + 1)}</button>`).join("")}</div></section>`;
 }
 ACT["jr-quick"] = el => { const t = todayISO(); jrSet(t, "m", +el.dataset.v); openSheet("journal", { date: t, live: true }); };
 TODAY_CARDS.push({ col: "b", o: 3, fn: () => journalCard() });
@@ -11657,7 +11708,7 @@ function jrPeriod(kind, off, today = todayISO()) {
 }
 const JR_RANGES = [["week", "Week"], ["month", "Month"], ["year", "Year"]];
 function jrCell(r, k, d, big) {
-  const v = r?.[k] ?? null, tip = `${DOW[dow(d)]} ${fmtDM(d)} · ${v == null ? "no entry" : `${JR_NAME[k]} ${v} of 5${k === "m" ? ", " + jrMoodOf(v)[1] : ""}`}`;
+  const v = r?.[k] ?? null, tip = `${DOW[dow(d)]} ${fmtDM(d)} · ${v == null ? "no entry" : `${JR_NAME[k]} ${v} of 5${k === "m" ? ", " + jrMoodOf(v) : ""}`}`;
   return `<button class="jr-d${v == null ? " none" : ""}${d === todayISO() ? " now" : ""}" data-act="jr-open" data-date="${d}" aria-label="${tip}" title="${tip}"><small>${big ? DOW[dow(d)] + " " : ""}${+d.slice(8)}</small><b>${jrShow(k, v)}</b><i style="width:${v == null ? 0 : v * 20}%;${k === "s" ? "background:var(--bad)" : ""}"></i></button>`;
 }
 function journalView() {
@@ -11670,7 +11721,7 @@ function journalView() {
     <small class="faint">Days without an entry are left out of every average, not counted as zero.</small></div>`;
   if (!cur.filled) return h + `<div class="note">Nothing in this period yet. Tap a day, or add today: four taps and an optional sentence.</div>`;
   const tile = ([k, l]) => { const m = cur.mean[k], pm = prev.mean[k], dl = m != null && pm != null && cur.n[k] >= 3 && prev.n[k] >= 3 ? m - pm : null;
-    return `<div class="stat"><b>${k === "m" && m != null ? jrMoodOf(m)[0] + " " : ""}${m == null ? "–" : r1(m)}</b><small>${l}${cur.n[k] ? ` · ${cur.n[k]} day${cur.n[k] > 1 ? "s" : ""}` : ""}</small>${dl != null && Math.abs(dl) >= .05 ? `<small class="faint" style="display:block">${dl > 0 ? "+" : "−"}${r1(Math.abs(dl))} vs ${kind === "week" ? "last week" : kind === "month" ? "last month" : "last year"}</small>` : ""}</div>`; };
+    return `<div class="stat"><b>${k === "m" && m != null ? jrFace(m, "sm") + " " : ""}${m == null ? "–" : r1(m)}</b><small>${l}${cur.n[k] ? ` · ${cur.n[k]} day${cur.n[k] > 1 ? "s" : ""}` : ""}</small>${dl != null && Math.abs(dl) >= .05 ? `<small class="faint" style="display:block">${dl > 0 ? "+" : "−"}${r1(Math.abs(dl))} vs ${kind === "week" ? "last week" : kind === "month" ? "last month" : "last year"}</small>` : ""}</div>`; };
   h += `<div class="stat-grid four">${JR_FIELDS.map(f => tile(f)).join("")}</div>
     <div class="chips" role="group" aria-label="Show">${JR_FIELDS.map(([k, l]) => `<button class="chip" data-act="jr-metric" data-k="${k}" aria-pressed="${met === k}">${l}</button>`).join("")}</div>`;
   if (kind === "year") {
@@ -11682,7 +11733,7 @@ function journalView() {
     const pts = cur.rows.filter(r => r[met] != null).map(r => [r.d, r[met]]);
     if (kind === "month" && pts.length >= 3) h += `<div class="card pad"><div class="flabel" style="margin-bottom:6px">${esc(JR_FIELDS.find(f => f[0] === met)[1])} · days with an entry</div>${seriesChart([{ name: JR_NAME[met], color: "var(--accent)", pts }], { fmt: v => r1(v), label: `${JR_NAME[met]} by day`, minPad: .4, h: 160 })}<small class="faint">Days without an entry are skipped, not drawn as zero.</small></div>`;
   }
-  if (cur.best) { const li = (r, tone) => `<button class="lrow" data-act="jr-open" data-date="${r.d}"><span style="min-width:0"><span class="t">${relDay(r.d)} · ${fmtDM(r.d)}</span><span class="s">${esc(JR_FIELDS.filter(f => r[f[0]] != null).map(f => `${f[1].toLowerCase()} ${f[0] === "m" ? jrMoodOf(r.m)[0] : r[f[0]]}`).join(" · "))}${r.n ? ` · “${esc(r.n)}”` : ""}</span></span></button>`;
+  if (cur.best) { const li = (r, tone) => `<button class="lrow" data-act="jr-open" data-date="${r.d}"><span style="min-width:0"><span class="t">${relDay(r.d)} · ${fmtDM(r.d)}</span><span class="s">${esc(JR_FIELDS.filter(f => r[f[0]] != null).map(f => `${f[1].toLowerCase()} ${f[0] === "m" ? jrMoodOf(r.m).toLowerCase() : r[f[0]]}`).join(" · "))}${r.n ? ` · “${esc(r.n)}”` : ""}</span></span></button>`;
     h += `<div class="section-h"><h2>Best days</h2></div><div class="card">${cur.best.map(r => li(r)).join("")}</div><div class="section-h"><h2>Harder days</h2></div><div class="card">${cur.worst.map(r => li(r)).join("")}</div>`; }
   const C = jrCorr(P.a, end);
   h += `<div class="section-h"><h2>Patterns</h2></div>` + (C.n < C.need ? `<div class="note">Patterns need at least ${C.need} days with entries; this period has ${C.n}.</div>` : C.rows.length
@@ -12187,55 +12238,32 @@ SHEETS.pantry = sh => { const o = _pantrySheet(sh), f = sh.food ? getFood(sh.foo
   const P = f.per || {}, info = `<button class="pa-food" data-act="pa-food-edit">${f.img ? `<img data-blob="${esc(f.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="pa-fi">${ic("plate", "sm")}</span>`}<span><b>${fmtN(r0(P.kcal || 0))} kcal</b> per 100 ${f.unit || "g"} · ${r1(P.p || 0)}P ${r1(P.c || 0)}C ${r1(P.f || 0)}F${f.pack ? ` · pack ${fmtN(f.pack)} ${f.unit || "g"}` : ""}${f.est ? " · estimated" : ""}<small>Edit values, pack and portions</small></span>${ic("chevR", "sm")}</button>`;
   o.body = info + o.body; return o; };
 ACT["pa-food-edit"] = () => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; UI.dest = "pantry"; openSheet("food", { draft: clone(f), isNew: false, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = "pantry"; };
-/* ================= pantry ↔ plan: only what you take from the pantry comes off it =================
-   A planned food is either "from the pantry" (it.pan) or something to buy. From the pantry: set aside as soon as
-   it's planned (the pantry shows what's still free) and taken off the stock when you eat it. Everything else in the
-   plan never touches the pantry and goes on the shopping list. Links are made when you add from Add › Pantry,
-   when a shopping trip is finished (what you bought for the plan is linked to it), by the planner when it plans
-   from the pantry, with "Use what's at home" on the list, or by hand in the food's sheet. */
-let NEW_PAN = false;
-{ const _ni = newItem; newItem = function (kind, ref, qty, extra = {}) { const it = _ni(kind, ref, qty, extra); if (NEW_PAN && kind === "food" && S.shop.pantry[ref]) it.pan = true; return it; }; }
-function panLinked(start = todayISO(), n = 14) { const o = {};
-  for (let i = 0; i < n; i++) { const d = S.days[addDays(start, i)]; if (!d) continue; for (const [, it] of dayItems(d)) if (it.pan && !it.eaten) for (const [id, g] of itemStockLines(it)) o[id] = (o[id] || 0) + g; }
+/* ================= plan ↔ pantry: one rule =================
+   The plan sets aside what is at home, with nothing to switch on: every planned food that is in the pantry is covered by it
+   from today on, earliest day first. Eating takes what was used off the stock and un-ticking gives it back. The shopping
+   list shows only what the plan needs and the pantry can't cover; buying adds to the pantry. (it.pan was a per-item switch
+   in earlier versions: it is ignored now and kept only so older data still reads.) */
+function planReserved(start = todayISO(), n = 14) { const o = {};
+  for (let i = 0; i < n; i++) { const d = S.days[addDays(start, i)]; if (!d) continue; for (const [, it] of dayItems(d)) if (!it.eaten && it.kind !== "quick") for (const [id, g] of itemStockLines(it)) o[id] = (o[id] || 0) + g; }
   return o; }
-const panFree = (id, L = panLinked()) => Math.max(0, r0((S.shop.pantry[id]?.g || 0) - (L[id] || 0)));
-/* link unlinked plan food to what's free at home, earliest days first (ids: only these foods) */
-function linkFromPantry(start = todayISO(), n = 7, ids = null, budget = null) { const L = panLinked(); let k = 0;
-  const free = {}; for (const id of Object.keys(S.shop.pantry || {})) free[id] = budget?.[id] ?? panFree(id, L);
-  for (let i = 0; i < n; i++) { const dt = addDays(start, i), d = S.days[dt]; if (!d) continue; let ch = false;
-    const next = clone(d); for (const [, it] of dayItems(next)) { if (it.pan || it.eaten || it.kind === "quick") continue;
-      const lines = itemStockLines(it); if (!lines.length) continue;
-      /* a food: the whole portion is at home. A recipe: at least one of its ingredients is, in the full amount it needs */
-      if (it.kind === "food" ? ((ids && !ids.includes(it.ref)) || !(free[it.ref] >= (+it.qty || 0) - 0.5)) : !lines.some(([id, g]) => (!ids || ids.includes(id)) && g > 0 && free[id] >= g - 0.5)) continue;
-      it.pan = true; for (const [id, g] of lines) if (free[id] != null) free[id] = Math.max(0, free[id] - g); ch = true; k++; }
-    if (ch) put("days", dt, next); }
-  return k; }
-/* finishing a trip: what you bought for the plan is linked to it */
-{ const _sd = ACT["shop-done"]; ACT["shop-done"] = (...a) => { const ids = Object.entries(S.shop.checked || {}).filter(([, c]) => c).map(([id]) => id), st = UI.shopStart, n = S.shop.range || 7; const out = _sd(...a); if (ids.length) linkFromPantry(st, n, ids); scheduleRender(); return out; }; }
-/* the planner, when it plans from the pantry */
-{ const _rp = runPlanner; runPlanner = async function (...a) { const sh = UI.sheet; const out = await _rp(...a); if (sh?.pantry) { const k = linkFromPantry(todayISO(), 7); if (k) toast(`${k} planned food${k > 1 ? "s" : ""} set aside from the pantry`); } return out; }; }
-/* once: the plans made before this keep using what's at home */
-function panMigrate() { if (S.shop.panV) return; S.shop.panV = 1; const k = linkFromPantry(addDays(todayISO(), -1), 15); put("shop", "", S.shop); if (k) console.info(`pantry: linked ${k} planned foods to the stock`); }
-/* Add › Pantry: what's free at home; adding from here sets it aside */
-function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m";
+const panFree = (id, L = planReserved()) => Math.max(0, r0((S.shop.pantry[id]?.g || 0) - (L[id] || 0)));
+/* Add › Pantry: what's free at home, use-by first */
+function pantryAddRows(sh) { const L = planReserved(), mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m";
   const xs = Object.entries(S.shop.pantry || {}).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], p, free: panFree(id, L) })).filter(x => x.f && x.free > 0 && getFood(x.id))
     .sort((a, b) => ((b.f.meals || ["m"]).includes(mk) - (a.f.meals || ["m"]).includes(mk)) || (a.p.exp || "9999").localeCompare(b.p.exp || "9999"));
   if (!xs.length) return `<div class="lrow"><span><span class="t">Nothing free at home</span><span class="s">Finish a shopping trip or add what you have in Groceries › Pantry.</span></span></div>`;
   return xs.map(({ id, f, p, free }) => { const q = Math.min(free, defaultQty(f) * (f.countable ? 1 : 1.5)), m = addM(ZERO(), f.per, q / 100), dl = p.exp ? daysBetween(todayISO(), p.exp) : null;
-    return `<div class="lrow add-r"><button data-act="pick" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" style="text-align:left;min-width:0"><span class="t">${ic("jar", "sm")} ${esc(f.name)}</span><span class="s">${fmtN(free)} ${f.unit || "g"} free${dl != null && dl <= 3 ? ` · <b style="color:var(--warn)">use by ${fmtDM(p.exp)}</b>` : ""} · ${fmtQ(q)} ${f.unit || "g"} = ${fmtN(m.kcal)} kcal</span></button>
-      <span class="end"><button class="plus-btn" data-act="quick-add" data-pan="1" data-kind="food" data-id="${id}" data-qty="${r0(q)}" aria-label="Add ${esc(f.name)} from the pantry">${ic("plus")}</button></span></div>`; }).join(""); }
+    return `<div class="lrow add-r"><button data-act="pick" data-kind="food" data-id="${id}" data-qty="${r0(q)}" style="text-align:left;min-width:0"><span class="t">${ic("jar", "sm")} ${esc(f.name)}</span><span class="s">${fmtN(free)} ${f.unit || "g"} free${dl != null && dl <= 3 ? ` · <b style="color:var(--warn)">use by ${fmtDM(p.exp)}</b>` : ""} · ${fmtQ(q)} ${f.unit || "g"} = ${fmtN(m.kcal)} kcal</span></button>
+      <span class="end"><button class="plus-btn" data-act="quick-add" data-kind="food" data-id="${id}" data-qty="${r0(q)}" aria-label="Add ${esc(f.name)} from the pantry">${ic("plus")}</button></span></div>`; }).join(""); }
 { const _ar = addRowsFor; addRowsFor = sh => (sh.seg === "pantry" && !(sh.q || "").trim()) ? pantryAddRows(sh) : _ar(sh); }
-{ const _qa = ACT["quick-add"]; ACT["quick-add"] = el => { NEW_PAN = el?.dataset?.pan === "1"; try { return _qa(el); } finally { NEW_PAN = false; } }; }
-{ const _pk = ACT.pick; ACT.pick = el => { const r = _pk(el); if (el?.dataset?.pan === "1" && UI.sheet?.type === "qty") UI.sheet.pan = true; return r; }; }
-{ const _qs = ACT["qty-save"]; ACT["qty-save"] = (...a) => { const sh = S_(); NEW_PAN = !!sh?.pan && !sh.itemId; try { return _qs(...a); } finally { NEW_PAN = false; } }; }
-/* the item: a jar when it comes from the pantry; its sheet can link or unlink it */
-{ const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId); return it.pan ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="From the pantry">${ic("jar", "sm")}</span>`) : h; }; }
-{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh), box = sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref]) ? stockBoxHTML(sh.ref) : ""; const atHome = sh.kind === "food" ? !!S.shop.pantry[sh.ref] : sh.kind === "recipe" && itemStockLines({ kind: "recipe", ref: sh.ref, qty: 1 }).some(([id]) => S.shop.pantry[id]); if (!sh.itemId || !atHome) { o.body += box; return o; } const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) { o.body += box; return o; }
-  o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? (sh.kind === "recipe" ? "Ingredients set aside at home as far as they go, taken off when you eat it" : "Set aside at home, taken off when you eat it") : sh.kind === "recipe" ? "Off: all its ingredients go on the shopping list" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; o.body += box; return o; }; }
-ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
-/* the list: what's free at home for food you'd otherwise buy */
-ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
-{ const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && dataReady("shop", "days")) panMigrate(); }; }
+/* the meal plan: a jar on a planned item the pantry covers, and on one that was eaten from it */
+let COV = { v: -1, m: {} };
+const coverOf = id => { if (COV.v !== DATA_V) COV = { v: DATA_V, m: stockPlan(todayISO(), 1).itemCov }; return COV.m[id] || null; };
+{ const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId), c = it.eaten ? null : coverOf(it.id), took = it.eaten && it.took && Object.keys(it.took).length;
+  const t = took ? "Taken from the pantry" : c && c.c > 0.5 ? (c.c >= c.g - 0.5 ? "At home: set aside" : "At home: partly set aside") : "";
+  return t ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="${t}" aria-label="${t}">${ic("jar", "sm")}</span>`) : h; }; }
+/* the quantity sheet shows what is at home for the food */
+{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref])) o.body += stockBoxHTML(sh.ref); return o; }; }
 /* ================= learning without AI: real pace on the scale, measured TDEE, own burn rates, watch left running ================= */
 const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 /* kg per week from the real weigh-ins of the last N days (least squares), with its standard error */
@@ -12717,7 +12745,7 @@ function yesterdayCard() { const G = yGaps(); if (!G) return ""; const d = G.d, 
 FORMS["yd-w"] = () => { const v = num($("#yd-w")?.value), d = addDays(todayISO(), -1); if (!(v > 20 && v < 400)) { toast("Enter your weight in kg."); return; }
   mutateLog(d, day => { day.weight = r1(v); }); toast(`${r1(v)} kg logged for yesterday`); scheduleRender(); };
 ACT["yd-ok"] = () => { mutateLog(addDays(todayISO(), -1), day => { day.yok = true; }); scheduleRender(); };
-ACT["yd-eaten"] = () => { const d = addDays(todayISO(), -1); mutateDay(d, day => { for (const [, it] of dayItems(day)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1); } }, { undo: "Yesterday marked as eaten" }); scheduleRender(); };
+ACT["yd-eaten"] = () => { const d = addDays(todayISO(), -1); mutateDay(d, day => { for (const [, it] of dayItems(day)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, d); } }, { undo: "Yesterday marked as eaten" }); scheduleRender(); };
 ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab = "plan"; scheduleRender(); window.scrollTo(0, 0); };
 /* water moves up with the supplements: both are taps you do during the day */
 { const c = TODAY_CARDS.find(x => x.fn === hydraCard); if (c) c.col = "c"; }
@@ -12756,12 +12784,11 @@ function shopCoveredHTML(covered) {
 }
 function shopPanel(inSheet) {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy), ck = S.shop.checked || {}, mode = S.shop.mode || "days";
-  const atHome = rows.filter(r => r.buy > 0 && r.free > 0), covered = shoppingCovered(start, n);
+  const covered = shoppingCovered(start, n);
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
   let h = `<div class="sq-top"><div class="chips">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button class="chip sm" data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}<button class="chip sm" data-act="shop-range" data-n="7" aria-pressed="${mode === "days"}">Next 7 days</button><button class="chip sm" data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
-  if (atHome.length) h += `<div class="pan-use"><span><b>${atHome.length} at home already</b> · ${esc(atHome.slice(0, 3).map(r => r.f.name).join(", "))}${atHome.length > 3 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use them</button></div>`;
-  h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
+  h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="shop-list">${extraFormHTML()}</div><div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
   if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
   h += shopCoveredHTML(covered);
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || visibleExtras().some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
@@ -13131,7 +13158,7 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   const g = r0(buyG(r)); if (!(g > 0)) return _ck(el); const before = clone(S.shop.pantry[id] || null), nb = (S.shop.buys || []).length;
   const p = S.shop.pantry[id] || { g: 0 }; S.shop.pantry[id] = { ...p, g: r0((p.g || 0) + g), exp: p.g > 0 ? p.exp || null : null };
   const k = eurPerG(id); S.shop.buys = [...(S.shop.buys || []), { d: todayISO(), id, n: r.f.name, g, eur: k != null ? Math.round(k * g * 100) / 100 : null, est: true }];
-  put("shop", "", S.shop); try { linkFromPantry(UI.shopStart, S.shop.range || 7, [id]); } catch (e) {} haptic(10);
+  put("shop", "", S.shop); haptic(10);
   toast(`${r.f.name} · ${fmtN(g)} ${r.f.unit || "g"} in the pantry`, () => { if (before) S.shop.pantry[id] = before; else delete S.shop.pantry[id]; S.shop.buys = (S.shop.buys || []).slice(0, nb); put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); });
   scheduleRender(); if (UI.sheet) renderSheet(); }; }
 

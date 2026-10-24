@@ -80,3 +80,6 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M7a2 P0/P1: campi intervals.icu in sola lettura, AEE «in ombra» con candidati per sessione, NEAT dai passi, backtest; il motore in uso è invariato | vedi `git log` |
 | 2026-10-24 | M3: extra con cronologia, autocompletamento e ricorrenza (B5); spesa per intervallo con alimentare/extra, per prodotto e previsto vs speso (B6); importi sempre con i centesimi | vedi `git log` |
 | 2026-10-24 | M4b Daily Journal: voci del giorno con salvataggio a ogni tap, card serale su Today, collegamento dal Check-in, Progress › Journal (recap, calendario, giorni migliori/duri, pattern non causali), unione per campo tra dispositivi, export; interruttore in Settings › Features | vedi `git log` |
+| 2026-10-24 | M4c (feedback su M4/M4b): Check-in sempre in vista su Today, integrazioni nel Check-in, volti disegnati al posto delle emoji, «Top» tolto da Foods e sostituito dal report Habits in Progress | vedi `git log` |
+| 2026-10-24 | M4d: una regola sola tra piano, dispensa e lista (il piano prenota ciò che c'è in casa, mangiare lo toglie, la lista mostra solo ciò che manca); via l'interruttore «From the pantry» per singolo cibo e «Use them»; vasetto sul piano; «Stock on» richiudibile; spiegazione nella Dispensa; «add extra» in cima alla lista | vedi `git log` |
+

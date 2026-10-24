@@ -28,12 +28,12 @@ test("the same stock shows on every screen: Pantry, Foods editor, Meal Plan quan
     const food = SHEETS.food({ draft: clone(S.foods["t-rice"]), isNew: false }).body;
     const pantry = VIEWS.pantry();
     ACT["stock-step"]({ dataset: { id: "t-rice", d: "1" } });
-    const after = { qty: SHEETS.qty({ kind: "food", ref: "t-rice", qty: 100, date: d, meal: "d", origMeal: "d" }).body, pantry: VIEWS.pantry(), g: S.shop.pantry["t-rice"].g, free: shoppingRows(d, 1).find(x => x.id === "t-rice").free };
-    return { qtyHas: /stock-box/.test(qty) && /150/.test(qty), foodHas: /stock-box/.test(food), pantryHas: /150/.test(pantry), foodsRow: foodSub(S.foods["t-rice"]), after: { g: after.g, free: after.free, qty: /175/.test(after.qty), pantry: /175/.test(after.pantry) } };
+    const after = { qty: SHEETS.qty({ kind: "food", ref: "t-rice", qty: 100, date: d, meal: "d", origMeal: "d" }).body, pantry: VIEWS.pantry(), g: S.shop.pantry["t-rice"].g, free: shoppingRows(d, 1).find(x => x.id === "t-rice").covered };
+    return { qtyHas: /stock-box/.test(qty) && /150/.test(qty), foodHas: /stock-box/.test(food), pantryHas: /150/.test(pantry), foodsRow: foodSub(S.foods["t-rice"]), after: { g: after.g, covered: after.free, qty: /175/.test(after.qty), pantry: /175/.test(after.pantry) } };
   });
   assert.equal(r.qtyHas, true); assert.equal(r.foodHas, true); assert.equal(r.pantryHas, true);
   assert.match(r.foodsRow, /at home/);
-  assert.deepEqual(r.after, { g: 175, free: 175, qty: true, pantry: true });
+  assert.deepEqual(r.after, { g: 175, covered: 175, qty: true, pantry: true });
 });
 
 test("the stock survives a reload and an offline change", async () => {
@@ -109,7 +109,7 @@ test("Pantry list: search (name, brand, Italian name), sort A–Z / Z–A / expi
 test("stock on a future date: current → projected, when it runs out, which meals use it; nothing is written", async () => {
   const page = await start();
   const r = await page.evaluate(() => {
-    const t = todayISO(); S.shop.pantry["t-rice"] = { g: 1000 }; for (let i = 0; i < 7; i++) S.days[addDays(t, i)].meals.m[0].pan = true; DATA_V++;
+    const t = todayISO(); S.shop.pantry["t-rice"] = { g: 1000 }; for (let i = 0; i < 7; i++) S.days[addDays(t, i)].meals.d = []; DATA_V++;   // only the 200 g a day of the bowl
     const snap = JSON.stringify([S.shop, S.days]);
     const f = pantryForecast(addDays(t, 3)), row = f.rows.find(x => x.id === "t-rice");
     return { row: { now: row.now, then: row.then, endsOn: row.endsOn === addDays(t, 4), uses: row.uses.length }, html: forecastHTML(addDays(t, 3)), same: snap === JSON.stringify([S.shop, S.days]) };
@@ -121,7 +121,7 @@ test("stock on a future date: current → projected, when it runs out, which mea
 test("the Pantry screen renders on phone, tablet and desktop without sideways scroll, with search, filters and the forecast", async () => {
   for (const [name, vp] of Object.entries(H.VIEWPORTS)) {
     const page = await start(F.seed({ withPantry: true }), vp);
-    const r = await page.evaluate(async () => { for (let i = 0; i < 7; i++) S.days[addDays(todayISO(), i)].meals.m[0].pan = true; S.shop.pantry["t-oil"] = { g: 300 }; DATA_V++; UI.tab = "pantry"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
+    const r = await page.evaluate(async () => { S.shop.pantry["t-oil"] = { g: 300 }; DATA_V++; UI.tab = "pantry"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
       return { sw: document.documentElement.scrollWidth, iw: innerWidth, search: !!document.querySelector("#pantry-q"), chips: document.querySelectorAll("[data-act=pantry-filter]").length, sorts: document.querySelectorAll("[data-act=pantry-sort]").length, forecast: !!document.querySelector(".pa-forecast") }; });
     assert.ok(r.sw <= r.iw, `${name}: page scrolls sideways`); assert.equal(r.search, true); assert.ok(r.chips >= 3 && r.sorts >= 3); assert.equal(r.forecast, true);
     await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), `pantry-${name}.png`) });

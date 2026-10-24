@@ -14,9 +14,8 @@ test("seven-day scenario: plan, edit a recipe, link the pantry, eat, buy, invent
       return bad;
     });
 
-    // 1. pantry has 600 g rice; link the plan to it (what "Use what's at home" does)
-    const linked = await ev(() => { S.shop.pantry["t-rice"] = { g: 600 }; DATA_V++; return linkFromPantry(todayISO(), 7); });
-    assert.equal(linked, 4, "days 0 and 1: the bowl and the plain rice, until the 600 g are used up");
+    // 1. pantry has 600 g rice: the plan sets it aside by itself, earliest meals first (nothing to switch on)
+    await ev(() => { S.shop.pantry["t-rice"] = { g: 600 }; DATA_V++; });
     assert.deepEqual(await invariant(), []);
     let r = await ev(() => Object.fromEntries(shoppingRows(todayISO(), 7).map(x => [x.id, [x.need, x.covered, x.buy]])));
     assert.deepEqual(r["t-rice"], [2100, 600, 1500]);
@@ -45,7 +44,7 @@ test("seven-day scenario: plan, edit a recipe, link the pantry, eat, buy, invent
     r = await ev(() => Object.fromEntries(shoppingRows(todayISO(), 7).map(x => [x.id, [x.need, x.covered, x.buy]])));
     assert.deepEqual(r["t-rice"], [1800, 300, 1500], "today's meals are eaten: no longer needed; the buy quantity is unchanged");
 
-    // 5. buy: ticking rice on the list puts it in the pantry and links the rest of the plan; it leaves the list
+    // 5. buy: ticking rice on the list puts it in the pantry; it leaves the list
     const bought = await ev(() => {
       UI.shopStart = todayISO(); S.shop.range = 7; S.shop.mode = "days"; DATA_V++;
       ACT["shop-check"]({ dataset: { id: "t-rice" } });
@@ -55,7 +54,7 @@ test("seven-day scenario: plan, edit a recipe, link the pantry, eat, buy, invent
     assert.equal(bought.rice, false);
     assert.equal(bought.chicken, 2400);
     assert.deepEqual(await invariant(), []);
-    assert.equal(await ev(() => stockOn(addDays(todayISO(), 6))["t-rice"]), 2300 - 300 - 5 * 300, "day 1 and days 2–6 linked");
+    assert.equal(await ev(() => stockOn(addDays(todayISO(), 6))["t-rice"]), 2300 - 300 - 5 * 300, "days 1 to 6 take 300 g each");
 
     // 6. everything above survives a reload
     const before = await ev(() => JSON.stringify([S.days, S.shop, S.recipes]));

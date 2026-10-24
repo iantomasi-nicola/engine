@@ -72,3 +72,25 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 3. Le correlazioni sono associazioni su dati osservati: con molti confronti qualcuna può essere casuale (dichiarato in schermata).
 4. `VIEWS.progress` ha ancora una definizione base non più raggiunta (sostituita più sotto): debito preesistente, da togliere in M14.
 
+## M4c Feedback su M4/M4b (24/10/2026)
+**Fatto:** tasto Check-in sempre presente e primo nella riga di Today (pallino se manca qualcosa); le integrazioni (`suppCard(data)`) stanno anche nel Check-in, per il giorno aperto; volti disegnati (SVG a tratto unico) al posto delle emoji in tutto il Journal; «Top» tolto da Foods e il suo contenuto trasformato nel report Habits in Progress › Nutrition (`foodHabits`, `habitsView`).
+
+**Eliminato:** il filtro «Top» di Foods, `topFoodsHTML`, `ACT["top-days"]`/`UI.topDays` (sostituiti da `habitsView`/`ACT["hab-days"]`/`UI.habDays`); il pulsante condizionale «Check in/Weigh in» (assorbito dal tasto fisso); le emoji.
+
+**Verificato:** 127 test; il vecchio test I2 (m4) riscritto sul nuovo posto; nessuna emoji nel Journal (regex `Extended_Pictographic` su sheet, card, vista e Check-in); 3 viewport.
+
+**Aperto:** NEAT dai passi giorno per giorno (D18/P2): modifica di formula, in attesa di approvazione esplicita; oggi il NEAT dei giorni senza kcal dell'orologio è la media dei 7 giorni precedenti.
+
+## M4d Una regola sola tra piano, dispensa e lista (24/10/2026)
+**Problema:** spuntare «mangiato» un cibo non lo toglieva dalla dispensa se non era stato «collegato» con un interruttore per singolo cibo (`it.pan`): comportamento non intuitivo.
+
+**Regola ora:** il piano *prenota* ciò che c'è in casa (da oggi, primo giorno prima); *mangiare* toglie dalla scorta ciò che c'era (e ripristina se si deseleziona); la *lista* mostra solo ciò che manca; *comprare* aggiunge. I giorni registrati da più di 3 giorni non toccano la scorta di oggi.
+
+**Eliminato:** `linkFromPantry`, `panMigrate` (e `S.shop.panV`), `NEW_PAN` con i 4 wrapper di `newItem`/`quick-add`/`pick`/`qty-save`, il wrapper di `shop-done` che collegava, quello di `runPlanner`, `ACT["qty-pan"]` e l'interruttore «From the pantry» nella scheda quantità, `ACT["pan-use"]` e la barra «N at home already · Use them», `data-pan`, il CSS `.pan-use`; `panLinked` → `planReserved`.
+
+**Aggiunto:** vasetto sul pasto coperto/mangiato dalla dispensa (`stockPlan().itemCov`), riquadro «How the pantry works» richiudibile (ricordato), «Stock on» richiudibile (ricordato), «Add something else» in cima alla lista della spesa.
+
+**Compatibilità dati:** nessuna migrazione: `it.pan` resta nei dati, ignorato; un pasto mangiato con la vecchia versione senza `took` restituisce l'intera quantità se deselezionato. Effetto visibile: i piani esistenti ora prenotano subito la scorta per tutti i cibi presenti in dispensa (prima solo per quelli collegati): la lista si accorcia di conseguenza.
+
+**Test:** 11 nuovi (`tests/stock-model.test.js`); riscritti i test che codificavano il vecchio collegamento (stock, domain, pantry, scenario, m4).
+

@@ -78,18 +78,18 @@ test("shopping: computing needs never changes the real pantry (projections are r
   assert.ok(same);
 });
 
-test("pantry stock not linked to the plan does not reduce the list: it is offered as free at home", async () => {
+test("what is at home covers the plan by itself, earliest meal first: nothing to switch on", async () => {
   const r = await ev(() => { S.shop.pantry["t-rice"] = { g: 150 }; DATA_V++; const row = shoppingRows(todayISO(), 1).find(x => x.id === "t-rice"); const out = { need: row.need, covered: row.covered, free: row.free, buy: row.buy }; delete S.shop.pantry["t-rice"]; DATA_V++; return out; });
-  assert.deepEqual(r, { need: 300, covered: 0, free: 150, buy: 300 });
+  assert.deepEqual(r, { need: 300, covered: 150, free: 0, buy: 150 });
 });
 
-test("a plain food linked to the pantry is covered by it (earliest days first); an unlinked recipe is still bought in full", async () => {
+test("stock bigger than the plan: the food leaves the list, is listed as covered, and 100 g are left after the day", async () => {
   const r = await ev(() => {
-    const d = todayISO(); S.shop.pantry["t-rice"] = { g: 150 }; S.days[d].meals.d[0].pan = true; DATA_V++;
-    const row = shoppingRows(d, 1).find(x => x.id === "t-rice"), out = { need: row.need, covered: row.covered, free: row.free, buy: row.buy };
-    delete S.shop.pantry["t-rice"]; delete S.days[d].meals.d[0].pan; DATA_V++; return out;
+    const d = todayISO(); S.shop.pantry["t-rice"] = { g: 400 }; DATA_V++;
+    const out = { row: shoppingRows(d, 1).some(x => x.id === "t-rice"), covered: shoppingCovered(d, 1).find(x => x.id === "t-rice")?.covered, left: stockOn(d)["t-rice"] };
+    delete S.shop.pantry["t-rice"]; DATA_V++; return out;
   });
-  assert.deepEqual(r, { need: 300, covered: 100, free: 50, buy: 200 });
+  assert.deepEqual(r, { row: false, covered: 300, left: 100 });
 });
 
 test("a food fully covered by the pantry has no row to buy but is listed as covered (B3)", async () => {
