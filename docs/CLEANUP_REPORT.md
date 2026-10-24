@@ -232,3 +232,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `planned[].at` (HH:MM) opzionale: letto da `start_date_local` di intervals.icu, scritto solo con «Plan from intervals.icu»; `settings.wx` invariato; la cache meteo senza `ap` si riscarica da sola.
 
 **Aperto:** la tabella degli attrezzi → varianti (`GEAR_ALT`) copre gli esercizi più comuni; per gli altri dice «no variant» e si cambia con Edit. Le corse senza zone/passo mostrano l'intensità come «non specificata».
+
+## M10c Today alta, «Ready to start» piatta, chevron, deficit %, live, scarico, orario (24/10/2026)
+**Verificato:** nuovo `m10c.test.js` (11 test): tessere, Yesterday e Supplements su tre viewport (nessun overflow), niente «How was today?», sezioni senza box, chevron su select/details, deficit % (percentuale del TDEE, tetto 15%, kcal prioritario, campo in Settings), avviso anelli e varianti, consiglio dopo una serie dura (applica/Undo), scarico intelligente (salta/forza) e riga nella pagina, orario modificabile con sync immediato (PUT con l'orario), riga meteo su desktop e telefono; `journal` e `ux-habits` aggiornati; screenshot a 360/390/1400 px.
+
+**Eliminato / unificato:** `journalCard`, `ACT["jr-quick"]`, `JR_FROM_H` e il CSS della card; CSS vecchio di Yesterday/Supplements/chip (`.yd`, `.sp-chip`…); `suggestHTML` e il suo CSS (residuo della vecchia pagina); frecce native e simboli ▾/▴/+/– sostituiti da un solo chevron; la nota «planned with …» è letta dal live come avviso (non come nota libera).
+
+**Compatibilità:** `settings.fit.phases[].pct` opzionale (solo Maintenance con kcal 0); `train.progs[].deloadMode` e `deloadOver` opzionali; `planned[].at` già introdotto in M10b; la nota `(planned with rings · was …)` resta nello script (letta anche da intervals.icu come testo).
+
+**Aperto:** «live buggato»: ho sistemato ciò che ho riprodotto (superserie lunghe, tally tagliato, placeholder troncato, campo carico fuori dalla scheda); se vedi ancora testi coperti mandami uno screenshot della schermata. La riga meteo compare solo con una sessione outdoor pianificata e un luogo impostato (altrimenti «Set location»).

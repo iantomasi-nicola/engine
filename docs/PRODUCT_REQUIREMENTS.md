@@ -223,4 +223,14 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L53 | Menù in basso: Fuel prima di Train | M10b | **Fatto (24/10)** |
 | L54 | Lunghezza cinghia degli anelli a quarti (le tacche dividono l'unità in 4): campo con −/+ da ¼ e numero scritto senza zeri inutili; il passo del consiglio resta un'impostazione | M10b | **Fatto (24/10)** |
 | L55 | Sincronizzazione completa con intervals.icu («Full sync» accanto a «Sync now»: 90 giorni di attività e benessere, piano da 30 giorni fa a 4 mesi avanti) | M10b | **Fatto (24/10)** |
+| L56 | Today, parte alta rifatta (tranne Fuel): quattro tessere con icona, valore, sotto-riga e grafico (energia con barra e proteine da fare, bilancio con deficit impostato, trend peso con sparkline a 14 giorni, gara o forma), «Yesterday» con riepilogo e righe con icona, «Supplements» con tasti grandi (dose, ora, ritardo) e il prossimo | M10c | **Fatto (24/10)** |
+| L57 | Tolto «How was today?» da Today (il Journal resta nel Check-in e in Progress) | M10c | **Fatto (24/10)** |
+| L58 | «Ready to start» senza box: sezioni sulla pagina divise da linee | M10c | **Fatto (24/10)** |
+| L59 | Una sola freccia elegante (chevron sottile) in tutti i menu a tendina e nelle sezioni che si aprono | M10c | **Fatto (24/10)** |
+| L60 | Mantenimento con leggero deficit in % del TDEE (0–15%, il numero in kcal, se c'è, ha la precedenza); è un'offerta sul target, nessuna formula cambiata | M10c | **Fatto (24/10)** |
+| L61 | Live: avviso «Planned with rings · was Ring row» quando l'esercizio era previsto con gli anelli ed è stato sostituito, «On rings» sugli esercizi agli anelli; varianti di difficoltà simile (Inverted row, Push-up, Dip, Bar muscle-up, Support hold…) | M10c | **Fatto (24/10)** |
+| L62 | Live: dopo una serie andata male (reps sotto il previsto o RIR 0 prima dell'ultima) propone di abbassare reps, carico o allungare il recupero nelle serie che restano, con Undo | M10c | **Fatto (24/10)** |
+| L63 | Live: layout più pulito (esercizi in superserie compatti, tally a griglia senza tagli, passo della cinghia), segnalato quanto non riprodotto | M10c | Parziale (24/10) |
+| L64 | Scarico del programma: «As planned» o «Only if I've been training» (salta lo scarico se nelle 3 settimane prima hai fatto meno del 60% delle sedute), con motivo e forzatura di singola settimana dalla pagina prima dell'allenamento | M10c | **Fatto (24/10)** |
+| L65 | Orario dell'allenamento modificabile dall'app (foglio dell'allenamento, foglio della sessione, riga meteo), mostrato in Today e mandato a intervals.icu subito | M10c | **Fatto (24/10)** |
 

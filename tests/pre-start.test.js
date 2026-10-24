@@ -21,7 +21,7 @@ test("forgot the rings: «Don't have it» swaps each ring exercise for its close
     ACT["gear-miss"]({ dataset: { id: "kb" } }); const sc2 = LV().script;
     ACT["sg-undo"]?.(); return { ids, btns, s0, sc, sc2, done, after }; });
   assert.ok(r.ids.includes("rings") && r.ids.includes("kb")); assert.ok(r.btns.includes("rings") && r.btns.includes("kb"), "a button on every item that can be swapped");
-  assert.match(r.sc, /- 8 Inverted row\n/); assert.doesNotMatch(r.sc, /rings/i); assert.match(r.sc, /- 8 Push-up\n/); assert.match(r.sc, /- 6 Pull-up \+10kg/, "what does not need rings is untouched");
+  assert.match(r.sc, /- 8 Inverted row \(planned with rings · was Ring row\)\n/); assert.doesNotMatch(r.sc, /rings\s*\d/i, "the strap length is gone"); assert.match(r.sc, /- 8 Push-up \(planned with rings · was Ring push-up\)\n/); assert.match(r.sc, /- 6 Pull-up \+10kg/, "what does not need rings is untouched");
   assert.match(r.done, /No rings/); assert.ok(!r.after.includes("rings"), "the rings are no longer on the list");
   assert.match(r.sc2, /Jump squat/); assert.match(r.sc2, /- 8 Inverted row/);
   const back = await page.evaluate(() => { ACT["gear-miss"]({ dataset: { id: "bands" } }); return LV().script; }); assert.ok(back);

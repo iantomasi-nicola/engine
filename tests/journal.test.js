@@ -165,12 +165,10 @@ for (const [name, vp] of Object.entries(H.VIEWPORTS)) {
   });
 }
 
-test("the Today card shows after the evening hour while today is empty and goes away once something is filled (K3)", async () => {
+test("Today has no «How was today?» card any more; the Journal stays one tap away in the Check-in and in Progress (K3)", async () => {
   const page = await start();
-  const r = await page.evaluate(() => { const a = journalCard(9), b = journalCard(19); jrSet(todayISO(), "m", 3); return { a, b: b.includes("jr-quick"), c: journalCard(19) }; });
-  assert.equal(r.a, "", "not before the evening"); assert.equal(r.b, true); assert.equal(r.c, "", "filled: gone");
-  const off = await page.evaluate(() => { S.settings.feat = { journal: false }; mutateLog(todayISO(), x => { x.jr = null; }); return journalCard(20); });
-  assert.equal(off, "", "the feature switch hides it");
+  const r = await page.evaluate(async () => { UI.tab = "today"; scheduleRender(); await new Promise(r => setTimeout(r, 250)); const html = document.body.innerText; openSheet("checkin", { date: addDays(todayISO(), -1), live: true }); const ci = !!document.querySelector('.sheet [data-act="jr-open"]'); return { card: typeof journalCard, quick: typeof ACT["jr-quick"], text: /How was today\?/.test(html), ci }; });
+  assert.equal(r.card, "undefined"); assert.equal(r.quick, "undefined"); assert.equal(r.text, false); assert.equal(r.ci, true, "the Journal is still reachable from a past day's Check-in");
 });
 
 test("the reminder is off by default, only fires once, only when the day is empty and the time has come", async () => {
@@ -202,7 +200,7 @@ test("the AI summary is off by default, needs an AI service, and only receives a
 test("switching the Journal off hides every entry point and keeps the data", async () => {
   const page = await start();
   await fill(page, [[1, 4, 4, 3, 2]]);
-  const r = await page.evaluate(() => { ACT["feat-toggle"]({ dataset: { k: "journal" } }); UI.tab = "progress"; UI.progSeg = "journal"; scheduleRender(); return { on: FEAT("journal"), kept: !!logGet(addDays(todayISO(), -1)).jr, card: journalCard(20) }; });
+  const r = await page.evaluate(() => { ACT["feat-toggle"]({ dataset: { k: "journal" } }); UI.tab = "progress"; UI.progSeg = "journal"; scheduleRender(); return { on: FEAT("journal"), kept: !!logGet(addDays(todayISO(), -1)).jr, card: /How was today\?/.test(document.body.innerText) ? "shown" : "" }; });
   assert.equal(r.on, false); assert.equal(r.kept, true); assert.equal(r.card, "");
   const seg = await page.evaluate(() => { navFix(); return UI.progSeg; });
   assert.notEqual(seg, "journal");

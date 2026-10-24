@@ -83,7 +83,7 @@ test("the Journal uses drawn faces and words, no emoji, anywhere", async () => {
   const page = await start();
   await page.evaluate(() => { for (let i = 0; i < 12; i++) { const d = addDays(todayISO(), -i); jrSet(d, "m", 1 + i % 5); jrSet(d, "p", 3); jrSet(d, "e", 2 + i % 3); jrSet(d, "s", 2); } });
   const out = await page.evaluate(() => { const r = {}; openSheet("journal", { date: todayISO(), live: true }); r.sheet = document.querySelector(".sheet").innerHTML; closeSheet();
-    r.card = journalCard(20) || (mutateLog(todayISO(), x => { x.jr = null; }), journalCard(20)); r.view = journalView(); r.ci = (openSheet("checkin", { date: todayISO(), live: true }), document.querySelector(".sheet").innerHTML); return r; });
+    r.view = journalView(); r.ci = (openSheet("checkin", { date: todayISO(), live: true }), document.querySelector(".sheet").innerHTML); return r; });
   for (const [k, v] of Object.entries(out)) assert.doesNotMatch(v, EMOJI, k);
   assert.match(out.sheet, /<svg[^>]*jr-face/);
   const labels = await page.evaluate(() => { closeSheet(); openSheet("journal", { date: todayISO(), live: true }); return [...document.querySelectorAll('.sheet [data-act="jr-set"][data-k="m"]')].map(b => b.getAttribute("aria-label")); });

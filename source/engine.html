@@ -257,23 +257,26 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .sg-t b{font-weight:600}
 .key-in{-webkit-text-security:disc;font-family:ui-monospace,monospace}.key-in:focus{-webkit-text-security:none}
 .pa-q{display:flex;align-items:center;gap:6px}.pa-q .chips{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.pa-q .chips::-webkit-scrollbar{display:none}.pa-q .chip{flex:0 0 auto}.pa-q .icon-btn{flex:0 0 auto;background:var(--v-fill,var(--surface2))}
-.sp-c .chips{gap:6px}.sp-chip{display:inline-flex;align-items:center;gap:6px}.sp-chip small{font-size:11.5px;color:var(--muted);font-weight:500}
-.sp-chip.done{opacity:.7}.sp-chip.done b{text-decoration:line-through;text-decoration-thickness:1px}
-.sp-chip.late{background:color-mix(in srgb,var(--warn) 16%,transparent)}.sp-chip.late small{color:var(--warn)}
 .sp-low{font-size:12.5px;color:var(--muted);margin-top:8px}
-.yd{background:color-mix(in srgb,var(--warn) 9%,var(--v-card,var(--card)))}.yd .yd-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
-.yd .yd-r>span:first-child{min-width:64px;font-weight:600}.yd .yd-in{max-width:120px}.yd .yd-r .chips{flex:1}
+.yd2{border-left:4px solid var(--warn)}.yd2 .td-ov .ic,.sp2 .td-ov .ic{width:16px;height:16px}.yd-sum{font-size:13px;color:var(--muted);margin-top:-6px}
+.yd-r2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}.yd-i{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}.yd-i .ic{width:16px;height:16px}
+.yd-l{font-size:14px;font-weight:600;min-width:64px;max-width:40%}.yd-f{display:flex;align-items:center;gap:8px;margin-left:auto}.yd-f .yd-in{max-width:120px}.yd-x{flex:1;font-size:12.5px;min-width:0}.yd-a{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}.yd-ch{flex:1;justify-content:flex-end}
+.sp2-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.sp2-b{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:16px;background:var(--surface-2);color:var(--ink);min-width:0}
+.sp2-c{width:26px;height:26px;border-radius:50%;border:2px solid var(--faint);display:grid;place-items:center;color:transparent;flex:none}.sp2-c .ic{width:15px;height:15px}.sp2-t{display:flex;flex-direction:column;min-width:0}.sp2-t b{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sp2-t small{font-size:12px;color:var(--muted)}
+.sp2-b.done .sp2-c{background:var(--good);border-color:var(--good);color:#fff}.sp2-b.done{opacity:.75}.sp2-b.late{background:color-mix(in srgb,var(--warn) 14%,var(--surface-2))}.sp2-b.late .sp2-c{border-color:var(--warn)}.sp2-b.late small{color:var(--warn)}
 .pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:30px;height:30px;min-width:30px;background:var(--v-fill,var(--surface2))}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
 .shop-covered{margin-top:8px;font-size:13px}.shop-covered summary{cursor:pointer;color:var(--muted);padding:6px 0}
-.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.gl-t{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:16px;background:var(--v-card,var(--card));min-width:0;text-align:left}
-.gl-t b{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.1}
-.gl-t small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.glance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media (min-width:640px){.glance{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.gl-t{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 14px 12px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);min-width:0;text-align:left;color:var(--ink)}
+.gl-h{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);max-width:100%}.gl-h .ic{width:15px;height:15px;flex:none}.gl-h em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.gl-t b{font-family:var(--display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.1;margin-top:4px}.gl-t b i{font-style:normal;font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px;letter-spacing:0}
+.gl-s{font-size:12px;line-height:1.35;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gl-bar{display:block;width:100%;height:4px;border-radius:2px;background:var(--surface-3);margin-top:6px;overflow:hidden}.gl-bar i{display:block;height:100%;background:var(--ink);border-radius:2px}.gl-bar.over i{background:var(--warn)}
+.gl-sp{width:100%;height:24px;margin-top:4px}.gl-sp polyline{fill:none;stroke:var(--accent,var(--ink));stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .gl-t.warn b{color:var(--warn)}
 .today-glance{margin-bottom:14px}
-@media (max-width:360px){.gl-t{padding:9px 8px}.gl-t b{font-size:16px}}
 .bin-b{flex:0 0 auto!important;display:inline-flex!important;align-items:center;gap:3px;padding-inline:12px!important}.bin-b .bin-n{font-size:11px;font-weight:700}
 .rq-a{display:flex;align-items:center;gap:4px}.rq-a b{min-width:54px;text-align:center;font-size:13.5px}.rq .lrow{padding-top:6px;padding-bottom:6px}
 .ss-race{text-align:right}.ss-race b{display:block;font-size:26px;font-weight:700;line-height:1}.ss-race small{font-size:11.5px;color:var(--muted)}
@@ -877,7 +880,6 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .jr-face.sm{display:inline-block;width:20px;height:20px;vertical-align:-4px;margin:0}.jr-d .jr-face{width:20px;height:20px}
 .td-pend{width:7px;height:7px;border-radius:50%;background:var(--bad);display:inline-block;margin-left:2px;flex:none}
 .jr-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
-.jr-card .jr-row{margin-top:8px}
 .jr-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
 .jr-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.jr-h{text-align:center;color:var(--faint);font-size:11px}
 .jr-d{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:52px;padding:4px 2px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;min-width:0;cursor:pointer}
@@ -1403,11 +1405,15 @@ body.live-mode .main{padding-bottom:120px!important}
 .sg-tag{font-style:normal;font-size:11px;font-weight:650;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:4px;vertical-align:1px}
 .sg-done{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:8px 0}.sg-done .ic{width:16px;height:16px;flex:none;color:var(--good)}.sg-done span{flex:1;min-width:0}
 .sg-same{border-top:1px solid var(--line);padding-top:6px}.sg-same>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}.sg-s{padding:6px 0}.sg-s b{display:block;font-size:14px;font-weight:600}.sg-s small{font-size:12.5px;color:var(--muted)}
-.sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}/* Ready to start */
-.pv-hero{gap:12px}
+.sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}/* Ready to start: sections on the page itself, divided by a line, not boxes */
+.pv-sec{display:flex;flex-direction:column;gap:10px;padding:20px 0;border-top:1px solid var(--line);min-width:0}.pv-hero{border-top:0;padding-top:6px;gap:14px}
+.lv-main>.pv-sec:first-child,.lv-side>.pv-sec:first-child{border-top:0}.pv-sec .eyebrow{display:flex;align-items:center;gap:6px}
+.pv-hero .lv-h1{font-size:34px;line-height:1.1}.pv-hero .pv-tiles>div{background:transparent;border:1px solid var(--line)}
+.lv-side .pv-sec{padding-top:6px}.pv-sec .eyebrow{font-size:12.5px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}.pv-sec .lv-eb{align-items:center}
+.pv-sec .pv-b{background:none!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;padding:12px 0 4px!important;margin-top:0}.pv-sec .pv-b:first-of-type{border-top:0!important;padding-top:4px!important}
 .pv-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.pv-tiles>div{background:var(--surface-2);border-radius:14px;padding:10px 6px 8px;text-align:center;min-width:0}
 .pv-tiles b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.pv-tiles b i{font-style:normal;font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}.pv-tiles small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
-.pv-rd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--surface-2);font-size:14px}.pv-rd>i{width:10px;height:10px;border-radius:50%;background:var(--faint);margin-top:5px;flex:none}.pv-rd.green>i{background:var(--good)}.pv-rd.yellow>i{background:var(--warn)}.pv-rd.red>i{background:var(--bad)}.pv-rd small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.pv-rd .link{margin-left:auto;flex:none;font-size:13px;white-space:nowrap}.pv-rd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--surface-2);font-size:14px}.pv-rd>i{width:10px;height:10px;border-radius:50%;background:var(--faint);margin-top:5px;flex:none}.pv-rd.green>i{background:var(--good)}.pv-rd.yellow>i{background:var(--warn)}.pv-rd.red>i{background:var(--bad)}.pv-rd small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
 .sg,.gear-pv{gap:8px}.pv-sub{margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
 .pv-cd>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-size:14px;min-height:28px}.pv-cd>summary b{font-weight:600}.pv-cd[open]>summary{margin-bottom:8px}
 .pv-s.pv-x{display:block;padding:0}.pv-e2{padding:7px 0;border-top:1px solid var(--line)}.pv-s.pv-x>.pv-e2:first-child{border-top:0}
@@ -2440,6 +2446,23 @@ html body .sheet.full{left:0!important;right:0!important;top:0!important;bottom:
 html body .sheet.full .sheet-b{flex:1 1 auto;min-height:0}
 html body .sheet.full .sheet-h::before{display:none}
 @media (min-width:1024px){html body .sheet.full{left:50%!important;right:auto!important;width:min(720px,100%)!important;transform:translateX(-50%)!important;top:2vh!important;bottom:2vh!important;border-radius:28px!important;padding-top:0}}
+/* live player: flags for rings, two exercises in one card, the day's tally, tips after a hard set */
+.lv-flag{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-size:12.5px;font-weight:600;padding:4px 10px 4px 8px;border-radius:99px;background:color-mix(in srgb,var(--warn) 16%,transparent);color:color-mix(in srgb,var(--warn) 70%,var(--ink))}.lv-flag .ic{width:14px;height:14px;flex:none}.lv-flag.on{background:var(--surface-2);color:var(--muted)}
+.lv-tally{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;overflow:visible;margin:14px 0 0;padding:0}.lv-tally>span{min-width:0;max-width:none}
+@media (max-width:1023px){
+  .lv-ex.multi{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 10px;align-items:start}
+  .lv-ex.multi>*{grid-column:1/-1}.lv-ex.multi>.lv-row:not(.rir-row):not(:has(.ring-f)){grid-column:auto;flex-direction:column;align-items:flex-start;gap:4px}
+  .lv-ex.multi>.lv-flag{justify-self:start}.lv-ex.multi .stp{max-width:100%}.lv-ex.multi .stp button{width:30px;height:34px}.lv-ex.multi .stp b{min-width:30px;font-size:17px}.lv-ex.multi .stp-in .inp{width:42px;padding-inline:2px}.lv-ex.multi .stp-in>span{font-size:11px}
+  .lv-ex.multi .lv-h{font-size:21px}
+}
+.lv-tip{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--warn) 13%,var(--surface-2))}.lv-tip>b{font-size:14px}.lv-tip>span{font-size:13px;color:var(--muted)}.lv-tip .row{gap:6px;flex-wrap:wrap}
+/* one chevron for every dropdown: selects and the sections that open and close */
+select,select.inp{-webkit-appearance:none;appearance:none;padding-right:38px!important;background-repeat:no-repeat!important;background-position:right 12px center!important;background-size:18px!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237d8277' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E")!important}
+details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}
+details>summary:not(.lrow)::after,.nut-more summary::after,.fd-more>summary::after,.set-det summary::after{content:""!important;display:inline-block;flex:none;width:18px;height:18px;margin-left:8px;vertical-align:-4px;font-size:0!important;background:currentColor;opacity:.5;border:0!important;transform:none;transition:transform .18s;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat}
+details[open]>summary:not(.lrow)::after,.nut-more[open] summary::after,.fd-more[open]>summary::after,.set-det[open] summary::after{content:""!important;transform:rotate(180deg)}
+details.card>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after{transform:rotate(180deg)!important}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -3404,7 +3427,7 @@ function weightsSeries(withEst = false) {
    t holds the time each field was last edited, so two devices merge field by field and a cleared field
    (kept as null) is an edit too. A day without an entry is not a zero: it is left out of every average. */
 const JR_KEYS = ["p", "m", "e", "s"], JR_NAME = { p: "productivity", m: "mood", e: "energy", s: "stress" };
-const JR_FROM_H = 18, JR_MIN_N = 14, JR_MIN_RHO = .3;
+const JR_MIN_N = 14, JR_MIN_RHO = .3;
 const jrOf = d => logGet(d)?.jr || null;
 const jrHas = (j, k) => !!j && Number.isInteger(j[k]) && j[k] >= 1 && j[k] <= 5;
 const jrFilled = d => { const j = jrOf(d); return !!j && (JR_KEYS.some(k => jrHas(j, k)) || (typeof j.n === "string" && j.n.length > 0)); };
@@ -3594,6 +3617,8 @@ const SESS_SRC = { logged: "Done", mixed: "Done + still planned", dated: "Planne
 function sessionLabel(w) { if (!w || w.sport === "Rest") return "Rest"; return `${w.sport}${w.min ? " " + r0(w.min) + "′" : ""}${w.km ? " " + r1(w.km) + " km" : ""}${w.int ? " · " + w.int : ""}`; }
 
 /* ================= energy series: BMR + NEAT + training + TEF, calibrated on your weight trend ================= */
+/* the phase's calories against TDEE: the number typed, or for Maintenance a slight deficit given as a % of that day's TDEE */
+const phaseKcal = (ph, tdee) => ph && ph.phase === "Maintenance" && +ph.pct > 0 && !(+ph.kcal) ? -Math.round(tdee * Math.min(+ph.pct, 15) / 100) : +ph?.kcal || 0;
 function phaseFor(date) {
   const ph = [...FIT().phases].filter(p => p.start).sort((a, b) => a.start.localeCompare(b.start));
   let cur = ph[0] || { phase: "Maintenance", kcal: 0, start: date }, idx = 0;
@@ -3658,7 +3683,7 @@ function energySeries() {
       } else f = factor;
       const tdee = tdeeW * f;
       const ph = phaseFor(d); const pp = fit.phaseParams[ph.phase] || fit.phaseParams.Maintenance;
-      const target = tdee + (+ph.kcal || 0);
+      const target = tdee + phaseKcal(ph, tdee);
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
       rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
@@ -4760,7 +4785,7 @@ function weeksView() {
 function dayDeficit(date) {
   if (!SMART()) return null;
   const r = energyAt(date); if (!r) return null;
-  const eat = eatenFor(date), tot = dayTotals(getDay(date)), set = +r.phase.kcal || 0;
+  const eat = eatenFor(date), tot = dayTotals(getDay(date)), set = phaseKcal(r.phase, r.tdee);
   const intake = eat.manual ? eat.kcal : Math.max(eat.kcal || 0, tot.kcal || 0);
   const done = !!eat.manual || date < todayISO() || (eat.kcal > 0 && eat.kcal >= (tot.kcal || 0) - 1);
   return { tdee: r.tdee, set, intake, eaten: eat.kcal || 0, done, none: !intake, proj: intake - r.tdee, now: (eat.kcal || 0) - r.tdee, kg: (intake - r.tdee) / FIT().energy.kcalPerKg };
@@ -5203,7 +5228,7 @@ SHEETS.checkin = sh => {
     ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), NEAT_SRC[r.neatSrc] || "average of the last 7 days")}
     ${row("Training", fmtN(r.eat), r.sess.list.length ? `${(SESS_SRC[r.sess.src] || "").toLowerCase()} · ${esc(r.sess.list.map(w => `${w.note || w.sport} ${fmtN(sessionKcal(w, d).kcal)}`).join(" + "))}` : "rest")}${row("Digestion (TEF)", fmtN(r.tef), `${r0(E.tef * 100)}% of the above`)}
     ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
-    ${row(esc(r.phase.phase), (r.phase.kcal > 0 ? "+" : "") + fmtN(r.phase.kcal), "kcal/day vs TDEE")}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
+    ${row(esc(r.phase.phase), (v => (v > 0 ? "+" : "") + fmtN(v))(phaseKcal(r.phase, r.tdee)), `kcal/day vs TDEE${r.phase.phase === "Maintenance" && +r.phase.pct > 0 && !(+r.phase.kcal) ? ` (${r.phase.pct}% deficit)` : ""}`)}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
     ${r.intake ? row("Balance", (r.balance > 0 ? "+" : "") + fmtN(r.balance), `≈ ${sgn(r.estKg * 1000, 0)} g of body weight`) : ""}</div></div>`;
   return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, titleHTML: dayNavHTML(d, "ci-go"), body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
 };
@@ -5231,6 +5256,7 @@ SHEETS.session = sh => {
       ${typeof icuPlanMode === "function" && icuPlanMode() ? `<span class="faint" style="font-size:12.5px">It goes to your intervals.icu calendar by itself.</span>` : `<label class="row" style="gap:10px;font-size:14px;margin-top:4px"><button type="button" class="switch" role="switch" aria-checked="${sh.list === "pattern"}" data-act="ss-repeat" aria-label="Repeat every week"></button>Repeat every ${DOWL[dow(sh.date)]}</label>`}
       ${(() => { const ex = plannedFor(sh.date).list.filter(w => w.sport && w.sport !== "Rest"); return ex.length && sh.list !== "pattern" ? `<span class="faint" style="font-size:12.5px">Already planned that day: ${esc(ex.map(sessionLabel).join(" + "))}. This one is added.</span>` : ""; })()}</div>`; })() : ""}<div class="field"><span class="flabel">Sport</span><div class="chips">${sports.map(s => `<button class="chip" data-act="ss-sport" data-k="${esc(s)}" aria-pressed="${w.sport === s}">${esc(s)}</button>`).join("")}</div></div>
       ${w.sport === "Rest" ? `<div class="note">A planned rest day: no training calories are added to the target.</div>` : `
+      ${isPlan ? `<div class="field"><label for="ss-at">Starts at <span class="faint">· optional</span></label><input id="ss-at" class="inp" type="time" value="${esc(w.at || "")}" data-in="ss" data-k="at">${pm || icuLinked() ? `<span class="faint" style="font-size:12.5px">${pm ? "Changing it moves the workout in intervals.icu right away." : "Kept here; intervals.icu is not the plan source."}</span>` : ""}</div>` : ""}
       <div class="grid2"><div class="field"><label for="ss-min">Minutes</label><input id="ss-min" class="inp" inputmode="decimal" value="${w.min ?? ""}" placeholder="45 or 1:05" data-in="ss" data-k="min"></div>
       <div class="field"><label for="ss-km">Km${isRun ? "" : " (optional)"}</label><input id="ss-km" class="inp" inputmode="decimal" value="${w.km ?? ""}" data-in="ss" data-k="km"></div></div>
       <div class="field"><span class="flabel">Intensity</span>${segBar("ss-int", w.int || "Moderate", INTS.map(i => [i, i]))}<span class="faint" style="font-size:12.5px">Recovery run = Light · long run and normal calisthenics = Moderate · intervals and weighted calisthenics = Hard.</span></div>
@@ -5313,9 +5339,9 @@ function fitSettings() {
   h += grp("Profile", `<div class="grid2">${fitSel("profile.sex", "Sex", [["Male", "Male"], ["Female", "Female"]])}${fitIn("profile.dob", "Date of birth", "", "date")}${fitIn("profile.height", "Height", "cm")}${fitIn("profile.startWeight", "Starting weight", "kg")}${fitIn("profile.bf", "Body fat (optional)", "%")}${fitIn("profile.maxHr", "Max HR (until you test)", "bpm")}${fitIn("trackStart", "Tracking start", "", "date")}</div>
     <div class="faint" style="font-size:12.5px">Age ${ageAt(todayISO())}. The starting weight is used until the first weigh-in.</div>`, true);
   h += grp("Goal", `<div class="grid2">${fitSel("goal.type", "Goal type", [["bf", "Body fat %"], ["weight", "Weight (kg)"]])}${fitIn("goal.value", f.goal.type === "weight" ? "Target weight" : "Target body fat", f.goal.type === "weight" ? "kg" : "%")}${fitIn("goal.date", "Target date (optional)", "", "date")}${fitIn("goal.leanShare", "Lean share of weight lost", "%", "pct")}</div><div class="faint" style="font-size:12.5px">0% = all fat. Typically 10–20% in a cut.</div>`, true);
-  h += grp("Phases · calories vs TDEE", `<div class="card">${f.phases.map((p, i) => `<div class="lrow ph-row" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 96px 36px;gap:8px"><input id="ph-s-${i}" class="inp" type="date" value="${p.start}" data-ph="start" data-i="${i}" aria-label="Start date"><select id="ph-p-${i}" class="inp" data-ph="phase" data-i="${i}" aria-label="Phase">${["Cut", "Maintenance", "Bulk"].map(k => `<option ${p.phase === k ? "selected" : ""}>${k}</option>`).join("")}</select><div class="unit-inp"><input id="ph-k-${i}" class="inp" inputmode="numeric" value="${p.kcal}" data-ph="kcal" data-i="${i}" aria-label="kcal per day"><span>kcal</span></div><button class="icon-btn" data-act="ph-del" data-i="${i}" aria-label="Remove phase">${ic("close", "sm")}</button></div>`).join("")}</div>
+  h += grp("Phases · calories vs TDEE", `<div class="card">${f.phases.map((p, i) => `<div class="lrow ph-row" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 96px 36px;gap:8px"><input id="ph-s-${i}" class="inp" type="date" value="${p.start}" data-ph="start" data-i="${i}" aria-label="Start date"><select id="ph-p-${i}" class="inp" data-ph="phase" data-i="${i}" aria-label="Phase">${["Cut", "Maintenance", "Bulk"].map(k => `<option ${p.phase === k ? "selected" : ""}>${k}</option>`).join("")}</select>${p.phase === "Maintenance" && !(+p.kcal) ? `<div class="unit-inp"><input id="ph-c-${i}" class="inp" inputmode="decimal" value="${p.pct || 0}" data-ph="pct" data-i="${i}" aria-label="Slight deficit, percent of TDEE"><span>% less</span></div>` : `<div class="unit-inp"><input id="ph-k-${i}" class="inp" inputmode="numeric" value="${p.kcal}" data-ph="kcal" data-i="${i}" aria-label="kcal per day"><span>kcal</span></div>`}<button class="icon-btn" data-act="ph-del" data-i="${i}" aria-label="Remove phase">${ic("close", "sm")}</button></div>`).join("")}</div>
     <button class="btn soft sm" data-act="ph-add" style="align-self:flex-start">${ic("plus", "sm")}New phase from today</button>
-    <div class="faint" style="font-size:12.5px">Cut = negative (−500 = 500 kcal deficit), maintenance = 0, bulk = positive. Add a row to change calories: past days keep the target they had.${f.phases.map(p => p.phase === "Cut" && p.kcal >= 0 ? " ⚠ A cut needs a negative number." : "").join("")}</div>`, true);
+    <div class="faint" style="font-size:12.5px">Cut = negative (−500 = 500 kcal deficit), bulk = positive. Maintenance with 0 kcal can take a slight deficit as a % of TDEE (0–15%, e.g. 5% ≈ −120 kcal); a kcal number there wins. Add a row to change calories: past days keep the target they had.${f.phases.map(p => p.phase === "Cut" && p.kcal >= 0 ? " ⚠ A cut needs a negative number." : "").join("")}</div>`, true);
   h += grp("Phase rules · grams per kg", tbl(["Phase", "Protein g/kg", "Fat g/kg", "Min carbs g/kg", "Weekly change min %", "max %"], ["Cut", "Bulk", "Maintenance"].map(p => `<tr><td><b>${p}</b></td>${["p", "f", "cmin"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${f.phaseParams[p][k]}" data-fit="phaseParams.${p}.${k}" data-t="num"></td>`).join("")}${["wmin", "wmax"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${r1(f.phaseParams[p][k] * 100 * 10) / 10}" data-fit="phaseParams.${p}.${k}" data-t="pct"></td>`).join("")}</tr>`)) + `<div class="faint" style="font-size:12.5px">Protein and fat = g/kg × trend weight; carbs fill the rest. Cut: protein 1.7–2.5, fat 0.7–0.8, lose 0.5–1% per week. Bulk: +10–15% calories, carbs ≥ 4 g/kg. Maintenance: protein 1.4–2, carbs 4–5+.</div>`);
   h += grp("Energy model", `<div class="grid2">${fitSel("energy.bmr", "BMR formula", [["Mifflin-St Jeor", "Mifflin-St Jeor"], ["Harris-Benedict", "Harris-Benedict"], ["MET", "MET (kg × 24)"]])}${fitSel("energy.watchMode", "Your watch's daily number", [["active", "Active kcal (incl. workouts)"], ["neat", "NEAT only (excl. workouts)"], ["total", "Total kcal (BMR + activity)"]])}
     ${fitIn("energy.neat", "Default NEAT", "kcal")}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitIn("energy.kcalPerKg", "kcal per kg of weight", "kcal")}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitIn("energy.hbBonus", "Harris-Benedict lean bonus", "kcal/pt")}${fitIn("energy.hbThr", "…below body fat", "%")}</div>
@@ -6702,6 +6728,7 @@ ACT["ss-save"] = () => {
   const list = clone(sessionList(sh));
   if (sh.idx == null) list.push(w); else list[sh.idx] = w;
   writeSessionList(sh, list); backFromSession(sh);
+  if (sh.list === "planned" && sh.idx != null && (w.at || null) !== (orig.at || null) && icuLinked()) icuKick("time changed", true);
 };
 ACT["ss-del"] = () => { const sh = S_(); const list = clone(sessionList(sh)); list.splice(sh.idx, 1); writeSessionList(sh, list); backFromSession(sh); };
 
@@ -6757,7 +6784,7 @@ ACT["rs-del"] = () => {
 };
 
 /* fitness settings lists */
-ACT["ph-add"] = () => { const cur = phaseFor(todayISO()); FIT().phases.push({ start: todayISO(), phase: cur.phase, kcal: cur.kcal }); saveSettings(); };
+ACT["ph-add"] = () => { const cur = phaseFor(todayISO()); FIT().phases.push({ start: todayISO(), phase: cur.phase, kcal: cur.kcal, ...(cur.pct ? { pct: cur.pct } : {}) }); saveSettings(); };
 ACT["ph-del"] = el => { if (FIT().phases.length <= 1) { toast("Keep at least one phase."); return; } FIT().phases.splice(+el.dataset.i, 1); saveSettings(); };
 ACT["sp-add"] = () => { FIT().sports.push({ name: "New sport", met: 5 }); saveSettings(); };
 ACT["sp-del"] = el => { FIT().sports.splice(+el.dataset.i, 1); saveSettings(); };
@@ -6783,7 +6810,7 @@ function fitChange(el) {
 }
 function listChange(el) {
   const f = FIT(), i = +el.dataset.i;
-  if (el.dataset.ph) { const k = el.dataset.ph; f.phases[i][k] = k === "kcal" ? num(el.value) : el.value; f.phases.sort((a, b) => (a.start || "").localeCompare(b.start || "")); }
+  if (el.dataset.ph) { const k = el.dataset.ph; f.phases[i][k] = k === "kcal" ? num(el.value) : k === "pct" ? clamp(num(el.value) || 0, 0, 15) : el.value; f.phases.sort((a, b) => (a.start || "").localeCompare(b.start || "")); }
   else if (el.dataset.sp) { const k = el.dataset.sp; const old = f.sports[i].name; f.sports[i][k] = k === "met" ? num(el.value) : el.value.trim() || old; if (k === "name" && f.runSport === old) f.runSport = f.sports[i].name; }
   else if (el.dataset.cc) f.circuits[i][el.dataset.cc] = el.value;
   saveSettings();
@@ -7063,7 +7090,7 @@ function exportSheets() {
     daily.push({ Date: xd(d), Day: DOW[dow(d)], "Weight (kg)": rd(L.weight, 10), "Weight estimated": L.estW ? "yes" : "", "Trend (kg)": rd(r.trend, 100), "Body fat %": rd(L.bf, 10), "Resting HR": rd(L.rhr), "HRV ms": rd(L.hrv), "Sleep (h)": rd(L.sleep, 10), Steps: rd(L.steps), "Watch kcal": rd(L.watch),
       "Intake kcal": rd(r.intake?.kcal), "Protein g": rd(r.intake?.p), "Carbs g": rd(r.intake?.c), "Fat g": rd(r.intake?.f), "Intake source": r.intake ? ({ food: "foods", manual: "typed / imported", est: "estimated" }[r.intake.src] || "") : "",
       Workouts: ws.map(sessionLabel).join(" + "), "Training kcal": rd(r.eat), BMR: rd(r.bmr), NEAT: rd(r.neat), TEF: rd(r.tef), "TDEE watch": rd(r.tdeeW), Calibration: rd(r.factor, 1000), TDEE: rd(r.tdee),
-      Phase: r.phase.phase, "Phase kcal": rd(r.phase.kcal), "Target kcal": rd(r.target), "Target protein g": rd(r.p), "Target carbs g": rd(r.c), "Target fat g": rd(r.f), "Balance kcal": rd(r.balance), "Est. change (g)": r.estKg == null ? null : rd(r.estKg * 1000), Notes: L.notes || "" });
+      Phase: r.phase.phase, "Phase kcal": rd(phaseKcal(r.phase, r.tdee)), "Target kcal": rd(r.target), "Target protein g": rd(r.p), "Target carbs g": rd(r.c), "Target fat g": rd(r.f), "Balance kcal": rd(r.balance), "Est. change (g)": r.estKg == null ? null : rd(r.estKg * 1000), Notes: L.notes || "" });
     for (const w of ws) { const k = sessionKcal(w, d); wk.push({ Date: xd(d), Sport: w.sport, Minutes: rd(w.min), Km: rd(w.km, 100), Intensity: sessionIntensity(w), "Avg HR": rd(w.hr), "Watch kcal": rd(w.watch), "Logged kcal": rd(w.kcal), "kcal used": rd(k.kcal), Method: k.how, "Load (sRPE)": rd(sessionLoad(w)) }); }
   }
   for (const d of Object.keys(S.days).sort()) for (const [m, it] of dayItems(S.days[d])) { const mm = itemMacros(it); const f = it.kind === "food" ? getFood(it.ref) : null;
@@ -7837,7 +7864,7 @@ function initTask(i) {
     // carry today's earlier set of the same exercise (keeps what you changed in round 1)
     const prev = Object.entries(L.res).map(([k, v]) => ({ t: L.tasks[k], v })).filter(x => x.t && x.t.t === "set" && x.v.ex && +x.t.bi === t.bi && x.t.pos === t.pos && x.t.round < t.round).sort((a, b) => b.t.round - a.t.round)[0];
     const px = prev?.v.ex[t.exs.indexOf(e)];
-    return { reps, load: px ? px.load : load, ring: px?.ring || e.ring || last?.ring || "", rir: null, hold: [], mini: 0 };
+    return { reps, load: e.loadFix ? e.load : px ? px.load : load, ring: px?.ring || e.ring || last?.ring || "", rir: null, hold: [], mini: 0 };
   });
   if (t.t === "emom" && !r.mins) { const n = Math.max(1, Math.round(t.dur / t.every)); r.mins = [...Array(n)].map((_, k) => { const st = t.steps[k % t.steps.length]; return { reps: st.exs.map(e => e.reps || 0), ok: null }; }); }
   if (t.t === "amrap" && r.rounds == null) { r.rounds = 0; r.partial = 0; r.splits = []; }
@@ -8116,7 +8143,7 @@ function editScript(script, ed) {
     if (ed.type === "load") { const re = new RegExp(`(${nm}[^+@]*?)([+@]\\s*)(\\d+(?:[.,]\\d+)?)(\\s*kg)`, "i");
       if (re.test(line)) return line.replace(re, (m, pre, sg, n, kg) => { if (+n.replace(",", ".") === ed.to) return m; hit++; return pre + sg + fmtKg(ed.to) + kg; });
       if (ed.to > 0) { hit++; return line.replace(new RegExp(`(${nm})`, "i"), `$1 +${fmtKg(ed.to)}kg`); } return line; }
-    if (ed.type === "swap") { let l = line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to; }); if (ed.dropRing) l = l.replace(/\s*\b(?:rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, ""); return l; }
+    if (ed.type === "swap") { let l = line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to + (ed.note ? ` (${ed.note})` : ""); }); if (ed.dropRing) l = l.replace(/\s*\b(?:rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, ""); return l; }
     if (ed.type === "noload") { const re = /\s*[+@]\s*\d+(?:[.,]\d+)?\s*kg/i; if (!re.test(line)) return line; hit++; return line.replace(re, ""); }
     if (ed.type === "ring") { const re = /\b(rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, txt = `rings ${fmtRing(ed.n)}${ed.unit === "cm" ? "cm" : " " + ed.unit}`;
       hit++; return re.test(line) ? line.replace(re, txt) : line.replace(/\s*$/, " " + txt); }
@@ -8138,7 +8165,7 @@ function ringAdvice(e, p, L) {
 }
 /* forgot something at home: each exercise that needs it becomes its closest variant without it (a table, not a guess); a belt just loses the weight */
 const GEAR_ALT = {
-  rings: [[/ring\s*rows?|rematore.*anell/i, "Inverted row"], [/ring\s*push[- ]?ups?|piegamenti.*anell/i, "Push-up"], [/ring\s*dips?/i, "Dip"], [/ring\s*muscle[- ]?ups?/i, "Pull-up"], [/ring\s*(pull[- ]?ups?|chin[- ]?ups?)/i, null], [/ring\s*(support|hold)/i, "Hollow hold"], [/ring\s*(fly|flies)/i, "Push-up"], [/ring\s*(?:l[- ]?sit)/i, "L-sit"]],
+  rings: [[/ring\s*rows?|rematore.*anell/i, "Inverted row"], [/ring\s*push[- ]?ups?|piegamenti.*anell/i, "Push-up"], [/ring\s*dips?/i, "Dip"], [/ring\s*muscle[- ]?ups?/i, "Bar muscle-up"], [/ring\s*(pull[- ]?ups?|chin[- ]?ups?)/i, null], [/ring\s*(support|hold)/i, "Support hold"], [/ring\s*(fly|flies)/i, "Wide push-up"], [/ring\s*l[- ]?sit/i, "L-sit"], [/ring\s+(.+)/i, null]],
   bands: [[/band(?:ed)?[\s-]*assisted\s+(.+)/i, null], [/band(?:ed)?\s+pull[- ]?apart/i, "Reverse fly"]],
   pbars: [[/parallettes?\s+push[- ]?ups?/i, "Push-up"], [/parallettes?\s+(.+)/i, null]],
   rope: [[/double[- ]?unders?|single[- ]?unders?|jump(?:ing)?\s*rope|skipping/i, "Jumping jacks"]],
@@ -8154,7 +8181,7 @@ function gearMissEdits(g, names) {
     if (g.id === "belt") { edits.push({ type: "noload", name: n, why: "no belt" }); continue; }
     let to = null;
     for (const [rx, r] of GEAR_ALT[g.id] || []) { const m = n.match(rx); if (m) { to = r === null ? (m[1] || n.replace(/\b(rings?|bands?|banded|parallettes?|kettlebell|kb|dumbbell|db|weighted|vest)\s+/i, "")).replace(/^./, c => c.toUpperCase()) : r; break; } }
-    if (to && normEx(to) !== normEx(n)) edits.push({ type: "swap", name: n, to, dropRing: g.id === "rings" }); else free.push(n);
+    if (to && normEx(to) !== normEx(n)) edits.push({ type: "swap", name: n, to, dropRing: g.id === "rings", note: `planned with ${g.label.toLowerCase().replace(/ \+ plates.*/, "")} · was ${n}` }); else free.push(n);
   }
   return { edits, free };
 }
@@ -8212,17 +8239,23 @@ function pvPlan(L, B) {
     ${b.kind === "rest" || b.kind === "timer" ? "" : b.steps.map((s, i) => s.rest ? `<div class="pv-s"><span class="faint">Rest ${fmtDurShort(s.dur || 0)}${b.kind === "sets" ? " after each round" : ""}</span></div>` : `<div class="pv-s pv-x">${(s.exs || []).map(e => { const last = lastFor(e, L.date), sg = sug.get(normEx(e.name)), lt = last ? lastText(last) : "";
       return `<div class="pv-e2"><div class="pv-e2h"><b>${esc(e.name)}</b><span class="pv-tg">${esc(targetText(e))}${e.note ? ` · ${esc(e.note)}` : ""}</span>${sg ? `<span class="pv-up" title="${esc(sg.why)}">↑ ${esc(sg.to)}</span>` : ""}</div>${lt ? `<small class="pv-last">Last ${fmtDM(last.date)}: ${esc(lt)}${last.ring ? ` · rings ${esc(last.ring)}` : ""}</small>` : `<small class="pv-last faint">First time: today is your baseline</small>`}</div>`; }).join("")}${b.kind === "emom" ? ` <small class="faint">min ${i + 1}${b.steps.length > 1 ? ", " + (i + 1 + b.steps.length) + "…" : "…"}</small>` : ""}</div>`).join("")}</div>`).join("");
 }
+/* the deload of this program week, said plainly, with the way to go the other way */
+function dlRow(L, P) { const V = deloadVerdict(P, L.week); if (!V.sched && !V.over) return "";
+  const t = V.do ? "Deload week · about −40% volume" : V.skipped ? "Deload skipped this week" : "Normal week", btn = V.do ? `<button class="link" data-act="dl-over" data-v="skip">Skip the deload</button>` : `<button class="link" data-act="dl-over" data-v="do">${V.skipped || V.sched ? "Do the deload anyway" : "Make it a deload"}</button>`;
+  return `<div class="pv-rd ${V.do ? "yellow" : ""}"><i></i><span><b>${t}</b>${V.why ? `<small>${esc(V.why)}</small>` : ""}</span>${btn}</div>`; }
+ACT["dl-over"] = el => { const L = LV(), P = L?.prog ? progById(L.prog) : null; if (!P || L.phase !== "preview") return; P.deloadOver = { ...(P.deloadOver || {}), [L.week]: el.dataset.v };
+  saveWK(); DATA_V++; const sc = scriptForWeek(L.baseScript || L.script, P, L.week, L.tplId); if (!applyEdit(sc)) return; scheduleRender(); };
 function livePreview(L) {
   const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), st = B.st, G = L.free ? [] : gearList(L.script, L.date).filter(x => !x.always || true);
   const nSets = tasks.filter(t => t.t === "set").length, nBlocks = parseScript(L.script).blocks.filter(b => b.kind !== "note").length, n = B.items.filter(i => i.edit && g.on[i.id]).length, pick = B.items.filter(i => i.edit);
   const rd = st && st.ready ? { green: ["Ready", "Everything looks good: follow the plan."], yellow: ["Reduced", "Keep the first sets easy and stop early if it feels off."], red: ["Low", "Think about a lighter day, below, or about resting."] }[st.ready] : null;
   const why = st && st.ready && st.ready !== "green" ? readyWhy(st) : "";
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
-  h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-hero"><h1 class="lv-h1">${esc(L.name)}</h1>
+  h += `<div class="lv-wrap two"><div class="lv-main"><section class="pv-sec pv-hero"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-tiles"><div><b>≈ ${est}<i>min</i></b><small>time</small></div><div><b>${nSets}</b><small>sets</small></div><div><b>${nBlocks}</b><small>${nBlocks === 1 ? "block" : "blocks"}</small></div>${P ? `<div><b>${L.week}<i>/${P.weeks}</i></b><small>${isDeload(P, L.week) ? "deload week" : "program week"}</small></div>` : ""}</div>
     ${rd ? `<div class="pv-rd ${st.ready}"><i></i><span><b>${rd[0]}</b>${why ? ` · ${esc(why)}` : ""}<small>${rd[1]}</small></span></div>` : ""}
-    <div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div>${P ? `<div class="faint" style="font-size:12.5px">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
-  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Tune today's workout${B.items.length ? ` · ${B.items.length}` : ""}</span>${pick.length > 1 ? `<button class="link" data-act="sg-all">${pick.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>
+    ${P ? dlRow(L, P) : ""}<div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div>${P ? `<div class="faint" style="font-size:12.5px">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
+  h += `<section class="pv-sec sg"><div class="lv-eb"><span class="eyebrow">Tune today's workout${B.items.length ? ` · ${B.items.length}` : ""}</span>${pick.length > 1 ? `<button class="link" data-act="sg-all">${pick.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>
     <p class="pv-sub">${B.items.length ? "Suggestions from how you did last time and how you feel today. Tick the ones you want and press Apply: they are written into this workout." : "Compared with your last sessions nothing needs changing."}</p>
     ${recapNote(L)}
     ${B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
@@ -8232,13 +8265,34 @@ function livePreview(L) {
     ${B.same.length ? `<details class="sg-same"><summary>Staying the same · ${B.same.length}</summary>${B.same.map(i => `<div class="sg-s"><b>${esc(i.name)}</b><small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></div>`).join("")}</details>` : ""}
     ${g.err ? `<div class="note">${esc(g.err)}</div>` : ""}
     <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${pick.length ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
-  if (G.length) h += `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Before you start · what to bring</span><p class="pv-sub">Forgot something? «Don't have it» swaps the exercises that need it for the closest variant.</p>${gearChecklist(G, L.date, true)}</section>`;
-  h += `<section class="lv-card"><details class="pv-cd"><summary><span>Countdown before timed sets</span><b>${PLAYER().prep ? PLAYER().prep + " s" : "Off"}</b></summary>${prepChips()}</details></section>`;
+  if (G.length) h += `<section class="pv-sec gear-pv"><span class="eyebrow">${ic("bag", "sm")}Before you start · what to bring</span><p class="pv-sub">Forgot something? «Don't have it» swaps the exercises that need it for the closest variant.</p>${gearChecklist(G, L.date, true)}</section>`;
+  h += `<section class="pv-sec"><details class="pv-cd"><summary><span>Countdown before timed sets</span><b>${PLAYER().prep ? PLAYER().prep + " s" : "Off"}</b></summary>${prepChips()}</details></section>`;
   const dk = `<div class="lv-dock"><button class="btn tonal" data-act="lv-edit">${ic("edit", "sm")}Edit</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start workout<small class="dk-s">≈ ${est} min</small></button></div>`;
-  h += `${dk}</div><aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">The workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${pvPlan(L, B)}</section></aside></div>`;
+  h += `${dk}</div><aside class="lv-side show"><section class="pv-sec"><div class="lv-eb"><span class="eyebrow">The workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${pvPlan(L, B)}</section></aside></div>`;
   return h;
 }
 ACT["sg-undo"] = () => { const L = LV(), g = L && sgOn(L); if (!g?.undo) return; applyEdit(g.undo); g.undo = null; g.done = []; g.lightDone = false; saveWK(); scheduleRender(); };
+/* after a set that went badly (fewer reps than planned, or nothing left before the last set) the sets still ahead can be lowered with one tap */
+function liveHint(L, t) {
+  if (!L || !t || (t.t !== "set" && t.t !== "rest")) return null;
+  let p = L.cur - 1; if (L.tasks[p]?.t === "rest") p--;
+  const pt = L.tasks[p], pr = L.res[p]; if (!pt || pt.t !== "set" || !pr?.done || pr.hint || !pr.ex) return null;
+  const items = [], facts = [], fin = isFinalSet(pt);
+  pt.exs.forEach((e, xi) => { const x = pr.ex[xi]; if (!x || e.timed || e.holdScheme || e.scheme) return;
+    const plan = e.reps || e.range?.[0] || 0, did = +x.reps?.[0] || 0, short = plan && did && did < plan, failed = x.rir === 0 && !fin; if (!short && !failed) return;
+    const nm = normEx(e.name), later = L.tasks.slice(L.cur).map((u, i) => [u, L.cur + i]).filter(([u]) => u.t === "set" && u.bi === pt.bi && u.exs.some(f => normEx(f.name) === nm));
+    facts.push(`${e.name}: ${did}${plan ? ` of ${plan}` : ""} reps${x.rir === 0 ? " · RIR 0" : ""}`); if (!later.length) return;
+    const to = Math.max(1, short ? did : plan - 1);
+    if (plan && to < plan) items.push({ k: "reps", label: `${e.name} ${plan} → ${to} reps`, apply: () => later.forEach(([u]) => { u.exs = u.exs.map(f => normEx(f.name) === nm ? { ...f, reps: to, range: null } : f); }) });
+    const ld = +x.load || 0; if (ld > 0 && (failed || (plan && did <= plan - 2))) { const nl = Math.max(0, Math.round((ld - loadStep()) * 100) / 100); items.push({ k: "load", label: `${e.name} −${fmtKg(ld - nl)} kg`, apply: () => later.forEach(([u]) => { u.exs = u.exs.map(f => normEx(f.name) === nm ? { ...f, load: nl, loadFix: true } : f); }) }); } });
+  const rest = L.tasks.slice(L.cur).find(u => u.t === "rest"); if (items.length && rest) items.push({ k: "rest", label: "Rest +30 s", apply: () => { rest.dur += 30; } });
+  return items.length ? { p, items, facts, many: pt.exs.length > 1 } : null;
+}
+const liveHintHTML = (L, t) => { const H = liveHint(L, t); if (!H) return "";
+  return `<div class="lv-tip" role="status"><b>${H.many ? "That superset was hard" : "That set was hard"}</b><span>${esc(H.facts.join(" · "))}. Lower what is still ahead?</span><div class="row">${H.items.map((i, k) => `<button class="btn tonal sm" data-act="lv-hint" data-i="${k}">${esc(i.label)}</button>`).join("")}<button class="btn text sm" data-act="lv-hint-no">Keep the plan</button></div></div>`; };
+ACT["lv-hint"] = el => { const L = LV(), H = liveHint(L, L?.tasks[L.cur]); const it = H?.items[+el.dataset.i]; if (!it) return; const snap = clone(L.tasks); it.apply(); L.res[H.p].hint = "applied"; saveWK(); scheduleRender();
+  toast(`${it.label} for the sets ahead`, () => { const L2 = LV(); if (!L2) return; L2.tasks = snap; if (L2.res[H.p]) L2.res[H.p].hint = null; saveWK(); scheduleRender(); }); };
+ACT["lv-hint-no"] = () => { const L = LV(), H = liveHint(L, L?.tasks[L.cur]); if (!H) return; L.res[H.p].hint = "no"; saveWK(); scheduleRender(); };
 function liveTask(L, t, r) {
   if (L.clk && !L.clk.paused && clkEl(L.clk) < 0 && t.t !== "rest") return { body: prepCard(-clkEl(L.clk), t.t === "run" || t.t === "open" ? runLabel(t) : taskLine(t)), dock: dock(`<button class="btn tonal grow" data-act="lv-pause">${ic("pause", "sm")}Pause</button>`) };
   if (t.t === "run" || t.t === "open") return liveRunTask(L, t, r);
@@ -8247,7 +8301,7 @@ function liveTask(L, t, r) {
   const pauseBtn = L.clk && !(t.t === "amrap" && r.timeUp) ? `<button class="btn tonal sm" data-act="lv-pause">${L.clk.paused ? ic("play", "sm") + "Resume" : ic("pause", "sm") + "Pause"}</button>` : "";
   const startDock = lbl => dock(`<button class="btn primary grow" data-act="lv-start">${ic("play", "sm")}${lbl}</button>`);
   if (t.t === "rest") { const nx = L.tasks[L.cur + 1];
-    return { body: `${head("Rest", "Recover")}${clockRing(fmtDur(t.dur - el), el / t.dur, "rest left", "rest")}
+    return { body: `${liveHintHTML(L, t)}${head("Rest", "Recover")}${clockRing(fmtDur(t.dur - el), el / t.dur, "rest left", "rest")}
       <div class="row lv-adj"><button class="btn tonal" data-act="lv-add" data-d="-15">−15s</button><button class="btn tonal" data-act="lv-add" data-d="15">+15s</button>${pauseBtn}</div>
       ${nx ? `<div class="lv-up"><small>Next</small><b>${esc(taskLine(nx))}</b>${nx.t === "set" ? `<span>${esc(nx.exs.map(liveTarget).join(" + "))}</span>` : ""}</div>` : ""}`,
       dock: dock(`<button class="btn primary grow" data-act="lv-done">Skip rest</button>`) }; }
@@ -8280,11 +8334,11 @@ function liveTask(L, t, r) {
   // ----- strength set -----
   const fin = isFinalSet(t);
   const eb = `${t.label ? t.label + " · " : t.of > 1 ? `${t.pos} of ${t.of} · ` : ""}Set ${t.round} of ${t.rounds}${t.method ? " · " + t.method : ""}`;
-  let b = `<div class="lv-eb"><span class="eyebrow">${esc(eb)}</span>${fin && t.rounds > 1 ? `<span class="chip-s strong">Final set</span>` : t.block ? `<span class="faint">${esc(t.block)}</span>` : ""}</div>`;
+  let b = `${liveHintHTML(L, t)}<div class="lv-eb"><span class="eyebrow">${esc(eb)}</span>${fin && t.rounds > 1 ? `<span class="chip-s strong">Final set</span>` : t.block ? `<span class="faint">${esc(t.block)}</span>` : ""}</div>`;
   let primary = "";
   t.exs.forEach((e, xi) => {
     const x = r.ex[xi], last = lastFor(e, L.date), note = WK().notes[normEx(e.name)], isRing = /ring|anell/i.test(e.name) || x.ring;
-    b += `<div class="lv-ex"><div class="lv-hrow"><h2 class="lv-h">${esc(e.name)}</h2><button class="icon-btn sm lv-swap" data-act="lv-swap" data-x="${xi}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">${ic("sync", "sm")}</button></div><div class="lv-tgt">${esc(liveTarget(e))}</div>${e.note ? `<div class="lv-note">${esc(e.note)}</div>` : ""}
+    b += `<div class="lv-ex${t.exs.length > 1 ? " multi" : ""}"><div class="lv-hrow"><h2 class="lv-h">${esc(e.name)}</h2><button class="icon-btn sm lv-swap" data-act="lv-swap" data-x="${xi}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">${ic("sync", "sm")}</button></div><div class="lv-tgt">${esc(liveTarget(e))}</div>${e.note ? (/^planned with /i.test(e.note) ? `<div class="lv-flag">${ic("swap", "sm")}<span>${esc(e.note.charAt(0).toUpperCase() + e.note.slice(1))}</span></div>` : `<div class="lv-note">${esc(e.note)}</div>`) : ""}${/ring|anell/i.test(e.name) && !/^planned with /i.test(e.note || "") ? `<div class="lv-flag on">${ic("pulse", "sm")}<span>On rings</span></div>` : ""}
       ${last ? `<div class="lv-last">${ic("undo", "sm")}<span>Last ${fmtDM(last.date)}: ${esc(lastText(last))}${last.ring ? ` · rings ${esc(last.ring)}` : ""}</span></div>` : ""}`;
     if (e.timed || e.holdScheme) {
       const parts = holdParts(e, x), dn = x.hold.length;
@@ -8302,7 +8356,7 @@ function liveTask(L, t, r) {
       b += `<div class="lv-row"><span class="lab">Load</span><span class="stp"><button data-act="lv-load" data-d="${-st}" data-x="${xi}" aria-label="Less">${ic("minus", "sm")}</button><span class="stp-in"><input class="inp" inputmode="decimal" value="${v === 0 || v === "" ? "" : esc(String(v))}" placeholder="BW" data-chg="lv-load-set" data-x="${xi}" aria-label="Load in kg"><small>kg</small></span><button data-act="lv-load" data-d="${st}" data-x="${xi}" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }
     const rirRow = `<div class="lv-row rir-row ${fin ? "final" : ""}"><span class="lab">${fin ? "RIR" : "RIR"}</span><span class="rir">${[0, 1, 2, 3, 4, 5].map(v => `<button data-act="lv-rir" data-x="${xi}" data-v="${v}" aria-pressed="${x.rir === v}" aria-label="${v} reps in reserve">${v}${v === 5 ? "+" : ""}</button>`).join("")}</span></div>`;
     if (!(e.timed || e.holdScheme)) b += fin ? rirRow + `<div class="faint lv-hint left">Reps in reserve on this final set, saved for planning your next session.</div>` : "";
-    if (isRing) b += `<div class="lv-row"><span class="lab">Rings</span>${ringField(x, xi, "length, e.g. 45 cm or hole 7")}</div>`;
+    if (isRing) b += `<div class="lv-row"><span class="lab">Rings</span>${ringField(x, xi, "45 cm or hole 7")}</div>`;
     b += `<details class="lv-more" ${note ? "open" : ""}><summary>${ic("edit", "sm")}${note ? "Note" : "Note"}${!fin && !(e.timed || e.holdScheme) ? " · RIR" : ""}${!isRing ? " · rings" : ""}</summary>
       ${!fin && !(e.timed || e.holdScheme) ? rirRow : ""}${!isRing ? `<div class="lv-row"><span class="lab">Rings</span>${ringField(x, xi, "optional")}</div>` : ""}
       <textarea class="inp" rows="2" placeholder="Saved for next time: grip, setup, cues…" data-chg="lv-note" data-n="${esc(normEx(e.name))}" aria-label="Exercise note">${esc(note || "")}</textarea></details></div>`;
@@ -8572,6 +8626,7 @@ SHEETS.wo = sh => {
   if (w) body += `<div class="wo-meta"><span class="pill" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})">${esc(w.int || sessionIntensity(w))}</span><span>${esc(w.sport)}${w.min ? ` · ${r0(w.min)} min` : ""}${w.km ? ` · ${r1(w.km)} km` : ""}${w.load ? ` · load ${w.load}` : ""}${R.logged && sessionKcal(w, R.date).kcal ? ` · ${fmtN(sessionKcal(w, R.date).kcal)} kcal` : ""}</span>${R.logged ? `<span class="pill" style="--c:var(--good)">Done</span>` : ""}${isIcu(R.p || w) ? `<span class="faint">intervals.icu</span>` : ""}</div>`;
   if (R.script && !isStrength(R.sport)) { const g = runGist(R.script); if (g.text) body += `<div class="wo-gist">${esc(g.text)}</div>`; }
   if (R.prog) { const P = progById(R.prog); if (P) body += `<div class="note">${esc(P.name)} · week ${R.week} of ${P.weeks} · ${esc(progRuleText(P, R.week))}</div>`; }
+  if (w && !R.logged && R.ri >= 0 && R.date >= todayISO()) body += `<div class="field wo-at"><label for="wo-at">Starts at</label><input id="wo-at" class="inp" type="time" value="${esc((R.p || w).at || "")}" data-chg="wo-at" data-date="${R.date}" data-i="${R.ri}">${icuPlanMode() && isIcu(R.p || w) ? `<small class="faint">Changing it moves the workout in intervals.icu right away.</small>` : ""}</div>`;
   body += "<!--wo-post-->";
   if (sess) body += `<div class="field"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="flabel">Result</span><span class="row" style="gap:12px">${ENDUR(w.sport) && !sess.gps ? `<label class="link">${ic("download", "sm")} Route${routeInput(`data-date="${R.date}" data-wi="${(logGet(R.date)?.workouts || []).indexOf(w)}"`)}</label>` : ""}<button class="link" data-act="story-open" data-date="${R.date}" data-id="${sess.id}">${ic("story", "sm")} Share as a story</button></span></div>${sessionDetailHTML(sess)}</div>`;
   else if (R.logged && w) { const wi = (logGet(R.date)?.workouts || []).indexOf(w); body += `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="story-open" data-date="${R.date}" data-wi="${wi}">${ic("story", "sm")}Share as a story</button>${ENDUR(w.sport) ? `<label class="btn text sm">${ic("download", "sm")}Add the route (GPX, FIT)${routeInput(`data-date="${R.date}" data-wi="${wi}"`)}</label>` : ""}</div>`; }
@@ -8634,7 +8689,24 @@ const PROG_RULES = [["none", "Manual"], ["reps", "+ reps / week"], ["load", "+ k
 const progs = () => (S.train.progs = S.train.progs || []);
 const progById = id => progs().find(p => p.id === id);
 function progWeek(P, date) { if (!P?.start) return null; const d = daysBetween(P.start, date); if (d < 0) return null; const w = Math.floor(d / 7) + 1; return w <= (P.weeks || 1) ? w : null; }
-const isDeload = (P, w) => !!(P && P.deload > 0 && w && w % P.deload === 0);
+/* a deload only helps after weeks you really trained: the program follows its schedule, or skips a scheduled deload when the three weeks before were mostly missed;
+   any single week can be forced either way (P.deloadOver[w] = "do" | "skip") */
+const DL_MIN = 0.6;
+function deloadAdherence(P, w) {
+  const ws = addDays(weekStartOf(P.start), 7 * (w - 1)), today = todayISO(); let done = 0, miss = 0, weeks = 0;
+  for (let k = 1; k <= 3; k++) { const s0 = addDays(ws, -7 * k); if (addDays(s0, 6) >= today) continue; weeks++; for (let i = 0; i < 7; i++) for (const x of daySessions(addDays(s0, i))) { if (x.st === "done") done++; else if (x.st === "missed") miss++; } }
+  return { weeks, done, n: done + miss, rate: done + miss ? done / (done + miss) : null };
+}
+function deloadVerdict(P, w) {
+  const sched = !!(P && P.deload > 0 && w && w % P.deload === 0); if (!P || !w) return { sched, do: false, why: "" };
+  const o = P.deloadOver?.[w]; if (o === "do") return { sched, do: true, why: "You chose a deload this week", over: true }; if (o === "skip") return { sched, do: false, why: sched ? "You skipped this deload" : "", over: true };
+  if (!sched) return { sched, do: false, why: "" };
+  if ((P.deloadMode || "planned") !== "smart") return { sched, do: true, why: "" };
+  const A = memo(`dla:${P.id}:${w}`, () => deloadAdherence(P, w));
+  if (A.weeks && A.n >= 2 && A.rate < DL_MIN) return { sched, do: false, skipped: true, A, why: `You did ${A.done} of ${A.n} planned sessions in the weeks before: a deload would only be more rest` };
+  return { sched, do: true, A, why: A.weeks && A.n >= 2 ? `You did ${A.done} of ${A.n} planned sessions in the weeks before: a deload makes sense` : "" };
+}
+const isDeload = (P, w) => memo(`dlv:${P?.id}:${w}`, () => deloadVerdict(P, w)).do;
 function progRuleText(P, w) {
   const k = (w || 1) - 1, dl = isDeload(P, w);
   const base = P.rule === "reps" ? `+${P.step || 1} rep${(P.step || 1) > 1 ? "s" : ""} per week: today +${k * (P.step || 1)} vs week 1` : P.rule === "load" ? `+${fmtKg(P.step || 2.5)} kg per week: today +${fmtKg(k * (P.step || 2.5))} kg vs week 1` : P.rule === "volume" ? `+${P.step || 10}% volume per week: today ×${(Math.pow(1 + (P.step || 10) / 100, k)).toFixed(2)}` : "Manual: edit each week's workout; your changes carry over to the following weeks";
@@ -8692,7 +8764,8 @@ SHEETS.prog = sh => { const d = sh.draft, tpls = WK().tpls, races = (S.train.rac
       ${["reps", "load", "volume"].includes(d.rule) ? `<div class="lv-row"><span class="lab">Step</span>${stepper("pg-step", d.step, "", d.rule === "load" ? "kg" : d.rule === "volume" ? "%" : "reps", d.rule === "load" ? 1.25 : d.rule === "volume" ? 5 : 1)}</div>` : ""}
       <span class="faint" style="font-size:12.5px">${d.rule === "none" ? "You edit each week by hand (from the workout preview or below). Later weeks start from your latest edit." : d.rule === "volume" ? "Scales durations and km of every step (great for running blocks)." : d.rule === "reps" ? "Adds reps to every exercise line each week." : "Adds kg to every line that has a load (+10kg)."}</span></div>
     ${!sh.isNew ? `<div class="field"><span class="flabel">Edit a week by hand</span>${[...new Set(Object.values(d.days).filter(Boolean))].map(id => { const t = tplById(id); if (!t) return ""; return `<div class="pg-wk"><b>${esc(t.name)}</b><div class="chips">${[...Array(+d.weeks || 1)].map((_, i) => `<button class="chip" data-act="pg-week" data-tpl="${id}" data-w="${i + 1}" aria-pressed="${d.over?.[id]?.[i + 1] != null}" aria-label="Edit week ${i + 1}">W${i + 1}${d.over?.[id]?.[i + 1] != null ? " ✎" : ""}</button>`).join("")}</div></div>`; }).join("")}<span class="faint" style="font-size:12.5px">✎ = edited by you. A week without its own edit starts from the last edited week before it.</span></div>` : ""}
-    <div class="field"><span class="flabel">Deload</span><div class="chips">${[[0, "Never"], [3, "Every 3rd week"], [4, "Every 4th"], [5, "Every 5th"], [6, "Every 6th"]].map(([k, l]) => `<button class="chip" data-act="pg-deload" data-k="${k}" aria-pressed="${+d.deload === k}">${l}</button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">Deload</span><div class="chips">${[[0, "Never"], [3, "Every 3rd week"], [4, "Every 4th"], [5, "Every 5th"], [6, "Every 6th"]].map(([k, l]) => `<button class="chip" data-act="pg-deload" data-k="${k}" aria-pressed="${+d.deload === k}">${l}</button>`).join("")}</div>
+      ${+d.deload > 0 ? `<div class="chips" style="margin-top:6px">${[["planned", "As planned"], ["smart", "Only if I've been training"]].map(([k, l]) => `<button class="chip" data-act="pg-dlmode" data-k="${k}" aria-pressed="${(d.deloadMode || "planned") === k}">${l}</button>`).join("")}</div><span class="faint" style="font-size:12.5px">${(d.deloadMode || "planned") === "smart" ? `A scheduled deload is skipped when you did less than ${DL_MIN * 100}% of the planned sessions in the 3 weeks before: with little training there is nothing to recover from. You can still force or skip any single week from the page before the workout.` : "The deload comes on its scheduled week whatever you did before."}</span>` : ""}</div>
     ${races.length ? `<div class="field"><label for="pg-race">Goal race</label><select id="pg-race" class="inp" data-chg="pg-race"><option value="">None</option>${races.map(r => `<option value="${r.id}" ${d.race === r.id ? "selected" : ""}>${esc(r.name)} · ${fmtDM(r.date)}</option>`).join("")}</select></div>` : ""}
     <div class="note">${d.start && d.weeks ? `${fmtDM(d.start)} → ${fmtDM(addDays(d.start, 7 * d.weeks - 1))} · ${Object.values(d.days).filter(Boolean).length} sessions a week` : ""}</div>`,
     foot: `${!sh.isNew ? `<button class="btn danger" data-act="pg-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pg-save">Save</button>` }; };
@@ -8705,6 +8778,7 @@ ACT["pg-rule"] = el => { const d = S_().draft; d.rule = el.dataset.k; d.step = d
 ACT["pg-step"] = el => { const d = S_().draft; d.step = Math.max(0, Math.round(((+d.step || 0) + +el.dataset.d) * 100) / 100); renderSheet(); };
 ACT["pg-weeks"] = el => { const d = S_().draft; d.weeks = clamp((+d.weeks || 1) + +el.dataset.d, 1, 52); renderSheet(); };
 ACT["pg-deload"] = el => { S_().draft.deload = +el.dataset.k; renderSheet(); };
+ACT["pg-dlmode"] = el => { S_().draft.deloadMode = el.dataset.k; renderSheet(); };
 ACT["pg-new"] = () => openSheet("prog", { isNew: true, draft: { id: puid("pg"), name: "", sport: strengthSport(), start: weekStartOf(addDays(todayISO(), dow(todayISO()) >= 4 ? 7 : 0)), weeks: 6, days: Object.fromEntries(DOWK.map(k => [k, null])), rule: "none", step: 1, deload: 0, race: null } });
 ACT["pg-edit"] = el => { const P = progById(el.dataset.id); if (P) openSheet("prog", { isNew: false, draft: { ...clone(P), days: { ...Object.fromEntries(DOWK.map(k => [k, null])), ...(P.days || {}) } } }); };
 ACT["pg-save"] = () => { const d = S_().draft; if (!Object.values(d.days).some(Boolean)) { toast("Pick at least one session day."); return; }
@@ -9015,7 +9089,7 @@ VIEWS.today = function () {
     tr += items.map((x, i) => { const w = x.w, p = x.p, isDone = x.st === "done", t = (p || w).tpl ? tplById((p || w).tpl) : null, title = t?.name || p?.note || w.note || w.sport;
       const k = sessionKcal(w, today).kcal, sess = isDone && w.sid ? (Lg.wsess || []).find(s => s.id === w.sid) : null, g = workoutGist(isDone ? (p || w) : w);
       const meta = isDone ? [w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", k ? fmtN(k) + " kcal" : "", sess ? "RPE " + sess.rpe : ""].filter(Boolean).join(" · ")
-        : [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", intOf(w)].filter(Boolean).join(" · ");
+        : [(p || w).at || "", shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", intOf(w)].filter(Boolean).join(" · ");
       const extra = isDone ? (p && p.min && w.min ? compliance(p, w) : "") : (isStrength(w.sport) ? "" : sessionDetail(w));
       return `<div class="td-s ${isDone ? "done" : ""}" style="--c:var(--${isDone ? "faint" : INT_COLOR[intOf(w)] || "fat"})"><button class="td-s-m" data-act="wo-open" data-date="${today}" data-i="${i}">
           <span class="td-s-b"><b>${esc(title)}</b><small>${esc(meta)}</small>${!isDone && g.text ? `<span class="td-g">${esc(g.text)}</span>` : ""}${extra ? `<span class="td-x">${esc(extra)}</span>` : ""}</span></button>
@@ -10813,7 +10887,7 @@ function energyView() {
     <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
-    <div class="stat-grid four">${kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (r.phase?.kcal ? ` · ${r.phase.kcal > 0 ? "+" : ""}${fmtN(r.phase.kcal)}` : ""))}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
+    <div class="stat-grid four">${kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (phaseKcal(r.phase, r.tdee) ? ` · ${phaseKcal(r.phase, r.tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(r.phase, r.tdee))}` : ""))}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
   hh += `<div class="section-h"><h2>Basal metabolism (BMR)</h2><span class="faint" style="font-size:12.5px">in use: ${esc(E.bmr)}</span></div>
     <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", E.bmr === "Mifflin-St Jeor" ? "in use" : "")}${kpi(fmtN(hb), "Harris-Benedict", E.bmr === "Harris-Benedict" ? "in use" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(r.bmr), "used today", `${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}`)}</div>`;
   hh += aeeShadowCard();
@@ -12259,14 +12333,6 @@ ACT["jr-open"] = el => { const t = todayISO(), d = el?.dataset?.date || t; openS
 ACT["jr-go"] = el => { const sh = S_(); if (sh?.type !== "journal" || !el.dataset.date) return; const t = todayISO(); sh.date = el.dataset.date > t ? t : el.dataset.date; renderSheet(); };
 ACT["jr-set"] = el => { const sh = S_(), d = sh?.date || todayISO(), k = el.dataset.k, v = +el.dataset.v; jrSet(d, k, jrOf(d)?.[k] === v ? null : v); renderSheet(); };
 CHG["jr-note"] = v => { const sh = S_(); if (sh?.type === "journal") jrNote(sh.date, v); };
-/* Today: shown in the evening while the day is empty; a tap on the mood saves it and opens the rest */
-function journalCard(hour = new Date().getHours()) {
-  const t = todayISO(); if (!FEAT("journal") || hour < JR_FROM_H || jrFilled(t)) return "";
-  return `<section class="card pad jr-card"><div class="row" style="justify-content:space-between"><span class="flabel">How was today?</span><button class="link" data-act="jr-open" data-date="${t}">Journal</button></div>
-    <div class="jr-row emo" role="group" aria-label="Mood">${JR_MOODS.map((l, i) => `<button type="button" data-act="jr-quick" data-v="${i + 1}" aria-label="Mood ${i + 1} of 5, ${l}">${jrFace(i + 1)}</button>`).join("")}</div></section>`;
-}
-ACT["jr-quick"] = el => { const t = todayISO(); jrSet(t, "m", +el.dataset.v); openSheet("journal", { date: t, live: true }); };
-TODAY_CARDS.push({ col: "b", o: 3, fn: () => journalCard() });
 /* the evening nudge: off until switched on; works while Engine is open, like the other reminders */
 function journalTick(now = nowHM()) {
   const J = S.settings?.jr || {}, R = S.settings?.reminders || {};
@@ -12553,7 +12619,7 @@ function gearList(script, date) {
   const exs = (parseScript(script || "").blocks || []).flatMap(b => (b.steps || []).flatMap(s => s.exs || []));
   const out = new Map(), add = (id, label, why) => { const o = out.get(id) || out.set(id, { id, label, why: [] }).get(id); if (why && !o.why.includes(why)) o.why.push(why); };
   let belt = 0, kb = 0;
-  for (const e of exs) { const t = `${e.name} ${e.raw || ""}`;
+  for (const e of exs) { const t = `${e.name} ${String(e.raw || "").replace(/\([^)]*\)/g, " ")}`;
     for (const [id, label, rx] of GEAR_RULES) if (rx.test(t)) add(id, label, e.name);
     const ld = +e.load || 0, past = ld ? 0 : +(lastFor(e, date)?.load || 0);
     if (GEAR_BW.test(e.name) && !GEAR_FREE.test(t) && (ld > 0 || past > 0)) { belt = Math.max(belt, ld || past); add("belt", "Dip belt", e.name); }
@@ -13077,8 +13143,10 @@ function wxRow(date, sessions) {
 SHEETS.wxloc = () => ({ title: "Weather", body: `${WX().place ? `<div class="faint" style="font-size:13px">Now: <b>${esc(WX().place)}</b>${WX().lat != null && !/^Current location/.test(WX().place) ? ` · ${(+WX().lat).toFixed(2)}, ${(+WX().lon).toFixed(2)}` : ""}</div>` : ""}${wxSettings().replace('<span class="flabel" style="margin-top:6px">Weather</span>', "")}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
 ACT["wx-place"] = () => openSheet("wxloc", { live: true });
 /* a day's training time: written on the day's outdoor sessions (so intervals.icu gets it too when the plan is synced), else kept for the day */
-CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; mutateLog(d, day => { const pl = Array.isArray(day.planned) ? day.planned : [], hit = pl.some(w => OUTDOOR(w.sport));
-  if (hit) { day.planned = planDiff(day, pl.map(w => OUTDOOR(w.sport) ? { ...w, at: v } : w)); day.wxAt = null; } else day.wxAt = v === WX().time ? null : v; }); scheduleRender(); };
+CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; let moved = false; mutateLog(d, day => { const pl = Array.isArray(day.planned) ? day.planned : [], hit = pl.some(w => OUTDOOR(w.sport));
+  if (hit) { day.planned = planDiff(day, pl.map(w => OUTDOOR(w.sport) ? { ...w, at: v } : w)); day.wxAt = null; moved = true; } else day.wxAt = v === WX().time ? null : v; }); scheduleRender(); if (moved && icuLinked()) icuKick("time changed", true); };
+/* one planned workout's start time, from its sheet: kept on the item and, with the plan synced, sent to intervals.icu at once */
+CHG["wo-at"] = (v, el) => { const d = el.dataset.date, i = +el.dataset.i; mutateLog(d, day => { const pl = Array.isArray(day.planned) ? clone(day.planned) : clone(plannedFor(d).list); if (!pl[i]) return; if (v) pl[i] = { ...pl[i], at: v }; else { const { at, ...rest } = pl[i]; pl[i] = rest; } day.planned = planDiff(day, pl); }); scheduleRender(); if (icuLinked()) icuKick("time changed", true); };
 CHG["wx-time"] = v => { if (v) { WX().time = v; saveSettings(); scheduleRender(); } };
 ACT["wx-locate"] = () => {
   if (!navigator.geolocation) { toast("Location isn't available here: type your city in Settings › Live workouts & timer."); return; }
@@ -13381,10 +13449,12 @@ ACT["pa-step"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.foo
 function suppCard(date = todayISO()) {
   const sl = suppSlots(date); if (!SUPPS().length || !sl.length) return "";
   const now = nowHM(), isToday = date === todayISO(), done = sl.filter(s => suppTaken(date, s.k)).length, st = suppStreak();
-  const low = SUPPS().filter(x => x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3));
-  return `<section class="card pad supp-card sp-c" aria-label="Supplements"><div class="nut-h"><span class="flabel">Supplements · ${done}/${sl.length}</span><span class="faint" style="font-size:12px">${st ? `${st} day${st > 1 ? "s" : ""} in a row` : ""}</span></div>
-    <div class="chips">${sl.map(s => { const tk = suppTaken(date, s.k), late = isToday && !tk && s.t <= now;
-      return `<button class="chip sp-chip ${tk ? "done" : late ? "late" : ""}" data-act="supp-tick" data-k="${esc(s.k)}" data-date="${date}" aria-pressed="${!!tk}">${tk ? ic("check", "sm") : ""}<b>${esc(s.x.name)}</b><small>${tk ? esc(typeof tk === "string" ? tk : "") : esc(s.t)}</small></button>`; }).join("")}</div>
+  const low = SUPPS().filter(x => x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3)), nxt = isToday ? sl.find(s => !suppTaken(date, s.k)) : null;
+  return `<section class="td-card sp2" aria-label="Supplements"><div class="td-ov"><span>${ic("jar", "sm")}Supplements</span><span>${done} of ${sl.length}${st ? ` · ${st} day${st > 1 ? "s" : ""} in a row` : ""}</span></div>
+    <span class="td-bar" style="--c:var(--good)"><i style="width:${sl.length ? done / sl.length * 100 : 0}%"></i></span>
+    <div class="sp2-g">${sl.map(s => { const tk = suppTaken(date, s.k), late = isToday && !tk && s.t <= now;
+      return `<button class="sp2-b ${tk ? "done" : late ? "late" : ""}" data-act="supp-tick" data-k="${esc(s.k)}" data-date="${date}" aria-pressed="${!!tk}"><span class="sp2-c">${ic("check", "sm")}</span><span class="sp2-t"><b>${esc(s.x.name)}</b><small>${tk ? `Taken${typeof tk === "string" ? " " + esc(tk) : ""}` : `${late ? "Late · " : "Due "}${esc(s.t)}${s.x.dose ? " · " + esc(s.x.dose) : ""}`}</small></span></button>`; }).join("")}</div>
+    ${nxt && !done ? `<div class="td-note">Next: ${esc(nxt.x.name)} at ${esc(nxt.t)}</div>` : ""}
     ${low.length ? `<div class="sp-low">Running low: ${low.map(x => `${esc(x.name)} (${x.stock})`).join(", ")} · <button class="link" data-act="supp-shop">Add to shopping</button></div>` : ""}</section>`;
 }
 /* yesterday: weight, supplements, food, sessions that were never logged */
@@ -13398,12 +13468,15 @@ function yGaps() {
   return out.weight || out.supp.length || out.food || out.wo.length ? out : null;
 }
 function yesterdayCard() { const G = yGaps(); if (!G) return ""; const d = G.d, n = (G.weight ? 1 : 0) + (G.supp.length ? 1 : 0) + (G.food ? 1 : 0) + G.wo.length;
-  const last = weightsSeries().pop();
-  return `<section class="card pad yd" aria-label="Yesterday"><div class="nut-h"><span class="flabel">Yesterday · ${n} thing${n > 1 ? "s" : ""} not logged</span><button class="link" data-act="yd-ok">Dismiss</button></div>
-    ${G.weight ? `<form class="yd-r" data-form="yd-w"><span>Weight</span><span class="unit-inp yd-in"><input id="yd-w" class="inp sm" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Yesterday's weight"><span>kg</span></span><button class="btn tonal sm" type="submit">Save</button></form>` : ""}
-    ${G.supp.length ? `<div class="yd-r"><span>Taken</span><div class="chips">${G.supp.map(s => `<button class="chip sm" data-act="supp-tick" data-k="${esc(s.k)}" data-date="${d}" aria-pressed="false">${esc(s.x.name)}</button>`).join("")}</div></div>` : ""}
-    ${G.food ? `<div class="yd-r"><span>Food</span><span class="faint" style="flex:1;font-size:12.5px">${G.food === "planned" ? "Planned, nothing ticked" : "Nothing logged"}</span>${G.food === "planned" ? `<button class="btn tonal sm" data-act="yd-eaten">Eaten as planned</button>` : ""}<button class="btn text sm" data-act="yd-food">Open</button></div>` : ""}
-    ${G.wo.map(x => `<div class="yd-r"><span>${esc(x.p?.note || x.w.note || x.w.sport)}</span><span class="faint" style="flex:1;font-size:12.5px">planned, not logged</span><button class="btn tonal sm" data-act="done-as-planned" data-date="${d}">Done</button><button class="btn text sm" data-act="wo-skip" data-date="${d}" data-k="${esc(planKey(x.p || x.w))}">Skipped</button></div>`).join("")}</section>`; }
+  const last = weightsSeries().pop(), L = logGet(d) || {}, kc = intakeFor(d), ses = daySessions(d).filter(x => x.st === "done").length;
+  const sum = [kc ? `${fmtN(kc)} kcal eaten` : "", ses ? `${ses} session${ses > 1 ? "s" : ""} done` : "", L.sleep > 0 ? `${r1(L.sleep)} h sleep` : "", L.weight > 0 ? `${r1(L.weight)} kg` : ""].filter(Boolean).join(" · ");
+  const row = (ico, label, body) => `<div class="yd-r2"><span class="yd-i">${ic(ico, "sm")}</span><span class="yd-l">${label}</span>${body}</div>`;
+  return `<section class="td-card yd2" aria-label="Yesterday"><div class="td-ov"><span>${ic("calendar", "sm")}Yesterday · ${n} to fill in</span><button class="link" data-act="yd-ok">Dismiss</button></div>
+    ${sum ? `<div class="yd-sum">${esc(sum)}</div>` : ""}
+    ${G.weight ? row("weight", "Weight", `<form class="yd-f" data-form="yd-w"><span class="unit-inp yd-in"><input id="yd-w" class="inp sm" inputmode="decimal" placeholder="${last ? r1(last[1]) : "kg"}" aria-label="Yesterday's weight"><span>kg</span></span><button class="btn tonal sm" type="submit">Save</button></form>`) : ""}
+    ${G.supp.length ? row("jar", "Taken?", `<div class="chips yd-ch">${G.supp.map(s => `<button class="chip sm" data-act="supp-tick" data-k="${esc(s.k)}" data-date="${d}" aria-pressed="false">${esc(s.x.name)}</button>`).join("")}</div>`) : ""}
+    ${G.food ? row("plate", "Food", `<span class="faint yd-x">${G.food === "planned" ? "Planned, nothing ticked" : "Nothing logged"}</span><span class="yd-a">${G.food === "planned" ? `<button class="btn tonal sm" data-act="yd-eaten">Eaten as planned</button>` : ""}<button class="btn text sm" data-act="yd-food">Open</button></span>`) : ""}
+    ${G.wo.map(x => row(isStrength(x.w.sport) ? "fitness" : "run", esc(x.p?.note || x.w.note || x.w.sport), `<span class="faint yd-x">planned, not logged</span><span class="yd-a"><button class="btn tonal sm" data-act="done-as-planned" data-date="${d}">Done</button><button class="btn text sm" data-act="wo-skip" data-date="${d}" data-k="${esc(planKey(x.p || x.w))}">Skipped</button></span>`)).join("")}</section>`; }
 FORMS["yd-w"] = () => { const v = num($("#yd-w")?.value), d = addDays(todayISO(), -1); if (!(v > 20 && v < 400)) { toast("Enter your weight in kg."); return; }
   mutateLog(d, day => { day.weight = r1(v); }); toast(`${r1(v)} kg logged for yesterday`); scheduleRender(); };
 ACT["yd-ok"] = () => { mutateLog(addDays(todayISO(), -1), day => { day.yok = true; }); scheduleRender(); };
@@ -13483,13 +13556,21 @@ SHEETS.shopq = () => { const P = shopPanel(true);
   return { full: true, title: `Shopping · ${P.left} to buy`, body: P.h, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto" aria-label="Copy the list">${ic("copy", "sm")}</button><button class="btn soft" data-act="shop-prod" style="flex:0 0 auto">${ic("plus", "sm")}Bought</button>${P.anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Finish${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` }; };
 /* the dashboard line on top: the four numbers of the day, each opening its section */
 function glanceHTML() {
-  const t = todayISO(), T = targetsFor(t), eat = eatenFor(t), D = typeof dayDeficit === "function" ? dayDeficit(t) : null;
+  const t = todayISO(), T = targetsFor(t), eat = eatenFor(t), D = typeof dayDeficit === "function" ? dayDeficit(t) : null, L = loadState();
   const left = T.kcal - (eat.kcal || 0), race = nextRace(), F = fitnessNow(), sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
-  const tile = (act, extra, v, l, tone) => `<button class="gl-t ${tone || ""}" data-act="${act}" ${extra}><b>${v}</b><small>${l}</small></button>`;
-  return `<div class="glance">${tile("tab", 'data-tab="plan"', left >= 0 ? fmtN(left) : "+" + fmtN(-left), left >= 0 ? "kcal left" : "kcal over", left < -150 ? "warn" : "")}
-    ${D && !D.none ? tile("tab", 'data-tab="plan"', sg(D.proj), D.proj <= 0 ? "deficit" : "surplus", D.set < 0 && D.proj > 0 ? "warn" : "") : tile("train-seg", 'data-k="perf"', F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}%` : "—", "form")}
-    ${(() => { const has = weightsSeries().length, a = has ? trendSimple(t) : null, b = has ? trendSimple(addDays(t, -7)) : null; return tile("tab", 'data-tab="progress"', a ? r1(a) : "—", a && b ? `kg · ${sgn(a - b)} 7 d` : "kg trend"); })()}
-    ${race ? tile("rc-edit", `data-id="${race.id}" title="${esc(race.name)}"`, daysBetween(t, race.date), "days to go") : tile("train-seg", 'data-k="perf"', F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}%` : "—", "form")}</div>`;
+  const tile = (act, extra, ico, label, v, u, sub, tone, vis) => `<button class="gl-t ${tone || ""}" data-act="${act}" ${extra}><span class="gl-h">${ic(ico, "sm")}<em>${label}</em></span><b>${v}${u ? `<i>${u}</i>` : ""}</b>${sub ? `<span class="gl-s">${sub}</span>` : ""}${vis || ""}</button>`;
+  const pLeft = Math.max(0, T.p - (eat.p || 0)), pct = T.kcal ? clamp((eat.kcal || 0) / T.kcal * 100, 0, 100) : 0;
+  const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", left >= 0 ? fmtN(left) : "+" + fmtN(-left), left >= 0 ? "kcal left" : "kcal over", `${fmtN(eat.kcal || 0)} of ${fmtN(T.kcal)} · ${r0(pLeft)} g protein to go`, left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
+  const t2 = D && !D.none ? tile("tab", 'data-tab="plan"', "trend", D.proj <= 0 ? "Deficit" : "Surplus", sg(D.proj), "kcal", `${D.done ? "so far" : "if you eat the plan"} · cut set ${sg(D.set)}${D.kg ? ` · ≈ ${D.kg > 0 ? "+" : "−"}${r0(Math.abs(D.kg) * 1000)} g` : ""}`, D.set < 0 && D.proj > 0 ? "warn" : "")
+    : tile("tab", 'data-tab="plan"', "trend", "Balance", "—", "", D ? `Plan or log food to see it · cut set ${sg(D.set)}` : "Plan or log food to see it", "");
+  const has = weightsSeries().length, a = has ? trendSimple(t) : null, b = has ? trendSimple(addDays(t, -7)) : null;
+  const pts = has ? [...Array(14)].map((_, i) => trendSimple(addDays(t, i - 13))).filter(v => v > 0) : [], lo = Math.min(...pts), hi = Math.max(...pts), span = Math.max(0.4, hi - lo);
+  const spark = pts.length > 2 ? `<svg class="gl-sp" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.map((v, i) => `${(i / (pts.length - 1) * 100).toFixed(1)},${(22 - (v - lo) / span * 20).toFixed(1)}`).join(" ")}"/></svg>` : "";
+  const t3 = tile("tab", 'data-tab="progress"', "weight", "Weight trend", a ? r1(a) : "—", a ? "kg" : "", a && b ? `${sgn(a - b)} kg in 7 days` : "Weigh in to start the trend", "", spark);
+  const I = race ? raceInsight(race) : null;
+  const t4 = race ? tile("rc-edit", `data-id="${race.id}" title="${esc(race.name)}"`, "flag", esc(race.name), daysBetween(t, race.date), "days", [fmtDM(race.date), I?.pred ? `predicted ${fmtClock(I.pred)}` : race.goal ? `goal ${esc(race.goal)}` : ""].filter(Boolean).join(" · "), "")
+    : tile("train-seg", 'data-k="perf"', "pulse", "Form", F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", "%", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
+  return `<div class="glance">${t1}${t2}${t3}${t4}</div>`;
 }
 /* ================= deleted foods: a bin for 3 days (restore with one tap), then gone for good ================= */
 const BIN_DAYS = 3;
