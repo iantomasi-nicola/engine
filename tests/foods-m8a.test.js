@@ -17,7 +17,7 @@ test("the Buy sheet has an edit button that opens the food, and Save or Close co
 test("duplicates: same name in any word order and accent, same barcode, another name with the same values; a different brand is not a duplicate", async () => {
   const page = await start();
   const r = await page.evaluate(() => { S.foods["t-rice"].barcode = "8001"; S.foods["t-rice"].brand = "Acme"; DATA_V++; const mk = o => ({ ...blankFood(), per: { kcal: 0, p: 0, c: 0, f: 0 }, ...o }); const names = x => [...x.name, ...x.values].map(f => f.name);
-    const a = foodDupes(mk({ name: "rice  TEST" })), b = foodDupes(mk({ name: "Test rice", brand: "Other" })), c = foodDupes(mk({ name: "Zzz", barcode: "8001" })), d = foodDupes(mk({ name: "Rizo", unit: "g", per: { ...S.foods["t-rice"].per } })), e = foodDupes(mk({ name: "Empty" })), self = foodDupes({ ...S.foods["t-rice"] });
+    const a = foodDupes(mk({ name: "rice  TEST" })), b = foodDupes(mk({ name: "Test rice", brand: "Other" })), c = foodDupes(mk({ name: "Zzz", barcode: "8001" })), d = foodDupes(mk({ name: "Rizo", brand: "Acme", unit: "g", per: { ...S.foods["t-rice"].per } })), e = foodDupes(mk({ name: "Empty" })), self = foodDupes({ ...S.foods["t-rice"] });
     return { a: names(a), b: names(b), c: c.barcode?.name, d: names(d), e: names(e), self: [self.name.length, self.values.length, !!self.barcode] }; });
   assert.deepEqual(r.a, ["Test rice"]); assert.deepEqual(r.b, ["Test rice"].filter(() => false).concat(r.b.filter(x => x !== "Test rice")), "another brand: not the same food by name"); assert.equal(r.c, "Test rice");
   assert.ok(r.d.includes("Test rice")); assert.deepEqual(r.e, []); assert.deepEqual(r.self, [0, 0, false]);

@@ -39,7 +39,7 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** nessuna migrazione. Campi nuovi opzionali: `it.took`, `S.shop.mode/cFrom/cTo`, `S.settings.pantryPrefs`, `fit.devices`, `fit.sportDevice`, `w.dev`, `S.shop.prices[id].manual`. Il flag `noPlan` e i pasti adatti (`meals`) dei cibi restano rispettati dal planner anche senza controllo a schermo (c'è «Include it again»). `it.took` assente (elementi mangiati prima) → ripristino con la quantità intera, come prima.
 
 **Aperto / proposto (non applicato: fuori perimetro o rischioso):**
-1. Debito preesistente nella baseline: `FA_DEF`, `cFinal`, `plPrefs` sono definiti e mai usati → rimozione in M14.
+1. Debito preesistente nella baseline: `FA_DEF`, `cFinal`, `plPrefs` sono definiti e mai usati → rimozione in M15.
 2. Persistono i wrapper di `SHEETS.*`/`VIEWS.*` in altre sezioni (≈34 punti, regex sull'HTML): da ridurre gradualmente quando si tocca quella sezione.
 3. ~960 `!important` nel CSS: da ridurre con il design system (J4).
 4. L'editor «Edit food» segnalava «Claude» nel testo sorgente: la build lo sostituisce con «AI»; da uniformare nel sorgente.
@@ -55,7 +55,7 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Compatibilità dati:** nessuna migrazione. Campi opzionali nuovi: `S.shop.xhist`, `extras[].rec/due/est`, `buys[].x/est`; i dati precedenti si leggono invariati (un acquisto senza `x` è alimentare, come prima).
 
-**Aperto:** lo scanner segnala `spendRangeOf` come «senza riferimenti» (falso positivo: usata con lo spread `...spendRangeOf(`); i 3 vecchi punti di debito (`FA_DEF`, `cFinal`, `plPrefs`) restano per M14; gli acquisti con prezzo stimato (`est`, alimentari come extra) entrano nello speso come già prima, ma la scheda non li distingue: valutare un'etichetta «di cui stimato» (B6, rifinitura).
+**Aperto:** lo scanner segnala `spendRangeOf` come «senza riferimenti» (falso positivo: usata con lo spread `...spendRangeOf(`); i 3 vecchi punti di debito (`FA_DEF`, `cFinal`, `plPrefs`) restano per M15; gli acquisti con prezzo stimato (`est`, alimentari come extra) entrano nello speso come già prima, ma la scheda non li distingue: valutare un'etichetta «di cui stimato» (B6, rifinitura).
 
 ## M4b Daily Journal (24/10/2026)
 **Verificato:** 20 test nuovi (`tests/journal.test.js`): un tap = un valore salvato, valori non validi rifiutati, giorni vuoti ≠ zero, migliori/peggiori, Spearman contro valori calcolati a mano (anche con ripetizioni), soglie dei pattern e formulazione, unione per campo e snapshot del server, backup→azzeramento→ripristino, nessuna duplicazione col Check-in, 3 viewport senza overflow, card serale, promemoria (una volta, solo a giorno vuoto), AI solo aggregati, interruttore Features; suite completa 117 test, smoke su 3 viewport; controllo visivo di sheet e vista su telefono e desktop.
@@ -70,7 +70,7 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 1. Il promemoria serale funziona solo con l'app aperta (come gli altri promemoria locali); con push attivo il server non lo conosce ancora.
 2. L'unione per campo protegge il Journal, non gli altri campi del giorno: per quelli resta «l'ultimo documento vince» (limite preesistente del sync).
 3. Le correlazioni sono associazioni su dati osservati: con molti confronti qualcuna può essere casuale (dichiarato in schermata).
-4. `VIEWS.progress` ha ancora una definizione base non più raggiunta (sostituita più sotto): debito preesistente, da togliere in M14.
+4. `VIEWS.progress` ha ancora una definizione base non più raggiunta (sostituita più sotto): debito preesistente, da togliere in M15.
 
 ## M4c Feedback su M4/M4b (24/10/2026)
 **Fatto:** tasto Check-in sempre presente e primo nella riga di Today (pallino se manca qualcosa); le integrazioni (`suppCard(data)`) stanno anche nel Check-in, per il giorno aperto; volti disegnati (SVG a tratto unico) al posto delle emoji in tutto il Journal; «Top» tolto da Foods e il suo contenuto trasformato nel report Habits in Progress › Nutrition (`foodHabits`, `habitsView`).
@@ -165,3 +165,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** nessun campo nuovo (la data di scadenza usa il campo `exp` già presente in `S.shop.pantry`).
 
 **Aperto (M8b):** C3 import ricetta da testo/immagine con AI e H10 workout a parole; il confronto etichetta non sceglie riga per riga (si usa tutto o niente); il controllo dei duplicati non esamina i food che arrivano da Open Food Facts salvati senza passare dall'editor (hanno comunque il controllo del barcode in `lookupAndAdd`).
+
+## M8b Scansioni chiare, import ricetta, flussi Food (24/10/2026)
+**Verificato:** `scan-clarity` (7: doppio scan dello stesso prodotto, stesso prodotto con altro barcode, azioni da Foods, flussi diretti invariati, «+ Food» con scansione e doppio salvataggio, filtro Drinks, marca nei duplicati per valori), `ai-import` (3: import ricetta con risposta AI simulata, 3 viewport, workout a parole), `stores-food` e `foods-m8a` aggiornati; suite completa; scansione codice morto; screenshot a 390 px.
+
+**Bug riprodotto prima del fix (doppia scansione):** un prodotto OFF completo veniva salvato e passato alla quantità senza dire se era nuovo o già presente, e un secondo barcode dello stesso prodotto non veniva mai segnalato (il controllo duplicati esisteva solo nell'editor). Ora ogni scansione dal piano o da Foods passa da un risultato esplicito (`foundHTML`, `found`) e il salvataggio avviene solo con una scelta.
+
+**Eliminato / unificato:** il campo «aggiungi negozio» nell'editor del food (`fd-store-new`, `fd-store-add`, `INP["fd-st-in"]`, stato `stNew`): i negozi si gestiscono solo dal foglio Store della spesa; il caso «campo kcal azzerato dalle macro» dopo un riempimento da OFF è evitato con `autoKcal = false`.
+
+**Compatibilità dati:** nessun campo nuovo obbligatorio (`recipe.ai` opzionale sulla bozza, non salvato come requisito).
+
+**Aperto:** la corrispondenza degli ingredienti importati usa la ricerca esistente (soglia `RI_GOOD`), da tarare con ricette reali; l'AI nell'interfaccia viene mostrata come «AI» (sostituzione di testo esistente) mentre i tag dei Food dicono «Claude»: incoerenza di terminologia da sistemare nel redesign (M13).

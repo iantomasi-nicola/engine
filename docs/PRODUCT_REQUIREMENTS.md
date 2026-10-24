@@ -43,7 +43,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 |---|---|---|---|---|---|---|
 | C1 | Recipe Engine: dosi, unità, porzioni, istruzioni, tempi, macro, costi, scaling | Must | L | M1 | **Fatto (M5a)**: scala ×½/×2/×3 con porzioni, tempo, metodo, costo a porzione (solo ingredienti con prezzo, marcato parziale), quantità in ½ pack / 1 pack con «= ¾ pack»; macro e costo dagli stessi Foods (`tests/recipe-engine.test.js`) | Macro e costo derivano dagli stessi Foods; scaling lineare testato |
 | C2 | Creare/modificare ricette da Recipes e Meal Plan; ingrediente mancante con flusso guidato senza perdere il lavoro; storico coerente | Must | L | C1 | **Fatto (M5a)**: modificare o cancellare una ricetta lascia com'erano i pasti già mangiati (`it.snap`); ingrediente mancante: cerca, scansiona o crea senza perdere la bozza (M4e/M6); dal piano «Save as recipe» già presente | Modificare una ricetta non altera i pasti storici (snapshot) |
-| C3 | Import ricetta da testo/immagine/camera con AI, associazione ai Foods, tutto modificabile prima del salvataggio | Should | L | C1, A6 | Parziale | Nessun salvataggio automatico; dati AI marcati |
+| C3 | Import ricetta da testo/immagine/camera con AI, associazione ai Foods, tutto modificabile prima del salvataggio | Should | L | C1, A6 | **Fatto (M8b)**: «Import from a photo or text» nell'editor di una nuova ricetta; revisione riga per riga (abbinamento ai Foods, grammi, «Leave out», «New food» con valori stimati marcati); niente salvato finché non confermi, la ricetta si salva dal suo editor | Nessun salvataggio automatico; dati AI marcati |
 | C4 | Meal Plan settimanale completo su desktop/tablet: panoramica, modifica diretta, drag & drop, copia, duplica, sposta, undo, alternative al trascinamento | Should | L | M5 | **Fatto (M5b)**: vista settimana su tablet e desktop (7 giorni × pasti, totale/target per giorno), tap per modificare, «+», menu dell'elemento (modifica quantità, sposta, copia, duplica, rimuovi), trascinamento con il mouse (Alt copia), undo per ogni azione; un elemento già mangiato non si sposta (`tests/meal-plan.test.js`) | Ogni azione ha alternativa a tap/tastiera e undo |
 | C5 | Scambio pranzo↔cena con un'azione | Should | S | – | **Fatto (M5b)**: «Swap lunch and dinner» nel menu del giorno, con undo; il nome del pasto viaggia con il pasto | Ingredienti/dosi/ricette preservati; undo |
 | C6 | Filtri in aggiunta Foods: P/C/F, combinazioni, verdure, in/fuori Storage, classificazioni motivate | Should | M | – | **Fatto (M5b)**: filtri Foods e Add: proteico/carboidrati/grassi per quota di energia (≥30 %/55 %/55 %) e quantità minima (8/15/10 g per 100 g; per porzione di ricetta 15/30/15 g), verdure da «Counts as», «At home»/«Not at home»; regole nel codice (`foodClass`) e testate ai limiti | Regole documentate (soglie % energia) e testate |
@@ -113,7 +113,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | H7 | Ricalcolo valutazione dopo la registrazione | Could | S | H4 | Mancante | Idempotente |
 | H8 | Recovery prediction individuale; domande nel check-in; incertezza | Could | L | D1, H4 | Parziale | Adattiva, mostra confidenza |
 | H9 | Free Workout: suggerimenti per sport/carico/piano/recupero/tempo; salvare nel piano | Should | M | H8 | Parziale | Salvataggio senza avvio |
-| H10 | Workout a parole → script strutturato modificabile e verificabile | Should | M | – | Non verificato | Parser valida prima del salvataggio |
+| H10 | Workout a parole → script strutturato modificabile e verificabile | Should | M | – | **Verificato (M8b)**: «Import a workout» (testo o foto) già presente; il parser del player controlla i passi, il testo è modificabile, niente è pianificato senza «Plan»/«Start now»; test aggiunto | Parser valida prima del salvataggio |
 
 ## I. Check-in, Analytics, Tools
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
@@ -151,7 +151,7 @@ Riuso: i dati vivono nel documento del giorno (`S.logm[mese].days[data]`, campo 
 ## Debito tecnico e pulizia (regola permanente)
 | ID | Voce | Stato |
 |---|---|---|
-| T1 | `FA_DEF`, `cFinal`, `plPrefs` definiti e mai usati (baseline) | Proposto per M14 |
+| T1 | `FA_DEF`, `cFinal`, `plPrefs` definiti e mai usati (baseline) | Proposto per M15 |
 | T2 | ≈34 wrapper di `SHEETS.*`/`VIEWS.*` che modificano l'HTML con regex (conteggio indicativo) | Ridurre quando si tocca la sezione |
 | T3 | `shopRowHTML`: definizione base + ridefinizione successiva | Unificare con la lista spesa |
 | T4 | Testi sorgente con «Claude» sostituiti in build con «AI» | Uniformare nel sorgente |
@@ -200,4 +200,10 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L30 | Modifica del food (tasto edit) dalla lista della spesa, con ritorno al foglio Buy | M8a | **Fatto (24/10)** |
 | L31 | Avviso di duplicati quando si inserisce un food: stesso nome (parole in qualsiasi ordine, accenti), stesso barcode, altro nome con gli stessi valori; un secondo Save per aggiungerlo comunque | M8a | **Fatto (24/10)** |
 | L32 | «At home» nell'editor più completo e veloce: +½ pack / +1 pack / +2 packs (o +100/250/500 g), Used up con annulla, data di scadenza, confezioni, quanto è impegnato dal piano e quando finisce | M8a | **Fatto (24/10)** |
+| L33 | Una scansione dice cosa ha trovato: «Already in your foods», «New product», «Looks like one you have» (altro barcode, stesso nome o stessi valori e stessa marca), con azioni esplicite; i flussi lista/ricetta/dispensa/sostituzione restano diretti | M8b | **Fatto (24/10)**; bug del doppio scan (Red Bull Zero) riprodotto e coperto da test |
+| L34 | «+ Food»: scansione barcode e etichetta in cima all'editor, un barcode sconosciuto compila il form da Open Food Facts; «Save» oppure «Save and add to plan» (e «Save only» se si arriva dal piano) | M8b | **Fatto (24/10)** |
+| L35 | Filtro «Drinks» nei Foods (corsia Drinks o unità ml, mai ricette) | M8b | **Fatto (24/10)** |
+| L36 | «Bought at» nell'editor: solo scelta tra i negozi esistenti (niente aggiunta da lì), scelti evidenziati con spunta e riepilogo «On the list of: …» | M8b | **Fatto (24/10)** |
+| L37 | Avviso «stessi valori» solo se anche la marca è la stessa | M8b | **Fatto (24/10)** |
+| L38 | Milestone di revisione critica (usabilità, sicurezza, difetti di progettazione, limiti) dopo il redesign | M14 (nuova) | Aggregata |
 

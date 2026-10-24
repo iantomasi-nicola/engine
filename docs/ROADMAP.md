@@ -23,13 +23,14 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
 | M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15, **L16** | L | Medio | In attesa |
-| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21**, L30–L32 | L | Medio | **M8a fatta (24/10)**: A6, A7, L21, L30–L32; **M8b da fare**: C3 (import ricetta con AI), H10 (workout a parole) |
+| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21**, L30–L32 | L | Medio | **Fatta (24/10)** in due passi: M8a (A6, A7, L21, L30–L32) e M8b (C3 import ricetta con AI, H10 verificato, L33–L37) |
 | M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara), **L28** (auto-plan su intervallo, senza sovrascrivere) | XL | Alto | – |
 | M10 Meteo e preparazione workout | F2, F3, F4, **L26** (pagina pre-avvio, suggerimenti e tasto «applica») | M | Basso | – |
 | M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20**, **L26** (logica di progressione) | XL | Medio | – |
 | M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4, **L27** (contaflessioni nel live, disattivabile) | M | Basso | – |
 | **M13 Redesign totale** — ultima milestone prima dei controlli finali: design system, **nuovo logo e grafiche**, animazioni minimal, valutazione gesti | J2–J6, **L12** | XL | Medio | – |
-| **M14 Audit finale e sistemazione repository** | Audit funzionale/sicurezza/performance/codice morto/dipendenze/UI su 3 viewport; ENG-09 (struttura repo, README, documentazione, script, artefatti di build, pulizia) | M | Basso | – |
+| **M14 Revisione critica dell'app** (richiesta 24/10) — dopo il redesign (M13), prima dell'audit finale | Ricerca sistematica di criticità: **usabilità** (percorsi chiave su telefono/tablet/desktop, errori ricorrenti, funzioni nascoste o ridondanti, coerenza di testi e componenti), **sicurezza** (ripetizione di M6, chiavi S-1, dati nel cloud, CSP), **difetti di progettazione** (dipendenze tra moduli, wrapper fragili, TDZ, CSS con `!important`, stato duplicato), **limiti** (volumi di dati, prestazioni, offline, conflitti di sincronizzazione, accessibilità, browser). Esito: elenco ordinato per gravità con proposta per ciascuna voce, da approvare prima di correggere | M | Basso | – |
+| **M15 Audit finale e sistemazione repository** | Audit funzionale/sicurezza/performance/codice morto/dipendenze/UI su 3 viewport; ENG-09 (struttura repo, README, documentazione, script, artefatti di build, pulizia) | M | Basso | – |
 
 ## Primi cinque interventi per valore/sforzo
 1. **M0 — test di avvio + build riproducibile** (S/M): avrebbe impedito la pubblicazione di `02f43a9`; sblocca tutto il resto.

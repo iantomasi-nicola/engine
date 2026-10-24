@@ -45,12 +45,12 @@ test("recipes are filtered by their serving: the bowl is carb- and protein-rich 
 test("the Foods tab and the Add sheet show the same filter chips; choosing one narrows the list and a second tap clears it", async () => {
   const page = await start(H.VIEWPORTS.phone);
   await page.evaluate(() => { S.shop.pantry["t-chicken"] = { g: 400 }; UI.tab = "foods"; UI.foodsSeg = "all"; DATA_V++; scheduleRender(); }); await page.waitForSelector("#foods-q");
-  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('[data-act="fflt"]')].map(b => b.innerText.trim())), ["High protein", "High carb", "High fat", "Vegetables", "At home", "Not at home"]);
+  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('[data-act="fflt"]')].map(b => b.innerText.trim())), ["High protein", "High carb", "High fat", "Vegetables", "Drinks", "At home", "Not at home"]);
   const n0 = await page.evaluate(() => document.querySelectorAll("#main .lrow").length); await page.click('[data-act="fflt"][data-k="in"]'); await page.waitForTimeout(150);
   const n1 = await page.evaluate(() => document.querySelectorAll("#main .lrow").length); assert.ok(n1 < n0 && n1 >= 1);
   await page.click('[data-act="fflt"][data-k="in"]'); await page.waitForTimeout(150); assert.equal(await page.evaluate(() => document.querySelectorAll("#main .lrow").length), n0);
   await page.evaluate(() => { openSheet("add", { date: todayISO(), meal: "lunch", seg: "all", q: "" }); });
-  assert.equal(await page.evaluate(() => document.querySelectorAll('.sheet [data-act="fflt"]').length), 6);
+  assert.equal(await page.evaluate(() => document.querySelectorAll('.sheet [data-act="fflt"]').length), 7);
   await page.click('.sheet [data-act="fflt"][data-k="p"]'); await page.waitForTimeout(150);
   const names = await page.evaluate(() => [...document.querySelectorAll("#add-list .lrow .t")].map(x => x.innerText)); assert.ok(names.some(n => /chicken/i.test(n)) && !names.some(n => /^Test rice/.test(n)));
 });

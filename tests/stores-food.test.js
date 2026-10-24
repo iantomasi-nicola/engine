@@ -36,7 +36,7 @@ test("scanning inside a store filter: a new product is bought at that store; a p
     S.foods["t-rice"].barcode = "8000000000111"; setFoodStores("t-rice", [a]); const n0 = Object.keys(S.foods).length;
     openSheet("scan", { date: UI.date, meal: "m", stage: "start" }); await lookupAndAdd("8000000000111"); const known = { n: Object.keys(S.foods).length === n0, st: foodStores("t-rice").map(storeName) };
     fetchOFF = async c => ({ food: { id: "bc-" + c, name: "New product", brand: "Brand Z", barcode: c, unit: "g", per: { kcal: 100, p: 5, c: 10, f: 2, fib: 0 }, servings: [], pack: 500, cat: "pantry", role: "C", meals: ["m"], source: "off" } });
-    UI.sheet = null; openSheet("scan", { date: UI.date, meal: "m", stage: "start" }); await lookupAndAdd("8000000000999"); await new Promise(r => setTimeout(r, 30));
+    UI.sheet = null; openSheet("scan", { date: UI.date, meal: "m", stage: "start" }); await lookupAndAdd("8000000000999"); await new Promise(r => setTimeout(r, 30)); ACT["fnd-save"]();
     return { known, fresh: foodStores("bc-8000000000999").map(storeName) }; });
   assert.deepEqual(r.known, { n: true, st: ["A", "B"] }); assert.deepEqual(r.fresh, ["B"]);
 });
@@ -48,11 +48,14 @@ test("a food typed in by hand inside a store filter is bought at that store; wit
   assert.equal(r.x.length, 1); assert.equal(r.y, null);
 });
 
-test("the food editor has a «Bought at» field: pick several stores, add one on the spot, and it is saved with the food", async () => {
+test("the food editor says which stores a food is bought at: the chosen ones are marked and named, and no store can be added from there", async () => {
   const page = await start(H.VIEWPORTS.phone);
-  await page.evaluate(() => { storeAdd("A"); openSheet("food", { draft: clone(S.foods["t-rice"]), isNew: false }); });
-  const r = await page.evaluate(async () => { const ids = storeList().map(x => x.id); ACT["fd-store"]({ dataset: { id: ids[0] } }); ACT["fd-store-new"](); await new Promise(r => setTimeout(r, 60)); document.querySelector("#fd-st-in").value = "Lidl"; ACT["fd-store-add"](); ACT["fd-save"](); return foodStores("t-rice").map(storeName); });
-  assert.deepEqual(r, ["A", "Lidl"]);
+  await page.evaluate(() => { storeAdd("A"); storeAdd("Lidl"); openSheet("food", { draft: clone(S.foods["t-rice"]), isNew: false }); UI.fdOpen = { price: true }; renderSheet(); });
+  const none = await page.evaluate(() => ({ summary: document.querySelector(".fd-st-s").innerText, add: document.querySelectorAll('[data-act="fd-store-new"]').length, checks: document.querySelectorAll(".fd-st .chip .ic").length }));
+  assert.deepEqual([none.add, none.checks], [0, 0]); assert.match(none.summary, /every store/);
+  const r = await page.evaluate(() => { const ids = storeList().map(x => x.id); ACT["fd-store"]({ dataset: { id: ids[0] } }); ACT["fd-store"]({ dataset: { id: ids[1] } }); const on = [...document.querySelectorAll('.fd-st .chip[aria-pressed="true"]')].map(b => b.innerText.trim()), checks = document.querySelectorAll(".fd-st .chip .ic").length, summary = document.querySelector(".fd-st-s").innerText;
+    const bg = getComputedStyle(document.querySelector('.fd-st .chip[aria-pressed="true"]')).backgroundColor, bg0 = getComputedStyle(document.querySelector('.fd-st .chip[aria-pressed="false"]') || document.body).backgroundColor; ACT["fd-save"](); return { on, checks, summary, saved: foodStores("t-rice").map(storeName), differs: bg !== bg0 }; });
+  assert.deepEqual(r.on, ["A", "Lidl"]); assert.equal(r.checks, 2); assert.match(r.summary, /A, Lidl/); assert.deepEqual(r.saved, ["A", "Lidl"]);
 });
 
 test("the brand is small on the list rows, and the list opened from Today takes the whole screen (and the store picker comes back to it)", async () => {
