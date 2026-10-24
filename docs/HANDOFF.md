@@ -53,7 +53,7 @@ git push -u origin claude/adoring-pasteur-grk6ez && git push origin claude/adori
 
 ## 6. Mappa dei dati e componenti (dove cercare)
 - Stato: `S.settings` (supps con `times`, `mealTimes`, `fit.phases[].pct`, `wx`), `S.shop` (stores, prices, buys, rcTodo, rcMap, receipts), `S.train` (progs con `deloadMode`, `calis` con `auto`, `wsess` con `pb`/`rec`), giorni `getDay(date).meals[mealId][]` con item `{kind, ref, qty, cheat, ph, at, eaten}`.
-- Componenti condivisi: `woRow(o)` (riga workout in Today/Workouts/Programs), `.section-h`/`.pv-sec`, `lrow`, `pillole`, `itemRow` (tag Placeholder/cheat), `openCheat({date,meal,ph})` (cheat meal e segnaposto con stima AI `Sync.sample.json`), `SHEETS.receipt` + `rcRows/rcCands/rcKey/rcFoodFor`, Settimana: `VIEWS.week` + CSS `.wb*`.
+- Componenti condivisi: `woRow(o)` (riga workout in Today/Workouts/Programs), `.section-h`/`.pv-sec`, `lrow`, `pillole`, `itemRow` (tag cheat), `openCheat({date,meal,ph})` (cheat meal e segnaposto con stima AI `Sync.sample.json`), `SHEETS.receipt` + `rcRows/rcCands/rcKey/rcFoodFor`, Settimana: `VIEWS.week` + CSS `.wb*`.
 - AI: `Sync.sample.json(prompt,{images})`, `AIF("feature")`, `AI_FEATS`.
 
 ## 7. Come lavorare meglio in collaborazione (suggerimenti)

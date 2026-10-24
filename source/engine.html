@@ -4237,7 +4237,7 @@ function itemRow(it, mealId) {
   const mm = itemMacros(it);
   return `<li class="item ${it.eaten ? "eaten" : ""} ${it.cheat ? "cheat" : ""}" data-item="${it.id}" data-meal="${mealId}">
     <button class="chk" data-act="toggle-eaten" data-meal="${mealId}" data-id="${it.id}" aria-label="${it.eaten ? "Mark as not eaten" : "Mark as eaten"}" aria-pressed="${!!it.eaten}"><span>${ic("check")}</span></button>
-    <button class="item-main" data-act="open-item" data-meal="${mealId}" data-id="${it.id}"><span class="item-name">${it.ph ? '<span class="tag cheat-tag">Placeholder</span>' : it.cheat ? '<span class="tag cheat-tag">Cheat</span>' : it.kind === "recipe" ? ic("recipe", "sm") : ""}<span class="nm">${esc(itemName(it))}</span></span><span class="item-sub">${itemBrand(it) ? `<span class="bd">${esc(itemBrand(it))}</span> · ` : ""}${esc(itemQty(it))}</span></button>
+    <button class="item-main" data-act="open-item" data-meal="${mealId}" data-id="${it.id}"><span class="item-name">${it.cheat ? '<span class="tag cheat-tag">Cheat</span>' : it.kind === "recipe" ? ic("recipe", "sm") : ""}<span class="nm">${esc(itemName(it))}</span></span><span class="item-sub">${itemBrand(it) ? `<span class="bd">${esc(itemBrand(it))}</span> · ` : ""}${esc(itemQty(it))}</span></button>
     <span class="item-kcal">${fmtN(mm.kcal)}<small><i style="--c:var(--carb)">${r0(mm.c)}</i><i style="--c:var(--pro)">${r0(mm.p)}</i><i style="--c:var(--fat)">${r0(mm.f)}</i></small></span></li>`;
 }
 
@@ -4971,7 +4971,7 @@ SHEETS.add = sh => {
     title: `Add to ${mealName(sh.meal)}`, focus: "add-q",
     body: `<div class="add-top">${mealChips(sh.meal)}
       <div class="search">${ic("search")}<input id="add-q" type="search" placeholder="Search, or type 150 g riso, 2 uova" value="${esc(q)}" data-in="add-q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn ink sm" data-act="open-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
-      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa" data-act="open-ph">${ic("spark")}<span>Placeholder</span></button><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("recipe")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("camera")}<span>Photo / text</span></button>` : ""}</div>
+      <div class="add-acts" role="group" aria-label="Add something new"><button class="aa aa-main" data-act="new-food">${ic("plus")}<span>New food</span></button><button class="aa" data-act="open-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="open-scan">${ic("scan")}<span>Barcode</span></button><button class="aa" data-act="open-quick">${ic("bolt")}<span>Quick kcal</span></button><button class="aa" data-act="new-recipe">${ic("recipe")}<span>Recipe</span></button><button class="aa" data-act="open-cheat" data-meal="${sh.meal}" data-date="${sh.date || UI.date}">${ic("star")}<span>Cheat meal</span></button>${AIF("describe") ? `<button class="aa" data-act="open-describe">${ic("camera")}<span>Photo / text</span></button>` : ""}</div>
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["pantry", "Pantry"], ["fav", "Starred"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       <div id="add-ctx">${addCtxFor(sh)}</div></div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
@@ -6240,7 +6240,7 @@ ACT["day-menu"] = () => {
 ACT["meal-menu"] = el => {
   const mid = el.dataset.meal, items = getDay(UI.date).meals[mid] || [];
   const list = [
-    { label: "Placeholder", icon: "spark", sub: "Write what it is (a dinner out, a birthday): it is estimated and the other meals make room", run: () => openCheat({ date: UI.date, meal: mid, ph: true }) },
+    { label: "Cheat meal", icon: "star", sub: "Eating out or a treat: write what it is, it is estimated and the plan makes room", run: () => openCheat({ date: UI.date, meal: mid }) },
     { label: items.length ? "Fill the rest of this meal" : "Plan this meal", icon: "spark", sub: "Uses this meal's share of the day's targets", run: () => {
       const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
       const day = planDay(UI.date, ctx, { mode: "fill", meals: [mid] });
@@ -6250,7 +6250,6 @@ ACT["meal-menu"] = el => {
         const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
         const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
       { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
-      { label: "Make it a cheat meal", icon: "star", sub: "Estimate it and let the plan make room", run: () => openCheat({ date: UI.date, meal: mid }) },
       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
       { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }) },
       { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => mutateDay(UI.date, d => { delete d.meals[mid]; if (d.dish) delete d.dish[mid]; }, { undo: `${mealName(mid)} cleared` }) }] : [])
@@ -7017,7 +7016,7 @@ function openCheat(o) {
   if (o.itemId) { const it = (getDay(date).meals[o.meal] || []).find(x => x.id === o.itemId); draft = { name: it.name, kcal: it.m.kcal, p: it.m.p, c: it.m.c, f: it.m.f, strategy: it.strategy || cheatRules().strategy, preset: "" }; }
   else draft = { ...CHEAT_PRESETS[0], preset: CHEAT_PRESETS[0].k, strategy: cheatRules().strategy };
   const dinner = activeMeals().find(m => m.id === "dinner")?.id || activeMeals().slice(-1)[0].id;
-  openSheet("cheat", { date, meal: o.meal || dinner, itemId: o.itemId || null, origMeal: o.meal || null, draft: o.ph ? { ...draft, name: "", kcal: "", p: "", c: "", f: "", preset: "" } : draft, ph: !!o.ph, ...(o.ph && AIF("restaurant") ? { focus: "ch-desc" } : {}) });
+  openSheet("cheat", { date, meal: o.meal || dinner, itemId: o.itemId || null, origMeal: o.meal || null, draft, ...(!o.itemId && AIF("restaurant") ? { focus: "ch-desc" } : {}) });
 }
 SHEETS.cheat = sh => {
   const d = sh.draft, plan = cheatPlan(sh.date, sh.meal, num(d.kcal), d.strategy), R = cheatRules();
@@ -7026,10 +7025,10 @@ SHEETS.cheat = sh => {
     : d.strategy === "none" ? `Planned surplus of about ${fmtN(plan.excess)} kcal. Fine now and then; your weekly balance absorbs it.`
     : Object.keys(plan.per).length ? `${Object.entries(plan.per).map(([day, v]) => `${DOW[dow(day)]} ${fmtN(v)}`).join(" · ")} kcal (from carbs and fat; protein stays).${plan.leftover > 30 ? ` About ${fmtN(plan.leftover)} kcal stay as surplus to keep each day within 15%.` : ""}` : "Nothing to compensate.";
   return {
-    title: sh.out ? "Eaten out" : sh.ph ? "Placeholder" : sh.itemId ? "Edit cheat meal" : "Plan a cheat meal", ...(sh.focus && !sh._f ? { focus: sh.focus } : {}),
+    title: sh.out ? "Eaten out" : sh.itemId ? "Edit cheat meal" : "Plan a cheat meal", ...(sh.focus && !sh._f ? { focus: sh.focus } : {}),
     body: `<div class="field"><label for="ch-date">Day</label><input id="ch-date" class="inp" type="date" value="${sh.date}" data-in="ch-date"></div>
       <div class="field"><span class="flabel">Meal</span>${mealChips(sh.meal, "ch-meal")}</div>
-      ${sh.out || (sh.ph && AIF("restaurant")) ? "" : `<div class="field"><span class="flabel">What</span><div class="chips">${CHEAT_PRESETS.map(p => `<button class="chip" data-act="ch-preset" data-k="${p.k}" aria-pressed="${d.preset === p.k}">${esc(p.name)} <span class="faint">~${fmtN(p.kcal)}</span></button>`).join("")}</div></div>`}
+      ${sh.out ? "" : `<div class="field"><span class="flabel">What</span><div class="chips">${CHEAT_PRESETS.map(p => `<button class="chip" data-act="ch-preset" data-k="${p.k}" aria-pressed="${d.preset === p.k}">${esc(p.name)} <span class="faint">~${fmtN(p.kcal)}</span></button>`).join("")}</div></div>`}
       <div class="grid2"><div class="field"><label for="ch-name">Name</label><input id="ch-name" class="inp" value="${esc(d.name || "")}" data-in="ch" data-k="name"></div>
         <div class="field"><label for="ch-kcal">Estimated calories</label><div class="unit-inp"><input id="ch-kcal" class="inp" inputmode="numeric" value="${d.kcal ?? ""}" data-chg="ch-kcal"><span>kcal</span></div></div></div>
       <div class="grid4" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[["c", "Carbs", "carb"], ["p", "Protein", "pro"], ["f", "Fat", "fat"]].map(([k, l, c]) => `<div class="field"><label class="mlabel" for="ch-${k}" style="--c:var(--${c})"><i></i>${l}</label><div class="unit-inp"><input id="ch-${k}" class="inp" inputmode="numeric" value="${d[k] ?? ""}" data-in="ch" data-k="${k}"><span>g</span></div></div>`).join("")}</div>
@@ -7038,7 +7037,7 @@ SHEETS.cheat = sh => {
         <div class="strats">${CHEAT_STRATS.filter(([k]) => !(sh.out && k === "before")).map(([k, l, t]) => `<button class="strat" data-act="ch-strat" data-k="${k}" aria-pressed="${d.strategy === k}"><b>${l}</b><small>${t}</small></button>`).join("")}</div>
         <div class="note">${impact}</div></div>
       ${sh.out ? "" : wk.length >= R.perWeek ? `<div class="note" style="color:var(--warn)">This week already has ${wk.length} cheat meal${wk.length > 1 ? "s" : ""} (your limit is ${R.perWeek}). Change the limit in Settings → Planner habits.</div>` : `<div class="faint" style="font-size:12.5px">${R.perWeek - wk.length} of ${R.perWeek} cheat meal${R.perWeek > 1 ? "s" : ""} left this week. Keep protein high in the other meals and log your weight as usual: a jump the next morning is water and glycogen.</div>`}`,
-    foot: `${sh.itemId ? `<button class="btn danger" data-act="ch-del" style="flex:0 0 auto" aria-label="Remove cheat meal">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="ch-save">${sh.out ? "Log it" : sh.ph ? "Add placeholder" : sh.itemId ? "Save" : "Add cheat meal"}</button>`
+    foot: `${sh.itemId ? `<button class="btn danger" data-act="ch-del" style="flex:0 0 auto" aria-label="Remove cheat meal">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="ch-save">${sh.out ? "Log it" : sh.itemId ? "Save" : "Add cheat meal"}</button>`
   };
 };
 function clearCheatAdj(id) { for (const [d, day] of Object.entries(S.days)) if (day.adj && day.adj[id] != null) mutateDay(d, x => { delete x.adj[id]; }); }
@@ -7053,7 +7052,6 @@ function rebalanceDayFn(date, skipIds) {
       if (sum > 50) { const k = clamp((sum + gap) / sum, 0.5, 1.4); for (const it of c) { const f = getFood(it.ref); it.qty = roundQty({ kind: "food", food: f, q: it.qty * k }); } } }
   });
 }
-ACT["open-ph"] = () => { const sh = S_(); openCheat({ date: sh.date, meal: sh.meal, ph: true }); };
 ACT["open-cheat"] = el => openCheat({ date: el.dataset.date || UI.date, meal: el.dataset.meal });
 ACT["ch-meal"] = el => { S_().meal = el.dataset.meal; renderSheet(); };
 ACT["ch-preset"] = el => { const p = CHEAT_PRESETS.find(x => x.k === el.dataset.k); Object.assign(S_().draft, { name: p.name, kcal: p.kcal, p: p.p, c: p.c, f: p.f, preset: p.k }); renderSheet(); };
@@ -7083,7 +7081,7 @@ ACT["ch-save"] = () => {
   for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null) touched.add(day);
   const snap = snapshotDays([...touched]);
   if (sh.itemId) { clearCheatAdj(id); for (const [day, dd] of Object.entries(S.days)) if (Object.values(dd.meals || {}).flat().some(it => it.id === id)) mutateDay(day, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); }); }
-  mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Cheat meal")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}), ...(sh.ph ? { ph: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
+  mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Cheat meal")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
   for (const [day, v] of Object.entries(plan.per)) mutateDay(day, x => { x.adj = { ...(x.adj || {}), [id]: v }; });
   // the cheat day itself keeps its other meals normal: its target rises by what is compensated elsewhere (or by the whole excess when free)
   const raise = plan.strategy === "none" ? plan.excess : -Object.values(plan.per).reduce((a, b) => a + b, 0);
@@ -13685,6 +13683,12 @@ function applyShopMode() {
 ACT["shop-mode"] = el => { const k = el.dataset.k; S.shop.mode = k; if (k === "custom") { S.shop.cFrom = S.shop.cFrom || UI.shopStart; S.shop.cTo = S.shop.cTo || addDays(S.shop.cFrom, (S.shop.range || 7) - 1); } put("shop", "", S.shop); };
 INP["shop-from"] = v => { if (!v) return; S.shop.mode = "custom"; S.shop.cFrom = v; if (!S.shop.cTo || S.shop.cTo < v) S.shop.cTo = v; put("shop", "", S.shop); };
 INP["shop-to"] = v => { if (!v) return; S.shop.mode = "custom"; S.shop.cTo = v; if (!S.shop.cFrom || S.shop.cFrom > v) S.shop.cFrom = v; put("shop", "", S.shop); };
+/* meals out (cheat meals) in these days: their food is not planned, so nothing goes on the list or is booked from the pantry */
+function shopOutHTML(start, n) {
+  const L = []; for (let i = 0; i < n; i++) { const d = addDays(start, i); for (const [mid, its] of Object.entries(getDay(d).meals || {})) for (const it of its || []) if (it.cheat) L.push({ d, mid, it }); }
+  if (!L.length) return "";
+  return `<details class="shop-covered shop-out"><summary>${L.length} meal${L.length > 1 ? "s" : ""} out · nothing to buy</summary>${L.map(x => `<div class="lrow"><span><span class="t">${esc(x.it.name)}</span><span class="s">${esc(mealName(x.mid))} · ${DOW[dow(x.d)]} ${fmtDM(x.d)} · ${fmtN(x.it.m?.kcal || 0)} kcal</span></span></div>`).join("")}</details>`;
+}
 function shopCoveredHTML(covered) {
   if (!covered.length) return "";
   const line = r => { const u = r.f.unit || "g", whys = [...new Set(r.uses.map(x => x.why))];
@@ -13715,7 +13719,7 @@ function shopPanel(inSheet) {
   h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(here, true)}</div>` : `<div class="shop-list">${extraFormHTML()}</div><div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
   if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${esc([f.brand, "to the pantry"].filter(Boolean).join(" · "))}</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
   if (elsewhere.length) h += `<details class="shop-other"><summary>At other stores · ${elsewhere.length}</summary><div class="shop-list">${elsewhere.map(r => `<div class="so-r">${shopRowHTML(r)}<div class="so-a"><span class="faint">at ${esc(foodStores(r.id).map(storeName).join(", "))}</span><button class="btn soft sm" data-act="shop-here" data-id="${r.id}">Buy it here</button></div></div>`).join("")}</div></details>`;
-  h += tickedHTML() + shopCoveredHTML(covered);
+  h += tickedHTML() + shopCoveredHTML(covered) + shopOutHTML(start, n);
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || visibleExtras().some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
 VIEWS.shop = function () {

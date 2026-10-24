@@ -44,14 +44,4 @@ test("the receipt learns: a printed line you match to a food (or create) is reme
   assert.ok(d.id && d.price === 4.2 && d.left === 0);
 });
 
-test("a smart placeholder: from a meal (menu or the Add sheet) write what it is, press Enter, it is estimated like a cheat meal, added as a «Placeholder» that reserves the calories; without an AI the usual presets stay", async () => {
-  const page = await open();
-  const r = await page.evaluate(async () => { Sync.sample = { json: async () => ({ name: "Pizza and a beer", kcal: 1100, protein: 38, carbs: 130, fat: 42 }) }; const t = todayISO(), A = activeMeals(), m = A[A.length - 1].id; UI.tab = "plan"; UI.date = t; render();
-    const menu = typeof ACT["open-ph"] === "function"; ACT["meal-menu"]({ dataset: { meal: m } }); const inMenu = /Placeholder/.test(document.querySelector(".sheet")?.innerText || ""); closeSheet(); openSheet("add", { date: t, meal: m }); const inAdd = !!document.querySelector('[data-act="open-ph"]'); ACT["open-ph"]();
-    const sh = UI.sheet, title = document.querySelector(".sheet h3")?.innerText, hasDesc = !!document.getElementById("ch-desc"), presets = !!document.querySelector('[data-act="ch-preset"]'); sh.desc = "pizza and a beer at Mario's"; const e = new KeyboardEvent("keydown", { key: "Enter", bubbles: true }); document.getElementById("ch-desc").dispatchEvent(e); await new Promise(r => setTimeout(r, 400));
-    const est = [sh.draft.name, sh.draft.kcal]; ACT["ch-save"](); await new Promise(r => setTimeout(r, 300)); const it = (getDay(t).meals[m] || []).find(x => x.ph);
-    return { menu, inMenu, inAdd, title, hasDesc, presets, est, it: it && [it.name, it.m.kcal, it.eaten], tag: [...document.querySelectorAll(".cheat-tag")].some(e => /placeholder/i.test(e.textContent)) }; });
-  assert.ok(r.menu && r.inMenu && r.inAdd); assert.equal(r.title, "Placeholder"); assert.ok(r.hasDesc); assert.equal(r.presets, false); assert.deepEqual(r.est, ["Pizza and a beer", 1100]); assert.deepEqual(r.it, ["Pizza and a beer", 1100, false]); assert.ok(r.tag);
-  const none = await page.evaluate(() => { Sync.sample = null; closeSheet(); ACT["open-ph"] = ACT["open-ph"]; openCheat({ date: todayISO(), meal: activeMeals()[0].id, ph: true }); return !!document.querySelector('[data-act="ch-preset"]'); });
-  assert.equal(none, true);
-});
+/* the smart placeholder moved into the cheat meal (L91): see m11c.test.js */
