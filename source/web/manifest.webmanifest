@@ -28,9 +28,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Free workout",
-      "short_name": "Workout",
-      "url": "./?a=free-open",
+      "name": "Check-in",
+      "short_name": "Check-in",
+      "url": "./?a=open-checkin",
       "icons": [
         {
           "src": "icons/icon-192.png",
@@ -52,9 +52,9 @@
       ]
     },
     {
-      "name": "Weigh in",
-      "short_name": "Weigh in",
-      "url": "./?a=weigh-open",
+      "name": "Free workout",
+      "short_name": "Workout",
+      "url": "./?a=free-open",
       "icons": [
         {
           "src": "icons/icon-192.png",
@@ -66,19 +66,7 @@
     {
       "name": "Shopping list",
       "short_name": "Shopping",
-      "url": "./#shop",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Timer",
-      "short_name": "Timer",
-      "url": "./?a=timer-open",
+      "url": "./?a=shopq-open",
       "icons": [
         {
           "src": "icons/icon-192.png",

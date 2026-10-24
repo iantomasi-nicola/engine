@@ -293,3 +293,9 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Controllato senza difetti:** nessuna `const` duplicata; ogni `data-act` ha il suo gestore (`story-acc` è registrato in un ciclo); nessuna dichiarazione di funzione duplicata oltre a `movePlanned`.
 **Aperto:** la riga di sotto-menu scorrevole mostra l'ultima voce tagliata dal fade (da valutare in M13: passare a un menu a due righe o a una lista); 19 funzioni «avvolte» da wrapper più in basso (rischio noto, da consolidare in M15).
 
+## M11d Giornata più fluida (24/10/2026)
+**Verificato:** `tests/m11c.test.js` (calorie scelte con un tocco e nome facoltativo, nome compilabile dopo, scorciatoie, righe e notifiche pre-allenamento con orario/anticipo/quali/messaggio/dove, notifica una sola volta, impostazioni dopo reload, sposta-saltato con regola dei giorni e Undo, etichette delle impostazioni intere sui tre formati), `tests/m10c.test.js` (card Reminders). Suite completa e `layout-audit.js` verdi; screenshot a 390/820/1440 px.
+**Eliminato / unificato:** `suppCard()` e il CSS `.sp2-*` (assorbiti dalla card Reminders `.rm-*`); la riga «Check-ups due» in «Coming up» (ora in Reminders); il gancio provvisorio `extraReminders`; la nota «Next: … at …» (l'ora è su ogni riga); le righe «etichetta + controllo» della story diventate `.opt-row` generiche, usate anche in Settings.
+**Compatibilità:** `S.settings.reminders.pre` opzionale (default 2 h, dure o lunghe, con quantità, Today + notifica); l'elemento `items[].ph` e il vecchio nome «Cheat meal» restano leggibili (ora mostrati come «Treat»); le scorciatoie vecchie «Weigh in» e «Timer» non sono più nel manifest ma i loro gestori `?a=` restano.
+**Aperto:** le notifiche pre-allenamento con l'app chiusa richiedono le notifiche push configurate (come gli integratori); «Move to» propone solo giorni della settimana corrente.
+
