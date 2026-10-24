@@ -23,7 +23,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | A1 | Modifica quantità in dispensa da Foods, Meal Plan e Storage (esatta, ±rapido); mostra disponibilità, unità, prezzo, confezione | Must | M | M1 | Parziale | Stesso valore ovunque dopo ogni modifica e dopo reload; ≤2 tap per ±; test e2e |
 | A2 | Prezzi/confezioni: €/kg, €/unità, €/confezione, quantità nominale, porzioni, ½ ¼ frazioni, valori esatti g/ml/unità | Must | M | M1 | Parziale | Nessuna conversione arbitraria; round-trip esatto; test su arrotondamenti |
 | A3 | Pantry: ricerca, A–Z/Z–A, filtri utili, preferenze persistenti | Should | S | – | Parziale (solo scadenza) | Preferenza sopravvive al reload; recuperabile da `02f43a9` previa verifica |
-| A4 | Inventario predittivo a data X con pasti/ricette associati e data di esaurimento | Must | L | M1 | Mancante | Proiezione non altera la giacenza; risultato coincide con simulazione giorno per giorno |
+| A4 | Inventario predittivo a data X con pasti/ricette associati e data di esaurimento | Must | L | M1 | **Motore fatto** (`stockOn(data)`, `endsOn`); schermata in M2 | Proiezione non altera la giacenza; risultato coincide con simulazione giorno per giorno |
 | A5 | Open Food Facts: ricerca, barcode, normalizzazione, porzioni, dati incompleti, dedup, errori, cache, attribuzione | Should | M | – | Parziale | Nessun latch permanente; cache con scadenza; attribuzione ODbL visibile; test con risposte simulate |
 | A6 | Alimento mancante: ricerca esterna o stima AI, distinti da dati ufficiali, conferma prima di salvare | Should | M | A5 | Non verificato | Badge "stima"; nessun salvataggio senza conferma |
 | A7 | Comando AI per suggerire/correggere la categoria dei nuovi Foods, senza ricategorizzare gli esistenti | Could | S | – | Mancante | Solo su richiesta; mai in massa |
@@ -31,9 +31,9 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 ## B. Shopping List e costi
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| B1 | Correggere bug Storage ↔ Shopping (duplicati, acquisti inutili, quantità incoerenti) | Must | M | M1 | Non verificato | Bug riprodotti con test prima del fix |
+| B1 | Correggere bug Storage ↔ Shopping (duplicati, acquisti inutili, quantità incoerenti) | Must | M | M1 | **Corretto nel sorgente** (24/10): ricette collegabili alla dispensa, stock prenotato giorno per giorno da oggi, mangiare/de-spuntare reversibile (`it.took`), niente duplicati dopo la spunta; test in `tests/stock.test.js` | Bug riprodotti con test prima del fix |
 | B2 | Filtri rapidi: settimana da oggi, prossima settimana, prossimi X giorni, intervallo | Must | S | M1 | Parziale | Fabbisogni ricalcolati; giorni passati esclusi; test di date a cavallo di mese/anno |
-| B3 | Prodotti coperti dalle scorte in elenco richiudibile, con data di fine e pasti; coperture parziali | Must | M | M1, A4 | Mancante | Totale acquisti = fabbisogno − scorta proiettata, mai negativo |
+| B3 | Prodotti coperti dalle scorte in elenco richiudibile, con data di fine e pasti; coperture parziali | Must | M | M1, A4 | **Motore fatto** (`shoppingCovered`: coperto, parziale, data di esaurimento, pasti); interfaccia in lavorazione | Totale acquisti = fabbisogno − scorta proiettata, mai negativo |
 | B4 | Rimuovere la nota "Not in the plan yet" dal Pantry (decisione utente 24/10; la voce originale chiedeva sezioni comprimibili) | Should | S | – | **Fatto nel sorgente** (24/10, test `tests/pantry-ui.test.js`); non ancora nella build di root; l'azione "Plan meals" resta raggiungibile da un pulsante in testata | La nota non compare più; nessun altro elemento del Pantry cambia; test di regressione sul render |
 | B5 | Extra non alimentari separati, cronologia, autocompletamento, ricorrenti; costi senza nutrienti | Should | M | – | Parziale | Nessun extra compare in Foods/nutrienti |
 | B6 | Stima spesa per intervallo, media settimanale, dettaglio prodotto, previsto/effettuato/alimentare/extra | Should | M | M1 | Parziale | Totali riconciliati con lo storico acquisti |
