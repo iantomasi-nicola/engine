@@ -30,7 +30,7 @@ Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commi
 ## Regole ingegneristiche (dal mandato dell'utente)
 1. Una sola fonte di verità per Foods, Recipes, Meal Plan, Storage, Shopping: quantità, unità, prezzi, nutrienti. Scorta reale ≠ consumo pianificato ≠ consumo effettivo; le proiezioni non alterano mai la giacenza.
 2. Ogni bug corretto: prima riprodotto, poi test di regressione.
-3. Nessuna modifica algoritmica nutrizionale senza proposta scientifica approvata (`docs/NUTRITION_PROPOSAL.md`).
+3. Nessuna modifica algoritmica nutrizionale (BMR, NEAT, EAT, TEF, calibrazione, macro, nutrienti) senza approvazione esplicita della singola formula. Riferimento: `docs/NUTRITION_SPEC.md`; audit e proposte: `docs/NUTRITION_AUDIT.md`. Nessun coefficiente nel codice finché non è confermato su una fonte primaria e non passa un test numerico indipendente.
 4. Test con fixture sintetiche; mai dati reali, mai il progetto Supabase reale.
 5. Branch dedicati, commit atomici, milestone piccole e reversibili. Un commit non è un deploy.
 6. L'utente approva ogni milestone prima che inizi (cosa, perché, benefici, complessità, rischi, criteri di completamento) e riceve un report dopo.

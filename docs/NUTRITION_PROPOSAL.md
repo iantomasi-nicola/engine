@@ -1,4 +1,6 @@
-# Proposta scientifica — nutrizione (BOZZA, nessun algoritmo modificato)
+# Proposta scientifica — nutrizione (SUPERATA da `NUTRITION_AUDIT.md`; conservata per storia)
+
+> Questa bozza iniziale è stata sostituita dall'audit basato su `NUTRITION_SPEC.md`. Alcune ipotesi qui sotto (doppio conteggio NEAT/EAT in tutte le modalità, TEF applicato due volte) **non sono state confermate**: vedi l'audit.
 
 Stato: **da approvare**. Non cambia il codice. Da integrare con il libro che l'utente allegherà; le fonti sotto sono quelle che intendo consultare, **da ricontrollare puntualmente prima di citare valori numerici** (qui non riporto soglie che non ho verificato).
 

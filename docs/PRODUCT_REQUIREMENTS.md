@@ -50,13 +50,28 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | C7 | Food Coach realistico: ricette/integrazioni coerenti, niente cibi casuali per chiudere i macro; whey se appropriata | Should | L | E5 | Parziale/Buggato | Nessun alimento fuori dalle preferenze/porzioni abituali; spiegazione di ogni suggerimento |
 | C8 | Icona ricetta disallineata nel Meal Plan e problemi UI analoghi | Must | S | – | Buggato | Screenshot prima/dopo su 3 viewport |
 
-## D. Nutrizione scientifica (richiede proposta approvata — `NUTRITION_PROPOSAL.md`)
+## D. Nutrizione scientifica (documento di riferimento: `NUTRITION_SPEC.md`; audit e proposte: `NUTRITION_AUDIT.md`, in attesa di approvazione; nessun algoritmo va modificato senza approvazione)
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
 | D1 | Rivedere BMR, TDEE, NEAT, EAT, attività, macro, distribuzione, micronutrienti, sodio, idratazione, atleta ibrido | Must | XL | proposta approvata, libro dell'utente | Parziale | Ogni formula con fonte, ipotesi, limiti, test |
 | D2 | Check-in: verificare NEAT/EAT senza doppi conteggi | Must | M | ENG-02 | Non verificato | Test sintetici per le 3 modalità orologio |
 | D3 | Vista opzionale (Settings) con formule, valori e passaggi | Should | M | D1 | Parziale | Disattivabile; stessi numeri dell'algoritmo |
 | D4 | Algoritmi deterministici, spiegabili, testati, documentati | Must | M | D1 | Parziale | Documento + test per ogni formula |
+| D5 | **Dispositivo FC per sport** (richiesta 24/10): elenco dispositivi (es. Amazfit al polso, Polar armband), predefinito per sport (corsa → armband, calisthenics → smartwatch), campo sull'allenamento scelto prima o dopo (da intervals.icu se riconoscibile), con «kcal lorde/nette/non so». D5a = dati + interfaccia, nessun numero cambia; D5b = uso nel calcolo delle kcal | Should | M | D2, ENG-02 | Mancante | D5a: scelta in ≤2 tap, persistente, nessuna variazione delle kcal; D5b: calibrazione per dispositivo con n sessioni e dispersione, nessun doppio conteggio, interruttore (vedi `NUTRITION_AUDIT.md` F-03) |
+| D6 | Contratto dei dati energetici: `{quantità, unità, valore, fonte, lordo/netto, copertura, confidenza, versione}` | Must | M | ENG-02 | Mancante | Una funzione pura per grandezza, provenienza visibile (F-09) |
+| D7 | EAT: separare kcal lorde/nette dei dispositivi, conversione dichiarata, niente somma di fonti alternative della stessa sessione | Must | M | D5, D6 | Presente ma fragile [dimostrato] | Test lordo→netto, stessa sessione una sola volta (F-03) |
+| D8 | Calibrazione TDEE robusta (finestra più lunga, regressione, qualità dati, restringimento verso 1, limite di variazione, affidabilità) | Must | L | D6, D17 | Fragile [dimostrato: fattore 0,87–1,10 e target ±190 kcal con rumore ordinario] | Property test; v1/v2 a confronto (F-06) |
+| D9 | Profilo incompleto: nessun default silenzioso (età 30, altezza 175, peso 75) | Must | S | – | Difetto [dimostrato] | Avviso «provvisorio»; nessun NaN (F-02) |
+| D10 | BMR: HB con coefficienti originali, bonus HB opzionale ed etichettato, Ten Haaf (limiti dichiarati), Cunningham solo con FFM misurata, confronto affiancato | Should | M | D9 | Parziale | Tabella numerica della specifica; default invariato (F-01) |
+| D11 | Target macro a intervalli con vincoli verificabili: `cmin` come avviso, soglia energetica prudente, nessun target incoerente | Must | M | D1 | Difetto [dimostrato: target 110 kcal accettato] | I tre casi di F-07 diventano test corretti |
+| D12 | Nutrienti: sconosciuto ≠ 0, copertura del dato, sale/sodio, avvisi non medicalizzanti | Should | M | D6 | Difetto [dimostrato per il sale] | Tabella sale/sodio, copertura parziale (F-09) |
+| D13 | Carboidrati periodizzati sul carico e fueling durante l'esercizio come intervalli (120 g/h mai default) | Should | L | D11 | Mancante | Soglie documentate con fonti |
+| D14 | Idratazione e sodio durante sforzi lunghi: indicazione prudente, non prescrittiva | Could | M | D13 | Mancante | Nessun supplemento automatico |
+| D15 | Disponibilità energetica / REDs come indicatore orientativo, mai diagnosi | Could | M | D11 | Mancante | Testo prudente, rimando a un professionista |
+| D16 | Suite numerica delle formule (tabella specifica §5) con calcolo indipendente | Must | S | – | **Fatto** (`tests/nutrition-baseline.test.js`) | Verde |
+| D17 | Versioni degli algoritmi e data di attivazione: lo storico non cambia retroattivamente | Must | M | D6 | Mancante | Backup verificato, prova di ripristino (F-11) |
+| D18 | **AEE senza digitare le kcal dell'orologio** (richiesta 24/10): AEE = EAT netto (da intervals.icu, corretto per dispositivo) + NEAT stimato dai passi fuori allenamento + base, con apprendimento dai dati passati e senza doppio conteggio | Should | L | D5, D7, D8, D17 | Mancante (passi importati ma non usati) | Passi con e senza corsa, regressione su dati sintetici, provenienza, interruttore `neatMode` (F-12) |
+
 
 ## E. AI Meal Planning
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |

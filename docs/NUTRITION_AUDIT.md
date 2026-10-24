@@ -1,0 +1,139 @@
+# Audit nutrizionale — NON modifica nessuna formula (richiede approvazione)
+
+Data: 2026-10-24. Documento di riferimento dell'utente: `docs/NUTRITION_SPEC.md` (copia fedele del file ricevuto). Codice esaminato: baseline `cae350d` (dopo il rollback). Stato: **proposta in attesa di approvazione**; nessun algoritmo, dato o migrazione è stato toccato.
+
+Come leggere: ogni problema ha *formula attuale → problema (dimostrato / rischio) → fonti → proposta → vantaggi → rischi → impatto sullo storico → test → rollback*. Livello di prova: **[D]** dimostrato con un test o un esperimento riproducibile (`tests/nutrition-baseline.test.js`), **[L]** letto nel codice, **[R]** rischio non riprodotto. Origine di ogni scelta: *libro 2015* / *linee guida* / *scelta progettuale* / *ipotesi da verificare*.
+
+## 1. Verifica delle fonti della specifica
+
+Da questo ambiente PubMed e i siti editoriali non sono raggiungibili (il proxy risponde 403); ho potuto usare solo una ricerca web, che restituisce sintesi. Quindi: **verificato = confermato da una fonte indipendente trovata; non verificato = non confermabile qui**. Non ho sostituito nulla con la memoria senza dirlo.
+
+| Affermazione della specifica | Esito |
+|---|---|
+| Tutti i casi numerici di §5 (Mifflin 1780 e 1781,6; HB originale M 1864,545 e F 1345,9985; Ten Haaf 1989,23; MET 350/280; sale→sodio) | **Verificati** con un secondo calcolo indipendente (`tests/nutrition-baseline.test.js`). Nota: 1 g di sale contiene ≈393 mg di sodio (la specifica dice «circa 400») |
+| Errori del libro (HB donna −1,16, esempio 1770 → 1780, 2430 → 2288, bonus body fat non appartenente alla HB) | Aritmetica verificata per gli esempi; il bonus HB non è nella regressione originale. **Il libro non lo ho** (non serve, come detto) |
+| Ten Haaf & Weijs 2014: equazione peso/altezza(m)/età/sesso | Studio **verificato**: 90 adulti, atleti *ricreativi di 18–35 anni*, calorimetria indiretta; titolo «…confirmation of Cunningham equation and an improved weight-based alternative». **Coefficienti non verificati sul testo originale.** Coincidono con i coefficienti in kJ che ricordo (49,940; 2459,053; 34,014; 799,257; 122,502 ÷ 4,184), ma è memoria, non fonte. Il coefficiente per FFM (484,264 + 22,771·FFM) **non l'ho potuto confrontare**: da non implementare finché non verificato |
+| O'Neill 2023, *Sports Med* 53:2373–2398: 29 studi, 1430 atleti, 100 equazioni | **Verificato**. Dall'abstract: per cinque equazioni (Cunningham 1980, Harris-Benedict 1918, Cunningham 1991, De Lorenzo, …) i valori predetti non differivano dai misurati; una sintesi secondaria indica Ten Haaf come la più accurata. **Il «80,2% entro ±10%» non l'ho potuto confermare**. Avvertenza degli autori: equazioni testate sulla coorte di derivazione appaiono migliori del vero, serve validazione esterna |
+| ISSN 2026 «Diets for Body Weight Reduction» (J Int Soc Sports Nutr 23(1), DOI 10.1080/15502783.2026.2740266) | **Esiste** (notizie del 14/10/2026). **PMID 42867412 e gli intervalli proteici 1,6–2,2 / 1,9–3,2 g/kg non verificati.** Verificato solo lo stand 2017 *Diets and body composition*: 2,3–3,1 g/kg **FFM** per soggetti magri allenati in deficit |
+| Morton et al. 2026 (J Nutr, «From Metabolism to Medals») fino a ~120 g/h di carboidrati in atleti allenati | **Verificato**. Controparte 2026 (Plews et al., *Sports Med*): promuovere indiscriminatamente apporti ultra-alti non è giustificato. Nota: l'autore principale ha legami con l'industria. Coerente con «non default» |
+| IOC REDs 2023 (Mountjoy et al., *BJSM* 57:1073–1098) | **Verificato**: spettro, nessun marcatore singolo, strumento clinico CAT2. Una soglia comunemente citata (<30 kcal/kg FFM/die) esiste in ricerca ma **non è** una soglia diagnostica dell'IOC |
+| Wearable: accuratezza kcal | **Coerente**: una revisione sistematica recente riporta MAPE >30% per il dispendio energetico; FC ottica buona a riposo e intensità moderata (MAPE <10%). Chevance 2024 (umbrella) esiste; **PMID 30194221 e 39080098 non verificati** |
+| OMS <2000 mg sodio/die; EFSA 2019 2,0 g; EFSA potassio 3500 mg; fibre 25 g | Coerenti con ciò che conosco; **non riverificati qui** |
+
+**Regola adottata:** nessun coefficiente entra nel codice finché non è confermato su una fonte primaria raggiungibile e passa il test numerico indipendente. Se non riesco a raggiungere la fonte, lo dico e chiedo.
+
+## 2. La specifica contro il codice dopo il rollback
+
+| Punto della specifica | Realtà in `cae350d` |
+|---|---|
+| Cunningham «con fallback» | **Non esiste.** Era solo in `02f43a9` (annullato). BMR disponibili: Mifflin (default), Harris-Benedict, «MET» (kg·24, ×0,9 donna) |
+| HB con bonus body fat | **Presente** (+27,5 kcal per punto sotto il 16%; `hbBonus`, `hbThr`) [D] |
+| TEF = 10% di (BMR+NEAT+EAT); NEAT 350 / min 150 / media 7 giorni | Confermato [L] |
+| Calibrazione: 14 giorni, ≥10 intake non stimati, ≥6 pesate, 7000 kcal/kg, clamp 0,75–1,10 | Confermato [L] |
+| Macro di fase (Cut 2,0/0,8/2,0; Bulk 1,6/0,8/4,0; Maintenance 1,8/0,8/4,0) | Confermato [L]. **`cmin` non è mai applicato** [D] |
+| Modalità smart vs semplice | Il default è **`targetMode: "simple"`** (macro per tipo di giornata). Il modello energetico guida i target solo se l'utente passa a *smart* [L] |
+| Sessioni lorde/nette | Il modello MET è **netto** (MET·fattore −1); le kcal da dispositivo sono usate **così come sono** [D] |
+| Dati iniziali silenziosi | `ageAt` ritorna 30 senza data di nascita; altezza 175 e peso 75 di default [D] |
+
+## 3. Matrice EN-01 … EN-10
+
+| ID | Verifica | Stato | Esito |
+|---|---|---|---|
+| EN-01 | Semantica kcal smartwatch | **Presente ma fragile** | `watchMode` active/neat/total esiste e il caso *active* è coerente (NEAT = AEE − kcal degli allenamenti). Il caso *total* sottrae il BMR **del modello**, non quello del dispositivo: la differenza finisce nel NEAT. La semantica per marca/dispositivo non è registrata (vedi F-03, D5) |
+| EN-02 | EAT vs NEAT, sessioni duplicate | **Presente, non verificato a fondo** | Pianificato e registrato sono accoppiati per evento/famiglia di sport; un registrato senza pianificato conta come extra. Il minuto «lasciato acceso» è escluso dal NEAT per scelta [L]. Da coprire con test (F-04) |
+| EN-03 | MET lordo/netto | **Mista** [D] | MET netto ✔, corsa 1,0 kcal/kg/km (costo netto) ✔, ma kcal da dispositivo (spesso lorde) e tassi *appresi* da quei dati sono mescolati con valori netti: F-03 |
+| EN-04 | TEF | **Accettabile** | Basato sul dispendio, non circolare. Differenza dall'intake reale ≈10% del deficit (<~50 kcal): F-05, nessuna modifica |
+| EN-05 | BMR | **Presente ma da correggere** [D] | F-01, F-02 |
+| EN-06 | Calibrazione | **Fragile** [D] | Esperimento riproducibile: F-06 |
+| EN-07 | Macro, `cmin`, conflitti | **Difetto** [D] | F-07 |
+| EN-08 | Check-in, stime vs misure | **Presente** | `intakeFor` distingue manuale/stimato/cibo; il Check-in mostra la scomposizione. Da estendere con provenienza e copertura (F-09) |
+| EN-09 | Proiezioni peso | **Non verificato** | Usano 7000 kcal/kg come costante; da mostrare come stima con incertezza (F-06) |
+| EN-10 | Compatibilità dopo rollback, storico | **Rischio** | Tutta la serie energetica è **ricalcolata dal vivo** da log e impostazioni: cambiare un algoritmo cambia retroattivamente target e bilanci passati (F-11) |
+
+## 4. Problemi e proposte
+
+### F-01 · BMR: coefficienti, bonus e scelta della formula — D10 (Should)
+- **Attuale** [L][D]: Mifflin arrotondata (default) ✔ 1780 kcal per 80 kg/180 cm/30 a. HB con coefficienti arrotondati: uomo −6,775·età (originale −6,755), donna a 0,04 kcal dall'originale; i −1,16 del libro **non** sono nel codice. **Bonus** +27,5 kcal per punto di BF sotto il 16%, non appartenente alla regressione.
+- **Problema:** differenza numerica minima (−0,76 kcal) ma etichetta «Harris-Benedict» non fedele; il bonus può aggiungere 100–300 kcal a un atleta magro senza validazione indipendente.
+- **Fonti:** Mifflin 1990 (PMID 2305711, non raggiunto); HB originale (PMC6935811, non raggiunto: coefficienti ricalcolati dal testo della specifica); O'Neill 2023 (verificato nella sostanza, incluso HB 1918 tra le equazioni senza differenza significativa).
+- **Proposta:** (1) HB con coefficienti originali, etichettata «1918/1919»; (2) il bonus resta **opzionale, disattivo, etichettato «non standard»**; (3) **Ten Haaf peso** come nuova opzione, con limiti dichiarati (derivata su 90 atleti *ricreativi 18–35 anni*; fuori da questa fascia l'incertezza cresce); (4) Cunningham/Ten Haaf-FFM solo con massa magra misurata, coefficienti verificati; De Lorenzo opzionale; (5) vista **affiancata** delle formule con spread, senza dichiararne una «migliore»; (6) **il default non cambia senza la tua scelta** (Mifflin resta il comparatore).
+- **Vantaggi:** trasparenza, confronto, coerenza con la letteratura. **Rischi:** più scelte = più confusione → una sola visualizzazione chiara; Ten Haaf ha errore individuale non trascurabile. **Storico:** la scelta della formula cambia la serie passata → vedi F-11. **Test:** tabella numerica della specifica (già in suite), unità (altezza in metri per Ten Haaf), input non validi. **Rollback:** impostazione `energy.bmr` e flag di versione.
+
+### F-02 · Profilo incompleto: nessun default silenzioso — D9 (Must)
+- **Attuale** [D]: senza data di nascita età = 30; altezza 175, peso 75 di default; sesso binario nel modello.
+- **Problema:** il TDEE sembra preciso ma poggia su dati inventati.
+- **Proposta:** stato «profilo incompleto» (sesso, data di nascita, altezza, peso) che mostra il valore come **provvisorio** con badge e chiede il dato; nessun calcolo di target smart finché mancano i dati essenziali (oppure con intervallo largo dichiarato). Nota: il campo «sesso» serve solo come parametro dell'equazione (le formule sono state derivate con quella codifica), da dichiarare.
+- **Vantaggi:** onestà del numero. **Rischi:** utenti esistenti vedranno un avviso → non bloccante. **Storico:** invariato. **Test:** profilo parziale → badge, nessun NaN. **Rollback:** flag UI.
+
+### F-03 · Kcal di allenamento: lordo/netto, fonte e dispositivo — D5, D7 (Must) *(nuova funzione richiesta dall'utente)*
+- **Attuale** [D][L]: l'EAT di una sessione con kcal da dispositivo è il valore del dispositivo; i tassi «appresi» (kcal/min per sport/intensità) derivano da quei valori; i default sono MET **netti**. La stima da FC usa Keytel (2005) × `hrCal = 0,794` **globale**, un fattore la cui origine non è documentata.
+- **Problema:** (a) Polar e molti orologi riportano kcal **lorde** (includono il metabolismo di riposo) → sommate al BMR giornaliero contano due volte circa 1 MET·kg·h (≈80 kcal/h a 80 kg); Amazfit non è documentato: **non lo so, va chiesto/misurato**. (b) La stessa sessione può avere FC da fasce diverse (polso ottico o fascia al braccio) con affidabilità diversa, specie nei movimenti di presa/braccia del calisthenics. (c) Un solo `hrCal` per tutto non riflette il dispositivo.
+- **Fonti:** Keytel 2005 (formula usata); revisione recente: kcal da wearable con errore medio >30%, FC ottica accettabile a intensità moderata (sintesi trovata, studio primario non aperto). Compendium of Physical Activities per MET lordo/netto.
+- **Proposta (due parti):**
+  - **D5a — dati e interfaccia, nessun cambio numerico:** elenco **Dispositivi FC** nelle Settings (preimpostati: *Amazfit (polso)* e *Polar armband (braccio)*; nome, tipo ottico-polso/fascia, e **«le kcal che riporta sono: lorde / nette / non so»**). **Dispositivo predefinito per sport** (es. Running → Polar armband; Calisthenics → Amazfit). Campo `dev` su ogni allenamento: preimpostato dallo sport, modificabile **prima** (sessione pianificata/Free workout) e **dopo** (editor sessione); per le attività importate da intervals.icu, riconoscimento dal nome del dispositivo registrato *se* l'attività lo riporta (da verificare sull'API; in caso contrario resta il predefinito dello sport). Mostrato come chip, un tap per cambiare.
+  - **D5b — uso nel calcolo (dopo la tua approvazione):** gerarchia per l'EAT: kcal misurate dal dispositivo scelto (convertite in nette se dichiarate lorde: `netto = lordo − BMR/1440·minuti`) > stima da FC con **calibrazione per dispositivo** (`hrCal[dev]` appresa dalle tue sessioni con kcal di riferimento, mostrata con numero di sessioni e dispersione; fino a N sessioni resta il fattore globale) > tasso appreso per sport/dispositivo > MET netto. La fascia pesa di più della stima ottica in sport con forte movimento delle braccia; l'incertezza è mostrata come intervallo, non come «precisione %».
+- **Vantaggi:** meno doppio conteggio, stime per sport più aderenti, un tap. **Rischi:** pochi dati per sport → calibrazione instabile → soglia minima di sessioni e fallback; l'orologio potrebbe non esporre quale fascia ha fornito la FC. **Storico:** D5a non cambia numeri; D5b si applica dalla data di attivazione (F-11). **Test:** device kcal lorde→nette; stessa sessione con due dispositivi non conta due volte; default per sport; persistenza e reload; intervals import con e senza nome dispositivo. **Rollback:** interruttore «usa il dispositivo nel calcolo» (D5b), D5a è additivo.
+- **Domande aperte per te:** (1) con la fascia Polar le kcal della corsa arrivano da dove (Polar, Amazfit con FC esterna, intervals.icu)? (2) Amazfit riporta kcal «attive» o «totali» per l'allenamento? (3) usi altri dispositivi (bici, nuoto)?
+
+### F-04 · NEAT/EAT, duplicati e semantica *watch* — D2 (Must)
+- **Attuale** [L]: NEAT = AEE − kcal allenamenti (active) | valore (neat) | totale − BMR − allenamenti (total); sotto 150 kcal usa la media dei 7 NEAT precedenti **che a loro volta possono essere medie** (si auto-rinforza).
+- **Problema** [R]: nessun test copre le tre modalità con più sessioni, pianificate+registrate, kcal grezze vs tagliate; in modalità *total* il BMR del modello sostituisce quello del dispositivo.
+- **Proposta:** test caratterizzanti per ogni modalità; contrassegno di provenienza (`neatSrc: orologio | media | default`) mostrato nel Check-in; la media 7 giorni usa solo NEAT *misurati*. Nessun cambio di formula senza test rosso riprodotto. **Test/rollback:** solo test e provenienza, nessun numero cambia.
+
+### F-05 · TEF — nessuna modifica
+10% del dispendio è un'approssimazione ragionevole della letteratura per dieta mista; legarlo all'introito reale cambierebbe poco (<~50 kcal in taglio) e introdurrebbe circolarità. **Proposta:** documentare come ipotesi, mostrare nel «Come calcolato»; eventuale variante *proteine-dipendente* tra i Could.
+
+### F-06 · Calibrazione del TDEE e 7000 kcal/kg — D8 (Must) **[D]**
+- **Attuale:** ogni giorno ricalcola il fattore con gli ultimi 14 giorni: `fattore = (intake medio − Δtrend·7000/14) / TDEE_modello`, Δ tra due medie mobili a 7 giorni, clamp 0,75–1,10 (asimmetrico), nessuna memoria né attenuazione.
+- **Esperimento riproducibile** (`tests/nutrition-baseline.test.js`, rumore gaussiano sul peso con generatore deterministico, introito costante pari al TDEE del modello): senza rumore il fattore è fermo; con deviazione standard 0,4 kg (ordinaria: acqua, sodio, glicogeno, intestino) il fattore spazia oltre **0,15** e il target giornaliero oltre **300 kcal** nella stessa persona con le stesse abitudini (osservati: fattore 0,87–1,10, target 2004–2539 in un profilo; 2138–2514 in un altro).
+- **Fonti:** specifica §3 punto 4 (finestre 3–4 settimane, calibrazione graduale), §4 (7000 kcal/kg non costante); la funzione `obsRate` dell'app già calcola una pendenza ai minimi quadrati con errore standard.
+- **Proposta:** (1) pendenza peso con regressione lineare su 21–28 giorni + errore standard, non differenza di due medie; (2) **requisiti di qualità**: copertura introito ≥70% e ≥8 pesate nella finestra; (3) **restringimento verso 1** proporzionale all'incertezza (`fattore = 1 + w·(grezzo − 1)`, w da errore standard); (4) variazione massima di target settimanale (es. ±100 kcal) e isteresi; (5) clamp simmetrico documentato; (6) mostrare **affidabilità** (alta/media/bassa) e intervallo; (7) costante energetica dichiarata come ipotesi (7000 vs 7700) e usata solo per la calibrazione, non per promettere variazioni di peso.
+- **Vantaggi:** target stabili, spiegabili. **Rischi:** reattività più lenta ai cambi reali → configurabile; più codice → funzioni pure + property test. **Storico:** vedi F-11. **Test:** proprietà (stabile con rumore, converge con deriva reale, indipendente dall'ordine, dati mancanti), confronto v1/v2 su dati sintetici e su un export anonimizzato **solo se me lo dai**. **Rollback:** `energy.calMode: "legacy" | "v2"`.
+
+### F-07 · Macro, `cmin`, soglie energetiche — D11 (Must, sicurezza) **[D]**
+- **Attuale:** `carboidrati = max(0, (target − 4P − 9G)/4)`; `cmin` si mostra nelle Settings ma **non viene mai usato**; il target = TDEE + kcal di fase **senza minimo**.
+- **Dimostrato** [D] (profilo 80 kg, TDEE 2310): fase Cut −500 → carboidrati 1,86 g/kg (sotto `cmin` 2,0) senza alcun avviso; Cut −1500 → target 810 kcal con proteine+grassi già a 1216 kcal e carboidrati 0 (macro che non sommano al target); Cut −2200 → **target 110 kcal**.
+- **Fonti:** specifica §4 (non imporre numeri impossibili: mostrare conflitto/range; nessun carbo minimo universale; grassi non ridotti per far quadrare); ACSM 2016 e ISSN come intervalli, non soglie.
+- **Proposta:** nessuna correzione silenziosa. (1) Target **con intervalli** per P/C/G e vincoli espliciti; (2) se non quadrano, mostrare **il conflitto** e non produrre kcal incoerenti; (3) soglia energetica di sicurezza *avvisante* (non diagnostica) sotto il bilancio di riposo stimato o sotto una soglia configurabile; (4) `cmin` diventa un avviso, non un vincolo duro. Nessun calcolo di EA/REDs automatico come diagnosi (IOC 2023). **Storico:** non retroattivo (solo avvisi). **Test:** i tre casi sopra diventano test del comportamento corretto. **Rollback:** avvisi disattivabili.
+
+### F-08 · Due modalità di target — nessun cambio
+Il default è *simple*. **Proposta:** spiegare nella UI quale modalità è attiva e che il modello energetico guida i target solo in *smart*; test che le due non si sommino (`targetsFor` + compensazione cheat meal).
+
+### F-09 · Provenienza e copertura dei dati — D6, D12 (Should/Must)
+- **Attuale** [L][D]: `blankFood` salva sale = 0 e l'import OFF usa `|| 0`: **dato assente = zero**; esiste conversione sodio→sale (×2,5) con euristica sull'unità; i riferimenti (sale 5 g, fibre ≥25 g, potassio 3500 mg) sono coerenti con OMS/EFSA.
+- **Problema:** i totali di sale/fibre/micro appaiono completi anche se la copertura è bassa.
+- **Proposta:** campo `null` = sconosciuto; copertura = % di alimenti del giorno con il dato; indicatori solo sopra una soglia di copertura; avvisi non medicalizzanti («dato incompleto»); etichetta con provenienza (etichetta / OFF / stima / manuale). Contratto unico `{quantity, unit, value, source, grossOrNet, coverage, confidence, version}` per le grandezze energetiche (D6). **Storico:** i valori 0 esistenti restano ma vengono marcati «non verificato» all'import. **Test:** tabella di sale/sodio, alimento senza sodio, copertura parziale. **Rollback:** campo opzionale.
+
+### F-10 · Carboidrati, proteine, idratazione, REDs — D13–D15 (Should/Could)
+Solo requisiti, nessuna modifica ora. Proteine su *range* in g/kg con distinzione peso/FFM; carboidrati periodizzati sul carico (non «4 g/kg minimi»); fueling durante l'esercizio come intervalli (30–60, fino a 90 g/h) con 120 g/h **mai** come default; idratazione/sodio durante lo sforzo come indicazione prudente, test personale del sudore; EA come indicatore orientativo. Fonti: ACSM 2016, ISSN, Morton 2026 e controparte, IOC 2023.
+
+### F-11 · Storico e versioni degli algoritmi — D17 (Must)
+- **Attuale** [L]: `energySeries` ricalcola tutto dai log e dalle impostazioni attuali. Cambiare formula, profilo o BMR cambia retroattivamente target, bilanci e grafici passati.
+- **Proposta:** `algoVersion` e data di attivazione: il nuovo algoritmo vale da quella data; i giorni passati restano calcolati con la versione con cui sono stati vissuti (o con calcolo legacy etichettato). Backup verificato (già in suite) e prova di ripristino prima di ogni migrazione; nessuna scrittura sui log reali.
+
+### F-12 · AEE senza digitare le kcal dell'orologio (NEAT + EAT calcolati) — D18 (Should, richiesta dell'utente 24/10)
+- **Richiesta:** calcolare meglio l'AEE senza dover inserire ogni giorno le kcal «attive» dello smartwatch; l'EAT arriva da intervals.icu, corretto in base al dispositivo (smartwatch o armband); il NEAT va stimato.
+- **Attuale** [L]: senza `L.watch` il NEAT è la media dei 7 NEAT precedenti oppure 350 kcal fisse; i passi (`L.steps`) sono già importati da intervals.icu (benessere) ma **non entrano in nessun calcolo energetico**. L'EAT per sessione c'è già (kcal registrate → km → FC → tassi appresi → MET netti).
+- **Proposta (deterministica e spiegabile):** `AEE = EAT_netto + NEAT`
+  1. **EAT_netto**, per ogni sessione, nell'ordine già descritto in F-03 (kcal del dispositivo scelto, convertite in nette se lorde; FC con calibrazione del dispositivo; km; tassi appresi; MET netto), con il dispositivo del campo `dev` (D5).
+  2. **NEAT = base + costo dei passi fuori dagli allenamenti.** `passi_fuori = max(0, passi_giorno − passi_negli_allenamenti)`, con i passi degli allenamenti ricavati da km/passo di falcata (corsa, camminata) o dalla cadenza se presente, così **non si conta due volte** ciò che è già nell'EAT. Costo netto per passo = `c_cammino × kg × falcata_m / 1000`, con falcata ≈ 0,415 × altezza (stima di letteratura per camminata, da verificare) e `c_cammino` ≈ 0,4–0,5 kcal/kg/km (il libro, pp. 264–266, lo dà come ordine di grandezza *non universale*). Ordine di grandezza per 80 kg, 1,80 m: ≈0,03 kcal/passo, quindi 8000 passi ≈ 240 kcal. La `base` rappresenta il movimento non misurato dai passi (postura, lavori) e parte da un valore prudente.
+  3. **Apprendimento dai tuoi dati, senza nuovi inserimenti:** nelle giornate passate in cui hai già scritto le kcal dell'orologio (`L.watch`) il programma può stimare `base` e `c_cammino` personali con una regressione robusta (passi fuori vs AEE − EAT_netto), richiedendo un minimo di giorni (es. ≥21) e mostrando n, pendenza, dispersione residua. Se i dati non bastano restano i valori di letteratura. Le kcal dell'orologio restano **facoltative** (calibrazione o confronto), non necessarie.
+  4. **Qualità e fallback:** passi mancanti → media NEAT *misurati* degli ultimi giorni, marcata come tale; giorno con orologio non indossato → provenienza «stimato». Il fattore di calibrazione del TDEE (F-06, v2) corregge comunque gli errori sistematici di tutta la catena.
+- **Vantaggi:** niente più digitazione quotidiana; il NEAT reagisce davvero ai giorni di più o meno movimento; nessun doppio conteggio con gli allenamenti. **Rischi:** i passi da polso sono imprecisi (movimento delle braccia, carrozzine/zaini, giorni senza orologio); con la fascia armband l'orologio potrebbe non essere indossato durante la corsa (i passi della corsa mancano, ma l'EAT li copre); i passi non misurano il lavoro «da fermo». Per questo l'incertezza è mostrata e il fattore empirico resta. **Storico:** vale dalla data di attivazione (F-11); le giornate con `L.watch` conservano il vecchio calcolo, scelta dell'utente se rielaborarle. **Test:** passi con e senza corsa (nessun doppio conteggio), falcata/altezza, regressione su dati sintetici con rumore, provenienza, retrocompatibilità con `watchMode`, reload/offline. **Rollback:** `energy.neatMode: "watch" | "steps"` (default invariato finché non lo scegli).
+- **Domande per te:** (1) i passi di Amazfit arrivano già a intervals.icu ogni giorno? (2) nei giorni con corsa in armband l'orologio resta al polso? (3) in quanti giorni passati hai inserito le kcal dell'orologio (servono per calibrare)?
+
+## 5. Test previsti (oltre a quelli già in `tests/nutrition-baseline.test.js`)
+1. Unit: tutte le formule con casi dalla specifica §5 più bordi (età 18/35/36/60, donna, BF noto/ignoto, altezza in metri).
+2. Property: calibrazione (rumore, deriva, dati mancanti, ordine), simmetria, monotonia.
+3. EAT: tre modalità orologio × sessioni {0,1,2,pianificata+registrata, duplicata, lorda/netta}; dispositivo per sport e per sessione.
+4. Nutrienti: sale/sodio, `null` vs 0, copertura, ricetta con 4 ingredienti e 2 porzioni, mezza confezione.
+5. E2E: scenario a 7 giorni già in suite + Check-in con vista «Come calcolato», reload, offline, sync simulata.
+6. UX: schermate su 3 viewport; scelta dispositivo in ≤2 tap.
+7. Sicurezza: nessun target estremo senza avviso; nessun supplemento automatico.
+
+## 6. Cosa chiedo di approvare
+1. **M7a (sicura, nessun numero cambia):** test numerici completi, provenienza dei dati, profilo incompleto come avviso (F-02), e **D5a** (dispositivi FC, default per sport, campo sulla sessione). Rollback: eliminare i campi opzionali.
+2. **M7b (cambia i numeri):** F-03 D5b, F-06 calibrazione v2, F-07 vincoli e avvisi, F-11 versioni. Solo dopo la tua approvazione specifica **di ciascuna formula**, con confronto prima/dopo sui dati sintetici.
+3. **D18 (AEE senza kcal orologio)** dentro M7b, dopo F-03 e F-06, con interruttore `neatMode`.
+4. **M7c–M7e:** trasparenza «Come calcolato» (D3), BMR opzionali (F-01), micronutrienti/idratazione (F-09/F-10).
+5. Risposte alle domande aperte di F-03 e F-12 e la tua scelta se tenere Mifflin come default (consigliato fino a un confronto sui tuoi dati).

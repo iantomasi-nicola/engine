@@ -14,7 +14,11 @@ Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossi
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
 | M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | – |
-| M7 Nutrizione scientifica | D1–D4 (dopo approvazione proposta e libro) | XL | Alto | Proposta in `NUTRITION_PROPOSAL.md` |
+| M7a Nutrizione: base sicura (nessun numero cambia) | D16 (fatto), D9, D6 (provenienza), **D5a** dispositivi FC per sport | M | Basso | Audit presentato, **in attesa di approvazione** |
+| M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
+| M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
+| M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
+| M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15 | L | Medio | In attesa |
 | M8 AI: stime, categorie, import ricette | A6, A7, C3, H10 | L | Medio | – |
 | M9 Pianificazione AI e Food Coach | E1–E5, C7 | XL | Alto | – |
 | M10 Meteo e preparazione workout | F2, F3, F4 | M | Basso | – |
@@ -63,3 +67,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M1 passo 3: finestre della lista (This week da oggi, Next week, N giorni, Custom) persistenti; elenco richiudibile "covered by what's at home" con parziali, data di esaurimento e pasti; verificato su telefono (31 test verdi) | vedi `git log` |
 | 2026-10-24 | M1 passo 4: scenario a 7 giorni (ENG-03) con invariante Σ pianificato = coperto + da comprare dopo ogni passo, reload, offline e sync simulata | vedi `git log` |
 | 2026-10-24 | M1: build di root rigenerata sul branch (commit dedicato, `release-check` verde: 33 test + smoke + build identica al sorgente). Nessuna pubblicazione, `main` invariato | vedi `git log` |
+| 2026-10-24 | Nutrizione: ricevuta e copiata `docs/NUTRITION_SPEC.md`; audit dettagliato `docs/NUTRITION_AUDIT.md` (fonti verificate/non verificate, matrice EN-01…10, F-01…F-12); suite di baseline `tests/nutrition-baseline.test.js` (9 test, fotografano i difetti dimostrati, nessuna formula modificata); nuovi requisiti D5–D18 (dispositivo FC per sport, AEE senza kcal orologio) | vedi `git log` |
