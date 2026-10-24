@@ -194,7 +194,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .td-gear>span{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline;font-size:13.5px;line-height:1.35}
 .td-gear i{font-style:normal;color:var(--muted)}.td-gear i:not(:last-child)::after{content:" ·"}.td-gear i.ok{text-decoration:line-through;opacity:.6}
 .td-gear.all>span b{color:var(--good)}
-.gear-l{display:flex;flex-direction:column;gap:2px}
+.gear-l{display:flex;flex-direction:column;gap:2px}.gear-r{display:flex;align-items:center;gap:6px}.gear-r .gear-i{flex:1;min-width:0}.gear-no{font-size:12.5px;white-space:nowrap;flex:none;padding:6px 4px}
 .gear-i{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 6px;border-radius:14px;width:100%}
 .gear-i:hover{background:color-mix(in srgb,var(--md-on-surface,#000) 5%,transparent)}
 .gear-i b{display:block;font-weight:600}.gear-i small{display:block;color:var(--muted);font-size:12px}
@@ -243,11 +243,12 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .wx-t::-webkit-calendar-picker-indicator{display:none}
 .wx-v{color:var(--muted)}.wx-v b{color:var(--text)}
 .wx-row>small{flex:1 1 100%;color:var(--text);font-size:12.5px}
-.wx-bars{position:relative;flex:1 1 100%;height:22px;margin-top:4px}
-.wx-bars i{position:absolute;bottom:0;border-radius:2px;background:var(--line,rgba(127,127,127,.25));}
-.wx-bars i.wet{background:color-mix(in srgb,var(--carb) 55%,transparent)}
-.wx-bars i.on{background:var(--muted)}.wx-bars i.on.wet{background:var(--carb)}
-.wx-ax{flex:1 1 100%;display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:-2px}
+.wx-row>.wx-s{flex:1 1 100%;color:var(--text);font-size:12.5px}
+.wx-chart{position:relative;flex:1 1 100%;height:44px;margin-top:6px}
+.wx-band{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--text) 8%,transparent);border:1px dashed color-mix(in srgb,var(--text) 28%,transparent)}
+.wx-c{position:absolute;top:0;bottom:0}.wx-c i{position:absolute;bottom:0;border-radius:3px 3px 0 0;left:16%;right:16%}.wx-c i.p{background:color-mix(in srgb,var(--carb) 24%,transparent)}.wx-c i.m{background:var(--carb);left:32%;right:32%}
+.wx-ax{position:relative;flex:1 1 100%;height:13px;font-size:10.5px;color:var(--faint)}.wx-ax span{position:absolute;transform:translateX(-50%)}
+.wx-lg{flex:1 1 100%;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--faint)}.wx-lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}.wx-lg i.p{background:color-mix(in srgb,var(--carb) 30%,transparent)}.wx-lg i.m{background:var(--carb)}.wx-lg i.b{border:1px dashed color-mix(in srgb,var(--text) 40%,transparent)}
 .rpe-g{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}.rpe-g .chip{min-width:0;padding:0;justify-content:center}
 .shoe-b{display:block;height:4px;border-radius:2px;background:var(--v-fill,var(--surface2));margin-top:6px;overflow:hidden;max-width:220px}.shoe-b i{display:block;height:100%;border-radius:2px}
 .zb{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-top:10px}.zb i{display:block;height:100%;min-width:3px}
@@ -1400,11 +1401,26 @@ body.live-mode .main{padding-bottom:120px!important}
 .sg-row{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;text-align:left;width:100%;padding:12px 0;border-top:1px solid var(--line)}.sg-row:first-of-type{border-top:0}
 .sg-chk{width:24px;height:24px;border-radius:50%;border:1.8px solid var(--surface-3);display:grid;place-items:center;color:transparent;margin-top:1px}.sg-chk .ic{width:15px;height:15px}
 .sg-row[aria-pressed=true] .sg-chk{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-.sg-item{border-top:1px solid var(--line)}.sg-item:first-of-type{border-top:0}.sg-item .sg-row{border-top:0;padding-bottom:6px}.sg-adj{display:flex;align-items:center;gap:6px;padding:0 0 10px 38px}.sg-adj .inp{width:74px;min-height:36px;text-align:center}.sg-adj span{color:var(--muted);font-size:13px}.sg-row.tip{cursor:default}.sg-chk.tipi{border:0;color:var(--muted)}.sg-t b{display:block;font-size:15px;font-weight:600}.sg-t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}.sg-d{display:block;font-size:14px;margin-top:2px}.sg-d strong{font-weight:650}
+.sg-item{border-top:1px solid var(--line)}.sg-item:first-of-type{border-top:0}.sg-item .sg-row{border-top:0;padding-bottom:6px}.sg-adj{display:flex;align-items:center;gap:6px;padding:0 0 10px 38px}.sg-adj .inp{width:74px;min-height:36px;text-align:center}.sg-adj span{color:var(--muted);font-size:13px}.sg-row.tip{cursor:default}.sg-chk.tipi{border:0;color:var(--muted)}.ring-f{display:inline-flex;align-items:center;gap:6px}.ring-f .inp{width:110px;text-align:center}.sg-t b{display:block;font-size:15px;font-weight:600}.sg-t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}.sg-d{display:block;font-size:14px;margin-top:2px}.sg-d strong{font-weight:650}
 .sg-tag{font-style:normal;font-size:11px;font-weight:650;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:4px;vertical-align:1px}
 .sg-done{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:8px 0}.sg-done .ic{width:16px;height:16px;flex:none;color:var(--good)}.sg-done span{flex:1;min-width:0}
 .sg-same{border-top:1px solid var(--line);padding-top:6px}.sg-same>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}.sg-s{padding:6px 0}.sg-s b{display:block;font-size:14px;font-weight:600}.sg-s small{font-size:12.5px;color:var(--muted)}
-.sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}.pv-ready{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}.pv-ready i{width:9px;height:9px;border-radius:50%;background:var(--faint)}.pv-ready.green i{background:var(--good)}.pv-ready.yellow i{background:var(--warn)}.pv-ready.red i{background:var(--bad)}
+.sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}/* Ready to start */
+.pv-hero{gap:12px}
+.pv-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.pv-tiles>div{background:var(--surface-2);border-radius:14px;padding:10px 6px 8px;text-align:center;min-width:0}
+.pv-tiles b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.pv-tiles b i{font-style:normal;font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}.pv-tiles small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.pv-rd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--surface-2);font-size:14px}.pv-rd>i{width:10px;height:10px;border-radius:50%;background:var(--faint);margin-top:5px;flex:none}.pv-rd.green>i{background:var(--good)}.pv-rd.yellow>i{background:var(--warn)}.pv-rd.red>i{background:var(--bad)}.pv-rd small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.sg,.gear-pv{gap:8px}.pv-sub{margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
+.pv-cd>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-size:14px;min-height:28px}.pv-cd>summary b{font-weight:600}.pv-cd[open]>summary{margin-bottom:8px}
+.pv-s.pv-x{display:block;padding:0}.pv-e2{padding:7px 0;border-top:1px solid var(--line)}.pv-s.pv-x>.pv-e2:first-child{border-top:0}
+.pv-e2h{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 8px}.pv-e2h b{font-size:14.5px;font-weight:600}.pv-tg{font-size:13px;color:var(--muted)}.pv-up{margin-left:auto;font-size:12px;font-weight:650;color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent);padding:1px 8px;border-radius:99px;white-space:nowrap}
+.pv-last{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.pr-ov{display:flex;flex-direction:column;gap:8px}.pr-bar{display:flex;gap:2px;height:22px;border-radius:8px;overflow:hidden}.pr-bar i,.pr-ph>i{background:var(--surface-3);display:block;min-width:2px}
+.pr-bar i.z1,.pr-ph>i.z1{background:color-mix(in srgb,var(--accent) 25%,var(--surface-2))}.pr-bar i.z2,.pr-ph>i.z2{background:color-mix(in srgb,var(--accent) 45%,var(--surface-2))}.pr-bar i.z3,.pr-ph>i.z3{background:color-mix(in srgb,var(--accent) 65%,var(--surface-2))}.pr-bar i.z4,.pr-ph>i.z4{background:var(--accent)}.pr-bar i.z5,.pr-ph>i.z5{background:color-mix(in srgb,var(--accent) 80%,var(--bad))}
+.pr-ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-4px}
+.pr-ph{display:grid;grid-template-columns:6px minmax(0,1fr) auto;gap:10px;align-items:stretch;padding:4px 0;border-top:1px solid var(--line)}.pr-ph>i{border-radius:3px}.pr-n b{display:block;font-size:14px;font-weight:600}.pr-n small{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}.pr-t{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pr-wx{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:8px 10px;border-radius:12px;background:var(--surface-2)}.pr-wx .wx-ic{margin-top:1px}
+.lv-dock .btn small.dk-s{font-size:13px;font-weight:400;opacity:.8;margin-left:8px}.icu-full{font-size:12.5px}.icu-full .link{display:inline;min-height:0;padding:0}
 .pv-meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13.5px;color:var(--muted)}.pv-meta>span{display:inline-flex;align-items:center;gap:5px}
 .pv-b{border-radius:12px!important}
 .pv-k.k-emom,.pv-k.k-amrap,.pv-k.k-tabata,.pv-k.k-fortime{background:var(--accent)!important;color:var(--accent-ink)!important}
@@ -3985,7 +4001,7 @@ const syncPill = () => `<span class="sync" data-s="${Sync.state}"><i></i><span>$
 const colorVar = c => `var(--${COLOR_TOKENS.includes(c) ? c : "accent"})`;
 
 /* ================= navigation ================= */
-const TABS = [["today", "Today", "home"], ["train", "Train", "fitness"], ["plan", "Fuel", "plate"], ["progress", "Progress", "chart"], ["dash", "Dashboard", "dash"]];
+const TABS = [["today", "Today", "home"], ["plan", "Fuel", "plate"], ["train", "Train", "fitness"], ["progress", "Progress", "chart"], ["dash", "Dashboard", "dash"]];
 const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
 const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const E = k === "pantry" ? expiryList() : null, xp = E ? E.expired.length + E.soon.length : 0, why = E ? [E.expired.length ? `${E.expired.length} expired` : "", E.soon.length ? `${E.soon.length} to use soon` : ""].filter(Boolean).join(" · ") : ""; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}${xp ? ` title="${why}"` : ""}><span class="tab-l">${l}${xp ? `<span class="tab-dot${E.expired.length ? "" : " soon"}" role="img" aria-label="${why}">${xp}</span>` : ""}</span></button>`; }).join("")}</nav>`;
 function navHTML(side) {
@@ -7775,6 +7791,7 @@ function lastFor(e, date) {
 /* ---------- progression engine: final-set RIR drives the next session ---------- */
 const exTarget = e => e.scheme ? e.scheme.reduce((a, b) => a + b, 0) : e.range ? e.range[1] : e.reps || null;
 /* the smallest weight you add: Settings › Live workouts › Load progression (2 kg until you change it) */
+const ringStep = () => { const v = Math.round((+FIT().player?.ringStep) * 4) / 4; return v > 0 ? v : 1; };
 const loadStep = () => { const v = +FIT().player?.loadStep; return v > 0 ? v : 2; };
 function decideNext(e, sets, loadNow) {
   if (!sets?.length) return null;
@@ -8101,8 +8118,9 @@ function editScript(script, ed) {
     if (ed.type === "load") { const re = new RegExp(`(${nm}[^+@]*?)([+@]\\s*)(\\d+(?:[.,]\\d+)?)(\\s*kg)`, "i");
       if (re.test(line)) return line.replace(re, (m, pre, sg, n, kg) => { if (+n.replace(",", ".") === ed.to) return m; hit++; return pre + sg + fmtKg(ed.to) + kg; });
       if (ed.to > 0) { hit++; return line.replace(new RegExp(`(${nm})`, "i"), `$1 +${fmtKg(ed.to)}kg`); } return line; }
-    if (ed.type === "swap") return line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to; });
-    if (ed.type === "ring") { const re = /\b(rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, txt = `rings ${ed.n}${ed.unit === "cm" ? "cm" : " " + ed.unit}`;
+    if (ed.type === "swap") { let l = line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to; }); if (ed.dropRing) l = l.replace(/\s*\b(?:rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, ""); return l; }
+    if (ed.type === "noload") { const re = /\s*[+@]\s*\d+(?:[.,]\d+)?\s*kg/i; if (!re.test(line)) return line; hit++; return line.replace(re, ""); }
+    if (ed.type === "ring") { const re = /\b(rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, txt = `rings ${fmtRing(ed.n)}${ed.unit === "cm" ? "cm" : " " + ed.unit}`;
       hit++; return re.test(line) ? line.replace(re, txt) : line.replace(/\s*$/, " " + txt); }
     return line;
   }).join("\n");
@@ -8110,15 +8128,44 @@ function editScript(script, ed) {
 }
 /* rings: when an exercise on rings was too easy (reps in hand) the rings go lower, when reps were missed they go higher. The strap length in the script (or from last time) moves one notch;
    without a length there is nothing to write, so it stays a tip. Only rows and push-ups, where the height changes the difficulty. */
+const fmtRing = n => { const v = Math.round(n * 4) / 4; return String(v); };
 const parseRing = t => { const m = String(t || "").match(/(\d+(?:[.,]\d+)?)\s*(cm|holes?|fori|foro)?/i); return m ? { n: +m[1].replace(",", "."), unit: (m[2] || "cm").toLowerCase().replace(/^holes$/, "hole").replace(/^fori$|^foro$/, "hole") } : null; };
 function ringAdvice(e, p, L) {
   if (!/\b(rows?|rematore|push-?ups?|piegamenti|flessioni)\b/i.test(e.name) || !(/ring|anell/i.test(e.name) || e.ring || p?.last?.ring)) return null;
   const easy = p && (p.kind === "load" || p.kind === "reps"), hard = p && p.kind === "none" && /^Missed/.test(p.text); if (!easy && !hard) return null;
-  const cur = parseRing(e.ring || p.last?.ring), notch = cur && cur.unit === "hole" ? 1 : 5, dir = easy ? 1 : -1, tip = easy ? "lower the rings: harder" : "raise the rings: easier", why = easy ? "You had reps in hand" : "Reps were missed last time";
+  const cur = parseRing(e.ring || p.last?.ring), notch = ringStep(), dir = easy ? 1 : -1, tip = easy ? "lower the rings: harder" : "raise the rings: easier", why = easy ? "You had reps in hand" : "Reps were missed last time";
   if (!cur) return { name: e.name, from: "", to: tip.charAt(0).toUpperCase() + tip.slice(1), why, last: "", edit: null };
-  const n = Math.max(1, cur.n + dir * notch), ed = { type: "ring", name: e.name, n, unit: cur.unit };
-  return { from: `strap ${cur.n} ${cur.unit}`, to: `${n} ${cur.unit} · ${tip}`, why, last: "", edit: ed };
+  const n = Math.max(0.25, Math.round((cur.n + dir * notch) * 4) / 4), ed = { type: "ring", name: e.name, n, unit: cur.unit };
+  return { from: `strap ${fmtRing(cur.n)} ${cur.unit}`, to: `${fmtRing(n)} ${cur.unit} · ${tip}`, why, last: "", edit: ed };
 }
+/* forgot something at home: each exercise that needs it becomes its closest variant without it (a table, not a guess); a belt just loses the weight */
+const GEAR_ALT = {
+  rings: [[/ring\s*rows?|rematore.*anell/i, "Inverted row"], [/ring\s*push[- ]?ups?|piegamenti.*anell/i, "Push-up"], [/ring\s*dips?/i, "Dip"], [/ring\s*muscle[- ]?ups?/i, "Pull-up"], [/ring\s*(pull[- ]?ups?|chin[- ]?ups?)/i, null], [/ring\s*(support|hold)/i, "Hollow hold"], [/ring\s*(fly|flies)/i, "Push-up"], [/ring\s*(?:l[- ]?sit)/i, "L-sit"]],
+  bands: [[/band(?:ed)?[\s-]*assisted\s+(.+)/i, null], [/band(?:ed)?\s+pull[- ]?apart/i, "Reverse fly"]],
+  pbars: [[/parallettes?\s+push[- ]?ups?/i, "Push-up"], [/parallettes?\s+(.+)/i, null]],
+  rope: [[/double[- ]?unders?|single[- ]?unders?|jump(?:ing)?\s*rope|skipping/i, "Jumping jacks"]],
+  kb: [[/(?:kb|kettlebell)\s*swings?/i, "Jump squat"], [/goblet\s*squat/i, "Squat"], [/(?:kb|kettlebell)\s+(.+)/i, null]],
+  db: [[/(?:db|dumbbell)\s*bench\s*press/i, "Push-up"], [/(?:db|dumbbell)\s+(.+)/i, null]],
+  vest: [[/(?:weighted|vest)\s+(.+)/i, null]],
+  wheel: [[/ab\s*wheel.*|rollouts?/i, "Plank"]],
+  strap: [[/nordic.*/i, "Glute bridge"]]
+};
+function gearMissEdits(g, names) {
+  const edits = [], free = [];
+  for (const n of names) {
+    if (g.id === "belt") { edits.push({ type: "noload", name: n, why: "no belt" }); continue; }
+    let to = null;
+    for (const [rx, r] of GEAR_ALT[g.id] || []) { const m = n.match(rx); if (m) { to = r === null ? (m[1] || n.replace(/\b(rings?|bands?|banded|parallettes?|kettlebell|kb|dumbbell|db|weighted|vest)\s+/i, "")).replace(/^./, c => c.toUpperCase()) : r; break; } }
+    if (to && normEx(to) !== normEx(n)) edits.push({ type: "swap", name: n, to, dropRing: g.id === "rings" }); else free.push(n);
+  }
+  return { edits, free };
+}
+ACT["gear-miss"] = el => { const L = LV(); if (!L || L.phase !== "preview") return; const g = gearList(L.script, L.date).find(x => x.id === el.dataset.id); if (!g) return;
+  const { edits, free } = gearMissEdits(g, g.why), old = L.script; let sc = old, done = [];
+  for (const ed of edits) { const r = editScript(sc, ed); if (r) { sc = r; done.push(ed.type === "swap" ? `${ed.name} → ${ed.to}` : `${ed.name} without weight`); } else free.push(ed.name); }
+  if (!done.length) { toast(`No variant of ${free.join(", ") || "it"} without ${g.label.toLowerCase().replace(/ \+ plates.*/, "")}: change it with Edit`); return; }
+  if (!applyEdit(sc)) return; const sg = sgOn(L); sg.done = [...(sg.done || []), `No ${g.label.toLowerCase().replace(/ \+ plates.*/, "")}: ${done.join(", ")}`]; sg.undo = old; saveWK(); scheduleRender();
+  toast(`${done.join(" · ")}${free.length ? ` · no variant for ${free.join(", ")}` : ""}`, () => { const L2 = LV(); if (!L2) return; applyEdit(old); const g2 = sgOn(L2); g2.done = []; g2.undo = null; saveWK(); scheduleRender(); }); };
 function sgBuild(L) {
   const items = [], same = [], seen = new Set(), st = L.date === todayISO() ? loadState() : null, soft = st && (st.ready === "yellow" || st.ready === "red");
   for (const t of L.tasks) if (t.t === "set") for (const e of t.exs) { const k = normEx(e.name); if (seen.has(k)) continue; seen.add(k);
@@ -8159,25 +8206,38 @@ Reply with only JSON: {"changes":[{"change":"...", "exercise":"...", "block":"..
       if (!ed || !editScript(L.script, ed)) continue; const id = "ai:" + (g.ai.length + n); n++; g.ai.push({ id, kind: "ai", name, from: c.change === "swap" ? name : "", to, why, last: "", edit: ed }); }
     if (!n) g.err = "The AI found nothing worth changing."; } catch (e) { g.err = sampleErr(e); }
   g.busy = false; saveWK(); scheduleRender(); };
+/* the page before a workout: what it is and how you are today, what to change, what to bring, and the workout itself with how you did last time */
+function pvPlan(L, B) {
+  const P = parseScript(L.script); if (!P.blocks.length) return `<div class="faint">Nothing to run in this script: use Edit.</div>`;
+  const sug = new Map(B.items.filter(i => i.edit && (i.kind === "prog" || i.kind === "ai")).map(i => [normEx(i.name), i]));
+  return P.blocks.map((b, bi) => `<div class="pv-b"><div class="pv-bh"><span class="pv-k k-${b.kind}">${KIND_LABEL[b.kind] || ""}</span><b>${esc(b.title || (b.kind === "rest" ? "Rest" : `Block ${bi + 1}`))}</b><span class="faint">${b.kind === "sets" && b.rounds > 1 ? `${b.rounds} rounds` : b.dur ? fmtDurShort(b.dur) : ""}${b.cluster ? " · cluster" : ""}${b.kind === "emom" && b.every !== 60 ? ` · every ${fmtDurShort(b.every)}` : ""}</span></div>
+    ${b.kind === "rest" || b.kind === "timer" ? "" : b.steps.map((s, i) => s.rest ? `<div class="pv-s"><span class="faint">Rest ${fmtDurShort(s.dur || 0)}${b.kind === "sets" ? " after each round" : ""}</span></div>` : `<div class="pv-s pv-x">${(s.exs || []).map(e => { const last = lastFor(e, L.date), sg = sug.get(normEx(e.name)), lt = last ? lastText(last) : "";
+      return `<div class="pv-e2"><div class="pv-e2h"><b>${esc(e.name)}</b><span class="pv-tg">${esc(targetText(e))}${e.note ? ` · ${esc(e.note)}` : ""}</span>${sg ? `<span class="pv-up" title="${esc(sg.why)}">↑ ${esc(sg.to)}</span>` : ""}</div>${lt ? `<small class="pv-last">Last ${fmtDM(last.date)}: ${esc(lt)}${last.ring ? ` · rings ${esc(last.ring)}` : ""}</small>` : `<small class="pv-last faint">First time: today is your baseline</small>`}</div>`; }).join("")}${b.kind === "emom" ? ` <small class="faint">min ${i + 1}${b.steps.length > 1 ? ", " + (i + 1 + b.steps.length) + "…" : "…"}</small>` : ""}</div>`).join("")}</div>`).join("");
+}
 function livePreview(L) {
-  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), n = B.items.filter(i => i.edit && g.on[i.id]).length, st = B.st;
-  const ready = st && st.ready ? `<span class="pv-ready ${st.ready}"><i></i>${st.ready === "green" ? "Ready" : st.ready === "yellow" ? "Reduced" : "Low"}${st.ready !== "green" && readyWhy(st) ? ` · ${esc(readyWhy(st))}` : ""}</span>` : "";
+  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), st = B.st, G = L.free ? [] : gearList(L.script, L.date).filter(x => !x.always || true);
+  const nSets = tasks.filter(t => t.t === "set").length, nBlocks = parseScript(L.script).blocks.filter(b => b.kind !== "note").length, n = B.items.filter(i => i.edit && g.on[i.id]).length, pick = B.items.filter(i => i.edit);
+  const rd = st && st.ready ? { green: ["Ready", "Everything looks good: follow the plan."], yellow: ["Reduced", "Keep the first sets easy and stop early if it feels off."], red: ["Low", "Think about a lighter day, below, or about resting."] }[st.ready] : null;
+  const why = st && st.ready && st.ready !== "green" ? readyWhy(st) : "";
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
-  h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
-    <div class="pv-meta"><span>${ic("timer", "sm")}≈ ${est} min</span><span>${tasks.filter(t => t.t === "set").length} sets</span>${P ? `<span class="chip-s">${esc(P.name)} · week ${L.week}/${P.weeks}${isDeload(P, L.week) ? " · deload" : ""}</span>` : ""}${ready}</div>
+  h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-hero"><h1 class="lv-h1">${esc(L.name)}</h1>
+    <div class="pv-tiles"><div><b>≈ ${est}<i>min</i></b><small>time</small></div><div><b>${nSets}</b><small>sets</small></div><div><b>${nBlocks}</b><small>${nBlocks === 1 ? "block" : "blocks"}</small></div>${P ? `<div><b>${L.week}<i>/${P.weeks}</i></b><small>${isDeload(P, L.week) ? "deload week" : "program week"}</small></div>` : ""}</div>
+    ${rd ? `<div class="pv-rd ${st.ready}"><i></i><span><b>${rd[0]}</b>${why ? ` · ${esc(why)}` : ""}<small>${rd[1]}</small></span></div>` : ""}
     <div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div>${P ? `<div class="faint" style="font-size:12.5px">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
-  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Suggested changes${B.items.length ? ` · ${B.items.length}` : ""}</span>${B.items.filter(i => i.edit).length > 1 ? `<button class="link" data-act="sg-all">${B.items.filter(i => i.edit).every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>${recapNote(L)}
-    ${B.items.length ? B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
-        const adj = i.adj && i.edit?.type === "load" ? `<span class="sg-adj" role="group" aria-label="Adjust the load of ${esc(i.name)}"><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="-1" aria-label="Less weight">${ic("minus", "sm")}</button><input class="inp sm" inputmode="decimal" value="${fmtKg(i.edit.to)}" data-chg="sg-load" data-id="${esc(i.id)}" aria-label="Load in kg"><span>kg</span><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="1" aria-label="More weight">${ic("plus", "sm")}</button></span>` : "";
-        return i.edit ? `<div class="sg-item"><button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span>${body}</button>${adj}</div>` : `<div class="sg-row tip"><span class="sg-chk tipi">${ic("trend", "sm")}</span>${body}</div>`; }).join("")
-      : g.done.length ? "" : `<p class="muted" style="margin:0;font-size:14px">${B.same.length ? "Nothing to change: your last sessions say repeat." : "First time with these exercises: today is your baseline. Log the RIR of each final set and next time you get a suggestion."}</p>`}
-    ${g.done.length ? `<div class="sg-done">${ic("check", "sm")}<span>Written in: ${esc(g.done.join(", "))}</span>${g.undo ? `<button class="link" data-act="sg-undo">Undo</button>` : ""}</div>` : ""}
+  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Tune today's workout${B.items.length ? ` · ${B.items.length}` : ""}</span>${pick.length > 1 ? `<button class="link" data-act="sg-all">${pick.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>
+    <p class="pv-sub">${B.items.length ? "Suggestions from how you did last time and how you feel today. Tick the ones you want and press Apply: they are written into this workout." : "Compared with your last sessions nothing needs changing."}</p>
+    ${recapNote(L)}
+    ${B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
+      const adj = i.adj && i.edit?.type === "load" ? `<span class="sg-adj" role="group" aria-label="Adjust the load of ${esc(i.name)}"><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="-1" aria-label="Less weight">${ic("minus", "sm")}</button><input class="inp sm" inputmode="decimal" value="${fmtKg(i.edit.to)}" data-chg="sg-load" data-id="${esc(i.id)}" aria-label="Load in kg"><span>kg</span><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="1" aria-label="More weight">${ic("plus", "sm")}</button><small>no plates for it? adjust</small></span>` : "";
+      return i.edit ? `<div class="sg-item"><button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span>${body}</button>${adj}</div>` : `<div class="sg-row tip"><span class="sg-chk tipi">${ic("trend", "sm")}</span>${body}</div>`; }).join("")}
+    ${g.done.length ? `<div class="sg-done">${ic("check", "sm")}<span>Written in: ${esc(g.done.join(" · "))}</span>${g.undo ? `<button class="link" data-act="sg-undo">Undo</button>` : ""}</div>` : ""}
     ${B.same.length ? `<details class="sg-same"><summary>Staying the same · ${B.same.length}</summary>${B.same.map(i => `<div class="sg-s"><b>${esc(i.name)}</b><small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></div>`).join("")}</details>` : ""}
     ${g.err ? `<div class="note">${esc(g.err)}</div>` : ""}
-    <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${B.items.some(i => i.edit) ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
-  h += `<section class="lv-card">${prepChips()}</section>`;
-  const dk = `<div class="lv-dock"><button class="btn tonal" data-act="lv-edit">${ic("edit", "sm")}Edit</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start workout</button></div>`;
-  h += `${dk}</div><aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">Workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${scriptPreview(L.script)}</section></aside></div>`;
+    <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${pick.length ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
+  if (G.length) h += `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Before you start · what to bring</span><p class="pv-sub">Forgot something? «Don't have it» swaps the exercises that need it for the closest variant.</p>${gearChecklist(G, L.date, true)}</section>`;
+  h += `<section class="lv-card"><details class="pv-cd"><summary><span>Countdown before timed sets</span><b>${PLAYER().prep ? PLAYER().prep + " s" : "Off"}</b></summary>${prepChips()}</details></section>`;
+  const dk = `<div class="lv-dock"><button class="btn tonal" data-act="lv-edit">${ic("edit", "sm")}Edit</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start workout<small class="dk-s">≈ ${est} min</small></button></div>`;
+  h += `${dk}</div><aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">The workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${pvPlan(L, B)}</section></aside></div>`;
   return h;
 }
 ACT["sg-undo"] = () => { const L = LV(), g = L && sgOn(L); if (!g?.undo) return; applyEdit(g.undo); g.undo = null; g.done = []; g.lightDone = false; saveWK(); scheduleRender(); };
@@ -8244,9 +8304,9 @@ function liveTask(L, t, r) {
       b += `<div class="lv-row"><span class="lab">Load</span><span class="stp"><button data-act="lv-load" data-d="${-st}" data-x="${xi}" aria-label="Less">${ic("minus", "sm")}</button><span class="stp-in"><input class="inp" inputmode="decimal" value="${v === 0 || v === "" ? "" : esc(String(v))}" placeholder="BW" data-chg="lv-load-set" data-x="${xi}" aria-label="Load in kg"><small>kg</small></span><button data-act="lv-load" data-d="${st}" data-x="${xi}" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }
     const rirRow = `<div class="lv-row rir-row ${fin ? "final" : ""}"><span class="lab">${fin ? "RIR" : "RIR"}</span><span class="rir">${[0, 1, 2, 3, 4, 5].map(v => `<button data-act="lv-rir" data-x="${xi}" data-v="${v}" aria-pressed="${x.rir === v}" aria-label="${v} reps in reserve">${v}${v === 5 ? "+" : ""}</button>`).join("")}</span></div>`;
     if (!(e.timed || e.holdScheme)) b += fin ? rirRow + `<div class="faint lv-hint left">Reps in reserve on this final set, saved for planning your next session.</div>` : "";
-    if (isRing) b += `<div class="lv-row"><span class="lab">Rings</span><input class="inp sm" value="${esc(x.ring || "")}" placeholder="length, e.g. 45 cm or hole 7" data-chg="lv-ring" data-x="${xi}" aria-label="Ring length"></div>`;
+    if (isRing) b += `<div class="lv-row"><span class="lab">Rings</span>${ringField(x, xi, "length, e.g. 45 cm or hole 7")}</div>`;
     b += `<details class="lv-more" ${note ? "open" : ""}><summary>${ic("edit", "sm")}${note ? "Note" : "Note"}${!fin && !(e.timed || e.holdScheme) ? " · RIR" : ""}${!isRing ? " · rings" : ""}</summary>
-      ${!fin && !(e.timed || e.holdScheme) ? rirRow : ""}${!isRing ? `<div class="lv-row"><span class="lab">Rings</span><input class="inp sm" value="${esc(x.ring || "")}" placeholder="optional" data-chg="lv-ring" data-x="${xi}" aria-label="Ring length"></div>` : ""}
+      ${!fin && !(e.timed || e.holdScheme) ? rirRow : ""}${!isRing ? `<div class="lv-row"><span class="lab">Rings</span>${ringField(x, xi, "optional")}</div>` : ""}
       <textarea class="inp" rows="2" placeholder="Saved for next time: grip, setup, cues…" data-chg="lv-note" data-n="${esc(normEx(e.name))}" aria-label="Exercise note">${esc(note || "")}</textarea></details></div>`;
   });
   if (!primary) primary = `<button class="btn primary grow" data-act="lv-set-done">${ic("check", "sm")}${fin && t.rounds > 1 ? "Done · final set" : "Done set"}</button>`;
@@ -8368,6 +8428,10 @@ ACT["lv-rep"] = el => { const [L, t, r] = LR(); const x = r.ex[+el.dataset.x]; c
 CHG["lv-load-set"] = (v, el) => { const [L, t, r] = LR(); const x = r?.ex?.[+el.dataset.x]; if (!x) return; const n = String(v).trim() === "" ? 0 : num(v); if (!isFinite(n)) return; x.load = Math.round(Math.max(-60, Math.min(500, n)) * 100) / 100; haptic(8); saveWK(); scheduleRender(); };
 ACT["lv-load"] = el => { const [L, t, r] = LR(); const x = r.ex[+el.dataset.x]; x.load = Math.round(Math.max(-60, (+x.load || 0) + +el.dataset.d) * 100) / 100; haptic(10); saveWK(); scheduleRender(); };
 ACT["lv-rir"] = el => { const [L, t, r] = LR(); const x = r.ex[+el.dataset.x], v = +el.dataset.v; x.rir = x.rir === v ? null : v; haptic(10); saveWK(); scheduleRender(); };
+/* the strap is marked in units split in four: the field moves a quarter at a time and keeps what you wrote around the number */
+const ringField = (x, xi, ph) => `<span class="ring-f"><button class="icon-btn sm" data-act="lv-ring-step" data-x="${xi}" data-d="-1" aria-label="A quarter shorter">${ic("minus", "sm")}</button><input class="inp sm" inputmode="decimal" value="${esc(x.ring || "")}" placeholder="${ph}" data-chg="lv-ring" data-x="${xi}" aria-label="Ring strap length"><button class="icon-btn sm" data-act="lv-ring-step" data-x="${xi}" data-d="1" aria-label="A quarter longer">${ic("plus", "sm")}</button></span>`;
+ACT["lv-ring-step"] = el => { const [L, t, r] = LR(), x = r.ex[+el.dataset.x], cur = String(x.ring || ""), m = cur.match(/\d+(?:[.,]\d+)?/), n = Math.max(0, Math.round(((m ? +m[0].replace(",", ".") : 0) + (+el.dataset.d) * 0.25) * 4) / 4);
+  x.ring = m ? cur.replace(m[0], fmtRing(n)) : `${fmtRing(n)} cm`; saveWK(); haptic(6); scheduleRender(); };
 CHG["lv-ring"] = (v, el) => { const [L, t, r] = LR(); r.ex[+el.dataset.x].ring = v.trim(); saveWK(); };
 CHG["lv-note"] = (v, el) => { const w = WK(); const k = el.dataset.n; if (v.trim()) w.notes[k] = v.trim(); else delete w.notes[k]; saveWK(); toast("Note saved for this exercise"); };
 ACT["lv-mini"] = el => { audioOn(); const [L, t, r] = LR(); const xi = +el.dataset.x, x = r.ex[xi], e = t.exs[xi]; x.mini++; beep(660, .1);
@@ -8514,12 +8578,12 @@ SHEETS.wo = sh => {
   if (sess) body += `<div class="field"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="flabel">Result</span><span class="row" style="gap:12px">${ENDUR(w.sport) && !sess.gps ? `<label class="link">${ic("download", "sm")} Route${routeInput(`data-date="${R.date}" data-wi="${(logGet(R.date)?.workouts || []).indexOf(w)}"`)}</label>` : ""}<button class="link" data-act="story-open" data-date="${R.date}" data-id="${sess.id}">${ic("story", "sm")} Share as a story</button></span></div>${sessionDetailHTML(sess)}</div>`;
   else if (R.logged && w) { const wi = (logGet(R.date)?.workouts || []).indexOf(w); body += `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="story-open" data-date="${R.date}" data-wi="${wi}">${ic("story", "sm")}Share as a story</button>${ENDUR(w.sport) ? `<label class="btn text sm">${ic("download", "sm")}Add the route (GPX, FIT)${routeInput(`data-date="${R.date}" data-wi="${wi}"`)}</label>` : ""}</div>`; }
   if (R.script) body += `<div class="field"><div class="row" style="justify-content:space-between"><span class="flabel">Script</span><button class="link" data-act="wo-copy">${ic("copy", "sm")} Copy</button></div><pre class="wo-script">${esc(R.script)}</pre></div>
-    ${isStrength(R.sport) || /emom|amrap|cluster|\dx\s*$/im.test(R.script) ? `<details class="card wo-pv"><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad">${scriptPreview(R.script)}</div></details>` : ""}`;
+    ${isStrength(R.sport) || /emom|amrap|cluster|\dx\s*$/im.test(R.script) ? `<details class="card wo-pv"${!isStrength(R.sport) ? " open" : ""}><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad">${isStrength(R.sport) ? scriptPreview(R.script) : runOverview(endTasks(R.script, R.sport), R.sport, R.date, R.w?.at) || scriptPreview(R.script)}</div></details>` : ""}`;
   else if (!sess && !R.logged) body += `<div class="note">${isStrength(R.sport) ? "No script on this session yet. Start it with one of your workouts, or write a new one." : "No workout text on this session."}</div>`;
   if (canStart && !R.script) body += `<div class="field"><span class="flabel">Run with</span><div class="card">${WK().tpls.map(t => `<button class="lrow" data-act="wo-start-tpl" data-tpl="${t.id}"><span><span class="t">${esc(t.name)}</span><span class="s">≈ ${Math.round(estimateScript(expandTasks(parseScript(t.script).blocks)) / 60)} min</span></span>${ic("play", "sm")}</button>`).join("") || `<div class="lrow"><span class="s">No workouts yet.</span></div>`}</div></div>`;
   const canEdit = w && !R.logged && R.ri >= 0 && R.date >= todayISO();
   const canCopy = w && !R.logged && R.ri >= 0, canDone = canCopy && R.date <= todayISO();
-  return { title: R.name || "Workout", body, foot: `${canCopy ? `<button class="btn tonal" data-act="clip-copy" data-date="${R.date}" data-i="${R.ri}" style="flex:0 0 auto" aria-label="Copy to paste on other days">${ic("copy", "sm")}Copy</button>` : ""}${canEdit ? `<button class="btn tonal" data-act="edit-session" data-list="planned" data-date="${R.date}" data-i="${R.ri}" style="flex:0 0 auto">${ic("edit", "sm")}Edit</button>` : ""}${w && !canEdit ? `<button class="btn soft" data-act="open-checkin" data-date="${R.date}" style="flex:0 0 auto">Day log</button>` : !w ? `<button class="btn soft" data-act="we-edit" data-tpl="${R.tplId}" style="flex:0 0 auto">Edit</button>` : ""}${canDone && (R.date < todayISO() || !(canStart && R.script)) ? `<button class="btn primary" data-act="wo-done" data-date="${R.date}" data-i="${R.ri}">${ic("check", "sm")}Mark done</button>` : canStart && R.script ? `<button class="btn primary" data-act="wo-go">${ic("play", "sm")}Start workout</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` };
+  return { title: R.name || "Workout", body, foot: `${sess ? `<button class="btn danger" data-act="wo-discard" style="flex:0 0 auto" aria-label="Discard this recording">${ic("trash", "sm")}</button>` : ""}${canCopy ? `<button class="btn tonal" data-act="clip-copy" data-date="${R.date}" data-i="${R.ri}" style="flex:0 0 auto" aria-label="Copy to paste on other days">${ic("copy", "sm")}Copy</button>` : ""}${canEdit ? `<button class="btn tonal" data-act="edit-session" data-list="planned" data-date="${R.date}" data-i="${R.ri}" style="flex:0 0 auto">${ic("edit", "sm")}Edit</button>` : ""}${w && !canEdit ? `<button class="btn soft" data-act="open-checkin" data-date="${R.date}" style="flex:0 0 auto">Day log</button>` : !w ? `<button class="btn soft" data-act="we-edit" data-tpl="${R.tplId}" style="flex:0 0 auto">Edit</button>` : ""}${canDone && (R.date < todayISO() || !(canStart && R.script)) ? `<button class="btn primary" data-act="wo-done" data-date="${R.date}" data-i="${R.ri}">${ic("check", "sm")}Mark done</button>` : canStart && R.script ? `<button class="btn primary" data-act="wo-go">${ic("play", "sm")}Start workout</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` };
 };
 function sessionDetailHTML(s, noFoot) {
   const byEx = {}; for (const x of s.sets || []) (byEx[x.ex] = byEx[x.ex] || []).push(x);
@@ -8534,7 +8598,11 @@ function sessionDetailHTML(s, noFoot) {
 SHEETS.wh = sh => { const s = (logGet(sh.date)?.wsess || []).find(x => x.id === sh.id); if (!s) return { title: "Session", body: "", foot: "" };
   return { title: `${s.name} · ${fmtDM(sh.date)}`, body: sessionDetailHTML(s), foot: `<button class="btn danger" data-act="wh-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button><button class="btn tonal" data-act="story-open" data-date="${sh.date}" data-id="${s.id}">${ic("image", "sm")}Story</button><button class="btn primary" data-act="close-sheet">Done</button>` }; };
 ACT["wh-open"] = el => openSheet("wh", { date: el.dataset.date, id: el.dataset.id });
-ACT["wh-del"] = () => { const sh = S_(); openSheet("confirm", { title: "Delete this session?", text: "Removes its sets and the workout from that day.", yes: "Delete", danger: true, run: () => mutateLog(sh.date, d => { d.wsess = (d.wsess || []).filter(x => x.id !== sh.id); d.workouts = (d.workouts || []).filter(w => w.sid !== sh.id); if (!d.workouts.length) d.workouts = null; }) }); };
+/* a recording made with the app goes away; the plan item it was run from stays where it was */
+function discardRecording(date, sid) { const keep = clone(logGet(date) || {});
+  openSheet("confirm", { title: "Discard this recording?", text: "Removes the sets and the result recorded with the app. The workout stays in your plan, so you can run it again.", yes: "Discard", danger: true, run: () => { mutateLog(date, d => { d.wsess = (d.wsess || []).filter(x => x.id !== sid); d.workouts = (d.workouts || []).filter(w => w.sid !== sid); if (!d.workouts.length) d.workouts = null; }); toast("Recording discarded · the plan is untouched", () => mutateLog(date, d => { d.wsess = keep.wsess || null; d.workouts = keep.workouts || null; })); } }); }
+ACT["wo-discard"] = () => { const r = S_().r; if (r?.w?.sid) discardRecording(r.date, r.w.sid); };
+ACT["wh-del"] = () => { const sh = S_(); discardRecording(sh.date, sh.id); };
 ACT["wo-open"] = el => { const r = woResolve(el); if (r) openSheet("wo", { r }); };
 ACT["wo-go"] = () => { const r = S_().r; if (LV()) { toast("Finish or discard the workout in progress first."); return; } startWorkout({ script: r.baseScript || r.script, name: r.name, tplId: r.tplId, prog: r.prog, week: r.week, ext: r.logged ? null : r.ext, planDate: r.date, date: r.date && r.date >= todayISO() ? todayISO() : r.date || todayISO(), sport: r.sport || strengthSport() }); };
 ACT["wo-start"] = el => { if (LV()) { ACT["lv-resume"](); return; } const r = woResolve(el); if (!r) return; if (!r.script) { openSheet("wo", { r }); return; } UI.liveFrom = UI.tab; startWorkout({ script: r.baseScript || r.script, name: r.name, tplId: r.tplId, prog: r.prog, week: r.week, ext: r.logged ? null : r.ext, planDate: r.date, date: todayISO(), sport: r.sport || strengthSport() }); };
@@ -8784,13 +8852,13 @@ function icuPending() {
   }
   return { plan, done, n: plan + done };
 }
-async function icuKick(reason, mode = false) {
+async function icuKick(reason, mode = false, force = false) {
   if (!icuState().key) return;
   if (mode !== true) { scheduleRender(); return; }
   if (ICU_KICK_STATE === "sent") { toast("Sync already running"); return; }
   ICU_KICK_STATE = "sent"; scheduleRender(); if (UI.sheet) renderSheet();
-  try { const r = await icuSyncDirect(); UI.syncstat = { at: new Date().toISOString(), ok: true, summary: r };
-    toast(`intervals.icu synced · ${r.planned} planned, ${r.acts} activities, ${r.well} wellness${r.pushed || r.sent_plan || r.sent_well ? ` · sent ${r.pushed + r.sent_plan + r.sent_well}` : ""}`); }
+  try { const r = await icuSyncDirect({ force }); UI.syncstat = { at: new Date().toISOString(), ok: true, summary: r };
+    toast(`intervals.icu ${force ? "fully " : ""}synced · ${r.planned} planned, ${r.acts} activities, ${r.well} wellness${r.pushed || r.sent_plan || r.sent_well ? ` · sent ${r.pushed + r.sent_plan + r.sent_well}` : ""}`); }
   catch (e) { console.warn(e); UI.syncstat = { at: new Date().toISOString(), ok: false, error: String(e?.message || e) }; toast("Sync failed: " + String(e?.message || e).slice(0, 90)); }
   finally { ICU_KICK_STATE = ""; scheduleRender(); if (UI.sheet) renderSheet(); }
 }
@@ -8817,6 +8885,7 @@ function icuSettingsCard() {
     <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · first sync in a moment"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
     ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
     <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><span class="faint" style="font-size:13px;flex:1">${busy ? "Syncing…" : P.n ? `${P.n} change${P.n > 1 ? "s" : ""} on the way` : "Up to date · syncs by itself when you open the app and after each change"}</span><button class="btn text sm" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}Sync now</button></div>
+    <div class="faint icu-full">Something missing or out of date? <button class="link" data-act="icu-force" ${busy ? "disabled" : ""}>Full sync</button> re-reads the last 90 days of activities and wellness and the plan from 30 days ago to 4 months ahead.</div>
     <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts and races you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}</div>
     <details class="icu-acc"><summary>Account and import</summary>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><label for="icu-aid" class="faint" style="font-size:13px">Athlete ID</label><input id="icu-aid" class="inp" style="max-width:150px" value="${esc(s.aid || "")}" placeholder="i123456" data-chg="icu-aid"></div>
@@ -8827,6 +8896,7 @@ function icuSettingsCard() {
 SHEETS.icuset = () => ({ title: "intervals.icu", body: icuSettingsCard(), foot: "" });
 ACT["icu-sheet"] = () => openSheet("icuset");
 ACT["icu-now"] = () => icuKick("Sync now", true);
+ACT["icu-force"] = () => icuKick("Full sync", true, true);
 ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pushwell"] = () => { icuSet({ pushWell: S.settings.intervals?.pushWell === false }); scheduleRender(); if (UI.sheet) renderSheet(); };
@@ -9354,6 +9424,17 @@ function cRun(L, t) {
   if (t.dur >= 300 && PLAYER().calls) o.push({ at: Math.round(t.dur / 2), k: "round", say: VT("Metà", "Halfway") });
   return [...o, ...cCount(t.dur), { at: t.dur, k: nx ? "go" : "end", say: nx ? null : VT("Allenamento finito. Ottimo lavoro!", "Workout complete. Well done!") }];
 }
+/* how an endurance script will run: intensity along the session, each phase with its repeats, and the weather expected at that time */
+const runLevel = t => { const g = t.tgt || {}, z = String(g.zone || "").match(/Z(\d)/i); if (z) return Math.min(5, +z[1]); const p = String(g.pct || "").match(/(\d+)(?:\s*-\s*(\d+))?/); if (!p) return 0; const v = (+p[1] + (+p[2] || +p[1])) / 2; return v < 60 ? 1 : v < 76 ? 2 : v < 91 ? 3 : v < 106 ? 4 : 5; };
+const runSecs = t => t.dur || (t.km ? t.km * (t.paceMid || 6) * 60 : 0);
+function runOverview(tasks, sport, date, at) {
+  const tot = tasks.reduce((a, t) => a + runSecs(t), 0); if (!tot) return "";
+  const bars = tasks.map(t => `<i class="z${runLevel(t)}" style="flex:${Math.max(1, runSecs(t))}" title="${esc(runLabel(t))}"></i>`).join("");
+  const groups = []; for (const t of tasks) { let g = groups[groups.length - 1]; if (!g || g.bi !== t.bi) groups.push(g = { bi: t.bi, name: t.block, reps: t.reps || 1, one: [], secs: 0, lvl: 0 }); if ((t.rep || 1) === 1) g.one.push(t); g.secs += runSecs(t); g.lvl = Math.max(g.lvl, runLevel(t)); }
+  const ph = groups.map(g => `<div class="pr-ph"><i class="z${g.lvl}"></i><span class="pr-n"><b>${esc(g.name || "Step")}${g.reps > 1 ? ` · ${g.reps}×` : ""}</b><small>${esc(g.one.map(t => runLabel(t)).join(" + "))}</small></span><span class="pr-t">${fmtDurShort(g.secs)}</span></div>`).join("");
+  let wx = ""; if (OUTDOOR(sport) && wxKey() && date) { const s = wxSlot(date, at || WX().time, Math.round(tot / 60)); if (s) { const w = wxSay(s); wx = `<div class="pr-wx">${wxIcon(s)}<span>${esc(minHM(hmMin(at || WX().time)))} · ${w.temp} · ${w.rain}${w.wind}</span></div>`; } }
+  return `<div class="pr-ov"><div class="pr-bar" role="img" aria-label="Intensity along the session, easy to hard">${bars}</div><div class="pr-ax"><span>Start</span><span>${fmtDurShort(tot)}${runEstKm(tasks) ? ` · ≈ ${r1(runEstKm(tasks))} km` : ""}</span></div>${ph}${wx}</div>`;
+}
 function runEstKm(tasks) { return tasks.reduce((a, t) => a + (t.km || (t.paceMid && t.dur ? t.dur / 60 / t.paceMid : 0)), 0); }
 
 /* live screen for an endurance step: nothing to press */
@@ -9378,6 +9459,7 @@ function runPreview(L) {
   h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-meta"><span>${ic("timer", "sm")}${fmtDurShort(tot)}</span>${km ? `<span>≈ ${r1(km)} km</span>` : ""}<span>${tasks.length} steps</span><span class="chip-s">${esc(L.sport)}</span></div>
     <p class="muted" style="margin:0;font-size:13.5px">Runs by itself: every step starts and ends on its own with a 3-2-1 countdown${PLAYER().voice ? " and spoken targets" : ""}. ${isBike(L.sport) ? "Put the phone on the bars and ride" : "Put the phone away and run"}. Pause is there if you need it.</p></section>
+    ${(() => { const o = runOverview(tasks, L.sport, L.date, (L.planDate && (logGet(L.planDate)?.planned || []).find(w => w.at)?.at) || logGet(L.date)?.wxAt); return o ? `<section class="lv-card">${o}</section>` : ""; })()}
     <section class="lv-card">${prepChips()}</section>
     <section class="lv-card flush"><div class="run-steps">${tasks.map((t, i) => `<div class="rs-row ${i && tasks[i - 1].bi !== t.bi ? "brk" : ""}"><span class="rs-n">${i + 1}</span><span class="rs-t"><b>${esc(runLabel(t))}</b>${t.block ? `<small>${esc(t.block)}${t.reps > 1 ? ` · ${t.rep}/${t.reps}` : ""}</small>` : ""}</span><span class="rs-d">${t.t === "open" ? "lap" : (t.est ? "≈" : "") + fmtDurShort(t.dur)}</span></div>`).join("")}</div></section>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-snd">${ic(PLAYER().mute ? "bellOff" : "bell", "sm")}${PLAYER().mute ? "Muted" : PLAYER().voice ? "Voice" : "Beeps"}</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start · ${PLAYER().prep}s countdown</button></div></div>
@@ -9626,6 +9708,7 @@ function playerSettings() {
     <div class="field"><span class="flabel">Sounds</span><button class="btn ${w.mute ? "soft" : "tonal"}" data-act="snd-mute">${ic(w.mute ? "bellOff" : "bell", "sm")}${w.mute ? "Muted · vibration" : "On"}</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="snd-test">${ic("play", "sm")}Test 3-2-1</button><button class="btn soft sm" data-act="timer-open">${ic("timer", "sm")}Open the timer</button></div>
     <div class="set-sub"><span class="flabel">Load progression</span><div class="grid2">${fitIn("player.loadStep", "Weight added when you progress", "kg")}</div><small class="faint">What a suggestion adds to a weighted exercise when you hit every rep with reps in hand: 2 kg until you change it. Set it to the smallest plate you can add; each suggestion can still be adjusted before you apply it.</small></div>
+    <div class="set-sub"><span class="flabel">Rings</span><div class="grid2">${fitIn("player.ringStep", "Strap step when you lower or raise the rings", "units")}</div><small class="faint">The strap is marked in units split in four: the step is in units and counts in quarters (1, 0.5, 0.25). The strap length is read and written in the same unit you type in the workout (cm or hole).</small></div>
     <div class="set-sub"><span class="flabel">Cycling</span><div class="grid2">${fitIn("bike.ftp", "FTP", "W")}${fitIn("bike.speed", "Usual speed", "km/h")}</div><small class="faint">Power steps ("- 10m 88-94% FTP", "- 5m Z4") show and say watts; distance steps ("- 20km Z2") are timed from your usual speed.</small></div>
     <div class="faint" style="font-size:12.5px">Beeps are scheduled on the audio clock, so they land exactly on the second. AMRAP: the minute you're in, the last 30 s and a spoken 10-second countdown. Running: each step's target is spoken as it starts. Keep the phone unlocked during a session (the screen stays on by itself).</div>`;
 }
@@ -12494,7 +12577,7 @@ function gearTick(date, id) { const d = GEAR_OK[date] = GEAR_OK[date] || {}; d[i
 function gearToday(ws, date) { const L = gearForDay(ws, date); if (!L.some(x => !x.always)) return ""; const ok = GEAR_OK[date] || {}, n = L.filter(x => ok[x.id]).length;
   return `<button class="td-gear ${n === L.length ? "all" : ""}" data-act="gear-open" data-date="${date}">${ic("bag", "sm")}<span><b>${n === L.length ? "Packed" : "Bring"}</b> ${L.map(x => `<i class="${ok[x.id] ? "ok" : ""}">${esc(x.label)}</i>`).join("")}</span>${ic("chevR", "sm")}</button>`; }
 const gearShort = (ws, date) => { const L = gearForDay(ws, date).filter(x => !x.always); return L.length ? ` · bring ${esc(L.map(x => x.label.replace(/ \+ plates.*/, "")).join(", ").toLowerCase())}` : ""; };
-const gearChecklist = (L, date) => { const ok = GEAR_OK[date] || {}; return `<div class="gear-l">${L.map(x => `<button class="gear-i ${ok[x.id] ? "ok" : ""}" data-act="gear-tick" data-date="${date}" data-id="${esc(x.id)}" aria-pressed="${!!ok[x.id]}"><span class="chk-c">${ok[x.id] ? ic("check", "sm") : ""}</span><span><b>${esc(x.label)}</b>${x.why.length ? `<small>${esc(x.why.slice(0, 3).join(", "))}${x.why.length > 3 ? "…" : ""}</small>` : x.always ? "<small>Always</small>" : ""}</span></button>`).join("")}</div>`; };
+const gearChecklist = (L, date, miss) => { const ok = GEAR_OK[date] || {}; return `<div class="gear-l">${L.map(x => `${miss && !x.always && !String(x.id).startsWith("c:") && x.why.length ? `<div class="gear-r">` : ""}<button class="gear-i ${ok[x.id] ? "ok" : ""}" data-act="gear-tick" data-date="${date}" data-id="${esc(x.id)}" aria-pressed="${!!ok[x.id]}"><span class="chk-c">${ok[x.id] ? ic("check", "sm") : ""}</span><span><b>${esc(x.label)}</b>${x.why.length ? `<small>${esc(x.why.slice(0, 3).join(", "))}${x.why.length > 3 ? "…" : ""}</small>` : x.always ? "<small>Always</small>" : ""}</span></button>${miss && !x.always && !String(x.id).startsWith("c:") && x.why.length ? `<button class="link gear-no" data-act="gear-miss" data-id="${esc(x.id)}">Don't have it</button></div>` : ""}`).join("")}</div>`; };
 SHEETS.gear = sh => { const date = sh.date || todayISO(), ws = sh.live ? [] : plannedFor(date).list.filter(w => w.sport && w.sport !== "Rest"), L = sh.script != null ? gearList(sh.script, date) : gearForDay(ws, date);
   return { title: date === todayISO() ? "What to bring" : `What to bring · ${relDay(date)}`, body: (L.length ? gearChecklist(L, date) : `<div class="note">Nothing special for this workout.</div>`) + `<button class="link" data-act="gear-set">Change what's detected and what you always bring</button>`,
     foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
@@ -12520,8 +12603,7 @@ FORMS["gear-cu"] = () => { const item = ($("#gear-cu-i")?.value || "").trim().sl
 /* before starting: the checklist right under the title, in both previews (sets and runs) */
 function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = Math.max(h.indexOf('class="lv-card sg"'), h.indexOf('class="lv-card pv-top"')); if (!G.length || a < 0) return h;
   const b = h.indexOf("</section>", a) + 10; return h.slice(0, b) + `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Bring</span>${gearChecklist(G, L.date)}</section>` + h.slice(b); }
-const _livePreviewG = livePreview, _runPreviewG = runPreview;
-livePreview = L => gearInPreview(_livePreviewG(L), L);
+const _runPreviewG = runPreview;
 runPreview = L => gearInPreview(_runPreviewG(L), L);
 /* ================= v3 interactions: page changes that glide, swipes between sections, glass on scroll =================
    Section changes (bottom bar, section tabs) go through a View Transition: the old page fades, the new one lifts in,
@@ -12924,13 +13006,13 @@ const wxKey = () => { const x = WX(); return x.lat != null ? `${(+x.lat).toFixed
 const OUTDOOR = sp => sp && sp !== "Rest" && !/strength|gym|weight|swim|nuot|yoga|pilates|indoor|trainer|treadmill/i.test(sp);
 async function wxFetch(force) {
   const x = WX(), k = wxKey(); if (!k || WXC.busy || !navigator.onLine) return;
-  if (!force && WXC.key === k && Date.now() - WXC.at < 45 * 60e3) return;
+  if (!force && WXC.key === k && WXC.data?.ap && Date.now() - WXC.at < 45 * 60e3) return;
   WXC.busy = true;
   try {
-    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${(+x.lat).toFixed(3)}&longitude=${(+x.lon).toFixed(3)}&hourly=temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m&forecast_days=3&timezone=auto`);
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${(+x.lat).toFixed(3)}&longitude=${(+x.lon).toFixed(3)}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m&forecast_days=3&timezone=auto`);
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(), h = j.hourly || {};
-    Object.assign(WXC, { key: k, at: Date.now(), data: { t: h.time || [], mm: h.precipitation || [], pr: h.precipitation_probability || [], c: h.temperature_2m || [], code: h.weather_code || [], wind: h.wind_speed_10m || [] } });
+    Object.assign(WXC, { key: k, at: Date.now(), data: { t: h.time || [], mm: h.precipitation || [], pr: h.precipitation_probability || [], c: h.temperature_2m || [], ap: h.apparent_temperature || [], code: h.weather_code || [], wind: h.wind_speed_10m || [], gust: h.wind_gusts_10m || [] } });
     try { localStorage.setItem("engine.wx", JSON.stringify({ key: WXC.key, at: WXC.at, data: WXC.data })); } catch (e) {}
     scheduleRender();
   } catch (e) { WXC.at = Date.now() - 40 * 60e3; } finally { WXC.busy = false; }
@@ -12940,10 +13022,10 @@ const minHM = m => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String
 /* the hours a session at `start` for `dur` minutes covers: rain in mm, chance, temperature, wind */
 function wxSlot(date, start, dur) {
   const D = WXC.key === wxKey() ? WXC.data : null; if (!D) return null;
-  const a = hmMin(start), b = a + Math.max(30, dur), out = { mm: 0, pr: 0, c: [], wind: 0, code: 0, n: 0 };
+  const a = hmMin(start), b = a + Math.max(30, dur), out = { mm: 0, pr: 0, c: [], ap: [], wind: 0, gust: 0, code: 0, n: 0, wetMin: 0 };
   D.t.forEach((t, i) => { if (t.slice(0, 10) !== date) return; const h = hmMin(t.slice(11, 16)); if (h + 60 <= a || h >= b) return;
-    const part = (Math.min(b, h + 60) - Math.max(a, h)) / 60; out.mm += (D.mm[i] || 0) * part; out.peak = Math.max(out.peak || 0, D.mm[i] || 0); out.pr = Math.max(out.pr, D.pr[i] || 0); out.c.push(D.c[i]); out.wind = Math.max(out.wind, D.wind[i] || 0); out.code = Math.max(out.code, D.code[i] || 0); out.n++; });
-  if (!out.n) return null; out.c = out.c.reduce((p, q) => p + q, 0) / out.c.length; return out;
+    const part = (Math.min(b, h + 60) - Math.max(a, h)) / 60; out.mm += (D.mm[i] || 0) * part; out.peak = Math.max(out.peak || 0, D.mm[i] || 0); out.pr = Math.max(out.pr, D.pr[i] || 0); out.c.push(D.c[i]); out.ap.push(D.ap?.[i] ?? D.c[i]); out.gust = Math.max(out.gust, D.gust?.[i] || 0); if ((D.mm[i] || 0) >= 0.1) out.wetMin += part * 60; out.wind = Math.max(out.wind, D.wind[i] || 0); out.code = Math.max(out.code, D.code[i] || 0); out.n++; });
+  if (!out.n) return null; const avg = x => x.reduce((p, q) => p + q, 0) / x.length; out.c = avg(out.c); out.ap = avg(out.ap); out.wetMin = Math.round(out.wetMin / 5) * 5; return out;
 }
 const wxWet = s => s && (s.mm >= 0.3 || (s.pr >= 60 && s.mm >= 0.1));
 /* nearest dry start before and after the planned one, same day, daylight-ish hours */
@@ -12957,37 +13039,48 @@ const WX_IC = { sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 1
   cloud: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
   rain: '<path d="M7 15h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 6.1a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5"/>' };
 const wxIcon = s => `<svg class="wx-ic" viewBox="0 0 24 24" aria-hidden="true">${WX_IC[wxWet(s) || s.code >= 51 ? "rain" : s.code >= 3 ? "cloud" : "sun"]}</svg>`;
-/* tiny bars of rain through the day, the session's hours highlighted */
+/* the day's rain: pale bar = chance of rain, dark bar = expected amount, the session's hours shaded; only drawn when there is something to see */
 function wxBars(date, start, dur) {
   const D = WXC.data, a = hmMin(start), b = a + dur; let g = "";
   const hrs = D.t.map((t, i) => [t, i]).filter(([t]) => t.slice(0, 10) === date && hmMin(t.slice(11, 16)) >= 6 * 60 && hmMin(t.slice(11, 16)) <= 22 * 60);
-  if (!hrs.some(([, i]) => (D.mm[i] || 0) >= 0.1)) return "";
-  const mx = Math.max(1, ...hrs.map(([, i]) => D.mm[i] || 0)), W = 100 / hrs.length;
-  hrs.forEach(([t, i], k) => { const h = hmMin(t.slice(11, 16)), on = h + 60 > a && h < b, v = D.mm[i] || 0, ht = v > 0 ? Math.max(8, v / mx * 100) : 4;
-    g += `<i class="${on ? "on" : ""}${v >= 0.1 ? " wet" : ""}" style="left:${k * W}%;width:${W}%;height:${ht}%" title="${t.slice(11, 16)} · ${r1(v)} mm · ${D.pr[i] || 0}%"></i>`; });
-  return `<div class="wx-bars" aria-hidden="true">${g}</div><div class="wx-ax"><span>${hrs[0][0].slice(11, 13)}</span><span>${hrs[Math.floor(hrs.length / 2)][0].slice(11, 13)}</span><span>${hrs[hrs.length - 1][0].slice(11, 13)}</span></div>`;
+  if (!hrs.some(([, i]) => (D.mm[i] || 0) >= 0.1 || (D.pr[i] || 0) >= 30)) return "";
+  const mx = Math.max(1, ...hrs.map(([, i]) => D.mm[i] || 0)), W = 100 / hrs.length, h0 = hmMin(hrs[0][0].slice(11, 16));
+  const x = m => Math.max(0, Math.min(100, (m - h0) / 60 * W));
+  hrs.forEach(([t, i], k) => { const h = hmMin(t.slice(11, 16)), v = D.mm[i] || 0, pr = D.pr[i] || 0, ht = v > 0 ? Math.max(8, v / mx * 100) : 0;
+    g += `<span class="wx-c" style="left:${k * W}%;width:${W}%" title="${t.slice(11, 16)} · ${pr}% chance · ${r1(v)} mm${D.wind?.[i] ? ` · wind ${r0(D.wind[i])} km/h` : ""}"><i class="p" style="height:${Math.max(pr, 3)}%"></i>${ht ? `<i class="m" style="height:${ht}%"></i>` : ""}</span>`; });
+  const ax = [6, 9, 12, 15, 18, 21].filter(h => h * 60 >= h0).map(h => `<span style="left:${x(h * 60)}%">${h}</span>`).join("");
+  return `<div class="wx-chart" role="img" aria-label="Chance and amount of rain by hour, your session ${minHM(a)} to ${minHM(b)} shaded"><b class="wx-band" style="left:${x(a)}%;width:${Math.max(2, x(b) - x(a))}%"></b>${g}</div><div class="wx-ax">${ax}</div><div class="wx-lg"><span><i class="p"></i>chance</span><span><i class="m"></i>expected rain</span><span><i class="b"></i>your session</span></div>`;
 }
 /* one row in Today's training card: forecast at the session's time, and a better time if it rains */
 /* the place the forecast is for, short enough for the row (the full name and coordinates are in the weather sheet) */
 const wxPlaceShort = () => { const p = WX().place || ""; return !p ? "Location" : /^Current location/.test(p) ? "Current location" : p.split(",")[0]; };
+/* the forecast of one slot in words: temperature (and feels-like), rain with its chance, amount and duration, wind */
+function wxSay(s) {
+  const wet = wxWet(s), sev = s.peak >= 4 ? "heavy" : s.peak >= 1 ? "moderate" : "light", chance = s.pr >= 70 ? "Rain likely" : s.pr >= 40 ? "Rain possible" : "Rain unlikely, but possible";
+  return { temp: `${r0(s.c)}°${Math.abs(s.ap - s.c) >= 2 ? ` · feels ${r0(s.ap)}°` : ""}`,
+    rain: wet ? `${chance} (${r0(s.pr)}%) · ${sev}, <b>${r1(s.mm)} mm</b>${s.wetMin ? ` over about ${s.wetMin >= 60 ? `${r1(s.wetMin / 60)} h` : `${s.wetMin}′`}` : ""}` : s.mm >= 0.1 ? `A few drops · ${r1(s.mm)} mm` : s.pr >= 30 ? `Dry expected · ${r0(s.pr)}% chance of rain` : "Dry",
+    wind: s.wind >= 20 ? ` · wind ${r0(s.wind)} km/h${s.gust >= s.wind + 15 ? `, gusts ${r0(s.gust)}` : ""}` : "" };
+}
 function wxRow(date, sessions) {
   const out = sessions.filter(w => OUTDOOR(w.sport)); if (!out.length) return "";
   if (!wxKey()) return `<div class="wx-row"><span class="faint">Rain alerts at training time</span><button class="link" data-act="wx-locate">Set location</button></div>`;
   wxFetch();
-  const L = logGet(date) || {}, set = L.wxAt || WX().time, nm = date === todayISO() ? Math.ceil(hmMin(nowHM()) / 30) * 30 : 0, at = hmMin(set) + 30 < nm ? minHM(nm) : set, dur = Math.max(30, Math.min(240, out.reduce((a, w) => a + (+w.min || workoutGist(w).min || 60), 0)));
+  const L = logGet(date) || {}, planned = out.find(w => w.at)?.at, set = planned || L.wxAt || WX().time, nm = date === todayISO() ? Math.ceil(hmMin(nowHM()) / 30) * 30 : 0, at = hmMin(set) + 30 < nm ? minHM(nm) : set, dur = Math.max(30, Math.min(240, out.reduce((a, w) => a + (+w.min || workoutGist(w).min || 60), 0)));
   const s = wxSlot(date, at, dur), day = date === todayISO() ? "" : "Tomorrow ", loc = `<button class="link wx-loc" data-act="wx-place" aria-label="Weather location: ${esc(WX().place || "set")}" title="${esc(WX().place || "")}">${esc(wxPlaceShort())}</button>`;
-  const tin = `<input class="wx-t" type="time" value="${esc(at)}" data-chg="wx-at" data-date="${date}" aria-label="Training time">`;
+  const icuT = icuPlanMode() && out.some(w => isIcu(w)), tin = `<input class="wx-t" type="time" value="${esc(at)}" data-chg="wx-at" data-date="${date}" aria-label="Training time" title="${icuT ? "Change it and the time moves in intervals.icu too" : "Training time for this day"}">`;
   if (!s) return `<div class="wx-row"><span>${day}${tin}</span><span class="faint">${WXC.busy ? "Loading the forecast…" : navigator.onLine ? "Forecast not available yet" : "Offline"}</span>${loc}</div>`;
-  const wet = wxWet(s), main = `${r0(s.c)}°${wet ? ` · ${s.peak >= 4 ? "heavy" : s.peak >= 1 ? "moderate" : "light"} rain, <b>${r1(s.mm)} mm</b> in ${dur}′` : s.mm >= 0.1 ? ` · ${r1(s.mm)} mm` : " · dry"}${s.pr ? ` · ${r0(s.pr)}%` : ""}${s.wind >= 25 ? ` · wind ${r0(s.wind)} km/h` : ""}`;
+  const wet = wxWet(s), { temp, rain, wind } = wxSay(s);
   let tip = "";
   if (wet) { const D = wxDry(date, at, dur), a = hmMin(at), fmt = m => `${minHM(m)} (${Math.abs(m - a) / 60 | 0} h ${m < a ? "earlier" : "later"})`;
     const opts = [D.early, D.late].filter(m => m != null).sort((x, y) => Math.abs(x - a) - Math.abs(y - a));
     tip = opts.length ? `Dry at ${opts.map(fmt).join(" or ")}` : "No dry window today: take a jacket or go indoors"; }
-  return `<div class="wx-row${wet ? " wet" : ""}"><span class="wx-m">${wxIcon(s)}<span>${day}${tin}<span class="wx-v">${main}</span></span></span>${loc}${tip ? `<small>${esc(tip)}</small>` : ""}${wxBars(date, at, dur)}</div>`;
+  return `<div class="wx-row${wet ? " wet" : ""}" title="Forecast from Open-Meteo, hour by hour: it can change, check again before you go."><span class="wx-m">${wxIcon(s)}<span>${day}${tin}<span class="wx-v">${temp}</span></span></span>${loc}<small class="wx-s">${rain}${wind}</small>${tip ? `<small>${esc(tip)}</small>` : ""}${wxBars(date, at, dur)}</div>`;
 }
 SHEETS.wxloc = () => ({ title: "Weather", body: `${WX().place ? `<div class="faint" style="font-size:13px">Now: <b>${esc(WX().place)}</b>${WX().lat != null && !/^Current location/.test(WX().place) ? ` · ${(+WX().lat).toFixed(2)}, ${(+WX().lon).toFixed(2)}` : ""}</div>` : ""}${wxSettings().replace('<span class="flabel" style="margin-top:6px">Weather</span>', "")}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
 ACT["wx-place"] = () => openSheet("wxloc", { live: true });
-CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; mutateLog(d, day => { day.wxAt = v === WX().time ? null : v; }); scheduleRender(); };
+/* a day's training time: written on the day's outdoor sessions (so intervals.icu gets it too when the plan is synced), else kept for the day */
+CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; mutateLog(d, day => { const pl = Array.isArray(day.planned) ? day.planned : [], hit = pl.some(w => OUTDOOR(w.sport));
+  if (hit) { day.planned = planDiff(day, pl.map(w => OUTDOOR(w.sport) ? { ...w, at: v } : w)); day.wxAt = null; } else day.wxAt = v === WX().time ? null : v; }); scheduleRender(); };
 CHG["wx-time"] = v => { if (v) { WX().time = v; saveSettings(); scheduleRender(); } };
 ACT["wx-locate"] = () => {
   if (!navigator.geolocation) { toast("Location isn't available here: type your city in Settings › Live workouts & timer."); return; }

@@ -77,9 +77,9 @@ test("rings: too easy → lower the rings (strap longer), missed reps → raise 
     const B = sgBuild(LV()), rg = B.items.filter(i => i.kind === "ring"); const text = document.querySelector(".sg").innerText.replace(/\s+/g, " ");
     const row = rg.find(i => /row/i.test(i.name)), push = rg.find(i => /push/i.test(i.name)); ACT["sg-toggle"]({ dataset: { id: row.id } }); ACT["sg-apply"]();
     return { names: rg.map(i => i.name), row: [row.from, row.to, !!row.edit], push: [push.to, !!push.edit], dip: B.items.some(i => /dip/i.test(i.name) && i.kind === "ring"), sc: LV().script, boxes: document.querySelectorAll(".sg-row.tip").length, text }; });
-  assert.deepEqual(r.names.sort(), ["Ring push-up", "Ring row"]); assert.equal(r.row[0], "strap 45 cm"); assert.match(r.row[1], /50 cm · lower the rings: harder/); assert.equal(r.row[2], true);
+  assert.deepEqual(r.names.sort(), ["Ring push-up", "Ring row"]); assert.equal(r.row[0], "strap 45 cm"); assert.match(r.row[1], /46 cm · lower the rings: harder/); assert.equal(r.row[2], true);
   assert.match(r.push[0], /Raise the rings: easier/); assert.equal(r.push[1], false, "no length known: a tip only"); assert.equal(r.dip, false, "dips don't depend on the ring height");
-  assert.match(r.sc, /- 8 Ring row rings 50cm/); assert.match(r.sc, /- 8 Ring push-up\n/);
+  assert.match(r.sc, /- 8 Ring row rings 46cm/); assert.match(r.sc, /- 8 Ring push-up\n/);
   const w = await page.evaluate(() => editScript("A 2x\n- 8 Ring row\n- 8 Dip", { type: "ring", name: "Ring row", n: 7, unit: "hole" })); assert.match(w, /- 8 Ring row rings 7 hole/);
 });
 

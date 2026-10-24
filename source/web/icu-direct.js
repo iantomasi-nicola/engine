@@ -3,7 +3,7 @@
    pushes Engine workouts, plan changes, check-ins and races. The result is applied as day/field patches,
    so edits made while it runs are kept. */
 const ICU_API = "https://intervals.icu/api/v1";
-async function icuSyncDirect() {
+async function icuSyncDirect(opts = {}) {
   const icu = clone(S.settings.intervals || {}), KEY = (icu.key || "").trim(), AID = (icu.aid || "").trim() || "0";
   if (!KEY) throw new Error("Add your intervals.icu API key first");
   const auth = "Basic " + btoa("API_KEY:" + KEY);
@@ -57,7 +57,7 @@ async function icuSyncDirect() {
   const strW = w => typeof isStrength === "function" && isStrength(w.sport);
   const evBody = (date, w) => { let desc = w.script || (w.min ? `- ${Math.trunc(w.min)}m${w.km ? ` ${w.km}km` : ""}` : ""); let min = w.min;
     if (strW(w) && w.script) { desc = desc.replace(/^(\s*)-\s+/gm, "$1• "); try { const g = workoutGist(w).min; if (g > 0) min = g; } catch (e) {} }
-    const b = { category: "WORKOUT", start_date_local: `${date}T00:00:00`, type: itype(w.sport), name: w.note || w.sport || "Workout", description: desc }; if (min) b.moving_time = Math.trunc(min * 60); return b; };
+    const b = { category: "WORKOUT", start_date_local: `${date}T${/^\d{2}:\d{2}$/.test(w.at || "") ? w.at : "00:00"}:00`, type: itype(w.sport), name: w.note || w.sport || "Workout", description: desc }; if (min) b.moving_time = Math.trunc(min * 60); return b; };
   // with «Plan from intervals.icu» off nothing about the plan is written there; anything queued stays queued
   if (PLAN_SRC) for (const mk of Object.keys(docs)) for (const [date, dd] of Object.entries(docs[mk].days)) {
     if (date < add(TODAY, -2)) continue;
@@ -69,7 +69,7 @@ async function icuSyncDirect() {
     } catch (e) { if (e.fatal) throw e; } }
   }
   // planned workouts
-  const a = add(TODAY, -7), bEnd = add(TODAY, 42);
+  const FULL = !!opts.force, back = FULL ? 90 : 21, a = add(TODAY, FULL ? -30 : -7), bEnd = add(TODAY, FULL ? 120 : 42);   // «Full sync» looks further back and ahead
   const ev = await req(`/athlete/${AID}/events?oldest=${a}&newest=${bEnd}&category=WORKOUT`) || [];
   const by = {};
   for (const e of ev) { if (!e || typeof e !== "object" || (e.category && e.category !== "WORKOUT")) continue;
@@ -78,7 +78,7 @@ async function icuSyncDirect() {
     let mins = r0_((e.moving_time || e.workout_doc?.duration || 0) / 60) || sm || null;
     if (strW({ sport: sport(e.type || e.name) }) && e.description) { try { const g = workoutGist({ sport: sport(e.type || e.name), script: String(e.description) }).min; if (g > 0) mins = g; } catch (x) {} }
     const km = hasT ? null : (r1_((e.distance || e.workout_doc?.distance || 0) / 1000) || sk || null);
-    (by[date] = by[date] || []).push(cleanO({ sport: sport(e.type || e.name), int: intensity(e.name || "", e.description || "", mins || 0, e.icu_training_load || 0), src: "intervals", ext: `icu-${e.id ?? date + e.name}`, min: mins, km: km && km > 0 ? km : null, note: (e.name || "").slice(0, 80) || null, script: String(e.description || "").trim().slice(0, 6000) || null, load: e.icu_training_load ? r0_(e.icu_training_load) : null })); }
+    (by[date] = by[date] || []).push(cleanO({ sport: sport(e.type || e.name), int: intensity(e.name || "", e.description || "", mins || 0, e.icu_training_load || 0), src: "intervals", ext: `icu-${e.id ?? date + e.name}`, min: mins, km: km && km > 0 ? km : null, note: (e.name || "").slice(0, 80) || null, at: (t => t && t !== "00:00" ? t : null)(String(e.start_date_local || "").slice(11, 16)), script: String(e.description || "").trim().slice(0, 6000) || null, load: e.icu_training_load ? r0_(e.icu_training_load) : null })); }
   const covered = new Set(Object.values(by).flat().map(w => w.sport));
   for (let ds = a; ds <= bEnd; ds = add(ds, 1)) {
     const cur = (day(ds, false) || {}).planned, xs = by[ds] || [];
@@ -91,7 +91,7 @@ async function icuSyncDirect() {
   // completed activities
   // seconds in each zone (heart rate, pace, power) as intervals.icu computed them
   const zt = a => { if (!Array.isArray(a) || !a.length) return null; const v = a.map(z => Math.round(+(typeof z === "object" && z ? z.secs : z) || 0)); return v.some(Boolean) ? v : null; };
-  const acts = await req(`/athlete/${AID}/activities?oldest=${add(TODAY, -21)}&newest=${TODAY}`) || [];
+  const acts = await req(`/athlete/${AID}/activities?oldest=${add(TODAY, -back)}&newest=${TODAY}`) || [];
   const groups = {};
   for (const x of acts) { if (!x || typeof x !== "object") continue; const date = String(x.start_date_local || x.start_date || "").slice(0, 10); if (!date || date > TODAY) continue;
     const mins = r0_((x.moving_time || x.elapsed_time || 0) / 60), km = x.distance ? r1_(x.distance / 1000) : null, sp = sport(x.type || x.name);
@@ -123,7 +123,7 @@ async function icuSyncDirect() {
     lst = [...lst, ...neu];
     if (JSON.stringify(lst) !== before) { dd.workouts = lst; res.acts++; } tidy(date); }
   // wellness (fills empty days only)
-  const WELL = await req(`/athlete/${AID}/wellness?oldest=${add(TODAY, -21)}&newest=${TODAY}`) || [];
+  const WELL = await req(`/athlete/${AID}/wellness?oldest=${add(TODAY, -back)}&newest=${TODAY}`) || [];
   for (const x of WELL) { if (!x || typeof x !== "object") continue; const date = String(x.id || x.date || "").slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     const cur = day(date, false) || {}, ch = {}, rhr = x.restingHR ?? x.resting_hr, sl = x.sleepSecs ?? x.sleep_secs;
     // weight is never taken from intervals.icu: the scale number you type is the one that counts

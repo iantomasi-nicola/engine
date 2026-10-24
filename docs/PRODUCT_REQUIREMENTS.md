@@ -88,9 +88,9 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
 | F1 | Posizione meteo chiara, modificabile, geolocalizzazione consensuale | Should | S | – | **Fatto** (24/10): il luogo è sempre nella riga meteo, «Use my current location» con permesso e coordinate; cambio con la città | Nome luogo sempre visibile |
-| F2 | Grafico meteo riprogettato: pioggia nell'intervallo di allenamento, probabilità, intensità, durata, vento, temperatura percepita, incertezza | Should | M | – | Parziale | Evidenzia intervallo; mai certezza assoluta |
-| F3 | Orario allenamento da intervals.icu, modificabile con sync coerente | Could | M | ENG-07 | Parziale | Nessuna scrittura remota non voluta |
-| F4 | "How it will run" migliorato (fasi, intervalli, recuperi, passo, zone, condizioni) | Could | M | F2 | Parziale | Confronto con script reale |
+| F2 | Grafico meteo riprogettato: pioggia nell'intervallo di allenamento, probabilità, intensità, durata, vento, temperatura percepita, incertezza | Should | M | – | **Fatto** (24/10): temperatura percepita, probabilità in parole, intensità, durata e vento con raffiche; grafico con probabilità e pioggia attesa, fascia della seduta e ore sull'asse; mai presentato come certezza | Evidenzia intervallo; mai certezza assoluta |
+| F3 | Orario allenamento da intervals.icu, modificabile con sync coerente | Could | M | ENG-07 | **Fatto** (24/10): l'orario arriva da intervals.icu (mezzanotte = nessun orario); cambiarlo nella riga meteo lo scrive sulle sedute outdoor del giorno e, con «Plan from intervals.icu», lo rimanda | Nessuna scrittura remota non voluta |
+| F4 | "How it will run" migliorato (fasi, intervalli, recuperi, passo, zone, condizioni) | Could | M | F2 | **Fatto** (24/10): «How it will run» per le corse: intensità lungo la seduta, fasi con ripetizioni, somma uguale allo script, meteo atteso; anche nella pagina «Ready to start» della corsa | Confronto con script reale |
 
 ## G. Running, sport, Intervals.icu
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
@@ -216,5 +216,11 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L46 | Verifica dei requisiti del primo prompt e delle richieste in corso d'opera (`docs/REQUIREMENTS_CHECK.md`) | – | **Fatto (24/10)** |
 | L47 | Il numero sulla scheda Pantry: conta gli alimenti scaduti o da usare presto; ora accanto al nome, ambra per «use soon» e rossa se c'è uno scaduto, con le parole nell'etichetta e nel tooltip (prima andava a capo sotto il nome) | M4f (ritocco) | **Fatto (24/10)** |
 | L48 | Progressioni dalle sedute precedenti con peso regolabile: il passo aggiunto è un'opzione (Settings › Live workouts › Load progression, 2 kg di default) e ogni suggerimento di carico si corregge con −/+ o scrivendo il valore prima di applicare | M10a (ritocco) | **Fatto (24/10)** |
-| L49 | Anelli: «lower the rings» (reps in mano) o «raise the rings» (ripetizioni mancate) per rematori e piegamenti sugli anelli; con la lunghezza della cinghia nello script o nell'ultima seduta la modifica si scrive (±5 cm / ±1 foro), altrimenti resta un consiglio | M10a (ritocco) | **Fatto (24/10)** |
+| L49 | Anelli: «lower the rings» (reps in mano) o «raise the rings» (ripetizioni mancate) per rematori e piegamenti sugli anelli; con la lunghezza della cinghia nello script o nell'ultima seduta la modifica si scrive (passo = impostazione «Rings», 1 unità di default; il campo della seduta va a ¼), altrimenti resta un consiglio | M10a (ritocco) | **Fatto (24/10)** |
+| L50 | «Ready to start» rifatta: scheda con tempo/serie/blocchi e prontezza spiegata, «Tune today's workout» con testo esplicativo, «what to bring», conto alla rovescia ripiegato, e a lato l'allenamento con l'ultima volta di ogni esercizio e il segnale ↑ sui suggerimenti | M10b | **Fatto (24/10)** |
+| L51 | Attrezzo dimenticato: «Don't have it» su ogni riga di «what to bring» sostituisce gli esercizi che lo richiedono con la variante più vicina senza (anelli, bande, parallette, corda, kettlebell, manubri, giubbotto, ruota; cintura = senza zavorra), con Undo; se non c'è una variante lo dice | M10b | **Fatto (24/10)** |
+| L52 | Scartare una registrazione fatta con l'app senza toccare il piano («Discard this recording» dal dettaglio dell'allenamento e dalla storia), con conferma e Undo | M10b | **Fatto (24/10)** |
+| L53 | Menù in basso: Fuel prima di Train | M10b | **Fatto (24/10)** |
+| L54 | Lunghezza cinghia degli anelli a quarti (le tacche dividono l'unità in 4): campo con −/+ da ¼ e numero scritto senza zeri inutili; il passo del consiglio resta un'impostazione | M10b | **Fatto (24/10)** |
+| L55 | Sincronizzazione completa con intervals.icu («Full sync» accanto a «Sync now»: 90 giorni di attività e benessere, piano da 30 giorni fa a 4 mesi avanti) | M10b | **Fatto (24/10)** |
 

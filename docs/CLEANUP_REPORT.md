@@ -223,3 +223,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** nuovo `settings.fit.player.loadStep` opzionale (default 2); `L.sg.over` solo nell'allenamento in corso.
 
 **Aperto:** il verso «strap più lunga = anelli più bassi» è una convenzione (il campo si chiama «Ring length»): se la tua è l'altezza dal suolo, dimmelo e inverto il segno; il consiglio a parole resta valido in entrambi i casi.
+
+## M10b Pagina «Ready to start», attrezzo, anelli a quarti, meteo, orario, «How it will run» (24/10/2026)
+**Verificato:** nuovo `pre-start.test.js` (11 test): ordine del menù, «Don't have it» (anelli → Inverted row/Push-up, kettlebell → Jump squat, cintura → senza zavorra, Undo da toast), campo anelli a ¼, scarto della registrazione (piano intatto, Undo), «Full sync» (finestre più ampie), pagina su tre viewport, riga meteo (feels-like, probabilità, durata, vento, grafico con fascia), orario da intervals.icu (lettura, scrittura con «Plan from intervals.icu», nessuna scrittura con l'impostazione spenta), «How it will run» della corsa (somma = script, meteo atteso, nel foglio e nella pagina); `preview-suggestions` aggiornato al passo di default (1 unità); screenshot a 390/820/1440 px.
+
+**Eliminato / unificato:** la scheda «what to bring» entra nella pagina (via il wrapper `gearInPreview` dalla pagina dell'allenamento, resta per la corsa); CSS `.pv-ready` della vecchia pagina; i due modi di cancellare una registrazione (`wh-del` e il nuovo) condividono `discardRecording`; il testo meteo è una sola funzione (`wxSay`) usata dalla riga e da «How it will run».
+
+**Compatibilità:** `planned[].at` (HH:MM) opzionale: letto da `start_date_local` di intervals.icu, scritto solo con «Plan from intervals.icu»; `settings.wx` invariato; la cache meteo senza `ap` si riscarica da sola.
+
+**Aperto:** la tabella degli attrezzi → varianti (`GEAR_ALT`) copre gli esercizi più comuni; per gli altri dice «no variant» e si cambia con Edit. Le corse senza zone/passo mostrano l'intensità come «non specificata».
