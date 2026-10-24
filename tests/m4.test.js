@@ -39,3 +39,48 @@ test("J1: the side menu collapses to a rail and expands again on tablet and desk
   await start(F.seed(), H.VIEWPORTS.phone); const p = await state(); assert.deepEqual(p.cls, []); assert.equal(p.toggle, false);
   assert.ok(await app.page.evaluate(() => getComputedStyle(document.querySelector("#bnav")).display !== "none"), "bottom bar on phones");
 });
+
+test("I1: the Check-in opens any day with previous / next / a date picker, edits a past day and the dependent figures follow", async () => {
+  const page = await start(F.seed({ withPlan: false }), H.VIEWPORTS.phone);
+  const r = await page.evaluate(async () => {
+    const t = todayISO(), y = addDays(t, -3); openSheet("checkin", { date: t, live: true }); await new Promise(r => setTimeout(r, 300));
+    const head = () => document.querySelector(".sheet-h .day-nav span")?.textContent;
+    const today = head(); ACT["ci-go"]({ dataset: { date: addDays(t, -1) } }); await new Promise(r => setTimeout(r, 150)); const prev = head();
+    const el = document.querySelector('input[data-in="day-pick"]'); el.value = y; el.dispatchEvent(new Event("input", { bubbles: true })); await new Promise(r => setTimeout(r, 150)); const picked = head(), sheetDate = S_().date;
+    CHG.ci("81.5", { dataset: { k: "weight" } }); await new Promise(r => setTimeout(r, 100));
+    const stored = logGet(y).weight, trend = energyAt(y).trend, other = logGet(t)?.weight ?? null;
+    const sw = document.documentElement.scrollWidth <= innerWidth, hdrW = Math.round(document.querySelector(".sheet-h").getBoundingClientRect().width);
+    return { today, prev, picked, sheetDate: sheetDate === y, stored, trendMoved: Math.abs(trend - 81.5) < 3, other, sw, hdrW };
+  });
+  assert.match(r.today, /Today/); assert.match(r.prev, /Log · Yesterday/); assert.match(r.picked, /Log ·/); assert.equal(r.sheetDate, true);
+  assert.equal(r.stored, 81.5); assert.equal(r.other, null, "today is untouched"); assert.ok(r.sw);
+  assert.deepEqual(app.errors, []);
+  await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "checkin-nav.png") });
+});
+
+test("G2: weekly running goal — progress, history judged by the goal of each week, persistence, the chart shows it", async () => {
+  const page = await start(F.seed({ withPlan: false }), H.VIEWPORTS.phone);
+  const r = await page.evaluate(async () => {
+    const t = todayISO(), ws = weekStartOf(t), run = (d, km) => { const m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; (S.logm[m].days[d] = S.logm[m].days[d] || {}).workouts = [{ sport: "Running", min: km * 6, km }]; };
+    S.logm = {}; run(addDays(ws, -14), 20); run(addDays(ws, -7), 30); run(ws, 12); S.days = {}; DATA_V++;
+    const none = { goal: kmGoalFor(ws), card: /Set a weekly distance/.test(kmGoalCard()) };
+    CHG["km-goal"]("25"); const oldWeek = addDays(ws, -7);
+    const a = { now: kmGoalFor(ws), prev: kmGoalFor(oldWeek), km: weekKm(ws) };
+    S.settings.fit.run.kmGoals.unshift({ from: addDays(ws, -21), km: 28 }); S.settings.fit.run.kmGoals.sort((x, y) => x.from.localeCompare(y.from)); DATA_V++;   // an older goal of 28 km
+    const hist = { w2: kmGoalFor(addDays(ws, -14)), w1: kmGoalFor(oldWeek), w0: kmGoalFor(ws) };
+    CHG["km-goal"]("30"); const changed = { thisWeek: kmGoalFor(ws), history: S.settings.fit.run.kmGoals.length };    // same week: replaced, not stacked
+    CHG["km-goal"]("0"); const off = { thisWeek: kmGoalFor(ws), lastWeek: kmGoalFor(oldWeek) };
+    CHG["km-goal"]("25");
+    const card = kmGoalCard(), chart = kmChart();
+    UI.tab = "train"; UI.trainSeg = "running"; scheduleRender(); await new Promise(r => setTimeout(r, 500));
+    return { none, a, hist, changed, off, card: { km: /12\.?\d* <\/b>|<b[^>]*>12</.test(card), goal: /\/ 25 km this week/.test(card), togo: /13 km to go/.test(card), reached: /Reached in/.test(card) }, chartGoal: (chart.match(/stroke-dasharray/g) || []).length, greenBars: (chart.match(/var\(--good\)/g) || []).length, sw: document.documentElement.scrollWidth <= innerWidth, shown: !!document.querySelector("#km-goal") };
+  });
+  assert.deepEqual(r.none, { goal: 0, card: true });
+  assert.deepEqual(r.a, { now: 25, prev: 0, km: 12 }, "a new goal applies from this week; the past is not rewritten");
+  assert.deepEqual(r.hist, { w2: 28, w1: 28, w0: 25 }, "each week has the goal that applied then");
+  assert.deepEqual(r.changed, { thisWeek: 30, history: 2 }); assert.deepEqual(r.off, { thisWeek: 0, lastWeek: 28 });
+  assert.deepEqual(r.card, { km: true, goal: true, togo: true, reached: true });
+  assert.ok(r.chartGoal >= 3 && r.greenBars >= 1, `goal lines ${r.chartGoal}, green bars ${r.greenBars}`); assert.ok(r.sw && r.shown); assert.deepEqual(app.errors, []);
+  await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "km-goal.png") });
+  await app.reload(); assert.equal(await page.evaluate(() => kmGoalFor(weekStartOf(todayISO()))), 25);
+});

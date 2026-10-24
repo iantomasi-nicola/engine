@@ -2297,7 +2297,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 .wd.done{background:var(--md-primary)!important;color:var(--md-on-primary)!important}.wd.done small{color:var(--md-on-primary)!important}
 @media (min-width:720px){.sheet-h::before{display:none!important}}
 /* ---------- the phone: compact, aligned, nothing cut ---------- */
-.shop-date{position:relative;gap:8px}.shop-date input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.date-pick{position:relative;gap:8px}.date-pick input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}.day-nav{display:flex;align-items:center;gap:2px;min-width:0}.day-nav .date-pick{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 8px;border-radius:12px;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day-nav .date-pick:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .st-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.st-ctl .seg{width:auto}.st-ctl .seg button{flex:0 0 auto}
 /* the side column on wide screens is narrow: the weigh-in goes on two lines there */
 @media (min-width:1024px){.plan-side .weigh{flex-wrap:wrap}.plan-side .weigh-l{flex:1 1 100%}.plan-side .weigh-in{flex:1 1 100%;display:flex;gap:8px}.plan-side .weigh-in .unit-inp{flex:1;width:auto}}
@@ -2305,9 +2305,6 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 .set-goal{grid-column:1/-1}
 .show-xs{display:none}@media (max-width:520px){.show-xs{display:inline}}
 @media (max-width:599px){
-  .chips.scroll:has(.shop-date){display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.25fr);gap:6px;overflow:visible}
-  .chips.scroll:has(.shop-date)>*{justify-content:center;padding:0 6px!important;min-width:0;white-space:nowrap}
-  .shop-date{gap:5px!important}
   .pan-main .t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 }
 @media (max-width:599px){
@@ -3261,7 +3258,7 @@ function defaultFit() {
     learn: { minSessions: 4, minKm: 10, window: 90, realBefore: "" },
     pattern: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }, usePattern: true,
     run: { window: "last20", lthrF: 1, powF: 1, provF: 1, tSlow: 1.03, iPct: 0.975, rFaster: 15, testMin: 30, retest: 42, band: 3, hardMax: 3,
-      loadCaution: 1.3, rhrAlert: 5, hrCal: 0.794, rpeL: 3, rpeM: 5, rpeH: 8, deloadShare: 0.7, deloadAfter: 5, vdotWindow: 60, lthrManual: null, zones: clone(DEF_ZONES) },
+      loadCaution: 1.3, rhrAlert: 5, hrCal: 0.794, kmGoals: [], rpeL: 3, rpeM: 5, rpeH: 8, deloadShare: 0.7, deloadAfter: 5, vdotWindow: 60, lthrManual: null, zones: clone(DEF_ZONES) },
     top: { repMin: 4, repMax: 6, inc: 2.5, rirEasy: 3 },
     player: { voice: "it", calls: "on", prep: 5 },
     exercises: ["Pull-up", "Dip", "Push-up", "Muscle-up", "HSPU"],
@@ -4350,6 +4347,7 @@ function trainRunning() {
   if (rs.fitness) st.push(["Aerobic fitness", rs.fitness.cat, `${rs.fitness.cat}${rs.fitness.pct == null ? ", below the 40th percentile" : `, about the ${r0(rs.fitness.pct)}th percentile`} for ${rs.fitness.group} (FRIEND registry)${rs.fitness.next ? `. Next level (${rs.fitness.next[1]}): VDOT ${r1(rs.fitness.next[0])} = 5k in ${fmtClock(rs.fitness.next5k)}` : ""}`]);
   let h = `<div class="stat-grid">${kpi(rs.lthr || "—", "LTHR bpm", esc(rs.lthrSrc))}${kpi(fmtPace(rs.tPace), "threshold pace /km", rs.tPace ? `${r1(60 / rs.tPace)} km/h` : "")}${kpi(rs.maxHr || "—", "max HR", esc(rs.maxSrc))}
     ${kpi(rs.vdot ? r1(rs.vdot) : "—", "VDOT", rs.fitness ? esc(rs.fitness.cat) : "")}${kpi(L.ratio == null ? "—" : L.ratio.toFixed(2) + "×", "load 7 d", `${fmtN(L.l7)} vs ${fmtN(L.usual)} usual`)}${kpi(rs.nextTest ? fmtDM(rs.nextTest) : "—", "next test", rs.daysSince != null ? (rs.daysSince > R.retest ? "due now" : `in ${R.retest - rs.daysSince} days`) : "do the lactate test")}</div>`;
+  h += kmGoalCard();
   h += `<div class="section-h"><h2>Status</h2></div><div class="card">${st.map(([k, s, d]) => `<div class="lrow" style="grid-template-columns:minmax(0,1fr) auto;align-items:start"><span style="min-width:0"><span class="t">${k}</span><span class="s" style="white-space:normal">${esc(d)}</span></span><span class="end">${pill(s)}</span></div>`).join("")}</div>`;
   h += `<div class="section-h"><h2>Training zones (Friel)</h2></div>${tbl(["Zone", "HR", "Pace /km", ...(rs.power ? ["Watts"] : []), "RPE", "Use"], rs.zones.map(z => `<tr><td><b>${z.z}</b> <span class="s">${esc(z.name)}</span></td><td class="n">${z.from == null && z.to == null ? "—" : `${z.from ?? "<"}${z.from != null && z.to != null ? "–" : ""}${z.to ?? "+"}`}</td><td class="n">${z.paceSlow || z.paceFast ? `${z.paceSlow ? fmtPace(z.paceSlow) : ""}${z.paceSlow && z.paceFast ? "–" : z.paceFast ? "> " : "+"}${z.paceFast ? fmtPace(z.paceFast) : ""}` : "—"}</td>${rs.power ? `<td class="n">${z.wFrom ?? ""}${z.wFrom && z.wTo ? "–" : ""}${z.wTo ?? ""}</td>` : ""}<td class="n">${z.rpe}</td><td class="s">${esc(z.use)}</td></tr>`))}
     <div class="faint" style="font-size:12.5px">HR as % of LTHR, pace as % of threshold pace. Slow runs by heart rate, quality sessions by pace (HR needs 1–3′ to rise). Add 4–6 strides of 20″ after two easy runs a week.</div>`;
@@ -4377,14 +4375,28 @@ function vdotChart(rs) {
   g += `<text x="${L}" y="${H - 6}">${fmtDM(pts[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(pts[pts.length - 1][0])}</text>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="VDOT trend">${g}</svg>`;
 }
+/* weekly running distance and its goal. The goal can change: each week is judged by the goal that applied to it */
+const weekKm = ws => { let km = 0; for (let i = 0; i < 7; i++) for (const w of logGet(addDays(ws, i))?.workouts || []) if (w.sport === FIT().runSport) km += +w.km || 0; return km; };
+const kmGoalFor = ws => { const g = (FIT().run.kmGoals || []).filter(x => x.from <= ws).sort((a, b) => a.from.localeCompare(b.from)).pop(); return g ? +g.km || 0 : 0; };
+function kmGoalSet(km) { const ws = weekStartOf(todayISO()), L = (FIT().run.kmGoals || []).filter(x => x.from !== ws); if (km > 0 || L.length) L.push({ from: ws, km: km > 0 ? r1(km) : 0 }); FIT().run.kmGoals = L.sort((a, b) => a.from.localeCompare(b.from)); saveSettings(); }
+function kmGoalCard() {
+  const ws = weekStartOf(todayISO()), goal = kmGoalFor(ws), km = weekKm(ws), left = 7 - dow(todayISO()) - 1, hit = [...Array(8)].map((_, k) => addDays(ws, -7 * (k + 1))).filter(w => kmGoalFor(w) > 0);
+  const reached = hit.filter(w => weekKm(w) >= kmGoalFor(w)).length;
+  return `<div class="section-h"><h2>Weekly running goal</h2></div><div class="card pad" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="justify-content:space-between;align-items:baseline"><span><b style="font-size:22px">${r1(km)}</b><span class="faint"> ${goal ? `/ ${r1(goal)} km this week` : "km this week"}</span></span>${goal ? `<span class="faint" style="font-size:12.5px">${km >= goal ? "Goal reached" : `${r1(goal - km)} km to go${left > 0 ? ` · ${left} day${left > 1 ? "s" : ""} left after today` : ""}`}</span>` : ""}</div>
+    ${goal ? `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${r1(km)}" style="height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden"><i style="display:block;height:100%;width:${Math.min(100, km / goal * 100)}%;background:var(--${km >= goal ? "good" : "accent"})"></i></div>` : ""}
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="unit-inp" style="max-width:140px"><input id="km-goal" class="inp" inputmode="decimal" value="${goal || ""}" placeholder="e.g. 30" data-chg="km-goal" aria-label="Weekly km goal"><span>km</span></div><span class="faint" style="font-size:12.5px">${hit.length ? `Reached in ${reached} of the last ${hit.length} week${hit.length > 1 ? "s" : ""} with a goal` : goal ? "Past weeks are compared with the goal that applied then" : "Set a weekly distance: it applies from this week; earlier weeks keep theirs"}</span></div></div>`;
+}
 function kmChart() {
-  const fit = FIT(), ws0 = weekStartOf(todayISO()), wk = [];
-  for (let k = 7; k >= 0; k--) { const s = addDays(ws0, -7 * k); let km = 0; for (let i = 0; i < 7; i++) for (const w of logGet(addDays(s, i))?.workouts || []) if (w.sport === fit.runSport) km += +w.km || 0; wk.push([s, km]); }
-  const W = chartW(true), H = 170, L = 30, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(10, ...wk.map(w => w[1])));
+  const ws0 = weekStartOf(todayISO()), wk = [];
+  for (let k = 7; k >= 0; k--) { const s = addDays(ws0, -7 * k); wk.push([s, weekKm(s), kmGoalFor(s)]); }
+  const W = chartW(true), H = 170, L = 30, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(10, ...wk.map(w => Math.max(w[1], w[2] * 1.15))));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx), bw = (W - L - R) / 8; let g = "";
   for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
-  wk.forEach(([s, km], i) => { const x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${y(km)}" width="${bw * 0.6}" height="${y(0) - y(km)}" rx="3" fill="var(--fat)"><title>${fmtDM(s)}: ${r1(km)} km</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Running km per week">${g}</svg>`;
+  wk.forEach(([s, km, goal], i) => { const x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${y(km)}" width="${bw * 0.6}" height="${y(0) - y(km)}" rx="3" fill="${goal > 0 && km >= goal ? "var(--good)" : "var(--fat)"}"><title>${fmtDM(s)}: ${r1(km)} km${goal ? ` · goal ${r1(goal)}` : ""}</title></rect>`;
+    if (goal > 0) g += `<line x1="${L + i * bw + 2}" x2="${L + (i + 1) * bw - 2}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Running km per week${wk.some(w => w[2]) ? ", with the weekly goal" : ""}">${g}</svg>`;
 }
 function trainRecords() {
   const rs = runState();
@@ -4507,7 +4519,7 @@ function renderSheet() {
   const f = captureFocus(); const sc = $(".sheet-b")?.scrollTop || 0;
   const def = SHEETS[sh.type](sh), enter = sh._new ? " enter" : "";
   root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
-    <div class="sheet-h"><h3>${esc(def.title)}</h3>${def.head || ""}<button class="icon-btn" data-act="close-sheet" aria-label="Close">${ic("close")}</button></div>
+    <div class="sheet-h"><h3>${def.titleHTML || esc(def.title)}</h3>${def.head || ""}<button class="icon-btn" data-act="close-sheet" aria-label="Close">${ic("close")}</button></div>
     <div class="sheet-b">${def.body}</div>${def.foot ? `<div class="sheet-f">${def.foot}</div>` : ""}</div>`;
   document.body.style.overflow = "hidden";
   const b = $(".sheet-b"); if (b && !sh._new) b.scrollTop = sc;
@@ -4854,6 +4866,11 @@ SHEETS.onboard = sh => ({
   foot: `<button class="btn primary" data-act="ob-done">Start</button>`
 });
 const NEAT_SRC = { watch: "from your watch", avg: "average of the last 7 days", default: "default value: no data yet" };
+/* a day picker for sheets: previous day, the date (tap it to pick any day), next day. go = the action that opens that day */
+function dayNavHTML(d, go) {
+  const t = todayISO(), txt = `${d < t ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`;
+  return `<span class="day-nav"><button class="icon-btn sm" data-act="${go}" data-date="${addDays(d, -1)}" aria-label="Previous day">${ic("chevL")}</button><label class="date-pick"><span>${esc(txt)}</span><input type="date" value="${d}" data-in="day-pick" data-go="${go}" aria-label="Pick a day"></label><button class="icon-btn sm" data-act="${go}" data-date="${addDays(d, 1)}" aria-label="Next day">${ic("chevR")}</button></span>`;
+}
 /* ================= day check-in ================= */
 const sessRow = (w, d, act, list, i) => { const k = sessionKcal(w, d); return `<button class="lrow" data-act="${act}" data-list="${list}" data-i="${i}" data-date="${d}"><span style="min-width:0"><span class="t">${esc(sessionLabel(w))}</span><span class="s">${w.sport === "Rest" ? "Planned rest" : `${fmtN(k.kcal)} kcal · ${{ watch: "watch", device: "watch · intervals.icu", load: "from intervals.icu load", logged: "logged", km: "from km", hr: "from avg HR", own: "your kcal/min", met: "MET estimate", none: "", rest: "" }[k.how]}${w.hr ? ` · HR ${w.hr}` : ""}${w.note ? ` · ${esc(w.note)}` : ""}`}</span></span><span class="end">${ic("edit", "sm")}</span></button>`; };
 SHEETS.checkin = sh => {
@@ -4892,7 +4909,7 @@ SHEETS.checkin = sh => {
     ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
     ${row(esc(r.phase.phase), (r.phase.kcal > 0 ? "+" : "") + fmtN(r.phase.kcal), "kcal/day vs TDEE")}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
     ${r.intake ? row("Balance", (r.balance > 0 ? "+" : "") + fmtN(r.balance), `≈ ${sgn(r.estKg * 1000, 0)} g of body weight`) : ""}</div></div>`;
-  return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
+  return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, titleHTML: dayNavHTML(d, "ci-go"), body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
 };
 
 /* ================= session editor ================= */
@@ -6149,6 +6166,8 @@ document.addEventListener("click", e => { if (e.target.id === "qty-in" && e.targ
 /* ================= training, check-in, results, fitness settings ================= */
 ACT["train-seg"] = el => { UI.trainSeg = el.dataset.k; if (UI.tab !== "train") { UI.tab = "train"; closeSheet(); window.scrollTo(0, 0); } scheduleRender(); };
 ACT["prog-seg"] = el => { UI.progSeg = el.dataset.k; scheduleRender(); };
+ACT["ci-go"] = el => { const sh = S_(); if (sh?.type !== "checkin" || !el.dataset.date) return; sh.date = el.dataset.date; renderSheet(); };
+INP["day-pick"] = (v, el) => { if (v) ACT[el.dataset.go]({ dataset: { date: v } }); };
 ACT["open-checkin"] = el => openSheet("checkin", { date: el.dataset.date || UI.date, live: true });
 ACT["open-pattern"] = el => openSheet("pattern", { k: el.dataset.k, live: true });
 ACT["fit-toggle"] = el => { const p = el.dataset.path; setPath(FIT(), p, !p.split(".").reduce((o, k) => o?.[k], FIT())); saveSettings(); };
@@ -9713,7 +9732,7 @@ function forecastHTML(date) {
   const body = F.rows.length ? F.rows.slice(0, 12).map(r => { const u = r.f.unit || "g", whys = [...new Set(r.uses.map(x => x.why))];
     return `<div class="lrow"><span style="min-width:0"><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.now)} → ${fmtN(r.then)} ${u}${r.endsOn ? ` · <b style="color:var(--${r.endsOn <= date ? "warn" : "muted"})">runs out ${dayTxt(r.endsOn)}</b>` : ""}${whys.length ? ` · for ${esc(whys.slice(0, 3).join(", "))}${whys.length > 3 ? ` +${whys.length - 3}` : ""}` : ""}</span></span></div>`; }).join("") + (F.rows.length > 12 ? `<div class="lrow"><span class="s">+${F.rows.length - 12} more</span></div>` : "")
     : `<div class="lrow"><span class="s">Nothing at home is set aside for meals up to ${dayTxt(date)}. Link planned meals to the pantry ("From the pantry") to see it here.</span></div>`;
-  return `<details class="pa-forecast card" ${F.rows.length ? "open" : ""}><summary><b>Stock on ${dayTxt(date)}</b><span class="faint">after the meals set aside up to then</span></summary><div class="chips pa-fchips">${chips}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div></details>`;
+  return `<details class="pa-forecast card" ${F.rows.length ? "open" : ""}><summary><b>Stock on ${dayTxt(date)}</b><span class="faint">after the meals set aside up to then</span></summary><div class="chips pa-fchips">${chips}<label class="chip sm date-pick">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div></details>`;
 }
 VIEWS.pantry = function () {
   const today = todayISO(), P = S.shop.pantry || {}, pref = panPrefs(), q = UI.pantryQ || "", fdate = UI.paDate && UI.paDate >= today ? UI.paDate : addDays(today, 7);
@@ -12680,6 +12699,7 @@ function gearView() {
 ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.onCode = code => { if (UI.sheet !== sh) return; const dup = findByBarcode(code);
     sh.draft.barcode = code; renderSheet(); toast(dup && dup.id !== sh.draft.id ? `Barcode ${code} · already used by ${dup.name}` : `Barcode ${code}`); };
   camOpen("barcode"); };
+CHG["km-goal"] = v => { kmGoalSet(num(v)); scheduleRender(); };
 CHG["fd-role"] = v => { const d = S_().draft; d.role = v; d._roleSet = true; d.meals = mealsForRole(v, d.name); renderSheet(); };
 ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
 { const _c = ACT["cam-close"], _t = ACT["cam-type"]; ACT["cam-close"] = el => { CAM.onCode = null; return _c(el); }; ACT["cam-type"] = el => { if (CAM.onCode) { CAM.onCode = null; camClose(); setTimeout(() => $("#fd-barcode")?.focus(), 60); return; } return _t(el); }; }
