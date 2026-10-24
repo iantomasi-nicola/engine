@@ -16,10 +16,10 @@ test("Today: a Shopping button sits in the quick row with the count, opens the q
   }
 });
 
-test("Shopping header: Bought comes first, then the scanner, then copy", async () => {
+test("Shopping header: Bought comes first, then the scanner, the receipt, then copy", async () => {
   const page = await start(H.VIEWPORTS.phone, "shop");
   const acts = await page.evaluate(() => [...document.querySelectorAll(".top-row .row > button")].map(b => b.dataset.act));
-  assert.deepEqual(acts, ["shop-prod", "shop-scan", "copy-list"]);
+  assert.deepEqual(acts, ["shop-prod", "shop-scan", "receipt-open", "copy-list"]);
 });
 
 test("a swipe on a list row (a deliberate one) opens Replace for that product; a short one does nothing; a ticked row asks to untick first", async () => {

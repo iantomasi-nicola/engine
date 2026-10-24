@@ -242,6 +242,6 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L71 | Scarico della Season come quello dei programmi: «Only if I've been training» salta lo scarico a calendario se nelle 3 settimane prima hai fatto meno del 60% delle sedute | M10d | **Fatto (24/10)** |
 | L72 | Meteo: il grafico del giorno c'è sempre (anche asciutto), con l'intervallo di temperatura; «Follow my GPS» rilegge la posizione una volta al giorno | M10d | **Fatto (24/10)** |
 | L73 | Vista unica della settimana su desktop/tablet (allenamenti + pasti + integratori in 7 colonne): il piano dei pasti settimanale c'è (M5b, Fuel › Week) e gli allenamenti sono in Train › Plan, la vista unica no | M13 | Da fare |
-| L74 | «Share as a story»: l'anteprima non salta né sfarfalla quando cambi un'opzione, il campo in cui scrivi non perde il cursore | M10e | Da fare |
-| L75 | Foto dello scontrino: scegli il supermercato, l'AI legge le righe, i cibi già registrati vanno in dispensa (quantità dal formato della confezione) con il prezzo per quel negozio e vengono depennati dalla lista; i cibi nuovi o non riconosciuti non si toccano e finiscono in un elenco da fare a mano | M10e | Da fare |
+| L74 | «Share as a story»: l'anteprima non salta né sfarfalla quando cambi un'opzione, il campo in cui scrivi non perde il cursore | M10e | **Fatto (24/10)** |
+| L75 | Foto dello scontrino: scegli il supermercato, l'AI legge le righe, i cibi già registrati vanno in dispensa (quantità dal formato della confezione) con il prezzo per quel negozio e vengono depennati dalla lista; i cibi nuovi o non riconosciuti non si toccano e finiscono in un elenco da fare a mano (Shopping › «From the receipt») | M10e | **Fatto (24/10)** |
 

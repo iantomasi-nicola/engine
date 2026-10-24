@@ -165,12 +165,14 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .sp-t{display:flex;flex-direction:column;min-width:0}.sp-t b{font-weight:600;font-size:15px}.sp-t small{font-size:12.5px;color:var(--muted)}
 .sp-item.done .sp-t b{color:var(--muted)}
 .prof-pre{white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface-2);border-radius:14px;padding:14px;margin:0;overflow-wrap:anywhere}
+.rc-r{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 8px}.rc-r.skip{opacity:.45}.rc-n{grid-column:1/-1;display:flex;gap:8px}.rc-n .unit-inp{flex:1;max-width:none}.rc-ph{display:flex;gap:8px;overflow-x:auto}.rc-ph img{height:96px;border-radius:10px}
+.rc-t{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.rc-t>span:first-child{flex:1}.rc-t b{display:block;font-size:14px}.rc-t small{font-size:12.5px;color:var(--muted)}
 .meal-t{gap:8px}.mt-f{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted)}.mt-f .inp{color:var(--ink)}.supp-tf{display:flex;align-items:center;gap:8px;width:100%}.supp-tf select{flex:1;min-width:0}.supp-tf input[type=time]{width:132px;flex:none}.supp-tf small{font-variant-numeric:tabular-nums}
 .sp-time{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.sp-item.late .sp-time,.sp-item.miss .sp-time{color:var(--warn);font-weight:600}.sp-item.done .sp-time{color:var(--good)}
 .sp-all{align-self:flex-start}
 .supp-tf{display:inline-flex;align-items:center;gap:2px}.supp-tf .inp{width:120px}
 
-.story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px}
+.story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px;min-height:min(52vh,460px)}
 .story-pv img{max-height:52vh;width:auto;border-radius:12px;box-shadow:var(--md-elev2,0 2px 8px rgba(0,0,0,.2))}
 /* secondary tabs: a tonal track, the picked one fills (M3 connected button group) */
 .subseg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--md-sc-high);width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
@@ -10129,6 +10131,7 @@ const AI_FEATS = [
   ["describe", "Describe a meal", "“A plate of carbonara and a salad” → foods and amounts."],
   ["restaurant", "Restaurant and cheat meals", "Estimates a meal you didn't cook."],
   ["lookup", "Values for unknown foods", "When a food isn't in your list or on Open Food Facts."],
+  ["receipt", "Read a receipt", "A photo of the receipt: foods you already have go to the pantry with their price and come off the list; new foods are only listed for you to add by hand."],
   ["tips", "Nutrition coach", "Reads your week (macros, fibre, salt, vitamins) and suggests concrete swaps."]];
 function AIF(k) { return !!Sync.sample && (S.settings?.aiFeat || {})[k] !== false; }
 function aiFeatCard() {
@@ -11195,7 +11198,12 @@ SHEETS.story = sh => { const O = storyOpt(sh), D = sh.data;
       <div class="chips st-acc">${Object.entries(STORY_ACC).map(([k, v]) => `<button class="chip sm" data-act="story-acc" data-k="${k}" aria-pressed="${O.acc === k}" aria-label="Accent ${k}"><i style="background:${v}"></i></button>`).join("")}</div></div>`,
   foot: `<button class="btn tonal" data-act="story-save" style="flex:0 0 auto">${ic("download", "sm")}Save</button><button class="btn primary" data-act="story-share">${ic("copy", "sm")}Share</button>` }; };
 let STORY_T = 0;
-async function storyDraw() { const sh = S_(); if (!sh || sh.type !== "story") return; const c = await storyCanvas(sh.data, sh.photo, sh.layout || "bg", storyOpt(sh)); const blob = await new Promise(r => c.toBlob(r, "image/png")); if (UI.sheet !== sh) return; if (sh.url) URL.revokeObjectURL(sh.url); sh.blob = blob; sh.url = URL.createObjectURL(blob); renderSheet(); }
+/* a new picture replaces the preview in place: the sheet is not rebuilt, so the preview keeps its size, the page does not jump and the field you are typing in keeps its cursor */
+async function storyDraw() { const sh = S_(); if (!sh || sh.type !== "story") return; const c = await storyCanvas(sh.data, sh.photo, sh.layout || "bg", storyOpt(sh)); const blob = await new Promise(r => c.toBlob(r, "image/png")); if (UI.sheet !== sh) return;
+  const old = sh.url; sh.blob = blob; sh.url = URL.createObjectURL(blob); const oldPv = document.querySelector(".sheet .story-pv"), img = oldPv?.querySelector("img");
+  if (!oldPv || !img) { renderSheet(); if (old) URL.revokeObjectURL(old); return; }
+  img.dataset.blob = sh.url; img.src = sh.url; const f = captureFocus(), b = document.querySelector(".sheet-b"), sc = b.scrollTop, tmp = document.createElement("div"); tmp.innerHTML = SHEETS.story(sh).body;
+  tmp.querySelector(".story-pv").replaceWith(oldPv); b.replaceChildren(...tmp.childNodes); b.scrollTop = sc; restoreFocus(f); if (old) setTimeout(() => URL.revokeObjectURL(old), 1500); }
 const storySet = (k, v, now) => { const sh = S_(); sh.opt = { ...storyOpt(sh), [k]: v }; try { localStorage.setItem("engine.story", JSON.stringify((({ title, caption, hide, ...o }) => o)(sh.opt))); } catch (e) {} clearTimeout(STORY_T); STORY_T = setTimeout(storyDraw, now ? 0 : 350); };
 function storyOpen(date, w, s) { let saved = {}; try { saved = JSON.parse(localStorage.getItem("engine.story") || "{}"); } catch (e) {} openSheet("story", { data: storyData(date, w, s), layout: "bg", opt: saved }); setTimeout(storyDraw, 30); }
 CHG["story-photo"] = (v, el) => { const f = el.files?.[0]; if (!f) return; const sh = S_(); sh.photo = f; sh.bg = "photo"; el.value = ""; storyDraw(); };
@@ -13610,10 +13618,10 @@ function shopPanel(inSheet) {
 VIEWS.shop = function () {
   const P = shopPanel(false), n = S.shop.range || 7, start = UI.shopStart;
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))}</div></div>
-    <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
+    <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="icon-btn" data-act="receipt-open" aria-label="Photo of the receipt" title="Photo of the receipt">${ic("camera")}</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
   h += `<div class="card pad shop-card">${P.h}</div>`;
   if (P.anyCk) h += `<div class="shop-done-bar"><button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Finish shopping${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button></div>`;
-  return h + spendCard();
+  return h + rcTodoCard() + spendCard();
 };
 SHEETS.shopq = () => { const P = shopPanel(true);
   return { full: true, title: `Shopping · ${P.left} to buy`, body: P.h, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto" aria-label="Copy the list">${ic("copy", "sm")}</button><button class="btn soft" data-act="shop-prod" style="flex:0 0 auto">${ic("plus", "sm")}Bought</button>${P.anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Finish${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` }; };
@@ -13995,6 +14003,70 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   put("shop", "", S.shop); haptic(10);
   toast(`${r.f.name} · ${fmtN(g)} ${r.f.unit || "g"} in the pantry`, () => { if (before) S.shop.pantry[id] = before; else delete S.shop.pantry[id]; S.shop.buys = (S.shop.buys || []).slice(0, nb); put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); });
   scheduleRender(); if (UI.sheet) renderSheet(); }; }
+/* ================= the receipt: a photo, the supermarket, and the pantry, the prices and the list follow ================= */
+const RC_MAX = 3;
+const rcFoodFor = x => { const hits = foodSearch(`${x.brand || ""} ${x.name}`.trim(), "all").filter(o => o.t === "food"); return hits[0] && hits[0].s >= RI_GOOD ? hits[0].x : null; };
+function rcRows(j) {
+  const rows = [], todo = [];
+  for (const x of (Array.isArray(j?.items) ? j.items : []).slice(0, 80)) { if (!x || !String(x.name || x.text || "").trim()) continue;
+    const name = String(x.name || x.text).trim().slice(0, 70), brand = String(x.brand || "").trim().slice(0, 40), qty = Math.max(1, num(x.qty) || 1), w = num(x.weight_g) > 0 ? num(x.weight_g) : 0, eur = num(x.price) > 0 ? Math.round(num(x.price) * 100) / 100 : null, f = rcFoodFor({ name, brand });
+    if (!f) { todo.push({ name, brand, qty, eur, why: "not in your foods" }); continue; }
+    const g = x.by_weight && w ? w : w ? r0(w * qty) : f.pack > 0 ? r0(f.pack * qty) : 0;
+    if (!(g > 0)) { todo.push({ name: f.name, brand: f.brand || brand, qty, eur, why: "no pack size: add it to the food or tell me the amount", id: f.id }); continue; }
+    rows.push({ id: f.id, name: f.name, brand: f.brand || "", g, u: f.unit === "ml" ? "ml" : "g", eur, printed: name });
+  }
+  return { rows, todo };
+}
+SHEETS.receipt = sh => { const can = AIF("receipt") && !!Sync.sample && !!Sync.sampleImages, R = sh.res, list = new Set(shopToBuy().map(r => r.id)), sts = storeList();
+  const storeChips = `<div class="field"><span class="flabel">Supermarket</span><div class="chips">${sts.map(x => `<button class="chip" data-act="rc-store" data-id="${x.id}" aria-pressed="${sh.store === x.id}">${esc(x.name)}</button>`).join("")}<button class="chip" data-act="rc-store" data-id="" aria-pressed="${!sh.store}">Not listed</button></div>${sts.length ? "" : `<span class="faint" style="font-size:12.5px">Add your supermarkets in the shopping list to keep a price for each.</span>`}</div>`;
+  const body = !can ? `<div class="note">${Sync.sample ? "Your AI service can't read pictures: add one that can in Settings › AI (Gemini does)." : "Add an AI service in Settings › AI to read a receipt from a photo."}</div>`
+    : R ? `<div class="note accent">Read by AI: check amounts and prices. Nothing is saved yet.</div>
+      <div class="field"><span class="flabel">To the pantry <small class="faint">· ${R.rows.filter(r => !r.skip).length}</small></span><div class="card">${R.rows.map((r, i) => `<div class="lrow rc-r${r.skip ? " skip" : ""}"><span style="min-width:0"><span class="t">${esc(r.name)}${list.has(r.id) ? ' <span class="tag">On your list</span>' : ""}</span><span class="s">${[r.brand, r.printed !== r.name ? r.printed : ""].filter(Boolean).map(esc).join(" · ") || "&nbsp;"}</span></span>
+        <button class="icon-btn sm" data-act="rc-skip" data-i="${i}" aria-label="${r.skip ? "Put back" : "Leave out"}">${ic(r.skip ? "undo" : "close", "sm")}</button>
+        <span class="rc-n"><span class="unit-inp"><input class="inp sm" inputmode="decimal" value="${r.g}" data-in="rc-g" data-i="${i}" aria-label="Amount of ${esc(r.name)}"><span>${r.u}</span></span><span class="unit-inp"><input class="inp sm" inputmode="decimal" value="${r.eur ?? ""}" placeholder="—" data-in="rc-e" data-i="${i}" aria-label="Price of ${esc(r.name)}"><span>€</span></span></span></div>`).join("") || `<div class="lrow"><span class="s">None of the lines matched a food you have.</span></div>`}</div></div>
+      ${R.todo.length ? `<div class="field"><span class="flabel">Not loaded · ${R.todo.length} <small class="faint">add them by hand</small></span><div class="card">${R.todo.map(t => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(t.name)}</span><span class="s">${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : "", t.why].filter(Boolean).map(esc).join(" · ")}</span></span></div>`).join("")}</div><span class="faint" style="font-size:12.5px">They stay on the shopping page until you create them or dismiss them.</span></div>` : ""}
+      ${R.dup ? `<div class="note warn">A receipt with the same total was loaded today: loading it again would count everything twice.</div>` : ""}`
+    : `${storeChips}<div class="field"><span class="flabel">Photo${sh.photos?.length ? ` · ${sh.photos.length}` : ""}</span><div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn tonal sm">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="rc-photo"></label><label class="btn soft sm">${ic("image", "sm")}Gallery<input type="file" accept="image/*" class="sr" data-chg="rc-photo" multiple></label></div>
+      ${(sh.urls || []).length ? `<div class="rc-ph">${sh.urls.map(u => `<img data-blob="${u}" alt="Receipt photo">`).join("")}</div>` : ""}<span class="faint" style="font-size:12.5px">Flat, well lit, the whole receipt in view. A long one: up to ${RC_MAX} photos, top to bottom.</span>
+      <button class="btn primary" data-act="rc-go" ${sh.busy || !sh.photos?.length ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Reading it…' : ic("spark", "sm") + "Read the receipt"}</button>${sh.busy ? skel("Reading the receipt…", 4) : ""}</div>`;
+  return { title: "Receipt", body, foot: R ? `<button class="btn soft" data-act="rc-back">Back</button><button class="btn primary" data-act="rc-load" ${R.rows.some(r => !r.skip) ? "" : "disabled"}>${ic("check", "sm")}Load ${R.rows.filter(r => !r.skip).length} into the pantry</button>` : `<button class="btn tonal" data-act="close-sheet">Cancel</button>` }; };
+ACT["receipt-open"] = () => openSheet("receipt", { store: curStore() || null, photos: [], urls: [] });
+ACT["rc-store"] = el => { S_().store = el.dataset.id || null; renderSheet(); };
+CHG["rc-photo"] = async (v, el) => { const sh = S_(), fs = [...(el.files || [])].slice(0, RC_MAX - (sh.photos?.length || 0)); el.value = ""; if (!fs.length) { if (sh.photos?.length >= RC_MAX) toast(`${RC_MAX} photos at most`); return; }
+  try { for (const f of fs) { const b = await shrink(f, 1800); sh.photos.push(b); sh.urls.push(URL.createObjectURL(b)); } } catch (e) { toast("Couldn't read that picture."); } renderSheet(); };
+INP["rc-g"] = (v, el) => { const r = S_().res.rows[+el.dataset.i]; r.g = num(v) || 0; };
+INP["rc-e"] = (v, el) => { const r = S_().res.rows[+el.dataset.i]; r.eur = String(v).trim() === "" ? null : Math.max(0, num(v)); };
+ACT["rc-skip"] = el => { const r = S_().res.rows[+el.dataset.i]; r.skip = !r.skip; renderSheet(); };
+ACT["rc-back"] = () => { const sh = S_(); sh.res = null; renderSheet(); };
+ACT["rc-go"] = async () => { const sh = S_(); if (!sh.photos?.length || sh.busy) return; sh.busy = true; renderSheet();
+  const prompt = `These are photos of one supermarket receipt (top to bottom). Read every purchased line.
+Reply with only JSON: {"store": "name or null", "date": "YYYY-MM-DD or null", "total": number or null, "items": [{"name": "plain product name in the receipt's language, no codes", "brand": "brand or null", "qty": number of units bought (1 if not shown), "weight_g": net weight or volume in g or ml of ONE unit if the line or name shows it (500G, 1L, 6x125g = 750), else null, "by_weight": true when sold by weight and qty/weight_g is that weight, "price": the line total in euros after quantity and any discount on that line}]}
+Ignore totals, VAT, bags, deposits, payments and loyalty points. Give weight_g in grams (1 kg = 1000, 1 L = 1000 ml).`;
+  try { const j = await Sync.sample.json(prompt, { images: sh.photos }); if (UI.sheet !== sh) return; const R = rcRows(j); R.total = num(j?.total) || null; R.date = /^\d{4}-\d{2}-\d{2}$/.test(String(j?.date)) ? j.date : null;
+    R.dup = !!R.total && (S.shop.receipts || []).some(x => x.d === todayISO() && Math.abs(x.tot - R.total) < 0.01);
+    if (!R.rows.length && !R.todo.length) toast("No lines came back: a flatter, closer photo usually fixes it."); else sh.res = R;
+  } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
+  sh.busy = false; if (UI.sheet === sh) renderSheet(); };
+ACT["rc-load"] = () => { const sh = S_(), R = sh.res; if (!R) return; const before = clone(S.shop), sid = sh.store || null, today = todayISO(), d = R.date && R.date <= today && R.date >= addDays(today, -14) ? R.date : today, list = new Set(shopToBuy().map(r => r.id));
+  S.shop.buys = S.shop.buys || []; S.shop.prices = S.shop.prices || {}; let n = 0, tot = 0;
+  for (const r of R.rows) { if (r.skip || !(r.g > 0)) continue; const f = getFood(r.id) || BUILTIN[r.id]; if (!f) continue;
+    const p = S.shop.pantry[r.id] || { g: 0 }; S.shop.pantry[r.id] = { ...p, g: r0((p.g || 0) + r.g), exp: p.g > 0 ? p.exp || null : null }; delete (S.shop.checked || {})[r.id];
+    if (r.eur != null) { const old = S.shop.prices[r.id], rec = { eur: r.eur, g: r.g, at: d }; S.shop.prices[r.id] = { ...(old?.st ? { st: old.st } : {}), ...rec, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), rec].slice(-8) };
+      if (sid) { const pr = S.shop.prices[r.id], o = pr.st?.[sid]; pr.st = { ...(pr.st || {}), [sid]: { ...rec, hist: [...(o?.hist || []), rec].slice(-8) } }; } tot += r.eur; }
+    if (sid) addFoodStore(r.id, sid);
+    S.shop.buys.push({ d, id: r.id, n: f.name, g: r.g, eur: r.eur, ...(r.eur == null ? { est: true } : {}), ...(sid ? { sid } : {}), receipt: true, ...(list.has(r.id) && d === today ? { tick: true } : {}) }); n++; }
+  const todo = R.todo.map(t => ({ id: uid(), ...t, ...(sid ? { sid } : {}), d })); S.shop.rcTodo = [...(S.shop.rcTodo || []), ...todo].slice(-60);
+  if (n) S.shop.receipts = [...(S.shop.receipts || []), { d: today, sid, tot: R.total ?? Math.round(tot * 100) / 100, n }].slice(-60);
+  put("shop", "", S.shop); closeSheet(); scheduleRender(); haptic(12);
+  toast(`${n} in the pantry${tot ? ` · ${fmtEur(tot)}` : ""}${todo.length ? ` · ${todo.length} to add by hand` : ""}`, () => { S.shop = before; put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); }); };
+/* what the receipt could not load stays on the shopping page until you create the food or dismiss the line */
+function rcTodoCard() { const L = S.shop.rcTodo || []; if (!L.length) return "";
+  return `<section class="card pad rc-todo"><div class="nut-h"><span class="flabel">From the receipt · ${L.length} to add by hand</span><span class="row" style="gap:6px"><button class="link" data-act="rc-copy">Copy</button><button class="link" data-act="rc-clear">Clear</button></span></div>
+    ${L.map(t => `<div class="rc-t"><span style="min-width:0"><b>${esc(t.name)}</b><small>${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : ""].filter(Boolean).map(esc).join(" · ")}</small></span><button class="btn tonal sm" data-act="rc-new" data-id="${t.id}">New food</button><button class="icon-btn sm" data-act="rc-del" data-id="${t.id}" aria-label="Dismiss ${esc(t.name)}">${ic("close", "sm")}</button></div>`).join("")}</section>`; }
+ACT["rc-new"] = el => { const t = (S.shop.rcTodo || []).find(x => x.id === el.dataset.id); if (!t) return; S.shop.rcTodo = S.shop.rcTodo.filter(x => x.id !== t.id); put("shop", "", S.shop); ACT["new-food"]({ dataset: { name: [t.brand, t.name].filter(Boolean).join(" ") } }); };
+ACT["rc-del"] = el => { S.shop.rcTodo = (S.shop.rcTodo || []).filter(x => x.id !== el.dataset.id); put("shop", "", S.shop); scheduleRender(); };
+ACT["rc-clear"] = () => { const old = S.shop.rcTodo; S.shop.rcTodo = []; put("shop", "", S.shop); scheduleRender(); toast("List cleared", () => { S.shop.rcTodo = old; put("shop", "", S.shop); scheduleRender(); }); };
+ACT["rc-copy"] = async () => { const t = (S.shop.rcTodo || []).map(x => `${x.name}${x.brand ? " (" + x.brand + ")" : ""}${x.eur != null ? " " + fmtEur(x.eur) : ""}`).join("\n"); try { await navigator.clipboard.writeText(t); toast("Copied"); } catch (e) { toast("Copy isn't available here"); } };
 /* what you ticked today stays on the list, so a wrong tick is taken back whenever you notice: the pantry and the history go back as they were */
 const tickedToday = () => (S.shop.buys || []).filter(b => b.tick && b.d === todayISO() && b.id);
 function tickedHTML() { const L = tickedToday(); if (!L.length) return "";

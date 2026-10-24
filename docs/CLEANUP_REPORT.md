@@ -250,3 +250,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `settings.mealTimes`, `settings.supps[].times` può contenere `~b`, `~l+`… (i vecchi orari «HH:MM» restano validi); `settings.fit.profile.name/surname`; `train.period.deloadMode`; `settings.wx.gps/gpsDay`. La funzione `engine-push` va ridistribuita per i promemoria raggruppati (con quella vecchia funzionano ma vengono inviati anche se hai già segnato l'integratore).
 
 **Aperto:** vista unica della settimana (L73) in M13; la posizione GPS resta «Current location (lat, lon)» perché un nome di città richiederebbe un servizio di geocoding inverso esterno.
+
+## M10e Story senza scatti e scontrino da foto (24/10/2026)
+**Verificato:** `m10e.test.js` (4 test): la story ridisegna l'immagine sul posto (stesso elemento, stesso scroll, campo di testo con cursore, chip aggiornati; il test fallisce sul codice precedente), scontrino con AI simulata (cibi noti in dispensa con quantità dal peso stampato o dal formato, prezzo per negozio, depennati dalla lista, nuovi cibi solo in elenco), Undo, scontrino già caricato, riga senza formato elencata invece di indovinata, bottone su tre schermi; screenshot a 390 px. Suite completa in background.
+
+**Eliminato / unificato:** la riscrittura dell'intera scheda a ogni ridisegno della story (`renderSheet()` in `storyDraw`); il prezzo e il negozio dello scontrino usano le stesse strutture di «Finish shopping» (`S.shop.prices[id].st[sid]`, `buys`, `addFoodStore`).
+
+**Compatibilità:** `S.shop.rcTodo` e `S.shop.receipts` opzionali; `buys[].receipt` e `tick` come per le spunte della lista (si annullano con la stessa spunta); funzione AI «receipt» tra i servizi attivabili in Settings › AI (serve un servizio che legga le immagini).
+
+**Aperto:** lo scontrino richiede un AI con visione; un lettore OCR locale non è previsto (righe e prezzi non sarebbero affidabili); i cibi nuovi non vengono creati da soli, come richiesto.
