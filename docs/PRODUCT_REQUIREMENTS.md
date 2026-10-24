@@ -131,7 +131,6 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | J3 | Correzione sistematica di overlap, overflow, icone, testi tagliati, touch | Must | L | ENG-01 | Non verificato | Scansione automatica + screenshot; target touch ≥44px |
 | J4 | Design system condiviso (colori, tipografia, spacing, componenti, grafici, stati) | Should | XL | J3 | Parziale | Token documentati; riduzione `!important` |
 | J5 | Redesign progressivo verificato su telefono, tablet, desktop | Should | XL | J4 | Non verificato | Screenshot per milestone |
-
 | J6 | Nuovo logo e nuove grafiche (icona dell'app e maskable, favicon, schermata iniziale, icone di sezione, illustrazioni degli stati vuoti, grafica delle story) coerenti con il design system (richiesta 24/10, dentro M13) | Should | L | J4 | Mancante | Set unico di asset in tutte le dimensioni, chiaro/scuro, verificato su telefono/tablet/desktop e come PWA installata |
 
 ## K. Daily Journal (richiesta 24/10 — proposta, nessun codice finché non è approvata)
