@@ -176,6 +176,16 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px;min-height:min(52vh,460px)}
 .story-pv img{max-height:52vh;width:auto;border-radius:12px;box-shadow:var(--md-elev2,0 2px 8px rgba(0,0,0,.2))}
 /* L15: the preview stays at the top of the sheet while the options scroll under it; on the phone it is shorter so the options show */
+/* the story sheet (L15): preview, then titled sections; on a wide screen the preview on the left, the options on the right */
+.st-wrap{display:flex;flex-direction:column;gap:4px;min-width:0}.st-opts2{display:flex;flex-direction:column;min-width:0}
+.st-sec{display:flex;flex-direction:column;gap:12px;padding:18px 0;border-top:1px solid var(--line);min-width:0}.st-sec:first-child{border-top:0;padding-top:10px}
+.st-h{margin:0;font-size:15px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.sty-row{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:12px;min-width:0}.sty-l{font-size:13.5px;color:var(--muted);line-height:1.3}
+.sty-row .seg,.st-sec>.seg{display:flex!important;width:100%!important}.sty-row .seg>button,.st-sec>.seg>button{flex:1 1 0;min-width:0}.st-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.st-route{align-self:flex-start;padding-inline:0!important}
+.st-acc{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.st-acc button{width:30px;height:30px;border-radius:50%;background:var(--sw);border:0;padding:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);cursor:pointer}
+.st-acc button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px var(--ink)}
+.st-sec .field{margin:0}
+@media (min-width:960px){.st-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;align-items:start}.sheet .st-wrap .story-pv{height:auto;padding:0;background:none;align-self:start}.sheet .st-wrap .story-pv img{max-height:calc(100vh - 240px);width:100%;height:auto;object-fit:contain}.sheet-b:has(.story-pv){scroll-padding-top:0}.st-sec:first-child{padding-top:0}}
 .sheet .story-pv{position:sticky;top:0;z-index:2;min-height:0}.sheet .story-pv img{max-height:44vh}.sheet-b:has(.story-pv){scroll-padding-top:calc(44vh + 28px)}
 @media (max-width:640px){.sheet-b:has(.story-pv){scroll-padding-top:calc(38vh + 12px)}}
 @media (max-width:640px){.sheet .story-pv{min-height:0;height:38vh;padding:8px}.sheet .story-pv img{max-height:calc(38vh - 16px)}}
@@ -624,7 +634,7 @@ textarea.inp{padding:10px 12px;min-height:80px;resize:vertical}
 .stat{background:var(--surface);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);min-width:0}
 .stat b{display:block;font-family:var(--display);font-stretch:112%;font-size:22px;font-weight:760;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .stat small{font-size:11.5px;color:var(--muted);font-weight:600}
-.chart{width:100%;height:auto;display:block}
+.chart{width:100%;height:auto;display:block;max-width:1100px}.chfs-b svg.chart{max-width:none}
 .chart text{fill:var(--muted);font-size:10.5px;font-family:var(--body)}
 .chart .gl{stroke:var(--line);stroke-width:1}
 .adh{display:grid;grid-template-columns:76px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:13px;padding:7px 0}
@@ -1426,13 +1436,13 @@ input.inp[type=time]{max-width:none!important;min-width:9.5em;width:auto}
 /* Shopping on the phone: «Bought» shows only its + so the title and the dates fit */
 @media (max-width:420px){.shop-prod .lbl{display:none}.shop-prod{padding-inline:10px!important;min-width:40px}}
 /* the run preview: its sections lose the box too, divided by a line like the strength one */
-.pv-run .lv-card{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding:20px 0!important}.pv-run .lv-main>.lv-card:first-child,.pv-run .lv-side>.lv-card:first-child{border-top:0!important;padding-top:6px!important}.pv-run .lv-card.flush .rs-row{padding-inline:0}
+.pv-run .lv-card{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding:20px 0!important}.pv-run .lv-main>.lv-card:first-child,.pv-run .lv-side>.lv-card:first-child{border-top:0!important;padding-top:6px!important}.pv-run .lv-card.flush .rs-row{padding-inline:0}.pv-run .wo-script{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}.pv-run .section-h{margin:0}.pv-run .section-h h2{font-size:18px!important}
 .pv-sec .pv-b{background:none!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;padding:12px 0 4px!important;margin-top:0}.pv-sec .pv-b:first-of-type{border-top:0!important;padding-top:4px!important}
 .pv-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.pv-tiles>div{background:var(--surface-2);border-radius:14px;padding:10px 6px 8px;text-align:center;min-width:0}
 .pv-tiles b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.pv-tiles b i{font-style:normal;font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}.pv-tiles small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
 .pv-rd .link{margin-left:auto;flex:none;font-size:13px;white-space:nowrap}.pv-rd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--surface-2);font-size:14px}.pv-rd>i{width:10px;height:10px;border-radius:50%;background:var(--faint);margin-top:5px;flex:none}.pv-rd.green>i{background:var(--good)}.pv-rd.yellow>i{background:var(--warn)}.pv-rd.red>i{background:var(--bad)}.pv-rd small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
 .sg,.gear-pv{gap:8px}.pv-sub{margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
-.pv-cd>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-size:14px;min-height:28px}.pv-cd>summary b{font-weight:600}.pv-cd[open]>summary{margin-bottom:8px}
+.pv-cd>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-size:14px;min-height:28px}.pv-cd>summary b{font-weight:600}.pv-cd>summary{justify-content:flex-start!important}.pv-cd>summary>span{margin-right:auto}.pv-cd .prep-ch>span{display:none}.pv-cd[open]>summary{margin-bottom:8px}
 .pv-s.pv-x{display:block;padding:0}.pv-e2{padding:7px 0;border-top:1px solid var(--line)}.pv-s.pv-x>.pv-e2:first-child{border-top:0}
 .pv-e2h{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 8px}.pv-e2h b{font-size:14.5px;font-weight:600}.pv-tg{font-size:13px;color:var(--muted)}.pv-up{margin-left:auto;font-size:12px;font-weight:650;color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent);padding:1px 8px;border-radius:99px;white-space:nowrap}
 .pv-last{display:block;font-size:12px;color:var(--muted);margin-top:1px}
@@ -1994,8 +2004,6 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .sum-stats.sm{margin-top:10px}
 .set-sub{display:flex;flex-direction:column;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
 .pa-units{gap:6px}
-.st-opts{display:flex;gap:8px;flex-wrap:wrap}
-.st-acc{margin-top:8px}.st-acc .chip i{display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
 .wk-rev{display:flex;flex-direction:column;gap:10px}
 .wk-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .wk-k span{display:flex;flex-direction:column;min-width:0}
@@ -4427,7 +4435,9 @@ function topFoods(dates, basis) {
   return `<div class="section-h"><h2>Biggest calorie sources</h2></div><div class="card pad">${top.map(t => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 70px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(itemName(t.it))}</span><span class="bar"><i style="width:${t.kcal / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtN(t.kcal)}<br><small class="faint">${t.n}×</small></span></div>`).join("")}</div>`;
 }
 /* ================= charts (SVG, drawn to scale) ================= */
-function chartW(half) { const full = clamp(Math.min(innerWidth, 720 + 260) - (innerWidth >= 960 ? 290 : 0) - 64, 280, 688); return half && innerWidth >= 560 ? Math.floor((full - 14) / 2) : full; }
+function chartW(half) { /* the width the chart really has (page next to the menu, minus padding), at most 1040 so the drawing is never stretched: text keeps its size */ const full = clamp(innerWidth - (innerWidth >= 1024 ? 288 : innerWidth >= 600 ? 96 : 0) - 64, 280, 1040); return half && innerWidth >= 560 ? Math.floor((full - 14) / 2) : full; }
+/* every how many columns a date label fits (about 52 px each: «14 Sept» is 40 px at 10.5 px), so neighbours never touch */
+const xStep = colW => Math.max(1, Math.ceil(52 / Math.max(1, colW)));
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
@@ -4684,7 +4694,7 @@ function minutesChart() {
   for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
   weeks.forEach((w, i) => { let acc = 0; const x = L + i * bw + (bw - barW) / 2;
     used.forEach((sp, j) => { const v = w.m[sp] || 0; if (!v) return; g += `<rect x="${x}" y="${y(acc + v)}" width="${barW}" height="${y(acc) - y(acc + v)}" fill="var(--${SPORT_COLORS[j % 7]})"><title>${sp}: ${r0(v)} min</title></rect>`; acc += v; });
-    g += `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${fmtDM(w.s)}</text>`; });
+    if (i % xStep(bw) === 0) g += `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${fmtDM(w.s)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Training minutes per sport per week">${g}</svg><div class="legend" style="flex-wrap:wrap;margin-top:6px">${used.map((sp, j) => `<span><i style="background:var(--${SPORT_COLORS[j % 7]})"></i>${esc(sp)}</span>`).join("") || "No logged sessions yet"}</div>`;
 }
 function trainRunning() {
@@ -4749,7 +4759,7 @@ function kmChart() {
   for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
   wk.forEach(([s, km, goal], i) => { const x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${y(km)}" width="${bw * 0.6}" height="${y(0) - y(km)}" rx="3" fill="${goal > 0 && km >= goal ? "var(--good)" : "var(--fat)"}"><title>${fmtDM(s)}: ${r1(km)} km${goal ? ` · goal ${r1(goal)}` : ""}</title></rect>`;
     if (goal > 0) g += `<line x1="${L + i * bw + 2}" x2="${L + (i + 1) * bw - 2}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-    if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
+    if (i % xStep(bw) === 0) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Running km per week${wk.some(w => w[2]) ? ", with the weekly goal" : ""}">${g}</svg>`;
 }
 function trainRecords() {
@@ -7442,7 +7452,7 @@ function weeklyIntakeChart() {
   Wk.forEach((w, i) => { const x0 = L + i * bw, cx = x0 + bw / 2, bwid = Math.min(26, bw * 0.6), dev = w.avgTarget ? (w.avgI - w.avgTarget) / w.avgTarget : 0;
     g += `<rect x="${cx - bwid / 2}" y="${y(w.avgI)}" width="${bwid}" height="${y(0) - y(w.avgI)}" rx="4" fill="var(--accent)" opacity="${w.inProgress ? .45 : Math.abs(dev) <= 0.1 ? 1 : .7}"><title>Week of ${fmtDM(w.ws)}: ${fmtN(w.avgI)} kcal a day vs ${fmtN(w.avgTarget || 0)} target</title></rect>`;
     if (w.avgTarget) g += `<line x1="${cx - bwid / 2 - 4}" x2="${cx + bwid / 2 + 4}" y1="${y(w.avgTarget)}" y2="${y(w.avgTarget)}" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>`;
-    if (i % (Wk.length > 8 && innerWidth < 560 ? 2 : 1) === 0) g += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
+    if (i % xStep(bw) === 0) g += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Average daily intake per week against target">${g}</svg>`;
 }
 /* ================= Fitness · Fatigue · Form (intervals.icu-style impulse–response model) =================
@@ -9658,10 +9668,10 @@ function runPreview(L) {
     <div class="pv-meta"><span>${ic("timer", "sm")}${fmtDurShort(tot)}</span>${km ? `<span>≈ ${r1(km)} km</span>` : ""}<span>${tasks.length} steps</span><span class="chip-s">${esc(L.sport)}</span></div>
     <p class="muted" style="margin:0;font-size:13.5px">Runs by itself: every step starts and ends on its own with a 3-2-1 countdown${PLAYER().voice ? " and spoken targets" : ""}. ${isBike(L.sport) ? "Put the phone on the bars and ride" : "Put the phone away and run"}. Pause is there if you need it.</p></section>
     ${(() => { const o = runOverview(tasks, L.sport, L.date, (L.planDate && (logGet(L.planDate)?.planned || []).find(w => w.at)?.at) || logGet(L.date)?.wxAt); return o ? `<section class="lv-card">${o}</section>` : ""; })()}
-    <section class="lv-card">${prepChips()}</section>
-    <section class="lv-card flush"><div class="run-steps">${tasks.map((t, i) => `<div class="rs-row ${i && tasks[i - 1].bi !== t.bi ? "brk" : ""}"><span class="rs-n">${i + 1}</span><span class="rs-t"><b>${esc(runLabel(t))}</b>${t.block ? `<small>${esc(t.block)}${t.reps > 1 ? ` · ${t.rep}/${t.reps}` : ""}</small>` : ""}</span><span class="rs-d">${t.t === "open" ? "lap" : (t.est ? "≈" : "") + fmtDurShort(t.dur)}</span></div>`).join("")}</div></section>
+    <section class="lv-card"><details class="pv-cd"><summary><span>Countdown before timed sets</span><b>${PLAYER().prep ? PLAYER().prep + " s" : "Off"}</b></summary>${prepChips()}</details></section>
+    <section class="lv-card flush"><div class="section-h"><h2>Steps</h2></div><div class="run-steps">${tasks.map((t, i) => `<div class="rs-row ${i && tasks[i - 1].bi !== t.bi ? "brk" : ""}"><span class="rs-n">${i + 1}</span><span class="rs-t"><b>${esc(runLabel(t))}</b>${t.block ? `<small>${esc(t.block)}${t.reps > 1 ? ` · ${t.rep}/${t.reps}` : ""}</small>` : ""}</span><span class="rs-d">${t.t === "open" ? "lap" : (t.est ? "≈" : "") + fmtDurShort(t.dur)}</span></div>`).join("")}</div></section>
     <div class="lv-dock"><button class="btn tonal" data-act="lv-snd">${ic(PLAYER().mute ? "bellOff" : "bell", "sm")}${PLAYER().mute ? "Muted" : PLAYER().voice ? "Voice" : "Beeps"}</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start · ${PLAYER().prep}s countdown</button></div></div>
-    <aside class="lv-side show"><section class="lv-card"><span class="eyebrow">Workout text</span><pre class="wo-script">${esc(L.script || "")}</pre></section></aside></div>`;
+    <aside class="lv-side show"><section class="lv-card"><div class="section-h"><h2>Workout text</h2></div><pre class="wo-script">${esc(L.script || "")}</pre></section></aside></div>`;
   return h;
 }
 function runSummary(L) {
@@ -10872,7 +10882,7 @@ function seriesChart(series, o = {}) {
   const x = d => L + (W - L - R) * (span ? daysBetween(d0, d) / span : 0.5), y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   let g = "";
   for (let i = 0; i <= 3; i++) { const v = lo + (hi - lo) * i / 3; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${(o.fmt || r1)(v)}</text>`; }
-  const ticks = span < 1 ? [d0] : [d0, addDays(d0, Math.round(span / 2)), d1];
+  const ticks = span < 1 ? [d0] : span < 2 ? [d0, d1] : [d0, addDays(d0, Math.round(span / 2)), d1];
   ticks.forEach((d, i) => { g += `<text x="${x(d)}" y="${H - 7}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : i === ticks.length - 1 && ticks.length > 1 ? "end" : "middle"}">${fmtDM(d)}</text>`; });
   for (const s of series) { if (!s.pts.length) continue; const P = [...s.pts].sort((a, b) => a[0].localeCompare(b[0]));
     if (P.length > 1) g += `<path d="${P.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
@@ -11325,20 +11335,26 @@ async function storyCanvas(D, photo, layout, O) {
   return c;
 }
 SHEETS.story = sh => { const O = storyOpt(sh), D = sh.data;
-  const seg = (act, cur, opts) => `<div class="seg sm">${opts.map(([k, l]) => `<button data-act="${act}" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
+  /* one layout: the preview, then four titled sections (Background, Words, On the picture, Style); in Style a label on the left and the control across the rest */
+  const seg = (act, cur, opts) => `<div class="seg sm fill">${opts.map(([k, l]) => `<button data-act="${act}" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
+  const row = (l, c) => `<div class="sty-row"><span class="sty-l">${l}</span>${c}</div>`;
   const tog = (k, l) => `<button class="chip sm" data-act="story-tog" data-k="${k}" aria-pressed="${!!O[k]}">${l}</button>`;
-  return { title: "Share the workout", body: `<div class="story-pv">${sh.url ? `<img data-blob="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
-    ${!(D.track?.length > 3) && D.run ? `<label class="btn soft sm" style="align-self:flex-start">${ic("download", "sm")}Add the route for the map (GPX, TCX, FIT)${routeInput(`data-story="1"`)}</label>` : ""}
-    <div class="field"><span class="flabel">Background</span>${seg("story-bg", O.bg, [...(D.track?.length > 3 ? [["map", "Map"]] : []), ["photo", "Photo"], ["none", "Plain"]])}
-      ${O.bg === "map" ? `<div class="row" style="gap:8px;margin-top:8px">${seg("story-map", O.map, [["dark", "Dark map"], ["light", "Light map"]])}</div>` : ""}${O.bg === "none" ? `<div class="row" style="gap:8px;margin-top:8px">${seg("story-pat", O.pat || "glow", [["glow", "Glow"], ["lines", "Contours"], ["soft", "Soft"]])}</div>` : ""}</div>
-    ${O.bg === "photo" ? `<div class="field"><span class="flabel">Photo</span><div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn tonal sm">${ic("camera", "sm")}Take a photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="story-photo"></label><label class="btn soft sm">${ic("image", "sm")}${sh.photo ? "Change" : "From gallery"}<input type="file" accept="image/*" class="sr" data-chg="story-photo"></label>${sh.photo ? `<button class="btn text sm" data-act="story-nophoto">Remove</button>` : ""}</div>
-      ${sh.photo ? `<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><span class="faint" style="font-size:12.5px">Photo</span>${seg("story-layout", sh.layout || "bg", [["bg", "Under the text"], ["below", "Bottom half"]])}</div>` : ""}</div>` : ""}
-    <div class="field"><label for="st-title">Title</label><input id="st-title" class="inp" value="${esc(O.title)}" data-in="story" data-k="title" maxlength="60"></div>
-    <div class="field"><label for="st-cap">Caption</label><input id="st-cap" class="inp" value="${esc(O.caption)}" placeholder="e.g. Rainy long run, felt great" data-in="story" data-k="caption" maxlength="120"></div>
-    <div class="field"><span class="flabel">Numbers to show</span><div class="chips">${D.stats.map(([l]) => `<button class="chip sm" data-act="story-stat" data-k="${esc(l)}" aria-pressed="${!O.hide[l]}">${esc(l)}</button>`).join("")}</div></div>
-    <div class="field"><span class="flabel">Also show</span><div class="chips">${tog("sport", "Sport")}${tog("date", "Date")}${D.lines.length ? tog("lines", D.run ? "Splits" : "Exercises") : ""}${D.track?.length && O.bg !== "map" ? tog("route", "Route") : ""}</div></div>
-    <div class="field"><span class="flabel">Text</span><div class="st-opts">${seg("story-pos", O.pos, [["top", "Top"], ["center", "Middle"], ["bottom", "Bottom"]])}${seg("story-size", O.size, [["s", "S"], ["m", "M"], ["l", "L"]])}${seg("story-ink", O.ink, [["white", "White"], ["black", "Black"]])}</div>
-      <div class="chips st-acc">${Object.entries(STORY_ACC).map(([k, v]) => `<button class="chip sm" data-act="story-acc" data-k="${k}" aria-pressed="${O.acc === k}" aria-label="Accent ${k}"><i style="background:${v}"></i></button>`).join("")}</div></div>`,
+  const bgSub = O.bg === "map" ? row("Map", seg("story-map", O.map, [["dark", "Dark"], ["light", "Light"]])) : O.bg === "none" ? row("Pattern", seg("story-pat", O.pat || "glow", [["glow", "Glow"], ["lines", "Contours"], ["soft", "Soft"]]))
+    : row("Photo", `<div class="st-btns"><label class="btn tonal sm">${ic("camera", "sm")}Camera<input type="file" accept="image/*" capture="environment" class="sr" data-chg="story-photo"></label><label class="btn soft sm">${ic("image", "sm")}${sh.photo ? "Change" : "Gallery"}<input type="file" accept="image/*" class="sr" data-chg="story-photo"></label>${sh.photo ? `<button class="btn text sm" data-act="story-nophoto">Remove</button>` : ""}</div>`) + (sh.photo ? row("Layout", seg("story-layout", sh.layout || "bg", [["bg", "Under the text"], ["below", "Bottom half"]])) : "");
+  return { title: "Share the workout", wide: true, body: `<div class="st-wrap"><div class="story-pv">${sh.url ? `<img data-blob="${sh.url}" alt="Preview of the picture">` : `<div class="result"><span class="spinner"></span><span>Drawing…</span></div>`}</div>
+    <div class="st-opts2">
+    <section class="st-sec"><h4 class="st-h">Background</h4>${seg("story-bg", O.bg, [...(D.track?.length > 3 ? [["map", "Map"]] : []), ["photo", "Photo"], ["none", "Plain"]])}${bgSub}
+      ${!(D.track?.length > 3) && D.run ? `<label class="btn text sm st-route">${ic("download", "sm")}Add the route for the map (GPX, TCX, FIT)${routeInput(`data-story="1"`)}</label>` : ""}</section>
+    <section class="st-sec"><h4 class="st-h">Words</h4>
+      <div class="field"><label for="st-title">Title</label><input id="st-title" class="inp" value="${esc(O.title)}" data-in="story" data-k="title" maxlength="60"></div>
+      <div class="field"><label for="st-cap">Caption</label><input id="st-cap" class="inp" value="${esc(O.caption)}" placeholder="e.g. Rainy long run, felt great" data-in="story" data-k="caption" maxlength="120"></div></section>
+    <section class="st-sec"><h4 class="st-h">On the picture</h4><div class="chips">${D.stats.map(([l]) => `<button class="chip sm" data-act="story-stat" data-k="${esc(l)}" aria-pressed="${!O.hide[l]}">${esc(l)}</button>`).join("")}${tog("sport", "Sport")}${tog("date", "Date")}${D.lines.length ? tog("lines", D.run ? "Splits" : "Exercises") : ""}${D.track?.length && O.bg !== "map" ? tog("route", "Route") : ""}</div></section>
+    <section class="st-sec"><h4 class="st-h">Style</h4>
+      ${row("Position", seg("story-pos", O.pos, [["top", "Top"], ["center", "Middle"], ["bottom", "Bottom"]]))}
+      ${row("Size", seg("story-size", O.size, [["s", "Small"], ["m", "Medium"], ["l", "Large"]]))}
+      ${row("Text", seg("story-ink", O.ink, [["white", "White"], ["black", "Black"]]))}
+      ${row("Accent", `<div class="st-acc" role="group" aria-label="Accent colour">${Object.entries(STORY_ACC).map(([k, v]) => `<button data-act="story-acc" data-k="${k}" aria-pressed="${O.acc === k}" aria-label="Accent ${k}" style="--sw:${v}"></button>`).join("")}</div>`)}</section>
+    </div></div>`,
   foot: `<button class="btn tonal" data-act="story-save" style="flex:0 0 auto">${ic("download", "sm")}Save</button><button class="btn primary" data-act="story-share">${ic("copy", "sm")}Share</button>` }; };
 let STORY_T = 0;
 /* a new picture replaces the preview in place: the sheet is not rebuilt, so the preview keeps its size, the page does not jump and the field you are typing in keeps its cursor */
@@ -12867,9 +12883,9 @@ ACT["gear-al-del"] = el => { const G = GEARS(); gearSave({ always: G.always.filt
 ACT["gear-cu-del"] = el => { const G = GEARS(); gearSave({ custom: G.custom.filter((_, i) => i !== +el.dataset.i) }); scheduleRender(); };
 FORMS["gear-al"] = () => { const v = ($("#gear-al")?.value || "").trim().slice(0, 40); if (!v) return; const G = GEARS(); if (!G.always.includes(v)) gearSave({ always: [...G.always, v] }); scheduleRender(); };
 FORMS["gear-cu"] = () => { const item = ($("#gear-cu-i")?.value || "").trim().slice(0, 40), kw = ($("#gear-cu-k")?.value || "").trim().slice(0, 120); if (!item || !kw) { toast("Write what to bring and the words that call for it."); return; } gearSave({ custom: [...GEARS().custom, { item, kw }] }); scheduleRender(); };
-/* before starting: the checklist right under the title, in both previews (sets and runs) */
-function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = Math.max(h.indexOf('class="lv-card sg"'), h.indexOf('class="lv-card pv-top"')); if (!G.length || a < 0) return h;
-  const b = h.indexOf("</section>", a) + 10; return h.slice(0, b) + `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Bring</span>${gearChecklist(G, L.date)}</section>` + h.slice(b); }
+/* before starting: the checklist right under the title of the run preview (the strength one has its own section) */
+function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = h.indexOf('class="lv-card pv-top"'); if (!G.length || a < 0) return h;
+  const b = h.indexOf("</section>", a) + 10; return h.slice(0, b) + `<section class="lv-card gear-pv"><div class="section-h"><h2>What to bring</h2></div>${gearChecklist(G, L.date)}</section>` + h.slice(b); }
 const _runPreviewG = runPreview;
 runPreview = L => gearInPreview(_runPreviewG(L), L);
 /* ================= v3 interactions: page changes that glide, swipes between sections, glass on scroll =================
@@ -13350,13 +13366,13 @@ CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; let moved
   if (hit) { day.planned = planDiff(day, pl.map(w => OUTDOOR(w.sport) ? { ...w, at: v } : w)); day.wxAt = null; moved = true; } else day.wxAt = v === WX().time ? null : v; }); scheduleRender(); if (moved && icuLinked()) icuKick("time changed", true, false, true); };
 /* one planned workout's start time, from its sheet: kept on the item and, with the plan synced, sent to intervals.icu at once */
 /* the same workout on another day: it leaves the day it was on and joins the new one (same intervals.icu event, new date), then the sheet reopens there */
-function movePlanned(date, ri, to) { const src = Array.isArray(logGet(date)?.planned) ? clone(logGet(date).planned) : clone(plannedFor(date).list), w = src[ri]; if (!w || !to || to === date) return null;
+function movePlannedTo(date, ri, to) { const src = Array.isArray(logGet(date)?.planned) ? clone(logGet(date).planned) : clone(plannedFor(date).list), w = src[ri]; if (!w || !to || to === date) return null;
   mutateLog(date, d => { src.splice(ri, 1); d.planned = planDiff(d, src); });
   let idx = 0; mutateLog(to, d => { const l = Array.isArray(d.planned) ? d.planned : clone(plannedFor(to).list), x = isIcu(w) && icuLinked() ? { ...w, dirty: true } : w; d.planned = [...l, typeof planDiff === "function" && !isIcu(w) ? planDiff(d, [x])[0] : x]; idx = d.planned.length - 1; });
   return idx; }
-CHG["wo-date"] = (v, el) => { const d = el.dataset.date, i = +el.dataset.i; if (!v || v === d) return; const k = movePlanned(d, i, v); if (k == null) return; haptic(10);
+CHG["wo-date"] = (v, el) => { const d = el.dataset.date, i = +el.dataset.i; if (!v || v === d) return; const k = movePlannedTo(d, i, v); if (k == null) return; haptic(10);
   const el2 = document.createElement("div"); el2.dataset.date = v; el2.dataset.i = String(k); el2.dataset.list = "planned"; const r = woResolve(el2); if (r) { const cur = UI.sheet; UI.sheet = { type: "wo", r, ...(cur?._ret ? { _ret: cur._ret } : {}), ...(cur?.keep ? { keep: cur.keep } : {}) }; renderSheet(); } scheduleRender(); if (icuLinked()) icuKick("session moved", true, false, true);
-  toast(`Moved to ${relDay(v)} · ${fmtDM(v)}`, () => { movePlanned(v, k, d); scheduleRender(); closeSheet(); if (icuLinked()) icuKick("session moved", true, false, true); }); };
+  toast(`Moved to ${relDay(v)} · ${fmtDM(v)}`, () => { movePlannedTo(v, k, d); scheduleRender(); closeSheet(); if (icuLinked()) icuKick("session moved", true, false, true); }); };
 CHG["wo-at"] = (v, el) => { const d = el.dataset.date, i = +el.dataset.i; mutateLog(d, day => { const pl = Array.isArray(day.planned) ? clone(day.planned) : clone(plannedFor(d).list); if (!pl[i]) return; if (v) pl[i] = { ...pl[i], at: v }; else { const { at, ...rest } = pl[i]; pl[i] = rest; } day.planned = planDiff(day, pl); }); scheduleRender(); if (icuLinked()) icuKick("time changed", true, false, true); };
 CHG["wx-time"] = v => { if (v) { WX().time = v; saveSettings(); scheduleRender(); } };
 /* with the GPS option on, the position is read again once a day (when the app is opened) and the forecast follows you */

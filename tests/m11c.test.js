@@ -140,3 +140,53 @@ test("L15 story: no text is squeezed on the picture (long names end with «…»
   assert.ok(r.pvTop >= -2 && r.pvTop <= 12, `the preview stays at the top while scrolling (${r.pvTop})`); assert.ok(r.pvH <= r.vh * 0.45, `the preview leaves room for the options (${r.pvH} of ${r.vh})`);
   assert.deepEqual(app.errors, []);
 });
+
+test("Ready to start, run and strength look the same: «What to bring» and «Countdown» as titled sections, the countdown value sits by its chevron, the workout text is not a card", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: F.seed(), viewport: vp });
+    const r = await app.page.evaluate(() => { const out = {};
+      for (const [k, sp, sc] of [["run", "Running", "Warm-up\n- 10m Z1\n\nMain 3x\n- 3m Z4\n- 2m Z1"], ["str", strengthSport(), "Pull 3x\n- 6 Pull-up\n- 8 Ring row"]]) {
+        WK().live = null; startWorkout({ script: sc, name: "Same", sport: sp, date: todayISO() }); UI.tab = "live"; render();
+        const sum = document.querySelector(".pv-cd > summary"), b = sum?.querySelector("b"), ws = document.querySelector(".wo-script"), wss = ws && getComputedStyle(ws);
+        out[k] = { heads: [...document.querySelectorAll(".lv-main .section-h h2")].map(h => h.textContent.trim()), cd: sum?.querySelector("span")?.textContent.trim(), gap: b ? Math.round(sum.getBoundingClientRect().right - b.getBoundingClientRect().right) : null,
+          dupLabel: sum ? [...sum.parentElement.querySelectorAll(".prep-ch > span")].filter(e => e.offsetParent).length : null, script: ws ? [wss.borderTopWidth, wss.backgroundColor] : null }; }
+      return out; });
+    for (const k of ["run", "str"]) { assert.ok(r[k].heads.includes("What to bring"), `${k} ${vp.width}: ${r[k].heads}`); assert.equal(r[k].cd, "Countdown before timed sets"); assert.ok(r[k].gap <= 40, `${k} ${vp.width}: the value is ${r[k].gap} px from the right`); assert.equal(r[k].dupLabel, 0, "no second label inside"); }
+    if (r.run.script) assert.deepEqual(r.run.script, ["0px", "rgba(0, 0, 0, 0)"], "the workout text is not boxed");
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+});
+
+test("L15 story sheet: titled sections, every control in a row starts and ends on the same edges, on phone, tablet and PC", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: F.seed(), viewport: vp });
+    const r = await app.page.evaluate(async () => { storyOpen(todayISO(), { sport: strengthSport(), min: 40, note: "Pulls" }, { min: 40, name: "Pulls", sets: [{ ex: "Pull-up", reps: [6, 6], load: 10 }] }); await new Promise(r => setTimeout(r, 900));
+      const heads = [...document.querySelectorAll(".st-h")].map(h => h.textContent), segs = [...document.querySelectorAll(".sty-row .seg")].map(e => e.getBoundingClientRect()), b = document.querySelector(".sheet-b").getBoundingClientRect();
+      const over = [...document.querySelectorAll(".sheet-b *")].filter(e => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX === "visible" && e.children.length === 0 && e.clientWidth > 0 && !/^(INPUT|IMG|CANVAS)$/.test(e.tagName)).map(e => e.className || e.tagName);
+      return { heads, lefts: [...new Set(segs.map(s => Math.round(s.left)))], rights: [...new Set(segs.map(s => Math.round(s.right)))], inside: segs.every(s => s.right <= b.right + 1 && s.left >= b.left - 1), over }; });
+    assert.deepEqual(r.heads, ["Background", "Words", "On the picture", "Style"]); assert.equal(r.lefts.length, 1, `${vp.width}: segments start on one edge ${r.lefts}`); assert.equal(r.rights.length, 1, `${vp.width}: and end on one edge ${r.rights}`);
+    assert.ok(r.inside); assert.deepEqual(r.over, [], "no text is cut"); assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+});
+
+test("review: copying a planned workout to another day keeps the original (a second movePlanned used to turn every copy into a move)", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.desktop });
+  const r = await app.page.evaluate(() => { const t = todayISO(), n = addDays(t, 1); mutateLog(t, d => { d.planned = [{ sport: "Running", min: 30, note: "Easy" }]; }); DATA_V++;
+    movePlanned(t, 0, n, true); const afterCopy = [plannedRaw(t).length, plannedRaw(n).length];
+    movePlanned(t, 0, n); const afterMove = [plannedRaw(t).length, plannedRaw(n).length];
+    return { afterCopy, afterMove, dups: (document.documentElement.outerHTML.match(/function movePlanned\(/g) || []).length }; });
+  assert.deepEqual(r.afterCopy, [1, 1], "copy: the original stays"); assert.deepEqual(r.afterMove, [0, 2], "move: the original goes");
+  assert.deepEqual(app.errors, []);
+});
+
+test("review: charts do not blow up on big screens (text stays near its drawn size) and a two-day chart has two date labels, not three", async () => {
+  const sizes = {};
+  for (const [w, h] of [[390, 844], [1440, 900], [1920, 1080]]) {
+    app = await H.startApp({ dir, seed: F.seed(), viewport: { width: w, height: h } });
+    sizes[w] = await app.page.evaluate(() => { const t = todayISO(), html = seriesChart([{ name: "A", color: "red", pts: [[addDays(t, -1), 2300], [t, 2310]] }]), box = document.createElement("div"); box.className = "main"; box.innerHTML = `<div class="card pad">${html}</div>`;
+      document.querySelector("main, .main").appendChild(box); const svg = box.querySelector("svg.chart"), vb = svg.viewBox.baseVal, scale = svg.getBoundingClientRect().width / vb.width, xl = [...svg.querySelectorAll("text")].filter(x => /Oct|Nov|Sep|Dec|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug/.test(x.textContent)).map(x => x.textContent);
+      box.remove(); return { scale: Math.round(scale * 100) / 100, xl }; });
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+  for (const w of [390, 1440, 1920]) { assert.ok(sizes[w].scale <= 1.15, `${w}: the chart is drawn ×${sizes[w].scale}`); assert.equal(sizes[w].xl.length, 2, `${w}: date labels ${sizes[w].xl}`); }
+});
