@@ -78,3 +78,46 @@ test("the timer and the live workout use the whole width on a computer (the page
   const w = await page.evaluate(() => ({ wrap: Math.round(document.querySelector(".tm-wrap").getBoundingClientRect().width), main: Math.round(document.getElementById("main").getBoundingClientRect().width) }));
   assert.ok(w.wrap >= 600 && w.main >= 900, JSON.stringify(w));
 });
+
+/* ---- third round (same day): the shopping period switch, the daily check-in notice, «Left on» closed by default ---- */
+for (const width of [360, 390, 820]) test(`the shopping period switch fits its row without scrolling or overlapping — ${width}px`, async () => {
+  const page = await start(F.seed(), { width, height: 800 });
+  await page.evaluate(() => { UI.tab = "shop"; scheduleRender(); }); await page.waitForSelector(".sq-top .seg");
+  const r = await page.evaluate(() => { const seg = document.querySelector(".sq-top .seg"), b = [...seg.querySelectorAll("button")].map(x => x.getBoundingClientRect()); const overlap = b.some((x, i) => i && x.left < b[i - 1].right - 0.5);
+    return { n: b.length, scroll: seg.scrollWidth > seg.clientWidth + 1, overlap, cut: [...seg.querySelectorAll("button")].some(x => x.scrollWidth > x.clientWidth + 1), labels: [...seg.querySelectorAll("button")].map(x => x.innerText) }; });
+  assert.deepEqual([r.n, r.scroll, r.overlap, r.cut], [4, false, false, false]); assert.deepEqual(r.labels, ["This week", "Next week", "7 days", "Custom"]);
+});
+
+test("the daily check-in notice: shown until the day has a check-in or you skip it; skipping is remembered for that day only", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => { const t = todayISO(), y = addDays(t, -1), sh = d => checkinNotice(d).includes("ci-notice");
+    const a = sh(t);                                        // nothing logged today
+    ACT["ci-skip"]({ dataset: { date: t } }); const b = sh(t), flag = logGet(t).ciSkip; const c = sh(addDays(t, 1));   // skipped; another day still asks
+    mutateLog(t, x => { x.ciSkip = null; }); mutateLog(t, x => { x.weight = 80; }); const d = sh(t);                  // a weigh-in is a check-in
+    return { a, b, flag, c, d, tomorrow: (checkinNotice(addDays(t, 1)) || "").length > 0 }; });
+  assert.deepEqual([r.a, r.b, r.flag, r.d], [true, false, true, false]);
+});
+
+test("the notice is on Today with «Open check-in» and «Skip today», and goes away after either", async () => {
+  const page = await start();
+  await page.evaluate(() => { UI.tab = "today"; scheduleRender(); }); await page.waitForSelector(".ci-notice");
+  const t = await page.evaluate(() => document.querySelector(".ci-notice").innerText); assert.match(t, /check-in/i); assert.match(t, /Skip today/);
+  await page.click('.ci-notice [data-act="ci-skip"]'); await page.waitForTimeout(150);
+  assert.equal(await page.evaluate(() => !!document.querySelector(".ci-notice")), false);
+});
+
+test("the check-in reminder notification is off by default, comes once, at the set time, only if the day is still open", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => { const sent = []; window.Notification = Object.assign(function () {}, { permission: "granted" }); notify = (t, b, tag) => sent.push(tag); S.settings.reminders = { on: true };
+    checkinTick("20:30"); const off = sent.length; S.settings.ci = { rem: true, at: "20:00" }; checkinTick("19:00"); const early = sent.length; checkinTick("20:30"); checkinTick("20:31"); const once = sent.length;
+    localStorage.removeItem("engine.rem"); ACT["ci-skip"]({ dataset: { date: todayISO() } }); checkinTick("21:00"); return { off, early, once, skipped: sent.length, tag: sent[0] }; });
+  assert.deepEqual(r, { off: 0, early: 0, once: 1, skipped: 1, tag: "engine-checkin" });
+});
+
+test("«Left on» starts closed and opens on tap", async () => {
+  const page = await start();
+  await page.evaluate(() => { S.shop.pantry["t-rice"] = { g: 700 }; DATA_V++; UI.tab = "pantry"; scheduleRender(); }); await page.waitForSelector(".pa-forecast");
+  assert.equal(await page.evaluate(() => !!document.querySelector(".pa-forecast .pa-frows")), false);
+  await page.click('.pa-forecast [data-act="pa-fc-toggle"]'); await page.waitForTimeout(120);
+  assert.equal(await page.evaluate(() => !!document.querySelector(".pa-forecast .pa-frows")), true);
+});

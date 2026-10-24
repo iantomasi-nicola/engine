@@ -96,7 +96,9 @@ test("«Stock on» can be closed and stays closed after a redraw", async () => {
   await page.evaluate(() => { S.shop.pantry["t-rice"] = { g: 700 }; DATA_V++; UI.tab = "pantry"; scheduleRender(); });
   await page.waitForSelector(".pa-forecast");
   const open = () => page.evaluate(() => !!document.querySelector(".pa-forecast .pa-frows"));
-  assert.equal(await open(), true, "opens by itself when something runs down");
+  assert.equal(await open(), false, "starts closed");
+  await page.click('.pa-forecast [data-act="pa-fc-toggle"]'); await page.waitForTimeout(120);
+  assert.equal(await open(), true);
   await page.click('.pa-forecast [data-act="pa-fc-toggle"]'); await page.waitForTimeout(120);
   assert.equal(await open(), false);
   await page.evaluate(() => { DATA_V++; scheduleRender(); }); await page.waitForTimeout(100);
@@ -108,7 +110,7 @@ test("«Stock on» can be closed and stays closed after a redraw", async () => {
 
 test("the Pantry has no how-it-works card; «Left on» lists every item, running out first, and can show them all", async () => {
   const page = await start();
-  await page.evaluate(() => { for (let k = 0; k < 10; k++) { S.shop.pantry["x" + k] = { g: 100 }; S.foods["x" + k] = { id: "x" + k, name: "Unused thing " + k, unit: "g", per: { kcal: 1, p: 0, c: 0, f: 0, fib: 0 }, servings: [], source: "custom" }; } S.shop.pantry["t-rice"] = { g: 700 }; S.shop.pantry["t-oil"] = { g: 300 }; DATA_V++; UI.tab = "pantry"; scheduleRender(); });
+  await page.evaluate(() => { for (let k = 0; k < 10; k++) { S.shop.pantry["x" + k] = { g: 100 }; S.foods["x" + k] = { id: "x" + k, name: "Unused thing " + k, unit: "g", per: { kcal: 1, p: 0, c: 0, f: 0, fib: 0 }, servings: [], source: "custom" }; } S.shop.pantry["t-rice"] = { g: 700 }; S.shop.pantry["t-oil"] = { g: 300 }; DATA_V++; UI.paFcOpen = true; UI.tab = "pantry"; scheduleRender(); });
   await page.waitForSelector(".pa-forecast");
   assert.equal(await page.evaluate(() => !!document.querySelector(".pa-how") && /How the pantry works/.test(document.body.innerText)), false);
   const f = await page.evaluate(() => { const F = pantryForecast(addDays(todayISO(), 6 - dow(todayISO()))); return { first: F.rows[0].f.name, states: F.rows.map(r => r.state), n: F.rows.length }; });

@@ -189,4 +189,6 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L19 | Consigli alimentari dettagliati pre-gara (per sport) e post-gara; strategia di gara dettagliata | M9 (Food Coach) / M11 | Aggregata |
 | L20 | Segnalare i PB di corsa e calisthenics e metterli in automatico nei record | M11 | Aggregata |
 | L21 | Modificare i macro scansionando l'etichetta | M8 | Aggregata |
+| L22 | Avviso se il check-in giornaliero non è fatto, con «Skip today»; promemoria opzionale (spento di default) | M4f | **Fatto (24/10)**: card su Today finché c'è una pesata/% grasso/kcal digitate o un salto; il salto vale solo per quel giorno |
+| L23 | «Left on» chiuso di default; selettore del periodo della spesa che non si sovrappone | M4f | **Fatto (24/10)** |
 

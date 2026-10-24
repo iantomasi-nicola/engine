@@ -318,6 +318,8 @@ svg.chart{cursor:zoom-in;touch-action:pan-y}
 
 /* shopping list: a period switch, a one-line summary, quieter group headers, roomier rows, a slim add-extra row */
 .sq-top{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:2px 4px 6px}
+html body .sq-top .seg[role]:not(.many)>button{flex:1 1 0!important;min-width:0!important;padding:0 2px!important;font-size:12.5px!important;white-space:nowrap;overflow:visible!important;text-overflow:clip!important}
+.ci-notice{display:flex;flex-direction:column;gap:10px;border:1px solid color-mix(in srgb,var(--warn) 45%,transparent)}.ci-n-t{display:flex;gap:10px;align-items:flex-start}.ci-n-t small{display:block;color:var(--muted);font-size:12.5px}
 .sq-sum{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);padding:0 4px}.sq-sum b{color:var(--ink);font-variant-numeric:tabular-nums}
 .shop-list .sq-add{display:flex;align-items:center;gap:8px;padding:6px 4px 10px;border:0}.shop-list .sq-add .inp{min-height:42px;border-radius:12px}.shop-list .sq-add .btn{min-height:42px;border-radius:12px;padding:0 14px}
 .shop-list .sq-h{padding:14px 6px 4px!important;font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;border-bottom:0!important}.shop-list .sq-h span{background:var(--surface-2);color:var(--muted);border-radius:999px;padding:1px 8px;font-size:11.5px;letter-spacing:0}
@@ -9992,7 +9994,7 @@ function forecastHTML(date) {
     return `<div class="fc-row ${r.state}"><span class="fc-top"><span class="t">${esc(r.f.name)}</span><span class="fc-q"><b>${fmtN(r.then)}</b> ${u} <small>of ${fmtN(r.now)}</small></span></span><span class="fc-bar"><i style="width:${pct}%"></i></span><span class="fc-s">${st}${whys.length ? ` · for ${esc(whys.slice(0, 2).join(", "))}${whys.length > 2 ? ` +${whys.length - 2}` : ""}` : ""}</span></div>`; }).join("")
     + (F.rows.length > 8 ? `<button class="link fc-more" data-act="pa-fc-all">${UI.paFcAll ? "Show fewer" : `Show all ${F.rows.length}`}</button>` : "")
     : `<div class="lrow"><span class="s">Nothing at home yet.</span></div>`;
-  const open = UI.paFcOpen ?? true;
+  const open = UI.paFcOpen ?? false;
   return `<section class="pa-forecast card"><button class="pa-fh" data-act="pa-fc-toggle" aria-expanded="${open}"><span><b>Left on ${dayTxt(date)}</b><span class="faint">${out ? `${out} run${out > 1 ? "" : "s"} out · ` : ""}${kept} still in stock, after the planned meals</span></span>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<div class="chips pa-fchips">${chips}<label class="chip sm date-pick">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div>` : ""}</section>`;
 }
 VIEWS.pantry = function () {
@@ -10018,7 +10020,7 @@ VIEWS.pantry = function () {
 };
 INP["pantry-q"] = v => { UI.pantryQ = v; scheduleRender(); };
 INP["pa-fdate"] = v => { if (v) { UI.paDate = v; scheduleRender(); } };
-ACT["pa-fc-toggle"] = () => { UI.paFcOpen = !(UI.paFcOpen ?? true); scheduleRender(); };
+ACT["pa-fc-toggle"] = () => { UI.paFcOpen = !(UI.paFcOpen ?? false); scheduleRender(); };
 ACT["pa-fc-all"] = () => { UI.paFcAll = !UI.paFcAll; scheduleRender(); };
 ACT["pa-fdate"] = el => { UI.paDate = addDays(todayISO(), +el.dataset.n); scheduleRender(); };
 ACT["pantry-sort"] = el => { setPantryPrefs({ sort: el.dataset.k }); scheduleRender(); };
@@ -11764,6 +11766,33 @@ SETTINGS_CARDS.push({ o: 1, fn: jrSettingsCard });
 ACT["jr-rem"] = () => { const J = S.settings.jr || {}; S.settings.jr = { ...J, rem: !J.rem }; saveSettings(); scheduleRender(); };
 CHG["jr-at"] = v => { S.settings.jr = { ...(S.settings.jr || {}), at: v || "21:00" }; saveSettings(); };
 ACT["jr-ai-toggle"] = () => { const J = S.settings.jr || {}; S.settings.jr = { ...J, ai: !J.ai }; saveSettings(); scheduleRender(); };
+/* ================= the daily check-in: a notice on Today until it's done or skipped, and an optional reminder =================
+   Done = a weigh-in, body fat or the watch figure typed for the day (sleep, HRV and steps usually arrive by themselves). Skipping is for that day only. */
+const ciDone = d => { const L = logGet(d) || {}; return L.weight > 0 || L.bf > 0 || L.watch > 0 || !!L.ciSkip; };
+function checkinNotice(date = todayISO()) {
+  if (date !== todayISO() || ciDone(date)) return "";
+  return `<section class="card pad ci-notice" aria-label="Daily check-in"><div class="ci-n-t">${ic("pulse", "sm")}<span><b>Daily check-in not done yet</b><small>Weigh in and note how the day went</small></span></div>
+    <div class="row" style="gap:8px"><button class="btn primary sm" data-act="open-checkin" data-date="${date}">Open check-in</button><button class="btn ghost sm" data-act="ci-skip" data-date="${date}">Skip today</button></div></section>`;
+}
+TODAY_CARDS.push({ col: "a", o: -1, fn: () => checkinNotice() });
+ACT["ci-skip"] = el => { const d = el?.dataset?.date || todayISO(); mutateLog(d, x => { x.ciSkip = true; }); toast("Check-in skipped for today", () => mutateLog(d, x => { x.ciSkip = null; })); };
+function checkinTick(now = nowHM()) {
+  const C = S.settings?.ci || {}, R = S.settings?.reminders || {};
+  if (!S.settings || !C.rem || !R.on || !("Notification" in window) || Notification.permission !== "granted") return;
+  const d = todayISO(), key = d + "|checkin"; if (now < (C.at || "20:00") || remSent()[key] === d || ciDone(d)) return;
+  remMark(key); notify("Daily check-in", "Weigh in and note how the day went, or skip it.", "engine-checkin", { tab: "checkin" });
+}
+setInterval(() => checkinTick(), 30000);
+navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-tab" && e.data.tab === "checkin") { UI.tab = "today"; ACT["open-checkin"]({ dataset: {} }); } });
+function ciSettingsCard() {
+  const C = S.settings.ci || {};
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Daily check-in</span>
+    <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!C.rem}" data-act="ci-rem" aria-label="Evening reminder"></button><span>Reminder if it's not done<small class="faint" style="display:block;font-size:12.5px">${S.settings.reminders?.on ? "A notification at the set time if the day has no check-in and you haven't skipped it. It comes while Engine is open." : "Turn on notifications in Reminders first. The notice on Today is always there."}</small></span></label>
+    ${C.rem ? `<div class="row" style="gap:8px;align-items:center"><label class="faint" for="ci-at" style="font-size:13px">Remind me at</label><input id="ci-at" class="inp" type="time" value="${esc(C.at || "20:00")}" data-chg="ci-at" style="max-width:130px"></div>` : ""}</section>`;
+}
+SETTINGS_CARDS.push({ o: 1, fn: ciSettingsCard });
+ACT["ci-rem"] = () => { const C = S.settings.ci || {}; S.settings.ci = { ...C, rem: !C.rem }; saveSettings(); scheduleRender(); };
+CHG["ci-at"] = v => { S.settings.ci = { ...(S.settings.ci || {}), at: v || "20:00" }; saveSettings(); };
 
 /* Progress › Journal */
 const p2 = n => String(n).padStart(2, "0");
