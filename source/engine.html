@@ -482,7 +482,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .item.eaten .chk span{background:var(--ink);border-color:var(--ink)}
 .item.eaten .chk span svg{opacity:1}
 .item-main{min-width:0;padding:4px 0;text-align:left}
-.item-name{font-weight:600;font-size:14.5px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.item-name{font-weight:600;font-size:14.5px;line-height:1.25;display:flex;align-items:center;gap:4px;min-width:0}.item-name .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item-name .ic,.item-name .tag{flex:none}.item-name .pan-tag{margin-right:0;vertical-align:0}
 .item-sub{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item.eaten .item-name{color:var(--muted)}
 .item-kcal{font-family:var(--display);font-stretch:110%;font-weight:650;font-size:14px;font-variant-numeric:tabular-nums;text-align:right;padding-right:2px}
@@ -1809,17 +1809,30 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .brand-mark{background:var(--md-primary-container)!important;color:var(--md-on-primary-container)!important;border-radius:12px!important}
 
 /* ==== window size classes (M3): compact < 600 phone · medium 600–1023 tablet · expanded ≥ 1024 computer ==== */
-/* medium: navigation rail */
+/* the side navigation is either a rail (icons) or a full drawer: your choice, remembered; the default follows the window (rail < 1024, drawer ≥ 1024) */
+@media (min-width:600px){
+  body.side-rail .shell{display:grid!important;grid-template-columns:80px minmax(0,1fr)!important;gap:20px!important;padding-left:0!important;padding-bottom:28px!important}
+  body.side-rail .side{display:flex!important;flex-direction:column;align-items:center;gap:4px;position:sticky;top:0;height:100vh;width:80px;padding:14px 0 16px;background:var(--md-surface)!important;overflow-y:auto;scrollbar-width:none}
+  body.side-rail .side .brand{padding:4px 0 16px!important}body.side-rail .side .brand>span:last-child{display:none}
+  body.side-rail .side-btn{flex-direction:column!important;gap:4px!important;width:80px;min-height:60px!important;padding:2px 0!important;border-radius:0!important;background:transparent!important;font-size:12px!important;color:var(--muted)!important;box-shadow:none!important}
+  body.side-rail .side-btn .ic{border-radius:16px;transition:background .2s}
+  body.side-rail .side-btn[aria-current="page"]{background:transparent!important;color:var(--ink)!important;font-weight:600!important}
+  body.side-rail .side-btn[aria-current="page"] .ic{background:var(--md-secondary-container);color:var(--md-on-secondary-container)}
+  body.side-rail .side-btn:hover .ic{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+  body.side-rail .side .sync{display:none}
+  body.side-rail .side-toggle span{display:none}
+  body.side-full .shell{display:grid!important;grid-template-columns:256px minmax(0,1fr)!important;gap:32px!important;padding-left:0!important;padding-bottom:28px!important}
+  body.side-full .side{display:flex!important;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;padding:20px 12px!important;background:var(--md-surface)!important;overflow-y:auto;scrollbar-width:none}
+  body.side-full .side .brand{padding:6px 16px 20px!important}
+  body.side-full .side-btn{min-height:56px!important;padding:0 16px!important;gap:12px!important;font-size:14px!important;border-radius:28px!important}
+  body.side-full .side-btn[aria-current="page"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;font-weight:600!important}
+  body.side-full .side-btn:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+  .side-toggle{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border-radius:14px;color:var(--muted);font-size:13px;font-weight:500}.side-toggle:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}
+}
+@media (min-width:600px) and (prefers-reduced-motion:no-preference){.shell,.side{transition:grid-template-columns .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1),padding .25s cubic-bezier(.4,0,.2,1)}}
+@media (max-width:599px){.side-toggle{display:none}}
+/* medium: layout of the page next to the rail */
 @media (min-width:600px) and (max-width:1023px){
-  .shell{display:grid!important;grid-template-columns:80px minmax(0,1fr)!important;gap:20px!important;padding-left:0!important;padding-bottom:28px!important}
-  .side{display:flex!important;flex-direction:column;align-items:center;gap:4px;position:sticky;top:0;height:100vh;width:80px;padding:14px 0 16px;background:var(--md-surface)!important;overflow-y:auto;scrollbar-width:none}
-  .side .brand{padding:4px 0 16px!important}.side .brand>span:last-child{display:none}
-  .side-btn{flex-direction:column!important;gap:4px!important;width:80px;min-height:60px!important;padding:2px 0!important;border-radius:0!important;background:transparent!important;font-size:12px!important;color:var(--muted)!important;box-shadow:none!important}
-  .side-btn .ic{width:56px;height:32px;padding:4px 16px;border-radius:16px;box-sizing:border-box;transition:background .2s}
-  .side-btn[aria-current="page"]{background:transparent!important;color:var(--ink)!important;font-weight:600!important}
-  .side-btn[aria-current="page"] .ic{background:var(--md-secondary-container);color:var(--md-on-secondary-container)}
-  .side-btn:hover .ic{background:color-mix(in srgb,var(--ink) 8%,transparent)}
-  .side .sync{display:none}
   .bnav,.tnav{display:none!important}
   .main{max-width:880px!important;width:100%;margin:0 auto!important;padding-right:8px}
   .main.wide{max-width:960px!important}
@@ -1835,12 +1848,6 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 }
 /* expanded: navigation drawer + wide two-column content */
 @media (min-width:1024px){
-  .shell{grid-template-columns:256px minmax(0,1fr)!important;gap:32px!important;padding-left:0!important}
-  .side{padding:20px 12px!important;background:var(--md-surface)!important}
-  .side .brand{padding:6px 16px 20px!important}
-  .side-btn{min-height:56px!important;padding:0 16px!important;gap:12px!important;font-size:14px!important;border-radius:28px!important}
-  .side-btn[aria-current="page"]{background:var(--md-secondary-container)!important;color:var(--md-on-secondary-container)!important;font-weight:600!important}
-  .side-btn:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
   .main{max-width:1040px!important}
   .main.wide{max-width:1240px!important}
   .today-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px!important;align-items:start}
@@ -1861,7 +1868,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .ic.sm{width:18px!important;height:18px!important}.ic.lg{width:24px!important;height:24px!important}
 .bnav .ic,.tnav .ic,.side-btn .ic{width:24px!important;height:24px!important}
 .side-btn .ic{box-sizing:content-box}
-@media (min-width:600px) and (max-width:1023px){.side-btn .ic{padding:4px 16px!important;width:24px!important;height:24px!important}}
+@media (min-width:600px){body.side-rail .side-btn .ic{padding:4px 16px!important;width:24px!important;height:24px!important}}
 .icon-btn .ic{width:24px!important;height:24px!important}
 .big-action .ic{width:36px!important;height:36px!important}
 
@@ -3833,12 +3840,16 @@ function restoreFocus(f) {
   if (!f) return; const el = document.getElementById(f.id);
   if (el && document.activeElement !== el) { el.focus({ preventScroll: true }); try { if (f.s != null) el.setSelectionRange(f.s, f.e); } catch (e) {} }
 }
+/* side navigation: "rail" (icons) or "full" (drawer); your choice is remembered, otherwise the window decides. Below 600 px there is the bottom bar instead */
+const SIDE_KEY = "engine.side";
+function sideMode() { if (innerWidth < 600) return null; let p = null; try { p = localStorage.getItem(SIDE_KEY); } catch (e) {} return p === "rail" || p === "full" ? p : innerWidth >= 1024 ? "full" : "rail"; }
+function applySide() { const m = sideMode(); document.body.classList.toggle("side-rail", m === "rail"); document.body.classList.toggle("side-full", m === "full"); }
 function render() {
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
-  applyShopMode();
+  applyShopMode(); applySide();
   if (DRAG.active) return;
   const f = captureFocus();
-  setHTML($("#side"), `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}`);
+  setHTML($("#side"), `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}<button class="side-toggle" data-act="side-toggle" aria-label="${sideMode() === "rail" ? "Expand the menu" : "Collapse the menu"}" title="${sideMode() === "rail" ? "Expand the menu" : "Collapse the menu"}">${ic(sideMode() === "rail" ? "chevR" : "chevL")}<span>Collapse</span></button>`);
   setHTML($("#bnav"), navHTML(false));
   document.body.classList.toggle("live-mode", UI.tab === "live" || UI.tab === "timer");
   const v = VIEWS[UI.tab] || VIEWS.plan;
@@ -3963,7 +3974,7 @@ function itemRow(it, mealId) {
   const mm = itemMacros(it);
   return `<li class="item ${it.eaten ? "eaten" : ""} ${it.cheat ? "cheat" : ""}" data-item="${it.id}" data-meal="${mealId}">
     <button class="chk" data-act="toggle-eaten" data-meal="${mealId}" data-id="${it.id}" aria-label="${it.eaten ? "Mark as not eaten" : "Mark as eaten"}" aria-pressed="${!!it.eaten}"><span>${ic("check")}</span></button>
-    <button class="item-main" data-act="open-item" data-meal="${mealId}" data-id="${it.id}"><span class="item-name">${it.cheat ? '<span class="tag cheat-tag">Cheat</span> ' : it.kind === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(itemName(it))}</span><span class="item-sub">${esc(itemQty(it))}</span></button>
+    <button class="item-main" data-act="open-item" data-meal="${mealId}" data-id="${it.id}"><span class="item-name">${it.cheat ? '<span class="tag cheat-tag">Cheat</span>' : it.kind === "recipe" ? ic("recipe", "sm") : ""}<span class="nm">${esc(itemName(it))}</span></span><span class="item-sub">${esc(itemQty(it))}</span></button>
     <span class="item-kcal">${fmtN(mm.kcal)}<small><i style="--c:var(--carb)">${r0(mm.c)}</i><i style="--c:var(--pro)">${r0(mm.p)}</i><i style="--c:var(--fat)">${r0(mm.f)}</i></small></span></li>`;
 }
 
@@ -5682,6 +5693,7 @@ function endDrag(cancel) {
 (function initFabScroll() { let y = scrollY, t = 0; addEventListener("scroll", () => { if (t) return; t = requestAnimationFrame(() => { t = 0; const f = $("#fab"); if (!f) return; const ny = scrollY; if (Math.abs(ny - y) > 8) { f.classList.toggle("away", ny > y && ny > 200); y = ny; } }); }, { passive: true }); })();
 /* ================= actions ================= */
 const ACT = {};
+ACT["side-toggle"] = () => { try { localStorage.setItem(SIDE_KEY, sideMode() === "rail" ? "full" : "rail"); } catch (e) {} applySide(); scheduleRender(); };
 const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
 
@@ -12832,7 +12844,7 @@ ACT["check-update"] = async () => {
     Sync.ready = true; scheduleRender();
     if (!Sync.db) setTimeout(maybeOnboard, 300);
   });
-  let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (["stats", "progress", "dash", "train", "today"].includes(UI.tab)) scheduleRender(); }, 200); });
+  let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { applySide(); if (["stats", "progress", "dash", "train", "today"].includes(UI.tab)) scheduleRender(); }, 200); });
   // keep "today" correct if the page stays open overnight
   let lastToday = todayISO();
   setInterval(() => { const t = todayISO(); if (t !== lastToday) { if (UI.date === lastToday) UI.date = t; lastToday = t; scheduleRender(); } }, 60000);
