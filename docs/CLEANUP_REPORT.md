@@ -8,6 +8,7 @@ Dal 24/10/2026 ogni revisione confronta il sorgente con la baseline (`git show c
 ## M7a2 P0/P1 (24/10/2026)
 **Verificato:** 90 test; un intervals.icu finto prova import, non-cancellazione e sola lettura; il confronto prima/dopo prova che target e figure in uso non cambiano.
 **Eliminato:** nessun codice (aggiunta isolata); un ramo ridondante nel calcolo dei passi «presi in prestito» semplificato prima della consegna.
+**Nota sullo strumento:** la scansione segnala `icuExtras` come «non usata» perché la usano degli spread (`...icuExtras(x)`): falso positivo, non codice morto.
 **Aperto:** nomi dei campi API da confermare alla prima sincronizzazione reale; equazione per la bici da potenza; METs 2024; nessun test sui dati reali (servono un export anonimo).
 
 ## Errore mio da dichiarare: `tests/check-build.js` era vuoto (24/10/2026)
