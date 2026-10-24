@@ -11,22 +11,24 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Fatta e pubblicata (24/10)** |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Fatta e pubblicata (24/10)** |
 | M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | **Fatta (24/10)**, in revisione |
+| **M4f Ritocchi alle milestone fatte** (richieste 24/10: L1–L11) | L1–L11 | M | Basso | **In corso** |
+| M3b Spesa: supermercati, prezzi, sostituzioni, scansione | L17 | L | Medio | Aggregata (dopo M5) |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Fatta (24/10)**, in revisione |
-| M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
+| M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6, **L13, L14** | XL | Medio | – |
 | M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | **Fatta (24/10)**, in revisione; S-1 (chiavi nel cloud) in attesa di decisione |
 | M7a Nutrizione: base sicura (nessun numero cambia) | D16, D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Fatta e pubblicata (24/10)** |
 | M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **P0 e P1 fatti (24/10)**: import in sola lettura e AEE in ombra; nessun numero in uso cambia. P2–P3 in attesa del confronto sui dati reali |
 | M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
-| M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15 | L | Medio | In attesa |
-| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10 | L | Medio | – |
-| M9 Pianificazione AI e Food Coach | E1–E5, C7 | XL | Alto | – |
+| M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15, **L16** | L | Medio | In attesa |
+| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21** | L | Medio | – |
+| M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara) | XL | Alto | – |
 | M10 Meteo e preparazione workout | F2, F3, F4 | M | Basso | – |
-| M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4 | XL | Medio | – |
+| M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20** | XL | Medio | – |
 | M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4 | M | Basso | – |
-| M13 Design system, redesign progressivo **e nuovo logo e grafiche** (trasversale, per tranche) | J2–J6 | XL | Medio | – |
+| **M13 Redesign totale** — ultima milestone prima dei controlli finali: design system, **nuovo logo e grafiche**, animazioni minimal, valutazione gesti | J2–J6, **L12** | XL | Medio | – |
 | **M14 Audit finale e sistemazione repository** | Audit funzionale/sicurezza/performance/codice morto/dipendenze/UI su 3 viewport; ENG-09 (struttura repo, README, documentazione, script, artefatti di build, pulizia) | M | Basso | – |
 
 ## Primi cinque interventi per valore/sforzo

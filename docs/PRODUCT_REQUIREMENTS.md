@@ -162,3 +162,31 @@ Riuso: i dati vivono nel documento del giorno (`S.logm[mese].days[data]`, campo 
 - E4 strategie di spesa premium/economica (dopo B6).
 - G1 backtesting avanzato; G3 report gara completo (dopo H4).
 - Riscrittura dell'architettura (framework, bundler): non richiesta; si valuta solo se i test mostrano che blocca i requisiti.
+
+## L. Richieste del 24/10 (seconda ondata) — dove sono state messe
+Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**); il resto si aggrega alle milestone non ancora fatte. Il redesign totale (M13) resta l'ultima milestone prima dei controlli finali (M14).
+
+| ID | Richiesta | Milestone | Stato |
+|---|---|---|---|
+| L1 | NEAT giorno per giorno dai passi (formula approvata dall'utente il 24/10): giorni con passi e senza corsa/camminata = costo dei passi + base appresa (≥14 giorni con orologio e passi); altrimenti comportamento attuale, segnalato | M7a2/P2 (ora) | In corso |
+| L2 | Sezione prezzo/stock di «New food» più curata (screen) | M4f (ora) | In corso |
+| L3 | Integratori nel Check-in: design e usabilità migliori | M4f (ora) | In corso |
+| L4 | Togliere «How the pantry works» | M4f (ora) | In corso |
+| L5 | «Stock on» gestito meglio; vedere cosa e quanto resta in magazzino per la settimana successiva (spesa settimanale con piano già fatto per la prossima) | M4f (ora) | In corso |
+| L6 | Modificare la grandezza del pack dalla lista della spesa | M4f (ora) | In corso |
+| L7 | Lista «prossima settimana»: «x g left over» non coerente (finiscono prima) — controlli di coerenza su tutta la catena piano ↔ scorta ↔ lista | M4f (ora) | In corso |
+| L8 | Design della lista della spesa (barre, chip, campo extra) | M4f (ora) | In corso |
+| L9 | Today › This week: ✗ rosso e ✓ verde se salto l'allenamento | M4f (ora) | In corso |
+| L10 | «Grafica time» buggata nella vista PC | M4f (ora) se riproducibile | Da riprodurre |
+| L11 | Passaggio tra pagine da smartphone: il menù scompare per un attimo | M4f (ora) | In corso |
+| L12 | Animazioni minimal e moderne in generale; valutare i gesti | M13 | Aggregata |
+| L13 | Mezzo pack / un pack come quantità di un ingrediente di ricetta | M5 | Aggregata |
+| L14 | «What can I cook»: scegliere pasto e data | M5 | Aggregata |
+| L15 | Condivisione allenamento come story: usabilità, bug grafici da smartphone, testi compressi | M11 | Aggregata |
+| L16 | Vitamine e minerali stimati con l'AI quando l'etichetta non li riporta; parte da rifare | M7e | Aggregata |
+| L17 | Supermercati: cambiare un prodotto in lista e di conseguenza nel piano (se nuovo → Foods), sostituzione con scansione dal vivo; prezzo in offerta o aumento permanente; scansionare e depennare; prezzi diversi per supermercato; scelta del supermercato in lista (prodotti di un altro restano in lista) | **M3b** (nuova, dopo M3) | Aggregata |
+| L18 | Reminder impostabili per misure, foto e test di corsa (con il test da fare) per ricalcolare zone e ritmi | M11 | Aggregata |
+| L19 | Consigli alimentari dettagliati pre-gara (per sport) e post-gara; strategia di gara dettagliata | M9 (Food Coach) / M11 | Aggregata |
+| L20 | Segnalare i PB di corsa e calisthenics e metterli in automatico nei record | M11 | Aggregata |
+| L21 | Modificare i macro scansionando l'etichetta | M8 | Aggregata |
+
