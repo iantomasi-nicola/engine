@@ -4637,7 +4637,8 @@ SHEETS.qty = sh => {
 /* ---------- food editor ---------- */
 function blankFood(name = "") { return { id: "", name, brand: "", barcode: "", unit: "g", per: { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, sat: 0, salt: 0 }, servings: [], pack: 0, cat: "pantry", role: "P", meals: ["m"], fav: false, noPlan: false, source: "custom" }; }
 SHEETS.food = sh => {
-  const d = sh.draft; if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per); const calc = kcalFromMacros(d.per);
+  const d = sh.draft; if (sh.isNew && !d._roleSet && (!d.source || d.source === "custom") && (num(d.per.p) || num(d.per.c) || num(d.per.f))) { const g = guessRoleMeals({ kcal: num(d.per.kcal), p: num(d.per.p), c: num(d.per.c), f: num(d.per.f), sug: num(d.per.sug) }, d.cat, d.name); d.role = g.role; d.meals = g.meals; }
+  if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per); const calc = kcalFromMacros(d.per);
   const isBuiltinEdit = BUILTIN[d.id] && !sh.isNew;
   const orig = d.orig;
   const nfield = (k, l, color, u = "g") => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><div class="unit-inp"><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? "" : ""}" data-in="fd-per" data-k="${k}"><span>${u}</span></div></div>`;
@@ -4649,7 +4650,7 @@ SHEETS.food = sh => {
       ${d.source === "ocr" ? `<div class="note accent">Read from the label on this device. Compare the numbers with the pack and give the food a name before saving.${d.ocrText ? `<details class="ocr-t"><summary>Text that was read</summary><pre>${esc(d.ocrText)}</pre></details>` : ""}</div>` : ""}
       ${d.source === "ai" ? `<div class="note accent">Values estimated by Claude. Check them against the pack if you have it.</div>` : ""}
       ${isBuiltinEdit ? `<div class="note">Built-in reference food. Your changes are saved as your own version.</div>` : ""}
-      <div class="field"><label for="fd-name">Name</label><input id="fd-name" class="inp" value="${esc(d.name)}" data-in="fd" data-k="name" placeholder="e.g. Spaghetti n.5"></div>
+      <div class="field"><label for="fd-name">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input id="fd-name" class="inp" value="${esc(d.name)}" data-in="fd" data-k="name" placeholder="e.g. Spaghetti n.5"><button class="icon-btn" data-act="fd-toggle" data-k="fav" aria-pressed="${!!d.fav}" aria-label="${d.fav ? "Remove from favourites" : "Add to favourites"}" title="Favourite: shown first" style="flex:none;color:${d.fav ? "var(--carb)" : "var(--faint)"}">${ic("star")}</button></div></div>
       <div class="grid2"><div class="field"><label for="fd-brand">Brand</label><input id="fd-brand" class="inp" value="${esc(d.brand || "")}" data-in="fd" data-k="brand"></div>
         <div class="field"><label for="fd-barcode">Barcode</label><input id="fd-barcode" class="inp" inputmode="numeric" value="${esc(d.barcode || "")}" data-in="fd" data-k="barcode"></div></div>
       <div class="field"><span class="flabel">Values per 100</span><div class="seg" style="max-width:200px">${["g", "ml"].map(u => `<button data-act="fd-unit" data-u="${u}" aria-pressed="${d.unit === u}">100 ${u}</button>`).join("")}</div></div>
@@ -4664,10 +4665,8 @@ SHEETS.food = sh => {
         <button class="btn soft sm" data-act="fd-serv-add" style="align-self:flex-start">${ic("plus", "sm")}Add portion (slice, pot, scoop…)</button></div>
       <div class="grid2"><div class="field"><label for="fd-pack">Pack size</label><div class="unit-inp"><input id="fd-pack" class="inp" inputmode="decimal" value="${d.pack || ""}" data-in="fd" data-k="pack" placeholder="for the shopping list"><span>${d.unit}</span></div></div>
         <div class="field"><label for="fd-cat">Aisle</label><select id="fd-cat" class="inp" data-chg="fd-cat">${AISLES.map(([k, l]) => `<option value="${k}" ${d.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
-      <div class="field"><span class="flabel">Planner role</span><div class="chips">${ROLES.map(([k, l]) => `<button class="chip" data-act="fd-role" data-k="${k}" aria-pressed="${d.role === k}">${l}</button>`).join("")}</div></div>
-      <div class="field"><span class="flabel">Good for</span><div class="chips">${[["b", "Breakfast"], ["m", "Lunch & dinner"], ["s", "Snacks"]].map(([k, l]) => `<button class="chip" data-act="fd-meal" data-k="${k}" aria-pressed="${(d.meals || []).includes(k)}">${l}</button>`).join("")}</div></div>
-      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Favourite</span><span class="s">Shows first and gets priority in auto-plan</span></span><button class="switch" role="switch" aria-checked="${!!d.fav}" data-act="fd-toggle" data-k="fav" aria-label="Favourite"></button></div>
-      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Leave out of auto-plan</span><span class="s">You can still add it by hand</span></span><button class="switch" role="switch" aria-checked="${!!d.noPlan}" data-act="fd-toggle" data-k="noPlan" aria-label="Leave out of auto-plan"></button></div>`,
+      <div class="field"><label for="fd-role">Counts as <small class="faint">· how the planner uses it${sh.isNew && !d._roleSet ? " (picked from the values)" : ""}</small></label><select id="fd-role" class="inp" data-chg="fd-role">${ROLES.map(([k, l]) => `<option value="${k}" ${d.role === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      ${d.noPlan ? `<div class="note">Left out of auto-plan. <button class="link" data-act="fd-toggle" data-k="noPlan">Include it again</button></div>` : ""}`,
     foot: `${!sh.isNew ? `<button class="btn danger" data-act="fd-del" style="flex:0 0 auto" aria-label="Delete food">${ic("trash", "sm")}</button>${isBuiltinEdit && S.foods[d.id] ? `<button class="btn ghost" data-act="fd-restore">Restore default</button>` : ""}` : ""}<button class="btn primary" data-act="fd-save">${sh.then ? "Save and add" : "Save"}</button>`
   };
 };
@@ -5080,9 +5079,13 @@ function guessRoleMeals(per, cat, name) {
   else if (fs >= 0.6) role = "F";
   else if (cs >= 0.55) role = (per.sug || 0) > 20 && k > 300 ? "S" : "C";
   else if (cat === "produce") role = k < 60 ? "V" : "R";
-  let meals = { P: ["m"], C: ["m"], V: ["m"], F: ["m", "s"], R: ["b", "s"], D: ["b", "s"], S: ["s"], X: ["m"] }[role];
-  if (/cereal|muesli|granola|oat|fette|biscott|biscuit|cornflakes|porridge|jam|marmellat/.test(n)) meals = ["b", "s"];
-  return { role, meals };
+  return { role, meals: mealsForRole(role, name) };
+}
+/* which meals a food of this role suits (and a few breakfast words), used when the role is picked or guessed */
+function mealsForRole(role, name) {
+  let meals = { P: ["m"], C: ["m"], V: ["m"], F: ["m", "s"], R: ["b", "s"], D: ["b", "s"], S: ["s"], X: ["m"] }[role] || ["m"];
+  if (/cereal|muesli|granola|oat|fette|biscott|biscuit|cornflakes|porridge|jam|marmellat/.test(norm(name))) meals = ["b", "s"];
+  return meals;
 }
 const clean0 = o => { for (const k of Object.keys(o)) if (o[k] == null) delete o[k]; return o; };
 function offToFood(code, p) {
@@ -5852,7 +5855,7 @@ ACT["fd-save"] = () => {
   if (BUILTIN[d.id] && !sh.isNew) d.source = "builtin-edit";
   if (!d.id) d.id = (d.barcode ? "bc-" + d.barcode : "f-" + uid());
   delete d.hidden;
-  const pv = num(d._pv), pu = d._pu || "kg"; delete d._pv; delete d._pu;
+  const pv = num(d._pv), pu = d._pu || "kg"; delete d._pv; delete d._pu; delete d._roleSet;
   put("foods", d.id, d);
   if (pv > 0 && !priceSet(d.id, pv, pu)) toast(pu === "pack" ? "Price not saved: type the pack size first." : "Price not saved: this food has no piece weight.");
   if (d.barcode && S.queue[d.barcode]) put("queue", d.barcode, { ...S.queue[d.barcode], status: "done", food: d.id });
@@ -12367,7 +12370,8 @@ ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.i
 /* the window of the list: this week from today (past days left out), next week, the next N days from a date, or any range */
 function applyShopMode() {
   const m = S.shop?.mode || "days", t = todayISO();
-  if (m === "week") { UI.shopStart = t; S.shop.range = 7 - dow(t); }
+  if (m === "days") { if ((S.shop.range || 7) === 7) { UI.shopStart = t; S.shop.range = 7; } else { const a = UI.shopStart || t; S.shop.mode = "custom"; S.shop.cFrom = a; S.shop.cTo = addDays(a, (S.shop.range || 7) - 1); } }  /* older choices (1, 3, 14 days) become a custom range */
+  if ((S.shop.mode || "days") === "week") { UI.shopStart = t; S.shop.range = 7 - dow(t); }
   else if (m === "next") { UI.shopStart = addDays(weekStartOf(t), 7); S.shop.range = 7; }
   else if (m === "custom") { const a = S.shop.cFrom || t, b = S.shop.cTo || addDays(a, 6); UI.shopStart = a; S.shop.range = clamp(daysBetween(a, b) + 1, 1, 62); }
 }
@@ -12384,7 +12388,7 @@ function shopPanel(inSheet) {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy), ck = S.shop.checked || {}, mode = S.shop.mode || "days";
   const atHome = rows.filter(r => r.buy > 0 && r.free > 0), covered = shoppingCovered(start, n);
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
-  let h = `<div class="sq-top"><div class="chips">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button class="chip sm" data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}${[[1, "1 d"], [3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${mode === "days" && n === k}">${l}</button>`).join("")}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label><button class="chip sm" data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
+  let h = `<div class="sq-top"><div class="chips">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button class="chip sm" data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}<button class="chip sm" data-act="shop-range" data-n="7" aria-pressed="${mode === "days"}">Next 7 days</button><button class="chip sm" data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   if (atHome.length) h += `<div class="pan-use"><span><b>${atHome.length} at home already</b> · ${esc(atHome.slice(0, 3).map(r => r.f.name).join(", "))}${atHome.length > 3 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use them</button></div>`;
   h += toBuy.length || (S.shop.extras || []).length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
@@ -12663,6 +12667,7 @@ ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.o
   o.body += `<div class="field pr-box"><span class="flabel">Price</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="unit-inp" style="max-width:150px"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv" aria-label="Price"><span>€</span></div><div class="seg sm" role="group" aria-label="Price per">${[["kg", u === "ml" ? "€/l" : "€/kg"], ["pack", "€/pack"], ["unit", "€/piece"]].map(([k, l]) => `<button data-act="price-unit" data-k="${k}" aria-pressed="${pu === k}">${l}</button>`).join("")}</div></div><span class="faint" style="font-size:12.5px">${cur ? `Now: ${esc(cur)}` : "No price yet: it is also remembered when you shop."}</span></div>`;
   if (!sh.isNew && id) o.body += stockBoxHTML(id);
   return o; }; }
+CHG["fd-role"] = v => { const d = S_().draft; d.role = v; d._roleSet = true; d.meals = mealsForRole(v, d.name); renderSheet(); };
 ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
 { const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh);
   o.body = o.body.replace(/(<input id="fd-barcode"[^>]*>)/, `<span class="row" style="gap:6px;flex-wrap:nowrap">$1<button class="icon-btn" data-act="fd-scan" aria-label="Scan the barcode" title="Scan the barcode" style="flex:0 0 auto">${ic("scan")}</button></span>`); return o; }; }

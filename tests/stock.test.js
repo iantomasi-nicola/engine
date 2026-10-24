@@ -138,7 +138,7 @@ test("windows: this week starts today (past days left out), next week is Monday 
 test("the shopping panel shows the covered list, and the window chips (this week, next week, custom)", async () => {
   const page = await start();
   const html = await page.evaluate(() => { S.shop.pantry["t-rice"] = { g: 400 }; for (let i = 0; i < 7; i++) S.days[addDays(todayISO(), i)].meals.m[0].pan = true; S.shop.mode = "custom"; S.shop.cFrom = todayISO(); S.shop.cTo = addDays(todayISO(), 1); DATA_V++; applyShopMode(); return shopPanel(false).h; });
-  for (const t of ["This week", "Next week", "Custom", "covered by what's at home", "from home", "runs out", "partly", 'id="shop-from"', 'id="shop-to"']) assert.ok(html.includes(t), "missing: " + t);
+  for (const t of ["This week", "Next week", "Next 7 days", "Custom", "covered by what's at home", "from home", "runs out", "partly", 'id="shop-from"', 'id="shop-to"']) assert.ok(html.includes(t), "missing: " + t);
   assert.deepEqual(app.errors, []);
 });
 
@@ -159,4 +159,17 @@ test("compatibility: an item eaten before this version (pan, no 'took') still gi
   const page = await start(F.seed({ withPantry: false }));
   const g = await page.evaluate(() => { const d = todayISO(); S.shop.pantry["t-rice"] = { g: 50 }; S.days[d].meals.d[0].pan = true; S.days[d].meals.d[0].eaten = true; mutateDay(d, day => { const x = day.meals.d[0]; x.eaten = false; pantryAdjust(x, -1); }); return S.shop.pantry["t-rice"].g; });
   assert.equal(g, 150);
+});
+
+test("only four window chips remain; an older 1/3/14-day choice becomes a custom range, not a lost one", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    S.shop.mode = "days"; S.shop.range = 3; UI.shopStart = todayISO(); applyShopMode();
+    const legacy = { mode: S.shop.mode, from: S.shop.cFrom === todayISO(), to: S.shop.cTo === addDays(todayISO(), 2), n: S.shop.range };
+    const html = shopPanel(false).h, chips = (html.match(/class="chip sm"/g) || []).length;
+    S.shop.mode = "days"; S.shop.range = 7; applyShopMode();
+    return { legacy, chips, seven: [S.shop.mode, UI.shopStart === todayISO(), S.shop.range], noDateChip: !/shop-start/.test(html), noOld: !/1 d|3 d|14 d/.test(html) };
+  });
+  assert.deepEqual(r.legacy, { mode: "custom", from: true, to: true, n: 3 });
+  assert.equal(r.chips, 4); assert.deepEqual(r.seven, ["days", true, 7]); assert.ok(r.noDateChip && r.noOld);
 });
