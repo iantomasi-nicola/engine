@@ -127,3 +127,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Aperto:** la vista settimana non è offerta sotto 820 px (telefono): il piano giornaliero resta l'unica vista; il trascinamento con il dito su tablet usa il menu dell'elemento; i valori dei Foods modificati restano retroattivi sullo storico (solo le ricette sono congelate).
 
+
+## M3b Spesa: supermercati, prezzi, sostituzioni, scansione (24/10/2026)
+**Verificato:** `stores` (8), `stores-swap` (8: sostituzione a grammi/calorie uguali, ricette con storico mangiato congelato, annulla, flusso dal foglio Buy, scansione con prodotto sconosciuto registrato, scansione per depennare, 3 viewport); suite completa; scansione codice morto (nessun elemento nuovo oltre ai falsi positivi noti `icuExtras`, `spendRangeOf`).
+
+**Eliminato / unificato:** nessuna implementazione parallela: la sostituzione riusa `freezeRecipeUses`, `mutateDay`, `destPick` e il flusso scanner/`lookupAndAdd` già esistenti; i prezzi per negozio passano da `eurPerG` (un solo punto).
+
+**Trappola evitata:** i nomi `sw-*` erano già dello scambio esercizi in allenamento (`ACT["sw-pick"]` ridefinito sovrascriveva l'altro): i nuovi handler sono `sf-*`. Sempre cercare il nome in `ACT`/`INP` prima di registrarlo.
+
+**Compatibilità dati:** `S.shop.stores/store/pref`, `prices[id].st`, `buys[].sid/offer` opzionali; senza negozi l'app si comporta come prima.
+
+**Aperto:** la sostituzione tocca i pasti non mangiati da oggi in poi (non i giorni passati, per scelta); «Replace» non cambia i prezzi del vecchio prodotto (restano nello storico acquisti).

@@ -12,7 +12,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Fatta e pubblicata (24/10)** |
 | M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | **Fatta (24/10)**, in revisione |
 | **M4f Ritocchi alle milestone fatte** (richieste 24/10: L1–L11) | L1–L11 | M | Basso | **Fatta (24/10)**, in revisione |
-| M3b Spesa: supermercati, prezzi, sostituzioni, scansione | L17 | L | Medio | Aggregata (dopo M5) |
+| M3b Spesa: supermercati, prezzi, sostituzioni, scansione | L17 | L | Medio | **Fatta** (24/10/2026, in due passi) |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Fatta (24/10)**, in revisione |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6, L13, L14 | XL | Medio | **Fatta (24/10)** in due passi: M5a (ricette) e M5b (piano settimanale, scambio, cook, filtri); in revisione |
