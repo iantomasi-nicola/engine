@@ -254,8 +254,6 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .zb{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-top:10px}.zb i{display:block;height:100%;min-width:3px}
 .zb-l{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--muted)}.zb-l span{display:inline-flex;align-items:center;gap:5px}.zb-l i{width:8px;height:8px;border-radius:50%}.zb-l b{color:var(--text);font-weight:600;margin-left:2px}
 .vol{display:flex;flex-direction:column;gap:8px}.vol .stat-grid{margin:0}
-.sg-why{font-size:12.5px;color:var(--muted);margin:-2px 0 6px}
-.sg-r{align-items:center}.sg-a{display:flex;gap:6px;align-items:center}
 .sg-t b{font-weight:600}
 .key-in{-webkit-text-security:disc;font-family:ui-monospace,monospace}.key-in:focus{-webkit-text-security:none}
 .pa-q{display:flex;align-items:center;gap:6px}.pa-q .chips{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.pa-q .chips::-webkit-scrollbar{display:none}.pa-q .chip{flex:0 0 auto}.pa-q .icon-btn{flex:0 0 auto;background:var(--v-fill,var(--surface2))}
@@ -13264,8 +13262,6 @@ function calTpl() { const T = (WK().tpls || []).filter(t => isStrength(t.sport |
   for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) for (const s of day.wsess || []) if (s.tplId && (!last[s.tplId] || d > last[s.tplId])) last[s.tplId] = d;
   const t = [...T].sort((a, b) => (last[a.id] || "").localeCompare(last[b.id] || ""))[0]; let min = 50; try { min = Math.round(estimateScript(expandTasks(parseScript(t.script).blocks)) / 60) || 50; } catch (e) {}
   return { t: t.name, min, int: "Moderate", sc: t.script, sport: t.sport || strengthSport(), tpl: t.id, last: last[t.id] || null }; }
-function suggestHTML(date) { const S0 = suggestFor(date); if (!S0.list.length) return S0.why ? `<div class="faint" style="font-size:12.5px">${esc(S0.why)}</div>` : "";
-  return `<div class="sg-why">${esc(S0.why)}</div><div class="card">${S0.list.map((s, i) => `<div class="lrow sg-r"><span style="min-width:0"><span class="t">${esc(s.t)}</span><span class="s" style="white-space:normal">${esc(s.note)}${s.last ? ` · last ${fmtDM(s.last)}` : ""} · load ≈ ${s.load} · form after ${s.formAfter > 0 ? "+" : ""}${s.formAfter}%</span></span><span class="end sg-a"><button class="btn tonal sm" data-act="sg-go" data-date="${date}" data-i="${i}">${date === todayISO() ? "Start" : "Use"}</button></span></div>`).join("")}</div>`; }
 ACT["sg-go"] = el => { const s = suggestFor(el.dataset.date).list[+el.dataset.i]; if (!s) return;
   if (s.tpl) { closeSheet(); UI.liveFrom = UI.tab; audioOn(); startWorkout({ script: s.sc, name: s.t, tplId: s.tpl, sport: s.sport, date: todayISO() }); return; }
   openSheet("freewo", { kind: isStrength(s.sport) ? "str" : "end", sport: s.sport, script: s.sc, name: s.t }); };
