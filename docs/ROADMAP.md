@@ -9,7 +9,7 @@ Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossi
 |---|---|---|---|---|
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
 | M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Completata nel sorgente e nella build di root del branch (24/10); in attesa di revisione dell'utente. Non pubblicata.** |
-| M2 Storage ovunque, prezzi e confezioni | A1, A2, A3 | M | Medio | – |
+| M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Approvata (24/10); completata nel sorgente, in attesa di revisione. Non pubblicata** |
 | M3 Spesa: extra, costi, liste lunghe | B4, B5, B6 | M | Basso | – |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
@@ -68,3 +68,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M1 passo 4: scenario a 7 giorni (ENG-03) con invariante Σ pianificato = coperto + da comprare dopo ogni passo, reload, offline e sync simulata | vedi `git log` |
 | 2026-10-24 | M1: build di root rigenerata sul branch (commit dedicato, `release-check` verde: 33 test + smoke + build identica al sorgente). Nessuna pubblicazione, `main` invariato | vedi `git log` |
 | 2026-10-24 | Nutrizione: ricevuta e copiata `docs/NUTRITION_SPEC.md`; audit dettagliato `docs/NUTRITION_AUDIT.md` (fonti verificate/non verificate, matrice EN-01…10, F-01…F-12); suite di baseline `tests/nutrition-baseline.test.js` (9 test, fotografano i difetti dimostrati, nessuna formula modificata); nuovi requisiti D5–D18 (dispositivo FC per sport, AEE senza kcal orologio) | vedi `git log` |
+| 2026-10-24 | M2: funzioni di scorta condivise (`stockSet/stockAdd/undoStock`, `stockBoxHTML`), riquadro «At home» in Foods e Meal Plan, prezzi per kg/confezione/pezzo, frazioni di confezione, Pantry con ricerca/filtri/ordine/preferenze e previsione a una data (51 test verdi, verificato su 3 viewport) | vedi `git log` |
