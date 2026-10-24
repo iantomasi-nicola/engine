@@ -110,6 +110,8 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pan-q{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
 .pan-q b{min-width:58px;text-align:center;font-weight:600}
 .pan-q small{font-size:11.5px;color:var(--muted);margin-left:2px;font-weight:400}
+.stock-box{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin-top:8px;border-radius:16px;background:var(--md-sc-high,var(--surface-2))}.stock-box .flabel{display:inline-flex;align-items:center;gap:6px;margin:0}.stock-box .pan-q{margin-left:auto}.sb-v{background:none;padding:2px 4px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:36px}.sb-s{flex-basis:100%;font-size:12.5px}
+.pa-tools{display:flex;flex-direction:column;gap:8px;padding:8px 0 4px}.pa-forecast{margin:8px 0;padding:10px 12px}.pa-forecast summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.pa-forecast summary .faint{font-size:12.5px}.pa-fchips{margin:8px 0 4px}
 .lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
 .lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
 
@@ -3959,7 +3961,8 @@ function itemRow(it, mealId) {
 /* ================= foods view ================= */
 function foodSub(f) {
   const u = f.unit || "g";
-  return `${fmtN(f.per.kcal)} kcal · ${r1(f.per.c)}C ${r1(f.per.p)}P ${r1(f.per.f)}F per 100 ${u}`;
+  const p = S.shop.pantry?.[f.id], home = p && p.g > 0 ? (q => ` · ${q.v} ${q.u} at home`)(pantryQty(f, p)) : "";
+  return `${fmtN(f.per.kcal)} kcal · ${r1(f.per.c)}C ${r1(f.per.p)}P ${r1(f.per.f)}F per 100 ${u}${home}`;
 }
 const NUTRI_C = { a: "#1e8f4e", b: "#60ac0e", c: "#c9a400", d: "#e07b00", e: "#d6301f" };
 const nutriTag = f => f && f.nutri && NUTRI_C[f.nutri] ? `<span class="tag ns" style="--n:${NUTRI_C[f.nutri]}" title="Nutri-Score ${f.nutri.toUpperCase()}">${f.nutri.toUpperCase()}</span>` : "";
@@ -4800,12 +4803,20 @@ SHEETS.pantry = sh => {
       ${u === "pack" && !(f.pack > 0) ? `<div class="field"><label for="pa-pk">One pack contains</label><div class="unit-inp" style="max-width:180px"><input id="pa-pk" class="inp" inputmode="decimal" value="${esc(String(sh.pk ?? U.pack ?? ""))}" placeholder="e.g. 500" data-in="pa" data-k="pk"><span>${U.base}</span></div></div>` : ""}
       <div class="grid2"><div class="field"><label for="pa-n">Amount at home</label><div class="unit-inp"><input id="pa-n" class="inp" inputmode="decimal" value="${esc(String(shown))}" data-in="pa" data-k="n"><span>${u === "pz" ? "pcs" : paLabel(U, u, 2)}</span></div></div>
         <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div></div>
-      ${u !== "base" && fac && num(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtN(r0(num(shown) * fac))} ${U.base}${cross ? " · 1 g ≈ 1 ml" : ""}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : u === "pack" && !fac ? `<div class="faint" style="font-size:12.5px">Type how much one pack contains.</div>` : ""}
+      ${u !== "base" && fac && paNum(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtN(r0(paNum(shown) * fac))} ${U.base}${cross ? " · 1 g ≈ 1 ml" : ""}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : u === "pack" && !fac ? `<div class="faint" style="font-size:12.5px">Type how much one pack contains.</div>` : ""}
       <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>`,
     foot: `${S.shop.pantry[f.id] ? `<button class="btn danger" data-act="pa-del" style="flex:0 0 auto" aria-label="Remove from pantry">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pa-save">Save</button>` };
 };
 function paGrams(sh) { const f = getFood(sh.food) || BUILTIN[sh.food], U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base";
-  if (sh.n == null) return num(sh.g); const fac = paFac(U, u); return fac ? num(sh.n) * fac : 0; }
+  if (sh.n == null) return num(sh.g); const fac = paFac(U, u); return fac ? paNum(sh.n) * fac : 0; }
+/* an amount typed or tapped: 37, 0,5, 1/2, 1 1/2 (a fraction of a pack stays exact; 1/0 is nothing) */
+function paNum(v) {
+  if (typeof v === "number") return isFinite(v) ? v : 0;
+  const t = String(v ?? "").trim().replace(",", "."); if (!t) return 0;
+  const m = t.match(/^(?:(\d+(?:\.\d+)?)\s+)?(\d+)\s*\/\s*(\d+)$/);
+  if (m) { const d = +m[3]; return d ? (+m[1] || 0) + (+m[2]) / d : 0; }
+  return num(t);
+}
 
 /* ---------- onboarding ---------- */
 SHEETS.onboard = sh => ({
@@ -5841,7 +5852,9 @@ ACT["fd-save"] = () => {
   if (BUILTIN[d.id] && !sh.isNew) d.source = "builtin-edit";
   if (!d.id) d.id = (d.barcode ? "bc-" + d.barcode : "f-" + uid());
   delete d.hidden;
+  const pv = num(d._pv), pu = d._pu || "kg"; delete d._pv; delete d._pu;
   put("foods", d.id, d);
+  if (pv > 0 && !priceSet(d.id, pv, pu)) toast(pu === "pack" ? "Price not saved: type the pack size first." : "Price not saved: this food has no piece weight.");
   if (d.barcode && S.queue[d.barcode]) put("queue", d.barcode, { ...S.queue[d.barcode], status: "done", food: d.id });
   if (sh.then === "qty" && UI.dest) destPick(d);
   else if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: defaultQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
@@ -5959,8 +5972,11 @@ ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", p
   if (u === "pz" && !pw && !pantryUnits(F).pw) { toast("Type the weight of one piece."); $("#pa-pw")?.focus(); return; }
   if (u === "pack" && !pk && !pantryUnits(F, S.shop.pantry[sh.food]).pack) { toast("Type how much one pack contains."); $("#pa-pk")?.focus(); return; }
   const old = S.shop.pantry[sh.food] || {};
-  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
-ACT["pa-del"] = () => { const sh = S_(); delete S.shop.pantry[sh.food]; put("shop", "", S.shop); closeSheet(); };
+  const had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null;
+  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); STOCK_UNDO = { id: sh.food, old: had };
+  paDone(sh); toast(g > 0 ? `${F.name} · ${(q => `${q.v} ${q.u}`)(pantryQty(F, S.shop.pantry[sh.food]))} at home` : `${F.name} removed from the pantry`, undoStock); };
+ACT["pa-del"] = () => { const sh = S_(), had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null; delete S.shop.pantry[sh.food]; put("shop", "", S.shop); STOCK_UNDO = { id: sh.food, old: had }; paDone(sh); toast("Removed from the pantry", undoStock); };
+function paDone(sh) { if (sh.back) openSheet(sh.back.type, sh.back); else closeSheet(); }
 
 /* stats */
 ACT["stats-range"] = el => { UI.statsRange = +el.dataset.n; scheduleRender(); };
@@ -9642,22 +9658,106 @@ function spendCard() {
 }
 
 /* ================= pantry: what's at home, leftovers included, editable ================= */
+/* the Pantry list: search (name, brand, Italian name), filters, sort; the choice of filter and sort is remembered */
+const PAN_SORTS = [["exp", "Expiry"], ["az", "A–Z"], ["za", "Z–A"], ["cat", "Category"]], PAN_FILTERS = [["all", "All"], ["soon", "Use soon"], ["spare", "Spare"], ["set", "Set aside"]];
+const panPrefs = () => ({ sort: "exp", filter: "all", ...(S.settings.pantryPrefs || {}) });
+function setPantryPrefs(o) { const cur = panPrefs(); S.settings.pantryPrefs = { sort: o.sort ?? cur.sort, filter: o.filter ?? cur.filter }; saveSettings(); }
+function pantryList(q, sort, filter) {
+  const today = todayISO(), nq = norm(q || "").trim(), L = panLinked(today, 14), P = S.shop.pantry || {};
+  let ids = Object.keys(P).filter(id => (getFood(id) || BUILTIN[id]) && P[id].g > 0);
+  if (nq) ids = ids.filter(id => { const f = getFood(id) || BUILTIN[id]; return norm(f.name).includes(nq) || norm(f.brand || "").includes(nq) || norm(f.alias || ALIAS_IT[f.id] || "").includes(nq); });
+  if (filter === "soon") ids = ids.filter(id => P[id].exp && daysBetween(today, P[id].exp) <= 3);
+  else if (filter === "spare") ids = ids.filter(id => P[id].g - (L[id] || 0) >= 20 && !(P[id].exp && P[id].exp < today));
+  else if (filter === "set") ids = ids.filter(id => (L[id] || 0) > 0);
+  const nm = id => (getFood(id) || BUILTIN[id]).name, cat = id => (getFood(id) || BUILTIN[id]).cat || "other";
+  ids.sort((a, b) => sort === "az" ? nm(a).localeCompare(nm(b)) : sort === "za" ? nm(b).localeCompare(nm(a)) : sort === "cat" ? cat(a).localeCompare(cat(b)) || nm(a).localeCompare(nm(b)) : (P[a].exp || "9999").localeCompare(P[b].exp || "9999") || nm(a).localeCompare(nm(b)));
+  return ids;
+}
+/* what the pantry will look like on a date: today's stock, the stock then, when it runs out and which meals use it. Read-only. */
+function pantryForecast(date) {
+  const today = todayISO(), n = Math.max(1, daysBetween(today, date) + 1), P = stockPlan(today, n), then = stockOn(date), rows = [];
+  for (const [id, p] of Object.entries(S.shop.pantry || {})) {
+    const f = getFood(id) || BUILTIN[id]; if (!f || !(p.g > 0)) continue;
+    const uses = P.uses[id] || [], endsOn = P.endsOn[id] || null; if (!uses.length && !endsOn) continue;
+    rows.push({ id, f, now: p.g, then: then[id] ?? p.g, endsOn, uses });
+  }
+  rows.sort((a, b) => (a.endsOn || "9999").localeCompare(b.endsOn || "9999") || a.f.name.localeCompare(b.f.name));
+  return { date, rows };
+}
+function forecastHTML(date) {
+  const F = pantryForecast(date), today = todayISO(), dayTxt = d => `${DOW[dow(d)]} ${fmtDM(d)}`;
+  const chips = [[3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="pa-fdate" data-n="${k}" aria-pressed="${date === addDays(today, k)}">${l}</button>`).join("");
+  const body = F.rows.length ? F.rows.slice(0, 12).map(r => { const u = r.f.unit || "g", whys = [...new Set(r.uses.map(x => x.why))];
+    return `<div class="lrow"><span style="min-width:0"><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.now)} → ${fmtN(r.then)} ${u}${r.endsOn ? ` · <b style="color:var(--${r.endsOn <= date ? "warn" : "muted"})">runs out ${dayTxt(r.endsOn)}</b>` : ""}${whys.length ? ` · for ${esc(whys.slice(0, 3).join(", "))}${whys.length > 3 ? ` +${whys.length - 3}` : ""}` : ""}</span></span></div>`; }).join("") + (F.rows.length > 12 ? `<div class="lrow"><span class="s">+${F.rows.length - 12} more</span></div>` : "")
+    : `<div class="lrow"><span class="s">Nothing at home is set aside for meals up to ${dayTxt(date)}. Link planned meals to the pantry ("From the pantry") to see it here.</span></div>`;
+  return `<details class="pa-forecast card" ${F.rows.length ? "open" : ""}><summary><b>Stock on ${dayTxt(date)}</b><span class="faint">after the meals set aside up to then</span></summary><div class="chips pa-fchips">${chips}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(date)}</span><input type="date" value="${date}" min="${today}" data-in="pa-fdate" aria-label="Date"></label></div><div class="pa-frows">${body}</div></details>`;
+}
 VIEWS.pantry = function () {
-  const today = todayISO(), ids = Object.keys(S.shop.pantry || {}).filter(id => (getFood(id) || BUILTIN[id]) && S.shop.pantry[id].g > 0);
+  const today = todayISO(), P = S.shop.pantry || {}, pref = panPrefs(), q = UI.pantryQ || "", fdate = UI.paDate && UI.paDate >= today ? UI.paDate : addDays(today, 7);
+  const all = pantryList("", "exp", "all"), ids = pantryList(q, pref.sort, pref.filter);
   const need = panLinked(today, 14); // only food planned from the pantry is set aside
-  ids.sort((a, b) => (S.shop.pantry[a].exp || "9999").localeCompare(S.shop.pantry[b].exp || "9999"));
-  const spare = ids.filter(id => S.shop.pantry[id].g - (need[id] || 0) >= 20 && !(S.shop.pantry[id].exp && S.shop.pantry[id].exp < today)), soon = ids.filter(id => S.shop.pantry[id].exp && daysBetween(today, S.shop.pantry[id].exp) <= 3);
-  let val = 0; for (const id of ids) { const k = eurPerG(id); if (k != null) val += k * S.shop.pantry[id].g; }
-  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${ids.length} item${ids.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
+  const spare = all.filter(id => P[id].g - (need[id] || 0) >= 20 && !(P[id].exp && P[id].exp < today));
+  let val = 0; for (const id of all) { const k = eurPerG(id); if (k != null) val += k * P[id].g; }
+  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Pantry</div><div class="top-sub">${all.length} item${all.length === 1 ? "" : "s"} at home${val ? ` · worth ${fmtEur(val)}` : ""}</div></div>
     <div class="row">${FEAT("cook") ? `<button class="btn tonal sm" data-act="cook-open" aria-label="What can I cook?">${ic("plate", "sm")}<span class="hide-xs">What can I cook?</span><span class="show-xs">Cook</span></button>` : ""}${spare.length ? `<button class="btn tonal sm" data-act="plan-pantry" aria-label="Plan meals with what's at home">${ic("spark", "sm")}<span class="hide-xs">Plan meals</span></button>` : ""}<button class="btn ink sm" data-act="pantry-prod">${ic("plus", "sm")}Add</button></div></div></header>`;
+  if (all.length) h += `<div class="pa-tools"><div class="search">${ic("search")}<input id="pantry-q" type="search" placeholder="Search pantry" value="${esc(q)}" data-in="pantry-q" autocomplete="off"></div>
+    <div class="chips">${PAN_FILTERS.map(([k, l]) => `<button class="chip sm" data-act="pantry-filter" data-k="${k}" aria-pressed="${pref.filter === k}">${l}</button>`).join("")}</div>
+    <div class="seg sm" role="group" aria-label="Sort">${PAN_SORTS.map(([k, l]) => `<button data-act="pantry-sort" data-k="${k}" aria-pressed="${pref.sort === k}">${l}</button>`).join("")}</div></div>`;
   h += expiryCard("pantry");
-  if (!ids.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping. Food you plan from here (Add › Pantry) is set aside and comes off when you eat it; the rest of the plan goes on the shopping list.</p></div>`;
-  return h + `<div class="card">${ids.map(id => { const p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0);
-    return `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} set aside for the plan` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
-      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q => `<b>${q.v}<small>${q.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
+  if (!all.length) return h + `<div class="empty"><h3>Nothing at home yet</h3><p>What you buy moves here when you finish shopping. Food you plan from here (Add › Pantry) is set aside and comes off when you eat it; the rest of the plan goes on the shopping list.</p></div>`;
+  h += forecastHTML(fdate);
+  if (!ids.length) return h + `<div class="empty slim"><p>${q ? `No items match “${esc(q)}”.` : "Nothing in this filter."}</p></div>`;
+  let lastCat = "";
+  return h + `<div class="card">${ids.map(id => { const p = P[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0), c = f.cat || "other";
+    const head = pref.sort === "cat" && c !== lastCat ? (lastCat = c, `<div class="lrow sub-h"><span class="s">${esc((AISLES.find(a => a[0] === c) || [0, c])[1])}</span></div>`) : "";
+    return head + `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by date"}${need[id] ? ` · ${fmtN(r0(need[id]))} ${u} set aside for the plan` : ""}${sp >= 20 && need[id] ? ` · ${fmtN(r0(sp))} spare` : ""}</span></button>
+      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q2 => `<b>${q2.v}<small>${q2.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
 };
-ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id], f = getFood(id) || BUILTIN[id]; if (!p || !f) return;
-  const U = pantryUnits(f, p), fac = paFac(U, p.u), step = p.u && p.u !== "base" && fac > 1 ? (["kg", "l"].includes(p.u) ? fac / 10 : fac) : f.countable && f.servings?.[0]?.g ? f.servings[0].g : p.g >= 500 ? 50 : p.g >= 100 ? 25 : 10; p.g = Math.max(0, r0(p.g + step * +el.dataset.d)); if (!p.g) delete S.shop.pantry[id]; put("shop", "", S.shop); };
+INP["pantry-q"] = v => { UI.pantryQ = v; scheduleRender(); };
+INP["pa-fdate"] = v => { if (v) { UI.paDate = v; scheduleRender(); } };
+ACT["pa-fdate"] = el => { UI.paDate = addDays(todayISO(), +el.dataset.n); scheduleRender(); };
+ACT["pantry-sort"] = el => { setPantryPrefs({ sort: el.dataset.k }); scheduleRender(); };
+ACT["pantry-filter"] = el => { setPantryPrefs({ filter: el.dataset.k }); scheduleRender(); };
+/* ================= stock: the same few functions behind every screen ================= */
+/* one tap on − or +: pieces, packs or a sensible number of grams */
+function stockStepAmount(id, p) {
+  const f = getFood(id) || BUILTIN[id], U = pantryUnits(f, p), fac = paFac(U, p?.u), g = p?.g || 0;
+  if (p && p.u && p.u !== "base" && fac > 1) return ["kg", "l"].includes(p.u) ? fac / 10 : fac;
+  if (f.countable && f.servings?.[0]?.g) return f.servings[0].g;
+  return g >= 500 ? 50 : g >= 100 ? 25 : g > 0 ? 10 : (f.pack > 0 && f.pack <= 500 ? f.pack : 100);
+}
+let STOCK_UNDO = null;
+function stockSet(id, g) {
+  g = Math.max(0, r0(g)); const old = S.shop.pantry[id] ? clone(S.shop.pantry[id]) : null; STOCK_UNDO = { id, old };
+  if (g > 0) S.shop.pantry[id] = clean0({ ...(old || {}), g }); else delete S.shop.pantry[id];
+  put("shop", "", S.shop);
+}
+const stockAdd = (id, d) => stockSet(id, (S.shop.pantry[id]?.g || 0) + d);
+function undoStock() { if (!STOCK_UNDO) return; const { id, old } = STOCK_UNDO; STOCK_UNDO = null; if (old) S.shop.pantry[id] = old; else delete S.shop.pantry[id]; put("shop", "", S.shop); }
+ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!p || !(getFood(id) || BUILTIN[id])) return; stockAdd(id, stockStepAmount(id, p) * +el.dataset.d); };
+ACT["stock-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!(getFood(id) || BUILTIN[id])) return; stockAdd(id, stockStepAmount(id, p) * +el.dataset.d); if (UI.sheet) renderSheet(); };
+/* price of a food as typed: per kg (or l), per pack, per piece. Stored as what was paid for how much, nothing converted on the way in */
+function priceViews(id) {
+  const p = S.shop.prices?.[id], f = getFood(id) || BUILTIN[id]; if (!p || !(p.g > 0) || !(p.eur >= 0) || !f) return null;
+  const rd = x => Math.round(x * 1e4) / 1e4, pw = pantryUnits(f, S.shop.pantry?.[id]).pw;
+  return { perKg: rd(p.eur / p.g * 1000), perPack: f.pack > 0 ? rd(p.eur / p.g * f.pack) : null, perUnit: pw > 0 ? rd(p.eur / p.g * pw) : null };
+}
+function priceSet(id, v, unit) {
+  const f = getFood(id) || BUILTIN[id]; v = +v; if (!f || !(v > 0)) return false;
+  const pw = pantryUnits(f, S.shop.pantry?.[id]).pw, g = unit === "kg" ? 1000 : unit === "pack" ? f.pack : unit === "unit" ? pw : 0;
+  if (!(g > 0)) return false;
+  S.shop.prices = S.shop.prices || {}; const at = todayISO();
+  S.shop.prices[id] = { eur: v, g, at, hist: [{ eur: v, g, at }], manual: true }; put("shop", "", S.shop); return true;
+}
+function stockBoxHTML(id) {
+  const f = getFood(id) || BUILTIN[id]; if (!f) return "";
+  const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(panLinked()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, pr = priceViews(id);
+  const sub = [res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside` : "", f.pack > 0 ? `pack ${fmtN(f.pack)} ${u}` : "", pr ? [`${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}`, pr.perPack != null ? `${fmtEur(pr.perPack)}/pack` : "", pr.perUnit != null ? `${fmtEur(pr.perUnit)}/piece` : ""].filter(Boolean).join(" · ") : ""].filter(Boolean).join(" · ");
+  return `<div class="stock-box" data-stock="${id}"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${id}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span>${sub ? `<span class="faint sb-s">${esc(sub)}</span>` : ""}</div>`;
+}
+/* the exact amount, units, fractions and use-by date: the pantry sheet, from any screen, and back to where you were */
+ACT["stock-open"] = el => { const id = el.dataset.id, f = getFood(id) || BUILTIN[id], p = S.shop.pantry[id]; if (!f) return; const cur = S_(), back = cur && (cur.type === "qty" || cur.type === "food") ? cur : null;
+  openSheet("pantry", { food: id, g: p?.g ?? "", exp: p?.exp || "", u: p?.u || (f.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk, back }); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
 function pantrySpare(days = 7) { const need = panLinked(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
@@ -11760,6 +11860,7 @@ function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m
 { const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId); return it.pan ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="From the pantry">${ic("jar", "sm")}</span>`) : h; }; }
 { const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); const atHome = sh.kind === "food" ? !!S.shop.pantry[sh.ref] : sh.kind === "recipe" && itemStockLines({ kind: "recipe", ref: sh.ref, qty: 1 }).some(([id]) => S.shop.pantry[id]); if (!sh.itemId || !atHome) return o; const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return o;
   o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? (sh.kind === "recipe" ? "Ingredients set aside at home as far as they go, taken off when you eat it" : "Set aside at home, taken off when you eat it") : sh.kind === "recipe" ? "Off: all its ingredients go on the shopping list" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; return o; }; }
+{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref])) o.body += stockBoxHTML(sh.ref); return o; }; }
 ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
 /* the list: what's free at home for food you'd otherwise buy */
 ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
@@ -12201,14 +12302,14 @@ ACT["wi-plan"] = () => { const R = S_().res; if (!R?.script) return; const t = t
 /* ================= pantry: amounts in one tap (packs, pieces, grams) and a stepper, no keyboard needed ================= */
 function paQuick(sh) { const f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return "";
   const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u);
-  const cur = sh.n != null && sh.n !== "" ? num(sh.n) : fac ? Math.round(num(sh.g) / fac * 100) / 100 : 0;
-  const opts = U.pack && !varPack(f) ? [1, 2, 3, 4, 6].map(n => ["pack", n, `${n} pack${n > 1 ? "s" : ""}`]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
+  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? Math.round(num(sh.g) / fac * 100) / 100 : 0;
+  const opts = U.pack && !varPack(f) ? [[0.25, "¼ pack"], [0.5, "½ pack"], ...[1, 2, 3, 4, 6].map(n => [n, `${n} pack${n > 1 ? "s" : ""}`])].map(([n, l]) => ["pack", n, l]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
   const on = (k, n) => (u === k || (k === "base" && !sh.u)) && Math.abs(cur - n) < 1e-6;
   return `<div class="pa-q"><button class="icon-btn" data-act="pa-step" data-d="-1" aria-label="Less">${ic("minus")}</button><div class="chips">${opts.map(([k, n, l]) => `<button class="chip" data-act="pa-quick" data-k="${k}" data-n="${n}" aria-pressed="${on(k, n)}">${l}</button>`).join("")}</div><button class="icon-btn" data-act="pa-step" data-d="1" aria-label="More">${ic("plus")}</button></div>`; }
 ACT["pa-quick"] = el => { const sh = S_(); sh.u = el.dataset.k; sh.n = +el.dataset.n; haptic(8); renderSheet(); };
 ACT["pa-step"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return;
   const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u), d = +el.dataset.d;
-  const cur = sh.n != null && sh.n !== "" ? num(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pack" || u === "pz" ? 1 : .5;
+  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pack" || u === "pz" ? 1 : .5;
   sh.n = Math.max(0, Math.round((cur + d * step) / step) * step); haptic(6); renderSheet(); };
 { const _ps = SHEETS.pantry; SHEETS.pantry = sh => { const o = _ps(sh); if (!sh.food) return o;
   o.body = o.body.replace(/(<div class="grid2"><div class="field"><label for="pa-n">)/, paQuick(sh) + "$1"); o.focus = null; return o; }; }
@@ -12556,6 +12657,13 @@ function gearView() {
 ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.onCode = code => { if (UI.sheet !== sh) return; const dup = findByBarcode(code);
     sh.draft.barcode = code; renderSheet(); toast(dup && dup.id !== sh.draft.id ? `Barcode ${code} · already used by ${dup.name}` : `Barcode ${code}`); };
   camOpen("barcode"); };
+/* price and stock inside the food editor */
+{ const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh), d = sh.draft, id = d.id, u = d.unit || "g", pu = d._pu || "kg", pr = id ? priceViews(id) : null;
+  const cur = pr ? [`${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}`, pr.perPack != null ? `${fmtEur(pr.perPack)}/pack` : "", pr.perUnit != null ? `${fmtEur(pr.perUnit)}/piece` : ""].filter(Boolean).join(" · ") : "";
+  o.body += `<div class="field pr-box"><span class="flabel">Price</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="unit-inp" style="max-width:150px"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv" aria-label="Price"><span>€</span></div><div class="seg sm" role="group" aria-label="Price per">${[["kg", u === "ml" ? "€/l" : "€/kg"], ["pack", "€/pack"], ["unit", "€/piece"]].map(([k, l]) => `<button data-act="price-unit" data-k="${k}" aria-pressed="${pu === k}">${l}</button>`).join("")}</div></div><span class="faint" style="font-size:12.5px">${cur ? `Now: ${esc(cur)}` : "No price yet: it is also remembered when you shop."}</span></div>`;
+  if (!sh.isNew && id) o.body += stockBoxHTML(id);
+  return o; }; }
+ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
 { const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh);
   o.body = o.body.replace(/(<input id="fd-barcode"[^>]*>)/, `<span class="row" style="gap:6px;flex-wrap:nowrap">$1<button class="icon-btn" data-act="fd-scan" aria-label="Scan the barcode" title="Scan the barcode" style="flex:0 0 auto">${ic("scan")}</button></span>`); return o; }; }
 { const _c = ACT["cam-close"], _t = ACT["cam-type"]; ACT["cam-close"] = el => { CAM.onCode = null; return _c(el); }; ACT["cam-type"] = el => { if (CAM.onCode) { CAM.onCode = null; camClose(); setTimeout(() => $("#fd-barcode")?.focus(), 60); return; } return _t(el); }; }
