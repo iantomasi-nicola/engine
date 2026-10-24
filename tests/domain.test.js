@@ -95,7 +95,7 @@ test("KNOWN (B1): a linked plan food takes stock from the pantry (earliest days 
 
 test("KNOWN (B3): a food fully covered by the pantry has no row at all (no 'covered by stock' list)", async () => {
   const r = await ev(() => {
-    const d = todayISO(); S.foods["t-pasta"] = { id: "t-pasta", name: "Test pasta", per: { kcal: 360, p: 12, c: 72, f: 2, fib: 3 }, unit: "g", pack: 500, cat: "grains", role: "C", meals: ["m"], source: "custom", servings: [] };
+    const d = todayISO(); S.foods["t-pasta"] = { id: "t-pasta", name: "Test pasta", per: { kcal: 360, p: 12, c: 72, f: 2, fib: 3 }, unit: "g", pack: 500, cat: "pantry", role: "C", meals: ["m"], source: "custom", servings: [] };
     S.days[d].meals.s = [{ id: "it-pasta", kind: "food", ref: "t-pasta", qty: 100, eaten: false, pan: true }]; S.shop.pantry["t-pasta"] = { g: 500 }; DATA_V++;
     const rows = shoppingRows(d, 1), out = { present: rows.some(x => x.id === "t-pasta"), toBuy: shopToBuy().some(x => x.id === "t-pasta") };
     delete S.foods["t-pasta"]; delete S.days[d].meals.s; delete S.shop.pantry["t-pasta"]; DATA_V++; return out;

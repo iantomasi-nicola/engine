@@ -6,7 +6,8 @@
     "smoke": "node smoke.js",
     "check-build": "node check-build.js",
     "test": "node --test *.test.js",
-    "verify": "node smoke.js && node check-build.js && node --test *.test.js"
+    "verify": "node smoke.js && node --test *.test.js",
+    "release-check": "node smoke.js && node --test *.test.js && node check-build.js"
   },
   "devDependencies": {
     "lightningcss": "^1.30.0",

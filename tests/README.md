@@ -14,7 +14,8 @@ Already have the tools somewhere else? Point to them: `ENGINE_NM=/path/to/node_m
 | `npm run smoke [-- <git-ref>]` | The app boots and renders on phone (390×844), tablet (820×1180) and desktop (1440×900) with **no script errors**, then opens the main tabs. With a git ref it builds that commit instead (`node smoke.js 02f43a9` fails with the blank-page bug). Screenshots: `$ENGINE_SHOTS` or a temp folder. |
 | `npm run check-build` | The committed `index.html`, `sw.js`, `manifest.webmanifest` are byte-identical to a fresh build of `source/` (build id ignored). Fails when the published build is stale. |
 | `npm test` | Domain tests (running VDOT, e1RM, energy/TDEE identity, recipes, day totals, shopping/pantry) and persistence tests (reload, offline, backup→wipe→restore, API keys left out of backups). |
-| `npm run verify` | All of the above. Run before every commit that touches `source/`. |
+| `npm run verify` | Smoke + tests. Run before every commit that touches `source/`. |
+| `npm run release-check` | `verify` plus `check-build`: run after rebuilding the root files, before a merge or publication. During a milestone the root build is intentionally left stale (see `AGENTS.md`). |
 
 ## Conventions
 - A test named **KNOWN (<id>)** pins a behaviour the backlog plans to change (id = requirement in `docs/PRODUCT_REQUIREMENTS.md`). When that requirement is implemented, update the test in the same commit.

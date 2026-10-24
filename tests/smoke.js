@@ -10,6 +10,8 @@ const fs = require("fs"), path = require("path"), H = require("./lib/harness");
     const text = await app.page.evaluate(() => document.body.innerText.trim());
     const problems = [...app.errors];
     if (text.length < 40) problems.push("blank page (body text: " + text.length + " chars)");
+    if (await app.page.$(".eg-ov")) problems.push("the sign-in screen covers the app");
+    if (await app.page.$(".sheet")) problems.push("a sheet (dialog) is open over the app at start");
     for (const tab of ["today", "train", "plan", "progress", "settings"]) {
       await app.page.evaluate(t => { UI.tab = t; scheduleRender(); }, tab).catch(e => problems.push(`tab ${tab}: ${e.message}`));
       await app.page.waitForTimeout(250);

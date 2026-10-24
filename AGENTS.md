@@ -25,7 +25,7 @@ PWA statica per un atleta ibrido (nutrizione, running, calisthenics, forza). Nes
 npm i terser lightningcss      # in una cartella fuori dalla repo
 NODE_MODULES=<cartella>/node_modules node source/build-web.js <outdir> nomin   # build non minificata fuori repo
 ```
-Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commit che tocca `source/`: build in cartella temporanea, avvio in Chromium (Playwright è preinstallato) con rete esterna bloccata, **zero `pageerror`** e UI visibile sui tre viewport (390×844, 820×1180, 1440×900). Il rebuild dei file di root si fa solo a fine milestone, in un commit dedicato.
+Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commit che tocca `source/`: build in cartella temporanea, avvio in Chromium (Playwright è preinstallato) con rete esterna bloccata, **zero `pageerror`** e UI visibile sui tre viewport (390×844, 820×1180, 1440×900). Il rebuild dei file di root (e `npm run release-check`) si fa solo a fine milestone, in un commit dedicato, e la pubblicazione solo su richiesta: durante la milestone `check-build` segnala giustamente che la build di root è indietro rispetto al sorgente.
 
 ## Regole ingegneristiche (dal mandato dell'utente)
 1. Una sola fonte di verità per Foods, Recipes, Meal Plan, Storage, Shopping: quantità, unità, prezzi, nutrienti. Scorta reale ≠ consumo pianificato ≠ consumo effettivo; le proiezioni non alterano mai la giacenza.

@@ -41,7 +41,8 @@ async function startApp({ dir, seed = { settings: { onboarded: true } }, viewpor
   const { chromium } = loadPlaywright();
   const srv = await serve(dir), browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport, serviceWorkers: "block" });
-  await ctx.addInitScript(([k, v]) => { try { if (v && !sessionStorage.getItem("__seeded")) { localStorage.setItem(k, v); sessionStorage.setItem("__seeded", "1"); } } catch (e) {} }, [LS_KEY, seed ? JSON.stringify(seed) : ""]);
+  /* "engine.localOnly" = the "Use on this device only" choice, so the sign-in screen does not cover the app */
+  await ctx.addInitScript(([k, v]) => { try { localStorage.setItem("engine.localOnly", "true"); if (v && !sessionStorage.getItem("__seeded")) { localStorage.setItem(k, v); sessionStorage.setItem("__seeded", "1"); } } catch (e) {} }, [LS_KEY, seed ? JSON.stringify(seed) : ""]);
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", e => errors.push("pageerror: " + e.message));
   page.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push("console: " + m.text().slice(0, 200)); });

@@ -12,7 +12,7 @@ function seed({ withPlan = true, withPantry = false } = {}) {
   return {
     settings: { onboarded: true, fit: { profile: { sex: "Male", dob: "1990-06-15", height: 180, startWeight: 80, bf: null, maxHr: null } } },
     foods: {
-      "t-rice": food("t-rice", "Test rice", 350, 7, 78, 1, 1000, "grains", "C"),
+      "t-rice": food("t-rice", "Test rice", 350, 7, 78, 1, 1000, "pantry", "C"),
       "t-chicken": food("t-chicken", "Test chicken", 110, 23, 0, 2, 400, "meat", "P"),
       "t-oil": food("t-oil", "Test oil", 900, 0, 0, 100, 500, "pantry", "F"),
     },
