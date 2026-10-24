@@ -855,6 +855,15 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .rc-sum{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px;background:var(--surface-2);border-radius:14px;padding:10px 12px}.rc-sum small{display:block;font-size:11.5px;color:var(--muted)}.rc-sum b{font-size:14.5px;font-weight:650}
 .rc-ing{align-items:center;row-gap:6px}.rc-pk{grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:6px}.rc-pk .faint{font-size:12.5px;min-width:80px}
 .rc-method{margin-top:6px}.rc-method summary{cursor:pointer;font-weight:600;font-size:14px}.rc-method ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.pw{display:grid;grid-template-columns:78px repeat(var(--n,7),minmax(0,1fr));gap:6px;align-items:stretch}.pw-row{display:contents}
+.pw-m{display:flex;align-items:center;font-size:12.5px;font-weight:650;color:var(--muted);padding:0 2px}
+.pw-day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink);min-width:0;cursor:pointer}.pw-day.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.pw-day small{font-size:11px;color:var(--muted)}.pw-day b{font-size:17px;line-height:1.1}.pw-kcal{font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}.pw-kcal small{font-size:10.5px}
+.pw-bar{display:block;width:100%;height:4px;border-radius:2px;background:var(--surface-2);overflow:hidden}.pw-bar i{display:block;height:100%;background:var(--accent)}
+.pw-cell{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:64px;padding:6px;border-radius:14px;background:var(--surface-2)}.pw-cell.now{background:color-mix(in srgb,var(--accent) 8%,var(--surface-2))}.pw-cell.over{outline:2px dashed var(--accent);outline-offset:-2px}
+.pw-it{display:flex;align-items:flex-start;gap:2px;background:var(--surface);border-radius:10px;padding:5px 4px 5px 8px;min-width:0;cursor:grab}.pw-it.eaten{opacity:.65}.pw-it.eaten .pw-n span{text-decoration:line-through}
+.pw-n{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1;min-width:0;background:none;padding:0;color:var(--ink)}.pw-n span{font-size:12.5px;font-weight:600;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}.pw-n small{font-size:11px;color:var(--muted)}
+.pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
 .jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
 .jr-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
@@ -4063,6 +4072,7 @@ function trainChip(date) {
 }
 const VIEWS = {};
 VIEWS.plan = function () {
+  if (pwOn()) return weekPlanView();
   const date = UI.date, day = getDay(date), T = targetsFor(date);
   const eat = eatenFor(date); const tot0 = dayTotals(day);
   const tot = eat.manual && tot0.kcal < eat.kcal ? { ...eat } : tot0;
@@ -4070,7 +4080,7 @@ VIEWS.plan = function () {
   const toEat = T.kcal - eat.kcal, diff = tot.kcal - T.kcal, onT = Math.abs(diff) <= T.kcal * 0.03;
   const planTxt = eat.manual ? "logged total" : !tot.kcal ? "nothing planned" : eat.kcal > 0 ? (toEat >= 0 ? `${fmtN(toEat)} to go` : `${fmtN(-toEat)} over`) : onT ? "on target" : `${fmtN(Math.abs(diff))} ${diff > 0 ? "over" : "short"}`;
   let h = `<header class="top plan-top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">${relDay(date)}</div><div class="top-sub">${(() => { const n = daysBetween(todayISO(), date); return Math.abs(n) <= 1 ? fmtLong(date) : `${parseISO(date).toLocaleDateString("en-GB", { day: "numeric", month: "long" })} · ${n > 0 ? `in ${n} days` : `${-n} days ago`}`; })()}</div></div>
-    <div class="row top-acts">${SMART() && date === today ? readinessDot() : ""}${date !== today ? `<button class="btn soft sm" data-act="date" data-date="${today}">Today</button>` : ""}${SMART() ? `<button class="icon-btn" data-act="open-checkin" data-date="${date}" aria-label="${date < today ? "Edit log" : "Check-in"}" title="${date < today ? "Edit log" : "Check-in"}">${ic("pulse")}</button>` : ""}${shopBtn()}<button class="icon-btn" data-act="day-menu" aria-label="Day options">${ic("more")}</button></div></div>
+    <div class="row top-acts">${SMART() && date === today ? readinessDot() : ""}${date !== today ? `<button class="btn soft sm" data-act="date" data-date="${today}">Today</button>` : ""}${SMART() ? `<button class="icon-btn" data-act="open-checkin" data-date="${date}" aria-label="${date < today ? "Edit log" : "Check-in"}" title="${date < today ? "Edit log" : "Check-in"}">${ic("pulse")}</button>` : ""}${innerWidth >= PW_MIN ? `<button class="icon-btn" data-act="plan-view" data-k="week" aria-label="Week view" title="Week view">${ic("calendar")}</button>` : ""}${shopBtn()}<button class="icon-btn" data-act="day-menu" aria-label="Day options">${ic("more")}</button></div></div>
     <nav class="week" aria-label="Week">${weekStrip()}</nav></header>`;
   let side = `<section class="hero" aria-label="Daily targets">
     ${SMART() ? sessionChip(date) : `<div class="hero-top">${trainChip(date)}</div>`}
@@ -4140,7 +4150,26 @@ function sourceTag(f) {
   if (f.source === "custom") return '<span class="tag">Mine</span>';
   return "";
 }
-function foodSearch(q, seg) {
+/* ================= food filters (Foods and the Add sheet) =================
+   Rich in protein / carbs / fat = that macro gives at least 30 % / 55 % / 55 % of the energy the macros add up to (4 p + 4 c + 9 f) and there is a real amount of it:
+   8 g / 15 g / 10 g per 100 g (for a recipe, per serving: 15 g / 30 g / 15 g). The limits are inclusive. A food can be in more than one group (nuts: fat, and protein if it
+   clears the bar). Vegetables = what you set the food to count as; a recipe is never a vegetable. At home = in the pantry (a recipe: every ingredient in the pantry).
+   Several filters together mean all of them; «At home» and «Not at home» are alternatives. */
+const FOOD_FILTERS = [["p", "High protein"], ["c", "High carb"], ["f", "High fat"], ["v", "Vegetables"], ["in", "At home"], ["out", "Not at home"]];
+const FF_RULE = { food: { p: [.30, 8], c: [.55, 15], f: [.55, 10] }, serving: { p: [.30, 15], c: [.55, 30], f: [.55, 15] } };
+function foodClass(f, perServing = false) {
+  const { p = 0, c = 0, f: fa = 0 } = f.per || {}, e = 4 * p + 4 * c + 9 * fa, R = perServing ? FF_RULE.serving : FF_RULE.food, ok = (g, k, cal) => e > 0 && (cal * g / e) >= R[k][0] - 1e-9 && g >= R[k][1] - 1e-9;
+  return { p: ok(p, "p", 4), c: ok(c, "c", 4), f: ok(fa, "f", 9), v: !perServing && f.role === "V" };
+}
+function foodInPantry(x, isRecipe) { const has = id => (S.shop.pantry?.[id]?.g || 0) > 0; return isRecipe ? (x.ingredients || []).length > 0 && x.ingredients.every(i => has(i.food)) : has(x.id); }
+function foodPasses(o, flt) {
+  if (!flt) return true; const isR = o.t === "recipe", cls = foodClass(isR ? { per: recipePerServing(o.x) } : o.x, isR);
+  for (const k of ["p", "c", "f", "v"]) if (flt[k] && !cls[k]) return false;
+  if (flt.in && !foodInPantry(o.x, isR)) return false; if (flt.out && foodInPantry(o.x, isR)) return false; return true;
+}
+const foodFilterOn = f => !!f && Object.values(f).some(Boolean);
+const foodFilterBar = () => `<div class="chips scroll ff-bar" role="group" aria-label="Food filters">${FOOD_FILTERS.map(([k, l]) => `<button class="chip sm" data-act="fflt" data-k="${k}" aria-pressed="${!!UI.foodFilt?.[k]}">${l}</button>`).join("")}${foodFilterOn(UI.foodFilt) ? `<button class="chip sm" data-act="fflt" data-k="">Clear</button>` : ""}</div>`;
+function foodSearch(q, seg, flt) {
   let foods = [], recs = [];
   if (seg !== "recipes") foods = allFoods().filter(f => seg === "mine" ? f.source !== "builtin" : seg === "fav" ? f.fav : true);
   if (seg === "all" || seg === "recipes" || seg === "fav") recs = allRecipes().filter(r => seg === "fav" ? r.fav : true);
@@ -4149,18 +4178,19 @@ function foodSearch(q, seg) {
   for (const f of foods) { const s = q ? matchScore(foodKeys(f), q) + (nq && (norm(f.name).startsWith(nq) || norm(f.alias || ALIAS_IT[f.id] || "").startsWith(nq)) ? 1.5 : 0) : 1; if (s) out.push({ t: "food", x: f, s: s + (f.fav ? 0.5 : 0) + (f.source !== "builtin" ? 0.3 : 0) }); }
   for (const r of recs) { const s = q ? matchScore(r.name, q) : 1; if (s) out.push({ t: "recipe", x: r, s: s + 0.4 + (r.fav ? 0.5 : 0) }); }
   out.sort((a, b) => b.s - a.s || a.x.name.localeCompare(b.x.name));
+  if (foodFilterOn(flt)) return out.filter(o => foodPasses(o, flt));
   if (!q) out.sort((a, b) => (a.t === b.t ? 0 : a.t === "recipe" ? -1 : 1) || a.x.name.localeCompare(b.x.name));
   return out;
 }
 VIEWS.foods = function () {
   const q = UI.foodsQ, seg = UI.foodsSeg;
-  const res = foodSearch(q, seg);
+  const res = foodSearch(q, seg, UI.foodFilt);
   const queue = Object.values(S.queue || {}).filter(x => x.status === "pending");
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div><div class="top-title">Foods</div><div class="top-sub">${allFoods().length} foods · ${allRecipes().length} recipes</div></div>
     <div class="row"><button class="btn soft sm" data-act="new-recipe">${ic("recipe", "sm")}Recipe</button><button class="btn ink sm" data-act="new-food">${ic("plus", "sm")}Food</button></div></div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:10px 0 12px">
     <div class="search">${ic("search")}<input id="foods-q" type="search" placeholder="Search foods and recipes" value="${esc(q)}" data-in="foods-q" autocomplete="off"><button class="icon-btn" data-act="open-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
-    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div></div></header>`;
+    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div>${seg === "hidden" ? "" : foodFilterBar()}</div></header>`;
   if (seg === "hidden") { const hf = hiddenFoods().filter(f => !q || matchScore(foodKeys(f), q) > 0).sort((a, b) => a.name.localeCompare(b.name));
     return h + `<div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px"><span class="faint" style="font-size:13px">Deleted foods stay here 3 days, then they're gone for good.</span>${hf.length > 1 ? `<button class="btn soft sm" data-act="fd-unhide-all">Restore all</button>` : ""}</div>
       <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${f.id}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
@@ -4791,7 +4821,7 @@ let addRowsFor = sh => {
       return `<div class="multi-h"><span><b>${n} foods</b> · ${fmtN(tot.kcal)} kcal · ${r0(tot.c)}C ${r0(tot.p)}P ${r0(tot.f)}F</span><button class="btn primary sm" data-act="add-all">${ic("plus", "sm")}Add all to ${esc(mealName(sh.meal))}</button></div>` + lines;
     }
     const e = entryOf(q), qn = e.n != null && e.name.length >= 2 ? e.name : q; sh._typedQty = qn !== q;
-    const res = foodSearch(qn, "all").slice(0, 40);
+    const res = foodSearch(qn, "all", UI.foodFilt).slice(0, 40);
     if (sh._typedQty) return (res.length ? res.map(r => r.t === "food" ? foodRow(r.x, entryQty("food", r.x, e)) : recRow(r.x, entryQty("recipe", r.x, e))).join("") : `<div class="lrow"><span><span class="t">No match for “${esc(qn)}”</span><span class="s">Check the name or create the food.</span></span><span class="end"><button class="btn tonal sm" data-act="new-food" data-name="${esc(qn)}">Create</button></span></div>`);
     const online = `<div id="off-inline"></div>` + (q.length >= 2 ? `<button class="lrow off-row" data-act="off-search"><span style="min-width:0"><span class="t">${ic("search", "sm")} Search “${esc(q)}” online</span><span class="s">Open Food Facts, or Claude's estimate of the label</span></span><span class="end">${ic("chevR", "sm")}</span></button>` : "");
     return res.length ? res.map(r => r.t === "food" ? foodRow(r.x) : recRow(r.x)).join("") + online
@@ -4808,7 +4838,7 @@ let addRowsFor = sh => {
   if (seg === "fav") return [...allFoods().filter(f => f.fav).map(f => foodRow(f)), ...allRecipes().filter(r => r.fav).map(r => recRow(r))].join("") || `<div class="lrow"><span><span class="t">No favourites yet</span><span class="s">Tap ★ on any food to keep it one tap away.</span></span></div>`;
   if (seg === "recipes") return allRecipes().sort((a, b) => a.name.localeCompare(b.name)).map(r => recRow(r)).join("") + `<button class="lrow" data-act="new-recipe"><span class="t" style="color:var(--accent)">${ic("plus", "sm")} New recipe</span></button>`;
   const mk = S.settings.meals.find(m => m.id === sh.meal)?.kind || "m";
-  return allFoods().filter(f => (f.meals || ["m"]).includes(mk) || f.source !== "builtin").sort((a, b) => a.name.localeCompare(b.name)).map(f => foodRow(f)).join("");
+  return allFoods().filter(f => (f.meals || ["m"]).includes(mk) || f.source !== "builtin").filter(f => foodPasses({ t: "food", x: f }, UI.foodFilt)).sort((a, b) => a.name.localeCompare(b.name)).map(f => foodRow(f)).join("") || `<div class="lrow"><span class="s">No food matches these filters.</span></div>`;
 };
 /* the meal you're filling: total vs its share of the day, and what's already in it (tap × to take it out) */
 const addCtxFor = sh => {
@@ -4816,7 +4846,8 @@ const addCtxFor = sh => {
   return `<div class="ctx"><span>${esc(mealName(sh.meal))} <b>${fmtN(mt.kcal)}</b> / ${fmtN(tg)} kcal</span><span class="${l < 0 ? "bad" : ""}">${l >= 0 ? fmtN(l) + " left" : fmtN(-l) + " over"}</span></div>
     ${it.length ? `<div class="add-in">${it.map(x => `<span class="add-tag">${esc(itemName(x))} <small>${x.kind === "food" ? fmtQ(x.qty) + " " + (getFood(x.ref)?.unit || "g") : x.kind === "recipe" ? fmtQ(x.qty) + " srv" : fmtN(itemMacros(x).kcal) + " kcal"}</small><button data-act="add-rm" data-id="${x.id}" aria-label="Remove ${esc(itemName(x))}">${ic("close", "sm")}</button></span>`).join("")}</div>` : ""}`;
 };
-function refreshAdd() { const sh = S_(); if (!sh || sh.type !== "add") return; const c = $("#add-ctx"); if (c) c.innerHTML = addCtxFor(sh); }
+const addFltFor = sh => (sh.seg === "all" || (sh.q || "").trim()) ? foodFilterBar() : "";
+function refreshAdd() { const sh = S_(); if (!sh || sh.type !== "add") return; const c = $("#add-ctx"); if (c) c.innerHTML = addCtxFor(sh); const f = $("#add-flt"); if (f) f.innerHTML = addFltFor(sh); }
 SHEETS.add = sh => {
   const q = sh.q || "", seg = sh.seg || "recent"; if (q.trim().length >= 3) setTimeout(() => offInline(sh), 0);
   return {
@@ -4827,7 +4858,7 @@ SHEETS.add = sh => {
       <div id="add-seg" class="seg" ${q ? "hidden" : ""}>${[["recent", "Recent"], ["pantry", "Pantry"], ["fav", "Starred"], ["recipes", "Recipes"], ["all", "All"]].map(([k, l]) => `<button data-act="add-seg" data-seg="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div>
       <div id="add-ctx">${addCtxFor(sh)}</div></div>
       ${q ? "" : `<div class="faint add-tip">Type the amount with the food (<b>150 g riso</b>, <b>2 uova</b>, <b>mezza cipolla</b>) and press Enter to add it straight away. Separate several foods with commas.</div>`}
-      <div class="card" id="add-list">${addRowsFor(sh)}</div>`
+      <div id="add-flt">${addFltFor(sh)}</div><div class="card" id="add-list">${addRowsFor(sh)}</div>`
   };
 };
 
@@ -5987,6 +6018,7 @@ ACT["day-menu"] = () => {
     { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a cheat meal", icon: "star", sub: "Pizza night, dinner out… the plan makes room", run: () => openCheat({ date }) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
+    ...(activeMeals().some(m => m.id === "lunch") && activeMeals().some(m => m.id === "dinner") && has ? [{ label: "Swap lunch and dinner", icon: "swap", sub: "Everything in them trades places", run: () => swapMeals(date, "lunch", "dinner") }] : []),
     { label: "Share the day as a picture", icon: "image", run: () => ACT["plan-share"]({ dataset: { date } }) },
     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
     ...(has ? [
@@ -6026,6 +6058,70 @@ function saveMealAsRecipe(mid) {
   const draft = { id: "rec-" + uid(), name: getDay(UI.date).dish?.[mid] || `${mealName(mid)} · ${fmtDM(UI.date)}`, servings: 1, meals: [kind], ingredients: Object.entries(ing).map(([food, g]) => ({ food, g: r0(g) })), note: "", fav: false, source: "custom" };
   openSheet("recipe", { draft, isNew: true });
 }
+
+/* ================= the weekly Meal Plan (tablet and desktop) =================
+   Seven days by the meals: each day's total against its target, an item opens to edit, "+" adds, an item's menu moves, copies, duplicates
+   or removes it, and with a mouse it can be dragged to another day (Alt copies). Every move can be undone. An eaten item is never moved. */
+const PW_MIN = 820;
+const pwOn = () => UI.planView === "week" && innerWidth >= PW_MIN;
+function swapMeals(date, a, b) {
+  const snap = snapshotDays([date]);
+  mutateDay(date, d => { const x = d.meals[a] || [], y = d.meals[b] || []; d.meals[a] = y; d.meals[b] = x;
+    if (d.dish) { const da = d.dish[a], db = d.dish[b]; delete d.dish[a]; delete d.dish[b]; if (db) d.dish[a] = db; if (da) d.dish[b] = da; } });
+  toast(`Swapped ${mealName(a).toLowerCase()} and ${mealName(b).toLowerCase()}`, () => restoreDays(snap));
+}
+/* move (or copy) an item to another day and meal; false when there is nothing to do */
+function moveItem(from, to, copy = false) {
+  const src = (getDay(from.date).meals[from.meal] || []).find(x => x.id === from.id); if (!src) return false;
+  if (src.eaten && !copy) return false;
+  if (!copy && from.date === to.date && from.meal === to.meal) return false;
+  const snap = snapshotDays([...new Set([from.date, to.date])]), it = clone(src);
+  if (copy) { it.id = uid(); it.eaten = false; delete it.took; delete it.snap; delete it.cheat; delete it.out; }
+  if (!copy) mutateDay(from.date, d => { d.meals[from.meal] = (d.meals[from.meal] || []).filter(x => x.id !== from.id); if (d.dish) delete d.dish[from.meal]; });
+  mutateDay(to.date, d => { (d.meals[to.meal] = d.meals[to.meal] || []).push(it); if (d.dish) delete d.dish[to.meal]; });
+  toast(`${copy ? (from.date === to.date && from.meal === to.meal ? "Duplicated" : "Copied") : "Moved"} to ${from.date === to.date ? mealName(to.meal) : `${DOW[dow(to.date)]} ${fmtDM(to.date)}`}`, () => restoreDays(snap));
+  return true;
+}
+function weekPlanView() {
+  const t = todayISO(), ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), M = activeMeals();
+  let h = `<header class="top plan-top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">${ws <= t && t < addDays(ws, 7) ? "This week" : `Week of ${fmtDM(ws)}`}</div><div class="top-sub">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</div></div>
+    <div class="row top-acts"><button class="icon-btn" data-act="pw-nav" data-d="-1" aria-label="Previous week">${ic("chevL")}</button>${ws <= t && t < addDays(ws, 7) ? "" : `<button class="btn soft sm" data-act="pw-nav" data-d="0">Today</button>`}<button class="icon-btn" data-act="pw-nav" data-d="1" aria-label="Next week">${ic("chevR")}</button><button class="icon-btn" data-act="plan-view" data-k="day" aria-label="Day view" title="Day view">${ic("list")}</button>${shopBtn()}</div></div></header>`;
+  const head = days.map(d => { const day = getDay(d), tot = dayTotals(day), T = targetsFor(d).kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0;
+    return `<button class="pw-day${d === t ? " now" : ""}" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b><span class="pw-kcal">${fmtN(tot.kcal)}<small>/${fmtN(T)}</small></span><i class="pw-bar"><i style="width:${pct}%"></i></i></button>`; }).join("");
+  const rows = M.map(m => `<div class="pw-row" data-meal="${m.id}"><div class="pw-m">${esc(m.name)}</div>${days.map(d => { const items = getDay(d).meals[m.id] || [];
+    return `<div class="pw-cell${d === t ? " now" : ""}" data-date="${d}" data-meal="${m.id}">${items.map(it => { const mm = itemMacros(it);
+      return `<div class="pw-it${it.eaten ? " eaten" : ""}" draggable="${it.eaten ? "false" : "true"}" data-item="${it.id}" data-date="${d}" data-meal="${m.id}"><button class="pw-n" data-act="pw-edit" data-date="${d}" data-meal="${m.id}" data-id="${it.id}"><span>${esc(itemName(it))}</span><small>${esc(itemQty(it))} · ${fmtN(mm.kcal)}</small></button><button class="pw-o" data-act="pw-item" data-date="${d}" data-meal="${m.id}" data-id="${it.id}" aria-label="Options for ${esc(itemName(it))}">${ic("more", "sm")}</button></div>`; }).join("")}<button class="pw-add" data-act="pw-add" data-date="${d}" data-meal="${m.id}" aria-label="Add to ${esc(m.name)} on ${DOW[dow(d)]}">${ic("plus", "sm")}</button></div>`; }).join("")}</div>`).join("");
+  return h + `<div class="pw" style="--n:${days.length}"><div class="pw-corner"></div>${head}${rows}</div><div class="faint" style="font-size:12.5px;padding:8px 2px">Drag an item to another day (hold Alt to copy), or use its menu.</div>`;
+}
+ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
+ACT["pw-nav"] = el => { const d = +el.dataset.d; UI.date = d === 0 ? todayISO() : addDays(UI.date, 7 * d); scheduleRender(); };
+ACT["pw-day"] = el => { UI.date = el.dataset.date; ACT["day-menu"](); };
+ACT["pw-add"] = el => { UI.date = el.dataset.date; ACT["open-add"]({ dataset: { meal: el.dataset.meal } }); };
+ACT["pw-edit"] = el => { UI.date = el.dataset.date; ACT["open-item"]({ dataset: { meal: el.dataset.meal, id: el.dataset.id } }); };
+SHEETS.pwitem = sh => {
+  const it = (getDay(sh.date).meals[sh.meal] || []).find(x => x.id === sh.id); if (!it) return { title: "Item", body: `<div class="empty slim"><p>This item is gone.</p></div>`, foot: "" };
+  const ws = weekStartOf(sh.date), days = [...Array(7)].map((_, i) => addDays(ws, i));
+  if (sh.mode) return { title: `${sh.mode === "copy" ? "Copy" : "Move"} ${itemName(it)}`, body: `<div class="field"><span class="flabel">Day</span><div class="chips">${days.map(d => `<button class="chip" data-act="pw-to-day" data-d="${d}" aria-pressed="${(sh.toDate || sh.date) === d}">${DOW[dow(d)]} ${+d.slice(8)}</button>`).join("")}</div></div>
+      <div class="field"><span class="flabel">Meal</span><div class="chips">${activeMeals().map(m => `<button class="chip" data-act="pw-to-meal" data-m="${m.id}" aria-pressed="${(sh.toMeal || sh.meal) === m.id}">${esc(m.name)}</button>`).join("")}</div></div>`,
+    foot: `<button class="btn soft" data-act="pw-back">Back</button><button class="btn primary" data-act="pw-do">${sh.mode === "copy" ? "Copy here" : "Move here"}</button>` };
+  const row = (act, label, ico, danger) => `<button class="lrow${danger ? " danger" : ""}" data-act="${act}"><span><span class="t">${label}</span></span>${ic(ico, "sm")}</button>`;
+  return { title: itemName(it), body: `<div class="card">${row("pw-sheet-edit", "Edit amount", "edit")}${it.eaten ? "" : row("pw-mode-move", "Move to…", "move")}${row("pw-mode-copy", "Copy to…", "copy")}${row("pw-dup", "Duplicate here", "plus")}${row("pw-del", "Remove", "trash", true)}</div>${it.eaten ? `<div class="faint" style="font-size:12.5px">It is already eaten, so it stays where it is: copy it instead.</div>` : ""}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` };
+};
+ACT["pw-item"] = el => openSheet("pwitem", { date: el.dataset.date, meal: el.dataset.meal, id: el.dataset.id });
+ACT["pw-sheet-edit"] = () => { const sh = S_(); closeSheet(); UI.date = sh.date; ACT["open-item"]({ dataset: { meal: sh.meal, id: sh.id } }); };
+ACT["pw-mode-move"] = () => { S_().mode = "move"; renderSheet(); };
+ACT["pw-mode-copy"] = () => { S_().mode = "copy"; renderSheet(); };
+ACT["pw-back"] = () => { const sh = S_(); sh.mode = null; renderSheet(); };
+ACT["pw-to-day"] = el => { S_().toDate = el.dataset.d; renderSheet(); };
+ACT["pw-to-meal"] = el => { S_().toMeal = el.dataset.m; renderSheet(); };
+ACT["pw-do"] = () => { const sh = S_(); closeSheet(); moveItem({ date: sh.date, meal: sh.meal, id: sh.id }, { date: sh.toDate || sh.date, meal: sh.toMeal || sh.meal }, sh.mode === "copy"); };
+ACT["pw-dup"] = () => { const sh = S_(); closeSheet(); moveItem({ date: sh.date, meal: sh.meal, id: sh.id }, { date: sh.date, meal: sh.meal }, true); };
+ACT["pw-del"] = () => { const sh = S_(), it = (getDay(sh.date).meals[sh.meal] || []).find(x => x.id === sh.id), snap = snapshotDays([sh.date]); closeSheet();
+  mutateDay(sh.date, d => { if (it?.eaten) pantryAdjust({ ...it }, -1); d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== sh.id); }); toast(`${it ? itemName(it) : "Item"} removed`, () => restoreDays(snap)); };
+/* the mouse: drag an item onto a cell */
+document.addEventListener("dragstart", e => { const it = e.target.closest?.(".pw-it"); if (!it || it.getAttribute("draggable") !== "true") return; e.dataTransfer.setData("text/plain", JSON.stringify({ date: it.dataset.date, meal: it.dataset.meal, id: it.dataset.item })); e.dataTransfer.effectAllowed = "copyMove"; });
+document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x !== c && x.classList.remove("over")); if (c) { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
+document.addEventListener("drop", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x.classList.remove("over")); if (!c) return; e.preventDefault(); let f; try { f = JSON.parse(e.dataTransfer.getData("text/plain")); } catch (x) { return; } if (f?.id) moveItem(f, { date: c.dataset.date, meal: c.dataset.meal }, e.altKey); });
 
 /* add sheet */
 ACT["sheet-meal"] = el => { S_().meal = el.dataset.meal; renderSheet(); };
@@ -6257,6 +6353,8 @@ ACT["scan-queue"] = () => {
 
 /* foods tab */
 ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
+ACT.fflt = el => { const k = el.dataset.k, f = { ...(UI.foodFilt || {}) }; if (!k) UI.foodFilt = {}; else { if (f[k]) delete f[k]; else { f[k] = true; if (k === "in") delete f.out; if (k === "out") delete f.in; } UI.foodFilt = f; } if (UI.sheet) renderSheet(); else scheduleRender(); };
+
 
 /* shopping */
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; S.shop.mode = "days"; put("shop", "", S.shop); };
@@ -11075,7 +11173,8 @@ function cookPlates(meal, H = pantryHave()) {
 }
 SHEETS.cook = sh => {
   const H = pantryHave(), n = Object.keys(H).length, meal = sh.meal || suggestMeal(), R = cookRecipes(H), Pl = cookPlates(meal, H);
-  const mealSel = `<div class="chips">${activeMeals().map(m => `<button class="chip sm" data-act="ck-meal" data-k="${m.id}" aria-pressed="${meal === m.id}">${esc(m.name)}</button>`).join("")}</div>`;
+  const date = sh.date || todayISO();
+  const mealSel = `<div class="row" style="justify-content:center">${dayNavHTML(date, "ck-go")}</div><div class="chips">${activeMeals().map(m => `<button class="chip sm" data-act="ck-meal" data-k="${m.id}" aria-pressed="${meal === m.id}">${esc(m.name)}</button>`).join("")}</div>`;
   if (!n) return { title: "What can I cook?", body: `<div class="empty slim"><p>The pantry is empty. Finish a shopping trip or add what you have at home, then ask again.</p><button class="btn tonal" data-act="pantry-prod">${ic("plus", "sm")}Add to the pantry</button></div>`, foot: "" };
   const plate = (x, i) => `<div class="ck-c"><div class="ck-h"><b>${esc(x.items.map(([f]) => f.name).slice(0, 3).join(" · "))}</b>${x.urgent ? `<span class="pill" style="--c:var(--warn)">uses expiring food</span>` : ""}</div>
     <small class="faint">${esc(x.items.map(([f, g]) => `${f.name} ${fmtN(g)} ${f.unit || "g"}`).join(" + "))}</small><small><b>${fmtN(x.m.kcal)} kcal</b> · ${r0(x.m.c)}C ${r0(x.m.p)}P ${r0(x.m.f)}F</small>
@@ -11094,11 +11193,12 @@ SHEETS.cook = sh => {
 const mainMeal = () => { const m = suggestMeal(), A = activeMeals(), k = A.find(x => x.id === m)?.kind || m; if (!/snack|^s$|^b$|break/i.test(k + m)) return m; const h = new Date().getHours(); return (A.find(x => /lunch/i.test(x.id + x.kind)) && h < 15 ? A.find(x => /lunch/i.test(x.id + x.kind)) : A.find(x => /dinner/i.test(x.id + x.kind)) || A[0]).id; };
 ACT["cook-open"] = () => openSheet("cook", { meal: mainMeal() });
 ACT["ck-meal"] = el => { S_().meal = el.dataset.k; renderSheet(); };
-const ckAdd = (items, label) => { const sh = S_(), meal = sh.meal || suggestMeal(), d = todayISO(); mutateDay(d, day => { for (const [f, g] of items) (day.meals[meal] = day.meals[meal] || []).push(newItem("food", f.id, g)); }); toast(`${label} added to ${mealName(meal)} · today`); };
+ACT["ck-go"] = el => { if (el.dataset.date) { S_().date = el.dataset.date; renderSheet(); } };
+const ckAdd = (items, label) => { const sh = S_(), meal = sh.meal || suggestMeal(), d = sh.date || todayISO(); mutateDay(d, day => { for (const [f, g] of items) (day.meals[meal] = day.meals[meal] || []).push(newItem("food", f.id, g)); }); toast(`${label} added to ${mealName(meal)} · ${relDay(d).toLowerCase()}`); };
 const ckSave = (name, items) => { closeSheet(); openSheet("recipe", { draft: { id: "", name, servings: 1, meals: [S_()?.meal || "lunch"], ingredients: items.map(([f, g]) => ({ food: f.id, g })), note: "", fav: false, source: "custom" }, isNew: true }); };
 ACT["ck-plate"] = el => { const x = cookPlates(S_().meal || suggestMeal())[+el.dataset.i]; if (x) ckAdd(x.items, x.items[0][0].name + " plate"); };
 ACT["ck-plate-save"] = el => { const x = cookPlates(S_().meal || suggestMeal())[+el.dataset.i]; if (x) ckSave(x.items.map(([f]) => f.name).slice(0, 2).join(" & "), x.items); };
-ACT["ck-rec"] = el => { const sh = S_(), r = getRecipe(el.dataset.id); if (!r) return; mutateDay(todayISO(), day => { (day.meals[sh.meal || suggestMeal()] = day.meals[sh.meal || suggestMeal()] || []).push(newItem("recipe", r.id, 1)); }); toast(`${r.name} added to ${mealName(sh.meal || suggestMeal())} · today`); };
+ACT["ck-rec"] = el => { const sh = S_(), r = getRecipe(el.dataset.id), d = sh.date || todayISO(); if (!r) return; mutateDay(d, day => { (day.meals[sh.meal || suggestMeal()] = day.meals[sh.meal || suggestMeal()] || []).push(newItem("recipe", r.id, 1)); }); toast(`${r.name} added to ${mealName(sh.meal || suggestMeal())} · ${relDay(d).toLowerCase()}`); };
 ACT["ck-miss"] = el => { const r = getRecipe(el.dataset.id), H = pantryHave(); if (!r) return; const sv = r.servings || 1; let n = 0;
   for (const ing of r.ingredients) { const f = getFood(ing.food) || BUILTIN[ing.food]; if (!f || isStaple(f, ing.g / sv) || (H[ing.food]?.g || 0) >= ing.g / sv * .6) continue; const t = `${f.name} · ${fmtN(r0(ing.g / sv))} ${f.unit || "g"}`; if (!(S.shop.extras || []).some(x => !x.done && x.text === t)) { S.shop.extras = [...(S.shop.extras || []), { id: uid(), text: t, done: false }]; n++; } }
   put("shop", "", S.shop); toast(`${n} item${n === 1 ? "" : "s"} added to the shopping list`); };

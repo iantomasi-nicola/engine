@@ -116,3 +116,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Aperto:** da confermare sul telefono reale il lampeggio della barra (rimossa la causa probabile); S-1 chiavi nel cloud; le richieste aggregate L12–L21 nelle milestone indicate.
 
+## M5 Recipe Engine e Meal Plan settimanale (24/10/2026)
+**Verificato:** `recipe-engine` (10), `meal-plan` (13), `food-filters` (6), `recipe-scan`; suite completa; controllo visivo di editor ricetta, vista settimana (tablet e desktop), filtri.
+
+**Eliminato / unificato:** nessuna duplicazione nuova; il filtro «Top» era già stato tolto in M4c; `foodSearch` ha ora un solo punto per i filtri (usato da Foods e Add); `lookupAndAdd` una sola definizione (M6).
+
+**Trappola evitata dai test:** `ACT.fflt` registrato prima di `const ACT` avrebbe azzerato l'app (TDZ): lo smoke/err test l'ha segnalato subito e la registrazione è stata spostata dopo il registro.
+
+**Compatibilità dati:** campi opzionali `recipe.time`, `item.snap` (solo sui pasti mangiati di una ricetta modificata o cancellata); nessuna migrazione: i pasti già mangiati prima di questa versione vengono congelati alla prima modifica della ricetta (non prima).
+
+**Aperto:** la vista settimana non è offerta sotto 820 px (telefono): il piano giornaliero resta l'unica vista; il trascinamento con il dito su tablet usa il menu dell'elemento; i valori dei Foods modificati restano retroattivi sullo storico (solo le ricette sono congelate).
+

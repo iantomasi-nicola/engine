@@ -112,7 +112,7 @@ test("stock on a future date: current → projected, when it runs out, which mea
     const t = todayISO(); S.shop.pantry["t-rice"] = { g: 1000 }; for (let i = 0; i < 7; i++) S.days[addDays(t, i)].meals.d = []; DATA_V++;   // only the 200 g a day of the bowl
     const snap = JSON.stringify([S.shop, S.days]);
     const f = pantryForecast(addDays(t, 3)), row = f.rows.find(x => x.id === "t-rice");
-    return { row: { now: row.now, then: row.then, endsOn: row.endsOn === addDays(t, 4), uses: row.uses.length }, html: forecastHTML(addDays(t, 3)), same: snap === JSON.stringify([S.shop, S.days]) };
+    return { row: { now: row.now, then: row.then, endsOn: row.endsOn === addDays(t, 4), uses: row.uses.length }, html: (UI.paFcOpen = true, forecastHTML(addDays(t, 3))), same: snap === JSON.stringify([S.shop, S.days]) };
   });
   assert.deepEqual(r.row, { now: 1000, then: 200, endsOn: true, uses: 4 });
   assert.ok(r.html.includes("runs out") && r.same);
