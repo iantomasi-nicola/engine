@@ -3824,6 +3824,7 @@ function restoreFocus(f) {
 }
 function render() {
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
+  applyShopMode();
   if (DRAG.active) return;
   const f = captureFocus();
   setHTML($("#side"), `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}`);
@@ -5947,7 +5948,7 @@ ACT["scan-queue"] = () => {
 ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
 
 /* shopping */
-ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; put("shop", "", S.shop); };
+ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; S.shop.mode = "days"; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
 ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: p.u || "base", pw: p.pw, pk: p.pk }); };
@@ -6027,7 +6028,7 @@ ACT["ob-done"] = () => {
 /* ================= input / change / submit wiring ================= */
 const INP = {
   "foods-q": v => { UI.foodsQ = v; scheduleRender(); },
-  "shop-start": v => { if (v) { UI.shopStart = v; scheduleRender(); } },
+  "shop-start": v => { if (v) { S.shop.mode = "days"; UI.shopStart = v; scheduleRender(); } },
   // typing only refreshes the results: the field keeps focus, the keyboard and what you're composing
   "lb-text": v => { const sh = S_(); if (sh) sh.text = v; },
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
@@ -12262,15 +12263,32 @@ ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.i
   const c = S.shop.checked[id], cur = c && c.g ? c.g : buyG(r), next = Math.max(0, cur + +el.dataset.d * r.f.pack);
   if (!next) delete S.shop.checked[id]; else S.shop.checked[id] = { g: next, eur: c && c.eur != null ? c.eur : null };
   haptic(8); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
+/* the window of the list: this week from today (past days left out), next week, the next N days from a date, or any range */
+function applyShopMode() {
+  const m = S.shop?.mode || "days", t = todayISO();
+  if (m === "week") { UI.shopStart = t; S.shop.range = 7 - dow(t); }
+  else if (m === "next") { UI.shopStart = addDays(weekStartOf(t), 7); S.shop.range = 7; }
+  else if (m === "custom") { const a = S.shop.cFrom || t, b = S.shop.cTo || addDays(a, 6); UI.shopStart = a; S.shop.range = clamp(daysBetween(a, b) + 1, 1, 62); }
+}
+ACT["shop-mode"] = el => { const k = el.dataset.k; S.shop.mode = k; if (k === "custom") { S.shop.cFrom = S.shop.cFrom || UI.shopStart; S.shop.cTo = S.shop.cTo || addDays(S.shop.cFrom, (S.shop.range || 7) - 1); } put("shop", "", S.shop); };
+INP["shop-from"] = v => { if (!v) return; S.shop.mode = "custom"; S.shop.cFrom = v; if (!S.shop.cTo || S.shop.cTo < v) S.shop.cTo = v; put("shop", "", S.shop); };
+INP["shop-to"] = v => { if (!v) return; S.shop.mode = "custom"; S.shop.cTo = v; if (!S.shop.cFrom || S.shop.cFrom > v) S.shop.cFrom = v; put("shop", "", S.shop); };
+function shopCoveredHTML(covered) {
+  if (!covered.length) return "";
+  const line = r => { const u = r.f.unit || "g", whys = [...new Set(r.uses.map(x => x.why))];
+    return [`${fmtN(r.covered)} ${u} from home`, r.partial ? `${fmtN(r.buy)} ${u} still to buy` : "", r.endsOn ? `runs out ${fmtDM(r.endsOn)}` : "lasts beyond these days", whys.length ? `for ${whys.slice(0, 3).join(", ")}${whys.length > 3 ? ` +${whys.length - 3}` : ""}` : ""].filter(Boolean).join(" · "); };
+  return `<details class="shop-covered"><summary>${covered.length} covered by what's at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}${r.partial ? ` <small class="faint">partly</small>` : ""}</span><span class="s">${esc(line(r))}</span></span></div>`).join("")}</details>`;
+}
 function shopPanel(inSheet) {
-  const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy), ck = S.shop.checked || {};
-  const atHome = rows.filter(r => r.buy > 0 && r.free > 0), covered = rows.filter(r => r.buy <= 0);
+  const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), T = shopTotals(toBuy), ck = S.shop.checked || {}, mode = S.shop.mode || "days";
+  const atHome = rows.filter(r => r.buy > 0 && r.free > 0), covered = shoppingCovered(start, n);
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
-  let h = `<div class="sq-top"><div class="chips">${[[1, "1 d"], [3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
+  let h = `<div class="sq-top"><div class="chips">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button class="chip sm" data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}${[[1, "1 d"], [3, "3 d"], [7, "7 d"], [14, "14 d"]].map(([k, l]) => `<button class="chip sm" data-act="shop-range" data-n="${k}" aria-pressed="${mode === "days" && n === k}">${l}</button>`).join("")}<label class="chip sm shop-date">${ic("calendar", "sm")}<span>${fmtDM(start)}</span><input type="date" value="${start}" data-in="shop-start" aria-label="Start date"></label><button class="chip sm" data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
+  if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   if (atHome.length) h += `<div class="pan-use"><span><b>${atHome.length} at home already</b> · ${esc(atHome.slice(0, 3).map(r => r.f.name).join(", "))}${atHome.length > 3 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use them</button></div>`;
   h += toBuy.length || (S.shop.extras || []).length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
   if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
-  if (covered.length) h += `<details class="shop-covered"><summary>${covered.length} planned, already at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.need)} ${r.f.unit || "g"} planned · ${fmtN(r.have)} at home</span></span></div>`).join("")}</details>`;
+  h += shopCoveredHTML(covered);
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || (S.shop.extras || []).some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
 VIEWS.shop = function () {

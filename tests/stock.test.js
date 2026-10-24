@@ -117,3 +117,40 @@ test("stockOn(X): the stock left after the linked meals planned up to X (A4 engi
   });
   assert.deepEqual(r, { yesterday: 1000, today: 800, day2: 400, day6: 0 });
 });
+
+test("windows: this week starts today (past days left out), next week is Monday to Sunday, custom is exact", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    const t = todayISO(), out = {};
+    // a planned meal yesterday must never count towards this week
+    S.days[addDays(t, -1)] = { date: addDays(t, -1), meals: { m: [{ id: "old", kind: "food", ref: "t-rice", qty: 999, eaten: false }] } }; DATA_V++;
+    S.shop.mode = "week"; applyShopMode(); out.week = [UI.shopStart, S.shop.range, shoppingRows(UI.shopStart, S.shop.range).find(x => x.id === "t-rice").need];
+    S.shop.mode = "next"; applyShopMode(); out.next = [UI.shopStart, S.shop.range, dow(UI.shopStart)];
+    S.shop.mode = "custom"; S.shop.cFrom = addDays(t, 1); S.shop.cTo = addDays(t, 3); applyShopMode(); out.custom = [UI.shopStart, S.shop.range, shoppingRows(UI.shopStart, S.shop.range).find(x => x.id === "t-rice").need];
+    out.today = t; out.left = 7 - dow(t); return out;
+  });
+  assert.equal(r.week[0], r.today); assert.equal(r.week[1], r.left);
+  assert.equal(r.week[2], 300 * Math.min(r.left, 7), "300 g rice per planned day from today to Sunday; yesterday's 999 g ignored");
+  assert.equal(r.next[1], 7); assert.equal(r.next[2], 0, "next week starts on a Monday");
+  assert.deepEqual([r.custom[1], r.custom[2]], [3, 900]);
+});
+
+test("the shopping panel shows the covered list, and the window chips (this week, next week, custom)", async () => {
+  const page = await start();
+  const html = await page.evaluate(() => { S.shop.pantry["t-rice"] = { g: 400 }; for (let i = 0; i < 7; i++) S.days[addDays(todayISO(), i)].meals.m[0].pan = true; S.shop.mode = "custom"; S.shop.cFrom = todayISO(); S.shop.cTo = addDays(todayISO(), 1); DATA_V++; applyShopMode(); return shopPanel(false).h; });
+  for (const t of ["This week", "Next week", "Custom", "covered by what's at home", "from home", "runs out", "partly", 'id="shop-from"', 'id="shop-to"']) assert.ok(html.includes(t), "missing: " + t);
+  assert.deepEqual(app.errors, []);
+});
+
+test("the covered list and chips render on a phone without overflow", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => {
+    S.shop.pantry["t-rice"] = { g: 400 }; for (let i = 0; i < 7; i++) S.days[addDays(todayISO(), i)].meals.m[0].pan = true; S.shop.mode = "week"; DATA_V++;
+    UI.tab = "shop"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
+    const box = document.querySelector(".shop-card")?.getBoundingClientRect();
+    return { sw: document.documentElement.scrollWidth, iw: innerWidth, card: box && [Math.round(box.left), Math.round(box.right)], has: !!document.querySelector(".shop-covered") };
+  });
+  assert.equal(r.has, true); assert.ok(r.sw <= r.iw, `page scrolls sideways (${r.sw} > ${r.iw})`);
+  assert.ok(r.card[1] <= r.iw);
+  await app.page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "shop-phone.png") });
+});
