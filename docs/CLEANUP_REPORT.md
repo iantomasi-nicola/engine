@@ -259,3 +259,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `S.shop.rcTodo` e `S.shop.receipts` opzionali; `buys[].receipt` e `tick` come per le spunte della lista (si annullano con la stessa spunta); funzione AI «receipt» tra i servizi attivabili in Settings › AI (serve un servizio che legga le immagini).
 
 **Aperto:** lo scontrino richiede un AI con visione; un lettore OCR locale non è previsto (righe e prezzi non sarebbero affidabili); i cibi nuovi non vengono creati da soli, come richiesto.
+
+## M11a Settimana unica, giorno dell'allenamento, sezioni coerenti, icone, scarico, PB, volume (24/10/2026)
+**Verificato:** nuovo `m11a.test.js` (8 test): spostamento del giorno con Undo e sync immediato, icone allineate, un solo modello di sezione (Programs/Workouts senza box, «Ready to start» con la stessa intestazione), settimana su tre viewport (7 giorni, tap apre la scheda, navigazione, menu laterale, card di Today), scarico in Settings, PB automatici (primo risultato = riferimento, secondo = PB, PB di corsa), volume 1–12 settimane contro il calcolo a mano, «Full sync» dal pulsante; `pre-start` aggiornato; screenshot a 390/820/1400 px.
+
+**Eliminato / unificato:** la seconda definizione di `icuKick` (che sovrascriveva la prima e ignorava «Full sync») è sparita: una sola, con `force` e `quiet`; `.eyebrow` nelle sezioni di «Ready to start» (ora `.section-h`); la card del diario in Today (M10c); un'altra `volumeHTML` già esistente (nome in conflitto) ha imposto `volWindowHTML` per la nuova.
+
+**Compatibilità:** `wsess[].pb` e `calis[].auto` opzionali; `UI.wk` e `UI.volW` solo di sessione; i record automatici sono normali righe di `train.calis`.
+
+**Aperto:** il modello di sezione piatto è applicato a «Ready to start» e a Train › Workouts; le altre pagine (Fuel, Progress, Today) vi passeranno in M13 con il resto del redesign. PB di corsa solo da gare/PB inseriti; i PB dalle attività importate arrivano con gli split (G3).

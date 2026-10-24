@@ -106,7 +106,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
 | H1 | Esercizi personalizzati in libreria, indipendenti dal workout | Should | M | – | Mancante | Compaiono nel parser degli script |
-| H2 | Statistiche forza/endurance con filtri 1/2/4/6/12 settimane | Should | M | – | Parziale | Totali coerenti con i log |
+| H2 | Statistiche forza/endurance con filtri 1/2/4/6/12 settimane | Should | M | – | **Fatto (24/10)** (L81) | Totali coerenti con i log |
 | H3 | Predizione 1RM corpo libero/zavorra/palestra, BW vs carico | Should | M | ENG-02 | Parziale | Formule documentate e testate, incertezza |
 | H4 | Workout Score 1–100 (forza, calisthenics endurance, running), deterministico | Could | XL | H5, ENG-02 | Mancante | Sottopunteggi riproducibili; nessun punteggio da LLM |
 | H5 | Score running per fasi/passo/zone/cadenza/contesto; sessione facile non penalizzata | Could | L | H4 | Mancante | Test su sessioni facili/intervalli |
@@ -241,7 +241,14 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L70 | «Share my profile» (Settings › Profile): messaggio breve con nome, cognome, età, altezza, peso, sport, migliori ripetizioni a corpo libero e con zavorra per esercizio, PB di corsa, km/settimana, passi, sonno, fase e gara | M10d | **Fatto (24/10)** |
 | L71 | Scarico della Season come quello dei programmi: «Only if I've been training» salta lo scarico a calendario se nelle 3 settimane prima hai fatto meno del 60% delle sedute | M10d | **Fatto (24/10)** |
 | L72 | Meteo: il grafico del giorno c'è sempre (anche asciutto), con l'intervallo di temperatura; «Follow my GPS» rilegge la posizione una volta al giorno | M10d | **Fatto (24/10)** |
-| L73 | Vista unica della settimana su desktop/tablet (allenamenti + pasti + integratori in 7 colonne): il piano dei pasti settimanale c'è (M5b, Fuel › Week) e gli allenamenti sono in Train › Plan, la vista unica no | M13 | Da fare |
+| L73 | Vista unica della settimana su desktop e tablet (e telefono): 7 giorni con allenamenti (orario, nome), pasti, kcal e integratori; ogni blocco apre ciò che è; settimana precedente/successiva; voce «Week» nel menu laterale e dalla card «This week» di Today | M11 | **Fatto (24/10)** |
 | L74 | «Share as a story»: l'anteprima non salta né sfarfalla quando cambi un'opzione, il campo in cui scrivi non perde il cursore | M10e | **Fatto (24/10)** |
 | L75 | Foto dello scontrino: scegli il supermercato, l'AI legge le righe, i cibi già registrati vanno in dispensa (quantità dal formato della confezione) con il prezzo per quel negozio e vengono depennati dalla lista; i cibi nuovi o non riconosciuti non si toccano e finiscono in un elenco da fare a mano (Shopping › «From the receipt») | M10e | **Fatto (24/10)** |
+| L76 | Dalla pagina dell'allenamento si cambia anche il giorno (oltre all'orario): l'allenamento si sposta con il suo orario, la scheda si riapre sul nuovo giorno, Undo, intervals.icu riceve subito la nuova data | M11 | **Fatto (24/10)** |
+| L77 | Un solo modello di sezione (titolo + righe divise da una linea, niente box) in «Ready to start», Programs, Workouts e History; le sezioni che si ripetono hanno la stessa intestazione | M11 | **Fatto (24/10)** — le altre schermate passano allo stesso modello in M13 |
+| L78 | Icone allineate al testo (link con icona, elenchi con icona in riga), icona «ricetta» non più simile a un cestino | M11 | **Fatto (24/10)** |
+| L79 | Scarico raggiungibile anche da Settings › Live workouts & timer («Deload weeks»): vale per la Season e per i nuovi programmi; indica dove trovare il resto (la Season compare con «Season and periodization» attivo in Settings › Features) | M11 | **Fatto (24/10)** |
+| L80 | PB automatici: reps senza zavorra a quasi-massimale e tenute entrano nei record da soli, un top set più pesante o una gara/PB di corsa migliore sono annunciati («PB: Pull-up 13 reps») e restano come etichetta sulla seduta; il primo risultato è un riferimento, non un PB (L20) | M11 | **Fatto (24/10)** |
+| L81 | Volume su 1, 2, 4, 6, 12 settimane (Train › Stats › Strength): sedute, serie, reps, peso aggiunto spostato, per esercizio, e totali di resistenza (km, tempo, passo), dai log (H2) | M11 | **Fatto (24/10)** |
+| L82 | «Full sync» e le modifiche di orario/giorno usano lo stesso percorso di sincronizzazione (prima c'erano due definizioni di `icuKick` e la seconda ignorava la sincronizzazione completa) | M11 | **Fatto (24/10)** |
 

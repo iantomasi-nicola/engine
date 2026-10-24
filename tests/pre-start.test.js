@@ -76,7 +76,7 @@ test("the page before a workout fits phone, tablet and desktop and says what it 
   for (const vp of Object.values(H.VIEWPORTS)) {
     const page = await start(vp);
     const r = await page.evaluate(() => ({ tiles: document.querySelectorAll(".pv-tiles>div").length, over: document.documentElement.scrollWidth > innerWidth + 1, text: document.body.innerText.replace(/\s+/g, " "), rows: document.querySelectorAll(".pv-e2").length }));
-    assert.equal(r.over, false, vp.width + "px"); assert.ok(r.tiles >= 3); assert.match(r.text, /Tune today's workout/); assert.match(r.text, /what to bring/); assert.ok(r.rows >= 4); assert.match(r.text, /First time: today is your baseline/);
+    assert.equal(r.over, false, vp.width + "px"); assert.ok(r.tiles >= 3); assert.match(r.text, /Tune today's workout/); assert.match(r.text, /What to bring/); assert.ok(r.rows >= 4); assert.match(r.text, /First time: today is your baseline/);
     await app.close(); app = null;
   }
 });
