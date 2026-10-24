@@ -10,7 +10,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
 | M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Fatta e pubblicata (24/10)** |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Fatta e pubblicata (24/10)** |
-| M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | Da approvare |
+| M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | **Fatta (24/10)**, in revisione |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Proposta, in attesa di approvazione** (dipende da I1 di M4) |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
@@ -78,3 +78,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | Pubblicato `main` = 621da12 (build 202610241056): M0–M2, M7a, UX, editor Food compatto, versione nelle Settings | 621da12 |
 | 2026-10-24 | M4: icona ricetta (C8), menu laterale a rail (J1), Check-in con selettore di giorno (I1), obiettivo km settimanali con storico (G2), Foods › Top (I2), luogo del meteo (F1); 3 trappole TDZ evitate dai test | vedi `git log` |
 | 2026-10-24 | M7a2 P0/P1: campi intervals.icu in sola lettura, AEE «in ombra» con candidati per sessione, NEAT dai passi, backtest; il motore in uso è invariato | vedi `git log` |
+| 2026-10-24 | M3: extra con cronologia, autocompletamento e ricorrenza (B5); spesa per intervallo con alimentare/extra, per prodotto e previsto vs speso (B6); importi sempre con i centesimi | vedi `git log` |

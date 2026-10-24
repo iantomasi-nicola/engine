@@ -45,3 +45,15 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 4. L'editor «Edit food» segnalava «Claude» nel testo sorgente: la build lo sostituisce con «AI»; da uniformare nel sorgente.
 5. `shopRowHTML` ha una definizione base e una ridefinizione più sotto (preesistente): unificare quando si tocca la lista spesa.
 6. I tag Git creati in locale non arrivano sul remoto da questo ambiente (l'invio dei tag non viene eseguito dal proxy): i punti di ripristino sono documentati con gli SHA nella roadmap.
+
+## M3 Spesa: extra e spesa per intervallo (24/10/2026)
+**Verificato:** lista spesa (righe, badge, totali, copia lista), «Bought»/`shop-done` con extra e ricorrenti, scheda Spending, report settimanale (stessa somma), export Excel (foglio acquisti con colonna `Type`), sync dei dati `shop`; 97 test (7 nuovi in `tests/shop-extras-spend.test.js`), smoke su 3 viewport, nessun overflow orizzontale.
+
+**Eliminato / unificato:** la somma della spesa era ripetuta (`spendStats` ×3 filtri, report settimanale, «Most spent on» a parte): ora una sola `spendIn(da, a)`; sostituito il blocco «Most spent on, last 30 days» dalle righe «By product» dell'intervallo scelto; le tre tessere fisse «this week/month/year» dal selettore d'intervallo.
+
+**Aggiornato:** backlog (B5, B6), roadmap, README test (nuovo file), `fmtEur` mostra sempre i centesimi sotto i 100 € (prima `€14,0`).
+
+**Compatibilità dati:** nessuna migrazione. Campi opzionali nuovi: `S.shop.xhist`, `extras[].rec/due/est`, `buys[].x/est`; i dati precedenti si leggono invariati (un acquisto senza `x` è alimentare, come prima).
+
+**Aperto:** lo scanner segnala `spendRangeOf` come «senza riferimenti» (falso positivo: usata con lo spread `...spendRangeOf(`); i 3 vecchi punti di debito (`FA_DEF`, `cFinal`, `plPrefs`) restano per M14; gli acquisti con prezzo stimato (`est`, alimentari come extra) entrano nello speso come già prima, ma la scheda non li distingue: valutare un'etichetta «di cui stimato» (B6, rifinitura).
+

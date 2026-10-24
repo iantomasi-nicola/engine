@@ -98,7 +98,7 @@ body.nav-top .fuel-sticky{top:0}
 span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .shop-q b{font-size:14.5px;font-weight:600;color:var(--ink)}
 .shop-q small{font-size:12px;color:var(--muted)}
-.shop-q .eur{width:64px;min-height:34px;padding:0 8px;text-align:right}
+.shop-q .eur{width:72px;min-height:34px;padding:0 8px;text-align:right}.shop-q .icon-btn.on{color:var(--accent);background:var(--accent-soft)}
 .sq-h{display:flex;justify-content:space-between;padding:12px 16px 4px;font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
 .sq-add{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
 .sq-add .inp{flex:1;min-width:0}
@@ -6157,7 +6157,8 @@ const CHG = {
   ov: (v, el) => { const sh = S_(); mutateDay(sh.date, d => { if (d.override) d.override[el.dataset.k] = Math.max(0, num(v)); }); renderSheet(); }
 };
 const FORMS = {
-  extra: f => { const inp = $("#extra-in"); const t = inp.value.trim(); if (!t) return; S.shop.extras = [...(S.shop.extras || []), { id: uid(), text: t, done: false }]; put("shop", "", S.shop); setTimeout(() => $("#extra-in")?.focus(), 30); },
+  extra: f => { const inp = $("#extra-in"); const t = inp.value.trim(); if (!t) return; const h = S.shop.xhist?.[extraKey(t)];
+    S.shop.extras = [...(S.shop.extras || []), { id: uid(), text: t, done: false, ...(h?.eur != null ? { eur: h.eur, est: true } : {}) }]; put("shop", "", S.shop); setTimeout(() => $("#extra-in")?.focus(), 30); },
   weight: () => saveWeighIn($("#w-in")?.value, $("#w-bf")?.value),
   avoid: () => { const inp = $("#avoid-in"); const parts = inp.value.split(",").map(s => s.trim()).filter(Boolean); if (!parts.length) return; S.settings.avoid = [...new Set([...S.settings.avoid, ...parts])]; saveSettings(); },
   "scan-code": () => { const v = $("#scan-code").value; lookupAndAdd(v); }
@@ -9637,12 +9638,12 @@ function stockOn(date) {
 const priceOf = id => { const p = S.shop.prices?.[id]; return p && p.g > 0 && p.eur >= 0 ? p : null; };
 /* price per gram: the middle of your last purchases, so a cheap or dear week doesn't swing the estimate */
 const eurPerG = id => { const p = priceOf(id); if (!p) return null; const h = (p.hist || []).filter(x => x.g > 0 && x.eur >= 0).slice(-5); if (h.length >= 2) { const v = h.map(x => x.eur / x.g).sort((a, b) => a - b); return v[v.length >> 1]; } return p.eur / p.g; };
-const fmtEur = v => v == null ? "" : "€" + (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : fmtN(r0(v))).replace(".", ",");
+const fmtEur = v => v == null ? "" : "€" + (v < 100 ? v.toFixed(2) : fmtN(r0(v))).replace(".", ",");
 /* what you'd actually carry home: whole packs when the food comes in packs */
 const buyG = r => r.packs ? r.packs * r.f.pack : r.buy;
 function rowCost(r) { const c = S.shop.checked?.[r.id]; if (c && c.eur != null) return +c.eur; const k = eurPerG(r.id); return k == null ? null : k * buyG(r); }
 function shopToBuy() { return shoppingRows(UI.shopStart, S.shop.range || 7).filter(r => r.buy > 0); }
-function shopBadge() { const n = shopToBuy().filter(r => !S.shop.checked?.[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length; return n ? `<span class="badge">${n > 99 ? "99+" : n}</span>` : ""; }
+function shopBadge() { const n = shopToBuy().filter(r => !S.shop.checked?.[r.id]).length + visibleExtras().filter(x => !x.done).length; return n ? `<span class="badge">${n > 99 ? "99+" : n}</span>` : ""; }
 const shopBtn = () => `<button class="icon-btn has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart")}${shopBadge()}</button>`;
 function shopRowHTML(r, compact) {
   const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
@@ -9652,17 +9653,24 @@ function shopRowHTML(r, compact) {
     <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</button>
     <button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button></div>`;
 }
+/* Extras are things that are not food (coffee beans stay in Foods; napkins don't): never a nutrient, never the pantry.
+   xhist remembers each name bought (case-insensitive) with its last real price, so the name autocompletes and the price is offered as an estimate. */
+const extraKey = t => String(t).trim().toLowerCase();
+const extraNames = () => Object.values(S.shop.xhist || {}).sort((a, b) => (b.cnt - a.cnt) || (b.last || "").localeCompare(a.last || "")).map(h => h.n);
+/* a recurring extra waits until it is due; it shows once the list window reaches that day */
+const visibleExtras = () => (S.shop.extras || []).filter(x => !x.due || x.due <= addDays(UI.shopStart, (S.shop.range || 7) - 1));
+const EXTRA_RECS = [7, 14, 30];
 function shopListHTML(rows, compact) {
   let h = ""; const ck = S.shop.checked || {};
   for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat).sort((a, b) => (!!ck[a.id] - !!ck[b.id]) || a.f.name.localeCompare(b.f.name)); if (!g.length) continue;
     h += `<div class="sq"><div class="sq-h">${esc(label)}<span>${g.filter(r => !ck[r.id]).length}</span></div>${g.map(r => shopRowHTML(r, compact)).join("")}</div>`; }
-  const ex = S.shop.extras || [];
-  if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span></span><span class="shop-q">${x.eur != null ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="€" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${x.id}">`}<button class="icon-btn sm" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
-  h += `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
+  const ex = visibleExtras();
+  if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span>${x.rec ? `<span class="s">every ${x.rec === 7 ? "week" : x.rec === 14 ? "2 weeks" : "month"}</span>` : ""}</span><span class="shop-q">${x.eur != null && !x.est ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="${x.est ? "~" + fmtEur(+x.eur) : "€"}" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${x.id}">`}<button class="icon-btn sm ${x.rec ? "on" : ""}" data-act="extra-rec" data-id="${x.id}" aria-pressed="${!!x.rec}" aria-label="Repeat ${esc(x.text)}">${ic("sync", "sm")}</button><button class="icon-btn sm" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
+  h += `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" list="extra-dl" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><datalist id="extra-dl">${extraNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
   return h;
 }
 function shopTotals(rows) { let est = 0, known = 0, inCart = 0; for (const r of rows) { const c = rowCost(r); if (c != null) { est += c; known++; if (S.shop.checked?.[r.id]) inCart += c; } }
-  for (const x of S.shop.extras || []) if (x.eur != null) { est += +x.eur; if (x.done) inCart += +x.eur; }
+  for (const x of visibleExtras()) if (x.eur != null) { est += +x.eur; if (x.done) inCart += +x.eur; }
   return { est, known, inCart }; }
 ACT["shopq-open"] = () => openSheet("shopq", { live: true });
 /* in the shop: how much you took, what it cost */
@@ -9687,7 +9695,8 @@ ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh
 ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
 INP.by = (v, el) => { S_()[el.dataset.k] = v; };
 ACT["shop-check"] = el => { const id = el.dataset.id; S.shop.checked = S.shop.checked || {}; if (S.shop.checked[id]) delete S.shop.checked[id]; else S.shop.checked[id] = true; put("shop", "", S.shop); };
-CHG["extra-eur"] = (v, el) => { const x = (S.shop.extras || []).find(e => e.id === el.dataset.id); if (!x) return; const e = num(v); if (e > 0) { x.eur = Math.round(e * 100) / 100; put("shop", "", S.shop); } };
+CHG["extra-eur"] = (v, el) => { const x = (S.shop.extras || []).find(e => e.id === el.dataset.id); if (!x) return; const e = num(v); if (e > 0) { x.eur = Math.round(e * 100) / 100; delete x.est; put("shop", "", S.shop); } };
+ACT["extra-rec"] = el => { const x = (S.shop.extras || []).find(e => e.id === el.dataset.id); if (!x) return; const k = EXTRA_RECS.indexOf(x.rec); if (k + 1 < EXTRA_RECS.length) x.rec = EXTRA_RECS[k + 1]; else delete x.rec; delete x.due; put("shop", "", S.shop); };
 /* finish: what was taken goes to the pantry (leftovers included), prices are remembered, spending is logged */
 ACT["shop-done"] = () => {
   const rows = shoppingRows(UI.shopStart, S.shop.range || 7), today = todayISO(); let n = 0, tot = 0; S.shop.buys = S.shop.buys || []; S.shop.prices = S.shop.prices || {};
@@ -9698,40 +9707,56 @@ ACT["shop-done"] = () => {
     S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : null }; // no use-by unless you set one
     if (c.eur != null) { const old = S.shop.prices[id]; S.shop.prices[id] = { eur: c.eur, g, at: today, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: c.eur, g, at: today }].slice(-8) }; }
     S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null }); if (eur != null) tot += eur; n++; }
-  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null }); if (x.eur != null) tot += +x.eur; n++; }
+  const again = [], xh = S.shop.xhist = S.shop.xhist || {};
+  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null, x: 1, ...(x.est ? { est: true } : {}) }); if (x.eur != null) tot += +x.eur; n++;
+    const k = extraKey(x.text), h = xh[k]; xh[k] = { n: h?.n || x.text, eur: x.eur != null && !x.est ? x.eur : h?.eur ?? null, cnt: (h?.cnt || 0) + 1, last: today };
+    if (x.rec) again.push({ id: uid(), text: x.text, done: false, rec: x.rec, due: addDays(today, x.rec), ...(xh[k].eur != null ? { eur: xh[k].eur, est: true } : {}) }); }
   S.shop.buys = S.shop.buys.filter(b => b.d >= addDays(today, -730));
-  S.shop.checked = {}; S.shop.extras = (S.shop.extras || []).filter(x => !x.done);
+  S.shop.checked = {}; S.shop.extras = [...(S.shop.extras || []).filter(x => !x.done), ...again];
   put("shop", "", S.shop); if (UI.sheet?.type === "shopq") closeSheet();
   toast(`${n} item${n === 1 ? "" : "s"} in the pantry${tot ? ` · ${fmtEur(tot)} spent` : ""}`);
 };
 ACT["copy-list"] = async () => {
   const rows = shopToBuy().filter(r => !S.shop.checked?.[r.id]), lines = [];
   for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat); if (!g.length) continue; lines.push(label.toUpperCase()); for (const r of g) lines.push(`- ${r.f.name}: ${fmtN(r.buy)} ${r.f.unit || "g"}${r.packs ? ` (${r.packs} × ${fmtN(r.f.pack)})` : ""}`); lines.push(""); }
-  for (const x of (S.shop.extras || []).filter(x => !x.done)) lines.push(`- ${x.text}`);
+  for (const x of visibleExtras().filter(x => !x.done)) lines.push(`- ${x.text}`);
   const txt = lines.join("\n").trim() || "Nothing to buy.";
   try { await navigator.clipboard.writeText(txt); toast("Shopping list copied"); } catch (e) { openSheet("confirm", { title: "Copy this list", text: txt, yes: "Done", run: () => {} }); }
 };
-/* spending: this week / month / year, and the averages */
+/* spending: one sum over the purchase history for any range (food and extras apart, unpriced purchases counted aside, never as 0) */
+function spendIn(from, to) {
+  const rows = {}; let food = 0, extra = 0, unpriced = 0;
+  for (const b of S.shop.buys || []) { if (b.d < from || b.d > to) continue; if (b.eur == null) { unpriced++; continue; }
+    const e = +b.eur; if (b.x) extra += e; else food += e;
+    const k = (b.x ? "x:" : "f:") + (b.id || b.n), r = rows[k] || (rows[k] = { n: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", eur: 0, k: 0, x: !!b.x }); r.eur += e; r.k++; }
+  const c = v => Math.round(v * 100) / 100;
+  return { from, to, food: c(food), extra: c(extra), total: c(food + extra), unpriced, rows: Object.values(rows).map(r => ({ ...r, eur: c(r.eur) })).sort((a, b) => b.eur - a.eur) };
+}
+const SPEND_RANGES = [["week", "Week"], ["month", "Month"], ["year", "Year"], ["90", "90 days"]];
+function spendRangeOf(k, today = todayISO()) { return k === "month" ? [today.slice(0, 8) + "01", today] : k === "year" ? [today.slice(0, 5) + "01-01", today] : k === "90" ? [addDays(today, -89), today] : [weekStartOf(today), today]; }
 function spendStats() {
-  const B = (S.shop.buys || []).filter(b => b.eur != null), today = todayISO(), ws = weekStartOf(today), ms = today.slice(0, 8) + "01", ys = today.slice(0, 5) + "01-01";
-  const sum = f => B.filter(f).reduce((a, b) => a + +b.eur, 0); if (!B.length) return null;
+  const B = (S.shop.buys || []).filter(b => b.eur != null), today = todayISO(); if (!B.length) return null;
   const first = B.reduce((a, b) => b.d < a ? b.d : a, today), days = Math.max(7, daysBetween(first, today) + 1);
-  const last90 = sum(b => b.d > addDays(today, -91)), span90 = Math.min(91, days);
-  const perDay = last90 / span90;
-  return { week: sum(b => b.d >= ws), month: sum(b => b.d >= ms), year: sum(b => b.d >= ys), avgWeek: perDay * 7, avgMonth: perDay * 30.44, avgYear: perDay * 365, since: first };
+  const span90 = Math.min(91, days), perDay = spendIn(addDays(today, -90), today).total / span90;
+  return { week: spendIn(...spendRangeOf("week")).total, avgWeek: perDay * 7, avgMonth: perDay * 30.44, avgYear: perDay * 365, since: first };
 }
 function spendCard() {
-  const s = spendStats(); if (!s) return `<div class="section-h"><h2>Spending</h2></div><div class="note">Enter what you pay while shopping (tap a product): weekly, monthly and yearly food spending show up here.</div>`;
+  const s = spendStats(); if (!s) return `<div class="section-h"><h2>Spending</h2></div><div class="note">Enter what you pay while shopping (tap a product): weekly, monthly and yearly spending show up here.</div>`;
   const t = (l, v, sub) => `<div class="stat"><b>${fmtEur(v)}</b><small>${l}${sub ? ` · ${sub}` : ""}</small></div>`;
-  const B = (S.shop.buys || []).filter(b => b.eur != null && b.d > addDays(todayISO(), -31)), by = {};
-  for (const b of B) by[b.n] = (by[b.n] || 0) + +b.eur; const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 5), mx = top[0]?.[1] || 1;
+  const k = SPEND_RANGES.some(r => r[0] === UI.spendRange) ? UI.spendRange : "week", R = spendIn(...spendRangeOf(k)), mx = R.rows[0]?.eur || 1, rows = UI.spendAll ? R.rows : R.rows.slice(0, 6);
+  const plan = shopTotals(shopToBuy()).est - shopTotals(shopToBuy()).inCart;
   return `<div class="section-h"><h2>Spending</h2><span class="faint" style="font-size:12.5px">since ${fmtDM(s.since)}</span></div>
-    <div class="stat-grid">${t("this week", s.week)}${t("this month", s.month)}${t("this year", s.year)}</div>
+    <div class="seg sm" role="group" aria-label="Spending range">${SPEND_RANGES.map(([r, l]) => `<button data-act="spend-range" data-k="${r}" aria-pressed="${k === r}">${l}</button>`).join("")}</div>
+    <div class="stat-grid">${t("spent", R.total)}${t("food", R.food)}${t("extras", R.extra)}</div>
+    ${R.unpriced ? `<div class="faint" style="font-size:12.5px">${R.unpriced} purchase${R.unpriced > 1 ? "s" : ""} without a price: not counted.</div>` : ""}
+    ${plan > 0 ? `<div class="faint" style="font-size:12.5px">Still planned on the list: about ${fmtEur(plan)} (estimate, not spent).</div>` : ""}
     ${S.settings.shopPrefs?.budget ? (() => { const b = S.settings.shopPrefs.budget, pct = s.week / b * 100; return `<div class="card pad"><div class="nut-t"><span>Weekly budget</span><span><b>${fmtEur(s.week)}</b> / ${fmtEur(b)}</span></div><div class="nut-bar"><i style="width:${clamp(pct, 0, 100)}%;background:var(--${pct > 100 ? "bad" : pct > 85 ? "warn" : "good"})"></i></div><div class="faint" style="font-size:12.5px;margin-top:6px">${pct > 100 ? `${fmtEur(s.week - b)} over this week.` : `${fmtEur(b - s.week)} left this week.`} Average ${fmtEur(s.avgWeek)} a week.</div></div>`; })() : ""}
     <div class="stat-grid">${t("a week on average", s.avgWeek)}${t("a month", s.avgMonth)}${t("a year at this pace", s.avgYear)}</div>
     ${(w => w.n ? `<div class="faint" style="font-size:12.5px">Thrown away in the last 30 days: ${w.n} item${w.n > 1 ? "s" : ""}${w.eur ? ` · ${fmtEur(w.eur)}` : ""}</div>` : "")((S.shop.waste || []).filter(x => x.d > addDays(todayISO(), -31)).reduce((a, x) => ({ n: a.n + 1, eur: a.eur + (+x.eur || 0) }), { n: 0, eur: 0 }))}
-    ${top.length ? `<div class="card pad"><div class="flabel" style="margin-bottom:6px">Most spent on, last 30 days</div>${top.map(([n, v]) => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 64px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n)}</span><span class="bar"><i style="width:${v / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtEur(v)}</span></div>`).join("")}</div>` : ""}`;
+    ${rows.length ? `<div class="card pad"><div class="flabel" style="margin-bottom:6px">By product</div>${rows.map(r => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 64px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.n)}${r.k > 1 ? ` ×${r.k}` : ""}${r.x ? ` <small class="faint">extra</small>` : ""}</span><span class="bar"><i style="width:${r.eur / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtEur(r.eur)}</span></div>`).join("")}${R.rows.length > 6 ? `<button class="btn soft sm" data-act="spend-all" style="margin-top:8px">${UI.spendAll ? "Show fewer" : `Show all ${R.rows.length}`}</button>` : ""}</div>` : `<div class="note">Nothing spent in this range.</div>`}`;
 }
+ACT["spend-range"] = el => { UI.spendRange = el.dataset.k; UI.spendAll = false; scheduleRender(); };
+ACT["spend-all"] = () => { UI.spendAll = !UI.spendAll; scheduleRender(); };
 
 /* ================= pantry: what's at home, leftovers included, editable ================= */
 /* the Pantry list: search (name, brand, Italian name), filters, sort; the choice of filter and sort is remembered */
@@ -10494,7 +10519,7 @@ const _periodStats = periodStats;
 periodStats = function (P) {
   const R = _periodStats(P); if (!R.days) return R;
   const end = R.end, inR = d => d >= P.a && d <= end;
-  R.spend = (S.shop.buys || []).filter(b => b.eur != null && inR(b.d)).reduce((a, b) => a + +b.eur, 0);
+  R.spend = spendIn(P.a, end).total;
   R.budget = S.settings.shopPrefs?.budget ? S.settings.shopPrefs.budget * (P.kind === "month" ? R.days / 7 : 1) : null;
   let planned = 0, done = 0, missed = []; for (let d = P.a; d <= end; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.p || x.st !== "done") { planned++; if (x.st === "done") done++; else if (d < todayISO()) missed.push(d); } }
   R.plan = planned; R.planDone = done; R.missed = missed.length;
@@ -11192,7 +11217,7 @@ exportSheets = function () {
   const goals = GOALS().map(g => { const G = goalProg(g); return { Goal: g.name || goalLabel(g), Kind: GOAL_KINDS.find(k => k[0] === g.kind)?.[1] || g.kind, Started: g.start ? xd(g.start) : null, Start: goalFmt(g, G.s0), Now: goalFmt(g, G.cur), Target: g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv), "Progress %": r0(G.prog * 100), Forecast: G.eta ? xd(G.eta) : null, By: g.due ? xd(g.due) : null, Reached: G.done ? "yes" : "" }; });
   const season = []; const cur = weekStartOf(today); for (let k = -12; k <= 20; k++) { const ws = addDays(cur, 7 * k), p = weekPhase(ws), t = weekTarget(ws), dn = ws <= today ? weekDone(ws) : null; season.push({ "Week of": xd(ws), Phase: PH[p.ph][0], Why: p.why || "", "Set by hand": p.manual ? "yes" : "", "Target load": t.base ? r0(t.load) : null, "Done load": dn ? r0(dn.l) : null, "Target km": t.baseKm ? r1(t.km) : null, "Done km": dn ? r1(dn.km) : null, Note: PER().weeks[ws]?.note || "" }); }
   const pantry = Object.entries(S.shop.pantry || {}).map(([id, p]) => { const f = getFood(id) || BUILTIN[id]; if (!f) return null; const q = pantryQty(f, p); return { Food: f.name, Amount: q.v, Unit: q.u, [`In ${f.unit || "g"}`]: p.g, "Use by": p.exp ? xd(p.exp) : null }; }).filter(Boolean);
-  const buys = (S.shop.buys || []).map(b => ({ Date: xd(b.d), Item: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", Amount: b.g || null, "€": b.eur ?? null, Estimated: b.est ? "yes" : "" }));
+  const buys = (S.shop.buys || []).map(b => ({ Date: xd(b.d), Item: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", Amount: b.g || null, "€": b.eur ?? null, Type: b.x ? "Extra" : "Food", Estimated: b.est ? "yes" : "" }));
   const supp = (S.settings.supps || []).map(x => ({ Supplement: x.name, Dose: x.dose || "", Times: (x.times || []).join(", "), Days: x.days?.length && x.days.length < 7 ? x.days.map(d => DOW[d]).join(" ") : "every day", Stock: x.stock ?? null, Active: x.on === false ? "paused" : "yes" }));
   const photos = (S.body.photos || []).map(p => ({ Date: xd(p.date), Pose: p.pose, "Weight kg": bodyAt(p.date).w ? r1(bodyAt(p.date).w) : null, "In the cloud": p.cloud ? "yes" : "no" }));
   return [...L, ["Routes", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
@@ -12524,10 +12549,10 @@ function shopPanel(inSheet) {
   let h = `<div class="sq-top"><div class="chips">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button class="chip sm" data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}<button class="chip sm" data-act="shop-range" data-n="7" aria-pressed="${mode === "days"}">Next 7 days</button><button class="chip sm" data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div><span class="faint">${T.est ? `≈ ${fmtEur(T.est)}` : ""}</span></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   if (atHome.length) h += `<div class="pan-use"><span><b>${atHome.length} at home already</b> · ${esc(atHome.slice(0, 3).map(r => r.f.name).join(", "))}${atHome.length > 3 ? "…" : ""}</span><button class="btn tonal sm" data-act="pan-use">Use them</button></div>`;
-  h += toBuy.length || (S.shop.extras || []).length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
+  h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(toBuy, true)}</div>` : `<div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div><form class="sq-add" data-form="extra"><input id="extra-in" class="inp" placeholder="Add something else (coffee, napkins…)" autocomplete="off"><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
   if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
   h += shopCoveredHTML(covered);
-  return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || (S.shop.extras || []).some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
+  return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || visibleExtras().some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
 VIEWS.shop = function () {
   const P = shopPanel(false), n = S.shop.range || 7, start = UI.shopStart;
