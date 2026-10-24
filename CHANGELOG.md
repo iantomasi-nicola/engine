@@ -2,6 +2,15 @@
 
 Le voci descrivono modifiche verificate nel repository; non attestano una pubblicazione.
 
+## Integrazione per Pages — 2026-10-24
+
+- Integrata M1 con gli aggiornamenti già presenti su main (`02f43a9`), conservando
+  ricerca per marca/alias, categorie e navigazione; nessuna nuova milestone.
+- Corretti registrazione anticipata dei gestori input e cancellazione di nuove finestre
+  da parte dell'animazione precedente. Aggiunti controlli di regressione dell'integrazione.
+- Autorizzati commit, push su main e deploy del sito esistente; procedura e riferimenti
+  di recupero in `docs/PUBLICATION_M1.md`.
+
 ## Unreleased — M1 Storage/Shopping del 2026-10-23
 
 - Fabbisogno unificato di alimenti/ricette meno scorte disponibili, copertura parziale,

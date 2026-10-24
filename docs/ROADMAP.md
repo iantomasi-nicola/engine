@@ -1,5 +1,8 @@
 # Roadmap tecnica
 
+Aggiornamento 24 ottobre 2026: autorizzati merge M1 su main e pubblicazione Pages;
+vedere [PUBLICATION_M1.md](PUBLICATION_M1.md). Nessuna milestone successiva avviata.
+
 ## Evoluzione prodotto — milestone autorizzata
 
 La richiesta del 23 ottobre 2026 «Parti dalla milestone che risolve i problemi con

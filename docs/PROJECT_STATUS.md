@@ -1,5 +1,14 @@
 # Stato del progetto
 
+## Integrazione per main — 24 ottobre 2026
+
+L'utente ha autorizzato merge, commit, push e pubblicazione sul sito Pages esistente.
+L'integrazione preserva il commit remoto `02f43a9`, risolve la sovrapposizione sulla
+dispensa e corregge due problemi di avvio/finestre emersi verificando quel sorgente.
+Riferimenti, procedura di verifica remota e rollback in
+[PUBLICATION_M1.md](PUBLICATION_M1.md). La sezione M1 sottostante descrive il checkpoint
+prima dell'autorizzazione alla pubblicazione, quindi i suoi riferimenti “locali” sono storici.
+
 ## M1 Storage/Shopping — aggiornamento del 23 ottobre 2026
 
 Implementazione sul branch `fix/storage-shopping-m1`, con checkpoint precedente
