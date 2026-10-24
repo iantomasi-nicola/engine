@@ -1415,6 +1415,8 @@ body.live-mode .main{padding-bottom:120px!important}
 .lv-main>.pv-sec:first-child,.lv-side>.pv-sec:first-child{border-top:0}
 .pv-hero .lv-h1{font-size:34px;line-height:1.1}.pv-hero .pv-tiles{display:flex;flex-wrap:wrap;gap:8px 28px}.pv-hero .pv-tiles>div{background:none;border:0;border-radius:0;padding:0;text-align:left}
 .lv-side .pv-sec{padding-top:6px}
+/* Shopping on the phone: «Bought» shows only its + so the title and the dates fit */
+@media (max-width:420px){.shop-prod .lbl{display:none}.shop-prod{padding-inline:10px!important;min-width:40px}}
 /* the run preview: its sections lose the box too, divided by a line like the strength one */
 .pv-run .lv-card{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding:20px 0!important}.pv-run .lv-main>.lv-card:first-child,.pv-run .lv-side>.lv-card:first-child{border-top:0!important;padding-top:6px!important}.pv-run .lv-card.flush .rs-row{padding-inline:0}
 .pv-sec .pv-b{background:none!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;padding:12px 0 4px!important;margin-top:0}.pv-sec .pv-b:first-of-type{border-top:0!important;padding-top:4px!important}
@@ -13725,7 +13727,7 @@ function shopPanel(inSheet) {
 VIEWS.shop = function () {
   const P = shopPanel(false), n = S.shop.range || 7, start = UI.shopStart;
   let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))}</div></div>
-    <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="icon-btn" data-act="receipt-open" aria-label="Photo of the receipt" title="Photo of the receipt">${ic("camera")}</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
+    <div class="row"><button class="btn ink sm shop-prod" data-act="shop-prod" aria-label="Bought" title="Bought">${ic("plus", "sm")}<span class="lbl">Bought</span></button><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="icon-btn" data-act="receipt-open" aria-label="Photo of the receipt" title="Photo of the receipt">${ic("camera")}</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
   h += `<div class="card pad shop-card">${P.h}</div>`;
   if (P.anyCk) h += `<div class="shop-done-bar"><button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Finish shopping${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button></div>`;
   return h + rcTodoCard() + spendCard();

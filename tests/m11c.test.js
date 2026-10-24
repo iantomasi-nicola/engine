@@ -77,3 +77,10 @@ test("L91: a meal out puts nothing on the shopping list, reserves nothing in the
   assert.deepEqual(app.errors, []);
 });
 
+test("Shopping on the phone: the title and the dates are whole (not cut by the buttons next to them)", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { UI.tab = "shop"; UI.fuelTab = "shop"; render(); const t = document.querySelector(".top-title"), s = document.querySelector(".top-sub"), b = document.querySelector('[data-act="shop-prod"]');
+    return { cut: t.scrollWidth > t.clientWidth + 1, subLines: Math.round(s.getBoundingClientRect().height / parseFloat(getComputedStyle(s).lineHeight)), label: b.getAttribute("aria-label") }; });
+  assert.equal(r.cut, false, "«Shopping» is not cut"); assert.equal(r.subLines, 1, "the dates stay on one line"); assert.equal(r.label, "Bought");
+  assert.deepEqual(app.errors, []);
+});
