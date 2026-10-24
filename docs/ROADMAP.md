@@ -2,13 +2,13 @@
 
 Regola: una milestone alla volta, approvata dall'utente prima di iniziare, branch dedicato, commit atomici, test, rollback descritto. Un commit non è un deploy; il rebuild dei file di root e la pubblicazione richiedono autorizzazione.
 
-Stato: **M0 completata (24/10). B4 fatto nel sorgente. Prossima: M1 in attesa di approvazione.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
+Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossima: M2 in attesa di approvazione.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
 
 ## Ordine (dipendenze → impatto → rischio)
 | Milestone | Contenuto (ID) | C | Rischio | Stato |
 |---|---|---|---|---|
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
-| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Approvata (24/10), in corso** |
+| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Completata nel sorgente e nella build di root del branch (24/10); in attesa di revisione dell'utente. Non pubblicata.** |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3 | M | Medio | – |
 | M3 Spesa: extra, costi, liste lunghe | B4, B5, B6 | M | Basso | – |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
@@ -62,3 +62,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M1 passo 2: modello unico `stockPlan` (scorta prenotata dai pasti collegati dal giorno di oggi in poi, ricette incluse), `shoppingRows/Covered/stockOn`; `linkFromPantry` e interruttore "From the pantry" anche per le ricette; i test KNOWN (B1/B3) diventano test del comportamento corretto (28 verdi) | vedi `git log` |
 | 2026-10-24 | M1 passo 3: finestre della lista (This week da oggi, Next week, N giorni, Custom) persistenti; elenco richiudibile "covered by what's at home" con parziali, data di esaurimento e pasti; verificato su telefono (31 test verdi) | vedi `git log` |
 | 2026-10-24 | M1 passo 4: scenario a 7 giorni (ENG-03) con invariante Σ pianificato = coperto + da comprare dopo ogni passo, reload, offline e sync simulata | vedi `git log` |
+| 2026-10-24 | M1: build di root rigenerata sul branch (commit dedicato, `release-check` verde: 33 test + smoke + build identica al sorgente). Nessuna pubblicazione, `main` invariato | vedi `git log` |
