@@ -196,3 +196,10 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** gli ingressi esistenti (`scope: "day"|"week"`) continuano a funzionare; nuovi `next` e `range` con `from`/`to`.
 
 **Aperto:** E2–E5 e C7 (motore di ottimizzazione con vincoli, svuota storage, strategie di spesa, Food Coach) sono lavori grandi e a rischio alto: vanno proposti a parte con criteri di completamento; M9b (consigli alimentari pre/post gara, L19) è il prossimo passo.
+
+## Marca ovunque, allenamento a parole, verifica requisiti (24/10/2026)
+**Verificato:** `brand-everywhere` (3), `ai-import` esteso (workout a parole da Free workout e dall'editor), suite completa; screenshot a 390 px dell'inventario.
+
+**Eliminato / unificato:** il wrapper di `SHEETS.freewo` (regex sul testo) è sostituito da un elemento della sheet di base; i due modi diversi di mettere la marca (testo in `foodSub`, prefisso nella riga Foods, solo nelle liste della spesa) passano da `brandOf`/`bdHTML`; testi accorciati senza perdere informazione («/100 g», «set aside»).
+
+**Aperto:** la vista settimanale ha la marca nella riga piccola ma può andare a capo in colonne strette; verificare con dati reali.

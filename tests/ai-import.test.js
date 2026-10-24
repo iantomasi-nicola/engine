@@ -37,3 +37,14 @@ test("workout from words: the AI writes it, the steps are checked by the player'
     INP["wi-r"]("6x800 edited", { dataset: { k: "name" } }); const same = JSON.stringify(Object.keys(S.logm)) === w0; ACT["wi-plan"](); return { name: name0, sport: R.sport, steps: /steps the player can run/.test(text), same, next: UI.sheet.type, script: /800mtr/.test(UI.sheet.draft.script) }; });
   assert.deepEqual(r, { name: "6x800", sport: "Running", steps: true, same: true, next: "session", script: true });
 });
+
+test("describe a workout in words: the entry is in the Free workout sheet and in the session editor, with or without an AI service (without one it says what to add), and from the editor the result is written into that workout", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const no = await page.evaluate(() => { ACT["free-open"](); const link = !!document.querySelector('.sheet [data-act="wo-import"]'); ACT["wo-import"](); return { link, type: UI.sheet.type, note: /Add an AI service/.test(document.querySelector(".sheet").innerText) }; });
+  assert.deepEqual(no, { link: true, type: "woimp", note: true });
+  const r = await page.evaluate(async () => { closeSheet(); Sync.sample = { json: async () => ({ sport: "Running", name: "6x800", script: "Warmup\n- 15m Z2 Pace\n\nMain set 6x\n- 800mtr 3:50/km Pace\n- 90s Rest", min: 55, km: 9, int: "Hard" }) };
+    openSheet("session", { list: "planned", pick: true, date: todayISO(), idx: null, draft: wClean({ sport: "Running", min: "", km: "", int: "Moderate", note: "", script: "" }), back: null }); const ed = UI.sheet; const link = !!document.querySelector('.sheet [data-act="wo-import-ss"]');
+    ACT["wo-import-ss"](); UI.sheet.desc = "6x800 at 3:50"; await ACT["wi-go"](); const foot = [...document.querySelectorAll(".sheet-f .btn")].map(b => b.innerText.trim()); ACT["wi-use"]();
+    return { link, foot, back: UI.sheet === ed, script: /800mtr/.test(ed.draft.script), min: ed.draft.min, note: ed.draft.note }; });
+  assert.deepEqual(r, { link: true, foot: ["Cancel", "Use it in this workout"], back: true, script: true, min: 55, note: "6x800" });
+});
