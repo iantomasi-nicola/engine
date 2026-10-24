@@ -8,7 +8,7 @@ Stato: **M0 completata (24/10). B4 fatto nel sorgente. Prossima: M1 in attesa di
 | Milestone | Contenuto (ID) | C | Rischio | Stato |
 |---|---|---|---|---|
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
-| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | Da approvare |
+| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Approvata (24/10), in corso** |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3 | M | Medio | – |
 | M3 Spesa: extra, costi, liste lunghe | B4, B5, B6 | M | Basso | – |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
@@ -58,3 +58,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | Approvato dall'utente: baseline, M0, rimozione della nota "Not in the plan yet" del Pantry (B4) | – |
 | 2026-10-24 | M0: `tests/` con smoke 3 viewport, controllo build, 12 test di dominio, 4 di persistenza/backup (16 verdi); smoke fallisce su `02f43a9`; correzione dell'audit sul dominio spesa/dispensa (logica a strati, B1/B3 riprodotti) | vedi `git log` |
 | 2026-10-24 | B4: rimossa la nota "Not in the plan yet" dal Pantry (azione "Plan meals" spostata in un pulsante in testata, per non perdere la funzione); smoke corretto (nascondeva il login sotto l'overlay) | vedi `git log` |
+| 2026-10-24 | M1 passo 1: `pantryAdjust` reversibile (`it.took`): mangiare toglie solo ciò che la dispensa aveva, de-spuntare restituisce lo stesso; supporta ricette. Corretto un bug di stock fantasma (riprodotto da test prima del fix) | vedi `git log` |

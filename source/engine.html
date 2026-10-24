@@ -2881,14 +2881,27 @@ function newItem(kind, ref, qty, extra = {}) { return { id: uid(), kind, ref, qt
 function defaultQty(f) { return f.servings?.[0]?.g || (f.role === "F" ? 10 : 100); }
 
 /* pantry */
+/* what an item uses, per food: [[foodId, grams]]; a recipe item is scaled by its servings */
+function itemStockLines(it) {
+  if (!it) return [];
+  if (it.kind === "food") return [[it.ref, +it.qty || 0]];
+  if (it.kind === "recipe") { const r = getRecipe(it.ref); return r ? r.ingredients.map(ing => [ing.food, ing.g * (+it.qty || 0) / (r.servings || 1)]) : []; }
+  return [];
+}
+/* the stock moves only for what's taken from the pantry (it.pan). Eating takes off what the pantry really had and
+   remembers it (it.took), so un-eating gives back exactly that and never more than was taken */
 function pantryAdjust(it, sign) {
-  const touch = (id, g) => {
-    const p = S.shop.pantry[id]; if (!p) return false;
-    p.g = Math.max(0, r0((p.g || 0) - sign * g)); return true;
-  };
+  if (!it?.pan) return;
   let changed = false;
-  if (it.kind === "food") changed = touch(it.ref, it.qty) || changed;
-  else if (it.kind === "recipe") { const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients) changed = touch(ing.food, ing.g * it.qty / (r.servings || 1)) || changed; }
+  if (sign > 0) {
+    const took = {};
+    for (const [id, g] of itemStockLines(it)) { const p = S.shop.pantry[id]; if (!p || !(g > 0)) continue; const before = +p.g || 0; p.g = Math.max(0, r0(before - g)); const t = before - p.g; if (t > 0) took[id] = (took[id] || 0) + t; changed = true; }
+    it.took = took;
+  } else {
+    const back = it.took || Object.fromEntries(itemStockLines(it));
+    for (const [id, g] of Object.entries(back)) { const p = S.shop.pantry[id]; if (!p) continue; p.g = r0((+p.g || 0) + g); changed = true; }
+    delete it.took;
+  }
   if (changed) put("shop", "", S.shop);
 }
 
@@ -11674,8 +11687,6 @@ function panLinked(start = todayISO(), n = 14) { const o = {};
   for (let i = 0; i < n; i++) { const d = S.days[addDays(start, i)]; if (!d) continue; for (const [, it] of dayItems(d)) if (it.pan && !it.eaten && it.kind === "food") o[it.ref] = (o[it.ref] || 0) + (+it.qty || 0); }
   return o; }
 const panFree = (id, L = panLinked()) => Math.max(0, r0((S.shop.pantry[id]?.g || 0) - (L[id] || 0)));
-/* the stock moves only for food taken from the pantry */
-{ const _pa = pantryAdjust; pantryAdjust = function (it, sign) { if (!it?.pan) return; return _pa(it, sign); }; }
 /* the list: plan food to buy in full; from the pantry only what's missing */
 shoppingNeeds = function (start, n) {
   const need = {}, src = {}, linked = {}, add = (id, g, why) => { if (!(g > 0)) return; need[id] = (need[id] || 0) + g; (src[id] = src[id] || new Set()).add(why); };
