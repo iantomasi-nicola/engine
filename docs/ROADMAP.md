@@ -2,20 +2,21 @@
 
 Regola: una milestone alla volta, approvata dall'utente prima di iniziare, branch dedicato, commit atomici, test, rollback descritto. Un commit non è un deploy; il rebuild dei file di root e la pubblicazione richiedono autorizzazione.
 
-Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossima: M2 in attesa di approvazione.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
+Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate su `main`** (build 202610241056). **In corso (approvate): M4 e M7a2 (AEE P0/P1).** Proposta in attesa: **M4b Daily Journal.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
 
 ## Ordine (dipendenze → impatto → rischio)
 | Milestone | Contenuto (ID) | C | Rischio | Stato |
 |---|---|---|---|---|
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
-| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Completata nel sorgente e nella build di root del branch (24/10); in attesa di revisione dell'utente. Non pubblicata.** |
-| M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Approvata (24/10); completata nel sorgente, in attesa di revisione. Non pubblicata** |
-| M3 Spesa: extra, costi, liste lunghe | B4, B5, B6 | M | Basso | – |
-| M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
+| M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Fatta e pubblicata (24/10)** |
+| M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Fatta e pubblicata (24/10)** |
+| M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | Da approvare |
+| M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Approvata (24/10), in corso** |
+| **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Proposta, in attesa di approvazione** (dipende da I1 di M4) |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
 | M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | – |
-| M7a Nutrizione: base sicura (nessun numero cambia) | D16 (fatto), D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Approvata e fatta nel sorgente (24/10)**; pubblicata con la prossima build |
-| M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | Proposta presentata, **in attesa di approvazione** |
+| M7a Nutrizione: base sicura (nessun numero cambia) | D16, D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Fatta e pubblicata (24/10)** |
+| M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **Approvata (24/10), in corso**: solo import in sola lettura e modalità in ombra, nessun numero visibile cambia |
 | M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
@@ -25,7 +26,7 @@ Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossi
 | M10 Meteo e preparazione workout | F2, F3, F4 | M | Basso | – |
 | M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4 | XL | Medio | – |
 | M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4 | M | Basso | – |
-| M13 Design system e redesign progressivo (trasversale, per tranche) | J2–J5 | XL | Medio | – |
+| M13 Design system, redesign progressivo **e nuovo logo e grafiche** (trasversale, per tranche) | J2–J6 | XL | Medio | – |
 | **M14 Audit finale e sistemazione repository** | Audit funzionale/sicurezza/performance/codice morto/dipendenze/UI su 3 viewport; ENG-09 (struttura repo, README, documentazione, script, artefatti di build, pulizia) | M | Basso | – |
 
 ## Primi cinque interventi per valore/sforzo
@@ -73,3 +74,5 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | UX: filtri della spesa ridotti a This week / Next week / Next 7 days / Custom; editor Food semplificato (stella, «Counts as», senza Good for e Leave out) — richieste dell'utente; 56 test verdi | vedi `git log` |
 | 2026-10-24 | Pubblicazione: `main` allineato al branch di lavoro (df96e46; Pages «pages build and deployment» riuscito alle 10:35 UTC); punto di ripristino precedente = `02f43a9` (tag remoto `restore/pre-m1-publish-2026-10-23`) | df96e46 |
 | 2026-10-24 | M7a fatta: sensori FC per sport (D5a), avviso profilo incompleto (D9), provenienza del NEAT (D6), nessun numero cambia; editor Food compatto; versione nelle Settings; regola permanente Consistency & Cleanup e primo report; proposta `AEE_ENGINE_PROPOSAL.md` | vedi `git log` |
+| 2026-10-24 | Fix «17 foods moved to the right aisle»: pulizie una tantum solo dopo i dati del server; avviso se la memoria del dispositivo è piena | vedi `git log` |
+| 2026-10-24 | Pubblicato `main` = 621da12 (build 202610241056): M0–M2, M7a, UX, editor Food compatto, versione nelle Settings | 621da12 |

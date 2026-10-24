@@ -132,6 +132,23 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | J4 | Design system condiviso (colori, tipografia, spacing, componenti, grafici, stati) | Should | XL | J3 | Parziale | Token documentati; riduzione `!important` |
 | J5 | Redesign progressivo verificato su telefono, tablet, desktop | Should | XL | J4 | Non verificato | Screenshot per milestone |
 
+| J6 | Nuovo logo e nuove grafiche (icona dell'app e maskable, favicon, schermata iniziale, icone di sezione, illustrazioni degli stati vuoti, grafica delle story) coerenti con il design system (richiesta 24/10, dentro M13) | Should | L | J4 | Mancante | Set unico di asset in tutte le dimensioni, chiaro/scuro, verificato su telefono/tablet/desktop e come PWA installata |
+
+## K. Daily Journal (richiesta 24/10 — proposta, nessun codice finché non è approvata)
+Riuso: i dati vivono nel documento del giorno (`S.logm[mese].days[data]`, campo `jr`), quindi sincronizzazione, backup, offline, esportazione Excel e isolamento tra account esistono già; navigazione di data del Check-in (I1), grafici a serie (`seriesChart`), griglia mensile del calendario di allenamento, sistema di funzioni AI opzionali (`AI_FEATS`), promemoria opzionali già presenti. Nessuna tabella nuova.
+| ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
+|---|---|---|---|---|---|---|
+| K1 | Voci del giorno: produttività 1–5, umore (5 emoji), energia 1–5, stress 1–5, nota di una frase; tutto facoltativo | Should | M | I1 | Proposta | Una schermata, un tap per voce, ≤10 s, salvataggio automatico a ogni tap, nessun campo obbligatorio |
+| K2 | Giorni passati modificabili con la stessa navigazione di data del Check-in | Should | S | I1, K1 | Proposta | Si compila ieri/qualsiasi giorno; ricalcolo dei riepiloghi |
+| K3 | Accesso rapido a fine giornata: card in Today dopo una certa ora e scorciatoia dal Check-in; promemoria opzionale, spento di default | Should | S | K1 | Proposta | Nessuna notifica invasiva; la card sparisce quando il giorno è compilato |
+| K4 | Nessuna duplicazione con il Check-in: sonno, RHR, HRV, passi, acqua, DOMS, allenamenti, note restano nel Check-in; il Journal li legge e non li ripete | Must | S | K1 | Proposta | Nessun campo duplicato; un solo punto di inserimento per dato |
+| K5 | Recap settimanale, mensile, annuale: medie, trend, giorni migliori/peggiori, variazioni, copertura («12 giorni su 30») | Should | L | K1 | Proposta | I giorni non compilati **non** sono zero e non entrano nelle medie; la copertura è sempre mostrata |
+| K6 | Heatmap/calendario e grafici semplici (media mobile, barre per periodo) con componenti condivisi | Should | M | K5 | Proposta | Leggibili su telefono, tablet, desktop; chiaro/scuro; accessibili (testo oltre al colore) |
+| K7 | Correlazioni con sonno, allenamenti, recupero, attività fisica già registrati | Could | M | K5 | Proposta | Solo con campione minimo e forza minima; formulazione «tende a coincidere», mai «causa»; ordinale (Spearman); intervallo di incertezza |
+| K8 | Riepilogo AI facoltativo (spento di default), concreto e non giudicante, con suggerimenti pratici | Could | M | K5, K7 | Proposta | Funzione disattivabile in Settings come le altre AI; l'AI riceve solo aggregati e non inventa numeri; etichetta «generato dall'AI» |
+| K9 | Privacy ed esportazione: dati privati per account, modificabili, inclusi nel backup, nel Full backup JSON e nell'Excel (foglio «Journal») | Must | S | K1 | Proposta | Export→reset→import identico; test di isolamento |
+| K10 | Giorni mancanti, modifiche successive e conflitti di sync gestiti | Must | S | K1 | Proposta | Modifica da due dispositivi: vince l'ultima per campo; test con sync simulata |
+
 ## Debito tecnico e pulizia (regola permanente)
 | ID | Voce | Stato |
 |---|---|---|
