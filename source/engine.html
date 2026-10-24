@@ -1397,9 +1397,14 @@ body.live-mode .main{padding-bottom:120px!important}
 .nx{display:flex;gap:5px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:3px}.nx.up{color:var(--good);font-weight:500}.nx svg{width:14px;height:14px}
 .rir-pill{height:32px;padding:0 12px;border-radius:16px;background:var(--sec-c);color:var(--on-sec-c);font-size:12.5px;font-weight:600;white-space:nowrap}
 .rir-pill.empty{background:var(--v-fill,var(--surface-2));color:var(--muted)}
-.pg-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
-.pg-row:first-of-type{border-top:0}
-.pg-row b{display:block;font-size:15px;font-weight:600}.pg-row small{display:block;font-size:12.5px;color:var(--muted)}.pg-row>div>span{display:block;font-size:13.5px;margin-top:2px}
+.sg-row{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;text-align:left;width:100%;padding:12px 0;border-top:1px solid var(--line)}.sg-row:first-of-type{border-top:0}
+.sg-chk{width:24px;height:24px;border-radius:50%;border:1.8px solid var(--surface-3);display:grid;place-items:center;color:transparent;margin-top:1px}.sg-chk .ic{width:15px;height:15px}
+.sg-row[aria-pressed=true] .sg-chk{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.sg-t b{display:block;font-size:15px;font-weight:600}.sg-t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}.sg-d{display:block;font-size:14px;margin-top:2px}.sg-d strong{font-weight:650}
+.sg-tag{font-style:normal;font-size:11px;font-weight:650;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:4px;vertical-align:1px}
+.sg-done{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:8px 0}.sg-done .ic{width:16px;height:16px;flex:none;color:var(--good)}.sg-done span{flex:1;min-width:0}
+.sg-same{border-top:1px solid var(--line);padding-top:6px}.sg-same>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}.sg-s{padding:6px 0}.sg-s b{display:block;font-size:14px;font-weight:600}.sg-s small{font-size:12.5px;color:var(--muted)}
+.sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}.pv-ready{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}.pv-ready i{width:9px;height:9px;border-radius:50%;background:var(--faint)}.pv-ready.green i{background:var(--good)}.pv-ready.yellow i{background:var(--warn)}.pv-ready.red i{background:var(--bad)}
 .pv-meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13.5px;color:var(--muted)}.pv-meta>span{display:inline-flex;align-items:center;gap:5px}
 .pv-b{border-radius:12px!important}
 .pv-k.k-emom,.pv-k.k-amrap,.pv-k.k-tabata,.pv-k.k-fortime{background:var(--accent)!important;color:var(--accent-ink)!important}
@@ -7791,11 +7796,6 @@ const LV = () => WK().live;
 const nowMs = () => Date.now();
 function clkEl(c) { if (!c) return 0; return ((c.paused ? c.acc : c.acc + (nowMs() - c.start))) / 1000; }
 const buildTasks = sc => expandTasks(parseScript(sc).blocks).filter(t => t.t !== "note");
-function proposalsFor(tasks, date) {
-  const seen = new Set(), out = {};
-  for (const t of tasks) if (t.t === "set") for (const e of t.exs) { const k = normEx(e.name); if (seen.has(k)) continue; seen.add(k); const p = progressionFor(e, date); if (p) out[k] = { ...p, name: e.name, on: false, lastTxt: lastText(p.last) }; }
-  return out;
-}
 const lastText = L => L ? L.sets.map(s => (s.reps?.length ? s.reps.join("-") : "") + (s.hold?.length ? " " + s.hold.join("-") + "s" : "") + (s.load ? ` +${fmtKg(s.load)}` : "")).join(" · ") + (L.final?.rir != null ? ` · RIR ${L.final.rir}` : "") : "";
 function startWorkout({ script, name, tplId, date, sport, prog, week, si, ext, planDate, free, open }) {
   if (LV()) { toast("A workout is already in progress"); ACT["lv-resume"](); return; }
@@ -7808,22 +7808,20 @@ function startWorkout({ script, name, tplId, date, sport, prog, week, si, ext, p
   const isAuto = auto && tasks.length && tasks.every(t => t.t === "run" || t.t === "open");
   if (!tasks.length && !free) { toast("Nothing to run in that script."); return; }
   const d = date || todayISO();
-  WK().live = { id: puid("ws"), name: name || "Workout", tplId: tplId || null, prog: P?.id || null, week: week || null, date: d, sport: sp, script: sc || "", baseScript: script || "", ext: ext || null, planDate: planDate || null, phase: "preview", tasks, cur: 0, res: {}, adj: isAuto || free ? {} : proposalsFor(tasks, d), created: new Date().toISOString(), clk: null, sub: null, auto: isAuto || null, free: free || null };
+  WK().live = { id: puid("ws"), name: name || "Workout", tplId: tplId || null, prog: P?.id || null, week: week || null, date: d, sport: sp, script: sc || "", baseScript: script || "", ext: ext || null, planDate: planDate || null, phase: "preview", tasks, cur: 0, res: {}, created: new Date().toISOString(), clk: null, sub: null, auto: isAuto || null, free: free || null };
   if (free || open) { closeSheet(); UI.tab = "live"; UI.liveList = false; ACT["lv-begin"](); return; }
   saveWK(); closeSheet(); UI.tab = "live"; UI.liveList = false; scheduleRender(); window.scrollTo(0, 0);
 }
-function adjFor(L, e) { const a = L.adj?.[normEx(e.name)]; return a && a.on ? a : null; }
 function initTask(i) {
   const L = LV(), t = L.tasks[i]; if (!t) return; L.cur = i; L.sub = null;
   const r = L.res[i] = L.res[i] || {};
   if (t.t === "set" && !r.ex) r.ex = t.exs.map(e => {
-    const last = lastFor(e, L.date), a = adjFor(L, e); let reps = e.scheme ? [...e.scheme] : [e.reps || (e.range ? e.range[0] : 0)];
+    const last = lastFor(e, L.date); let reps = e.scheme ? [...e.scheme] : [e.reps || (e.range ? e.range[0] : 0)];
     let load = e.load != null ? e.load : last?.load != null ? last.load : null;
-    if (a?.kind === "load") load = a.to; if (a?.kind === "reps") reps[0] += a.delta;
     // carry today's earlier set of the same exercise (keeps what you changed in round 1)
     const prev = Object.entries(L.res).map(([k, v]) => ({ t: L.tasks[k], v })).filter(x => x.t && x.t.t === "set" && x.v.ex && +x.t.bi === t.bi && x.t.pos === t.pos && x.t.round < t.round).sort((a, b) => b.t.round - a.t.round)[0];
     const px = prev?.v.ex[t.exs.indexOf(e)];
-    return { reps, load: px ? px.load : load, ring: px?.ring || e.ring || last?.ring || "", rir: null, hold: [], mini: 0, holdAdd: a?.kind === "hold" ? a.delta : 0 };
+    return { reps, load: px ? px.load : load, ring: px?.ring || e.ring || last?.ring || "", rir: null, hold: [], mini: 0 };
   });
   if (t.t === "emom" && !r.mins) { const n = Math.max(1, Math.round(t.dur / t.every)); r.mins = [...Array(n)].map((_, k) => { const st = t.steps[k % t.steps.length]; return { reps: st.exs.map(e => e.reps || 0), ok: null }; }); }
   if (t.t === "amrap" && r.rounds == null) { r.rounds = 0; r.partial = 0; r.splits = []; }
@@ -7835,7 +7833,7 @@ function goTask(i) { const L = LV(); if (!L || i < 0 || i >= L.tasks.length) ret
 function nextTask() { const L = LV(); const n = L.cur + 1; if (n >= L.tasks.length) { (L.res[L.cur] = L.res[L.cur] || {}).done = true; L.clk = null; L.sub = null; if (L.free) { L.cur = L.tasks.length; saveWK(); scheduleRender(); window.scrollTo(0, 0); return; } L.phase = "done"; saveWK(); scheduleRender(); window.scrollTo(0, 0); return; } goTask(n); }
 function completeTask() { const L = LV(), r = L.res[L.cur] = L.res[L.cur] || {}; r.done = true; r.at = nowMs(); if (L.clk) r.sec = Math.round(clkEl(L.clk)); haptic(); nextTask(); }
 const isFinalSet = t => t.t === "set" && t.round === t.rounds;
-const holdParts = (e, x) => { const base = e.holdScheme || [e.dur]; const add = x?.holdAdd || 0; return base.map(s => s + (e.holdScheme ? Math.ceil(add / base.length) : add)); };
+const holdParts = e => (e.holdScheme || [e.dur]).slice();
 
 /* ---------- sound, voice, haptics, wake lock ----------
    Every cue (3-2-1 ticks, go, end, spoken call-outs) is derived from the clock, then scheduled on the
@@ -8031,7 +8029,7 @@ function applyEdit(script) {
   const curSig = taskSig(L.tasks[L.cur] || {}), res = {};
   nt.forEach((t, i) => { const o = old[taskSig(t)]; if (o && (o.done || taskSig(t) === curSig)) res[i] = o; });
   L.tasks = nt; L.res = res; L.script = script;
-  if (L.phase === "preview") { L.adj = proposalsFor(nt, L.date); return true; }
+  if (L.phase === "preview") return true;
   let cur = nt.findIndex(t => taskSig(t) === curSig); if (cur < 0) cur = nt.findIndex((t, i) => !res[i]?.done); if (cur < 0) cur = nt.length - 1;
   L.cur = cur; if (!res[cur]) initTask(cur); return true;
 }
@@ -8083,22 +8081,87 @@ function liveSide(L) {
       return hb + `<button class="sl-i ${i === L.cur ? "now" : ""} ${r.done ? "ok" : ""} ${skp ? "skip" : ""}" data-act="lv-go" data-i="${i}"><span class="sl-ck">${r.done ? ic("check", "sm") : skp ? ic("close", "sm") : ""}</span><span class="sl-t">${esc(t.t === "set" ? `${t.label ? t.label + " · " : ""}${t.exs.map(e => e.name).join(" + ")}` : taskLine(t))}</span><small>${t.t === "set" ? (r.done ? esc(r.ex.map(x => (x.reps || []).join("-") + (x.load ? " +" + fmtKg(x.load) : "") + (x.rir != null ? " · RIR " + x.rir : "")).join(" / ")) : skp ? `skipped · ${t.round}/${t.rounds}` : `${t.round}/${t.rounds}`) : t.dur ? fmtDurShort(t.dur) : ""}</small></button>`; }).join("")}</div></section>
     <div class="kbd faint"><span><kbd>Space</kbd> done</span><span><kbd>←</kbd><kbd>→</kbd> steps</span><span><kbd>P</kbd> pause</span><span><kbd>E</kbd> edit</span><span><kbd>M</kbd> mute</span></div>`;
 }
+/* ---------- the page before a workout: suggested changes you pick, written into today's script ----------
+   Each suggestion is one concrete edit of the script (a rep, a load, a set, an exercise). Progressions come from your last session of that exercise (decideNext: the RIR of the final set),
+   «lighter» from today's readiness, and the AI can add ideas; nothing changes until you tick the ones you want and press Apply, and Undo puts the script back. */
+const escRx = x => String(x).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const isStepLine = l => /^[-•*]\s*/.test(l.trim());
+function editScript(script, ed) {
+  const lines = String(script || "").split("\n"); let hit = 0, first = false;   // reps and load change the first place the exercise appears; a swap changes every place
+  const out = lines.map(line => {
+    const t = line.trim(); if (!t) return line;
+    if (ed.type === "sets" || ed.type === "sets_all") { if (isStepLine(line)) return line;
+      if (ed.type === "sets" && !normEx(t).startsWith(normEx(ed.block || "\u0000"))) return line;
+      return line.replace(/(\d+)(\s*x\s*)$/i, (m, n, x) => { const to = ed.type === "sets" ? ed.to : +n + ed.by; if (ed.type === "sets_all" && +n < 3) return m; if (!(to >= 1) || to === +n) return m; hit++; return to + x; }); }
+    if (!isStepLine(line) || !normEx(t.replace(/^[-•*]\s*/, "")).includes(normEx(ed.name))) return line;
+    const nm = escRx(ed.name).replace(/\\?[-\s]+/g, "[-\\s]*");
+    if (ed.type !== "swap") { if (first) return line; first = true; }
+    if (ed.type === "reps") return line.replace(new RegExp(`(\\d+)(\\s*(?:x|×)?\\s*)(?=${nm})`, "i"), (m, n, sp) => { if (+n === ed.to) return m; hit++; return ed.to + sp; });
+    if (ed.type === "load") { const re = new RegExp(`(${nm}[^+@]*?)([+@]\\s*)(\\d+(?:[.,]\\d+)?)(\\s*kg)`, "i");
+      if (re.test(line)) return line.replace(re, (m, pre, sg, n, kg) => { if (+n.replace(",", ".") === ed.to) return m; hit++; return pre + sg + fmtKg(ed.to) + kg; });
+      if (ed.to > 0) { hit++; return line.replace(new RegExp(`(${nm})`, "i"), `$1 +${fmtKg(ed.to)}kg`); } return line; }
+    if (ed.type === "swap") return line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to; });
+    return line;
+  }).join("\n");
+  return hit ? out : null;
+}
+function sgBuild(L) {
+  const items = [], same = [], seen = new Set(), st = L.date === todayISO() ? loadState() : null, soft = st && (st.ready === "yellow" || st.ready === "red");
+  for (const t of L.tasks) if (t.t === "set") for (const e of t.exs) { const k = normEx(e.name); if (seen.has(k)) continue; seen.add(k);
+    const p = progressionFor(e, L.date); if (!p) continue; const last = lastText(p.last), base = { name: e.name, why: p.text, last: `Last ${fmtDM(p.last.date)}: ${last}` }; let ed = null, from = "", to = "";
+    if (p.kind === "load") { const cur = e.load ?? p.last.load ?? 0; ed = { type: "load", name: e.name, to: p.to }; from = cur ? `+${fmtKg(cur)} kg` : "bodyweight"; to = `+${fmtKg(p.to)} kg`; }
+    else if (p.kind === "reps" && e.reps && !e.scheme && !e.range) { ed = { type: "reps", name: e.name, to: e.reps + p.delta }; from = `${e.reps} reps`; to = `${e.reps + p.delta} reps`; }
+    if (ed && editScript(L.script, ed)) items.push({ id: "p:" + k, kind: "prog", ...base, from, to, edit: ed }); else same.push({ ...base, id: "s:" + k });
+  }
+  if (soft && !L.sg?.lightDone) items.push({ id: "lighter", kind: "lighter", name: "A lighter day", from: "every block of 3+ sets", to: "one set less", why: `Readiness is ${st.ready === "red" ? "low" : "reduced"}${readyWhy(st) ? ` (${readyWhy(st)})` : ""}`, last: "", edit: { type: "sets_all", by: -1 } });
+  for (const a of L.sg?.ai || []) if (editScript(L.script, a.edit)) items.push(a);
+  return { items, same, st };
+}
+const sgOn = L => (L.sg = L.sg || { on: {}, ai: [], done: [], undo: null });
+ACT["sg-toggle"] = el => { const L = LV(), g = sgOn(L), id = el.dataset.id; g.on[id] = !g.on[id]; scheduleRender(); };
+ACT["sg-all"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), all = B.items.every(i => g.on[i.id]); B.items.forEach(i => { g.on[i.id] = !all; }); scheduleRender(); };
+ACT["sg-apply"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => g.on[i.id]); if (!pick.length) return;
+  const old = L.script; let sc = old, n = 0; const names = [];
+  for (const i of pick) { const r = editScript(sc, i.edit); if (r) { sc = r; n++; names.push(i.kind === "lighter" ? "lighter day" : i.name); if (i.kind === "lighter") g.lightDone = true; } }
+  if (!n || !applyEdit(sc)) { toast("Nothing could be changed in the script."); return; }
+  g.on = {}; g.ai = (g.ai || []).filter(a => !pick.some(i => i.id === a.id)); g.done = names; g.undo = old; saveWK(); scheduleRender();
+  toast(`${n} change${n === 1 ? "" : "s"} written into the workout`, () => { const L2 = LV(); if (!L2) return; applyEdit(old); const g2 = sgOn(L2); g2.done = []; g2.undo = null; g2.lightDone = false; saveWK(); scheduleRender(); }); };
+ACT["sg-ai"] = async () => { const L = LV(), g = sgOn(L); if (!Sync.sample || g.busy) return; g.busy = true; g.err = ""; scheduleRender();
+  const st = L.date === todayISO() ? loadState() : null, hist = [...new Set(L.tasks.filter(t => t.t === "set").flatMap(t => t.exs.map(e => e.name)))].map(n => { const l = lastFor({ name: n }, L.date); return l ? `${n}: ${lastText(l)} (${l.date})` : `${n}: no history`; });
+  const prompt = `You are a rigorous but fair strength and calisthenics coach. Today's workout script (intervals.icu text; "Nx" at the end of a title line = sets, "- 6 Pull-up +10kg" = reps, exercise, load):\n"""${String(L.script).slice(0, 2500)}"""
+The athlete's last session of each exercise:\n${hist.join("\n")}\nReadiness today: ${st ? st.ready + (readyWhy(st) ? " (" + readyWhy(st) + ")" : "") : "unknown"}.
+Suggest at most 4 small, safe changes to today's script that make it better for this athlete today (progression, less volume when tired, or swapping an exercise that is a poor fit). Allowed changes only:
+{"change":"reps","exercise":"name exactly as written","to":number} · {"change":"load","exercise":"name exactly as written","to":kg number} · {"change":"sets","block":"the title line exactly as written without the 'Nx'","to":number} · {"change":"swap","exercise":"name exactly as written","to":"a similar exercise"}.
+Reply with only JSON: {"changes":[{"change":"...", "exercise":"...", "block":"...", "to":..., "why":"one short sentence"}]}`;
+  try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (LV() !== L) return; const have = new Set(Object.keys(g.on)); let n = 0;
+    for (const c of (Array.isArray(j?.changes) ? j.changes : []).slice(0, 4)) { const why = String(c.why || "").slice(0, 120); let ed = null, from = "", to = "", name = String(c.exercise || c.block || "").slice(0, 60);
+      if (c.change === "reps" && +c.to > 0) { ed = { type: "reps", name, to: Math.round(+c.to) }; to = `${Math.round(+c.to)} reps`; }
+      else if (c.change === "load" && +c.to >= 0) { ed = { type: "load", name, to: +c.to }; to = `+${fmtKg(+c.to)} kg`; }
+      else if (c.change === "sets" && +c.to >= 1) { ed = { type: "sets", block: name, to: Math.round(+c.to) }; to = `${Math.round(+c.to)} sets`; }
+      else if (c.change === "swap" && c.to) { ed = { type: "swap", name, to: String(c.to).slice(0, 60) }; to = String(c.to).slice(0, 60); }
+      if (!ed || !editScript(L.script, ed)) continue; const id = "ai:" + (g.ai.length + n); n++; g.ai.push({ id, kind: "ai", name, from: c.change === "swap" ? name : "", to, why, last: "", edit: ed }); }
+    if (!n) g.err = "The AI found nothing worth changing."; } catch (e) { g.err = sampleErr(e); }
+  g.busy = false; saveWK(); scheduleRender(); };
 function livePreview(L) {
-  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, adj = Object.values(L.adj || {});
+  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), n = B.items.filter(i => g.on[i.id]).length, st = B.st;
+  const ready = st && st.ready ? `<span class="pv-ready ${st.ready}"><i></i>${st.ready === "green" ? "Ready" : st.ready === "yellow" ? "Reduced" : "Low"}${st.ready !== "green" && readyWhy(st) ? ` · ${esc(readyWhy(st))}` : ""}</span>` : "";
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
   h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
-    <div class="pv-meta"><span>${ic("timer", "sm")}≈ ${est} min</span><span>${tasks.filter(t => t.t === "set").length} sets</span>${P ? `<span class="chip-s">${esc(P.name)} · week ${L.week}/${P.weeks}${isDeload(P, L.week) ? " · deload" : ""}</span>` : ""}</div>
-    <div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div></section>`;
-  h += `<section class="lv-card"><div class="lv-eb"><span class="eyebrow">Last time · your call</span>${adj.some(a => a.kind !== "none" && a.on) ? `<button class="link" data-act="lv-adj-all">Clear suggestions</button>` : ""}</div>
-    <p class="muted" style="margin:0;font-size:13px">You set the progression: edit the workout, or change load and reps on each set. Suggestions are off unless you switch one on.</p>
-    ${adj.length ? adj.map(a => `<div class="pg-row"><div><b>${esc(a.name)}</b><small>Last ${fmtDM(a.last.date)}: ${esc(a.lastTxt)}</small><span class="faint">Suggestion: ${esc(a.text)}</span></div>${a.kind !== "none" ? `<button type="button" class="switch" role="switch" aria-checked="${!!a.on}" data-act="lv-adj" data-k="${esc(normEx(a.name))}" aria-label="Apply the suggestion to ${esc(a.name)}"></button>` : ""}</div>`).join("")
-    : `<p class="muted" style="margin:0;font-size:14px">First time with these exercises: today is your baseline. Log the RIR of each final set so next time you know where you stand.</p>`}
-    ${P ? `<div class="note">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
+    <div class="pv-meta"><span>${ic("timer", "sm")}≈ ${est} min</span><span>${tasks.filter(t => t.t === "set").length} sets</span>${P ? `<span class="chip-s">${esc(P.name)} · week ${L.week}/${P.weeks}${isDeload(P, L.week) ? " · deload" : ""}</span>` : ""}${ready}</div>
+    <div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div>${P ? `<div class="faint" style="font-size:12.5px">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
+  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Suggested changes${B.items.length ? ` · ${B.items.length}` : ""}</span>${B.items.length > 1 ? `<button class="link" data-act="sg-all">${B.items.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>${recapNote(L)}
+    ${B.items.length ? B.items.map(i => `<button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span><span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span></button>`).join("")
+      : g.done.length ? "" : `<p class="muted" style="margin:0;font-size:14px">${B.same.length ? "Nothing to change: your last sessions say repeat." : "First time with these exercises: today is your baseline. Log the RIR of each final set and next time you get a suggestion."}</p>`}
+    ${g.done.length ? `<div class="sg-done">${ic("check", "sm")}<span>Written in: ${esc(g.done.join(", "))}</span>${g.undo ? `<button class="link" data-act="sg-undo">Undo</button>` : ""}</div>` : ""}
+    ${B.same.length ? `<details class="sg-same"><summary>Staying the same · ${B.same.length}</summary>${B.same.map(i => `<div class="sg-s"><b>${esc(i.name)}</b><small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></div>`).join("")}</details>` : ""}
+    ${g.err ? `<div class="note">${esc(g.err)}</div>` : ""}
+    <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${B.items.length ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
   h += `<section class="lv-card">${prepChips()}</section>`;
   const dk = `<div class="lv-dock"><button class="btn tonal" data-act="lv-edit">${ic("edit", "sm")}Edit</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start workout</button></div>`;
   h += `${dk}</div><aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">Workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${scriptPreview(L.script)}</section></aside></div>`;
   return h;
 }
+ACT["sg-undo"] = () => { const L = LV(), g = L && sgOn(L); if (!g?.undo) return; applyEdit(g.undo); g.undo = null; g.done = []; g.lightDone = false; saveWK(); scheduleRender(); };
 function liveTask(L, t, r) {
   if (L.clk && !L.clk.paused && clkEl(L.clk) < 0 && t.t !== "rest") return { body: prepCard(-clkEl(L.clk), t.t === "run" || t.t === "open" ? runLabel(t) : taskLine(t)), dock: dock(`<button class="btn tonal grow" data-act="lv-pause">${ic("pause", "sm")}Pause</button>`) };
   if (t.t === "run" || t.t === "open") return liveRunTask(L, t, r);
@@ -8143,8 +8206,8 @@ function liveTask(L, t, r) {
   let b = `<div class="lv-eb"><span class="eyebrow">${esc(eb)}</span>${fin && t.rounds > 1 ? `<span class="chip-s strong">Final set</span>` : t.block ? `<span class="faint">${esc(t.block)}</span>` : ""}</div>`;
   let primary = "";
   t.exs.forEach((e, xi) => {
-    const x = r.ex[xi], last = lastFor(e, L.date), a = adjFor(L, e), note = WK().notes[normEx(e.name)], isRing = /ring|anell/i.test(e.name) || x.ring;
-    b += `<div class="lv-ex"><div class="lv-hrow"><h2 class="lv-h">${esc(e.name)}</h2><button class="icon-btn sm lv-swap" data-act="lv-swap" data-x="${xi}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">${ic("sync", "sm")}</button></div><div class="lv-tgt">${esc(liveTarget(e))}${a && a.kind !== "none" ? ` <span class="chip-s up">${ic("trend", "sm")}${a.kind === "load" ? `+${fmtKg(a.to - (last?.load || 0))} kg` : a.kind === "reps" ? `+${a.delta} rep${a.delta > 1 ? "s" : ""}` : "longer hold"}</span>` : ""}</div>${e.note ? `<div class="lv-note">${esc(e.note)}</div>` : ""}
+    const x = r.ex[xi], last = lastFor(e, L.date), note = WK().notes[normEx(e.name)], isRing = /ring|anell/i.test(e.name) || x.ring;
+    b += `<div class="lv-ex"><div class="lv-hrow"><h2 class="lv-h">${esc(e.name)}</h2><button class="icon-btn sm lv-swap" data-act="lv-swap" data-x="${xi}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">${ic("sync", "sm")}</button></div><div class="lv-tgt">${esc(liveTarget(e))}</div>${e.note ? `<div class="lv-note">${esc(e.note)}</div>` : ""}
       ${last ? `<div class="lv-last">${ic("undo", "sm")}<span>Last ${fmtDM(last.date)}: ${esc(lastText(last))}${last.ring ? ` · rings ${esc(last.ring)}` : ""}</span></div>` : ""}`;
     if (e.timed || e.holdScheme) {
       const parts = holdParts(e, x), dn = x.hold.length;
@@ -8272,8 +8335,6 @@ ACT["lv-begin"] = () => { audioOn(); const L = LV(); L.phase = "run"; L.started 
   else { if (L.auto) { L.nextStart = nowMs() + PLAYER().prep * 1000; L.t0 = L.nextStart; } else if (L.tasks[0]?.t === "set") L.prepEnd = nowMs() + PLAYER().prep * 1000; initTask(0); }
   saveWK(); wakeOn(); scheduleRender(); window.scrollTo(0, 0); };
 ACT["lv-cancel"] = () => { WK().live = null; saveWK(); UI.tab = UI.liveFrom || "today"; scheduleRender(); };
-ACT["lv-adj"] = el => { const a = LV().adj[el.dataset.k]; if (a) a.on = !a.on; saveWK(); scheduleRender(); };
-ACT["lv-adj-all"] = () => { const L = LV(); Object.values(L.adj).forEach(a => a.on = false); saveWK(); scheduleRender(); };
 ACT["lv-edit"] = () => openSheet("lvedit", { script: LV().script, saveTpl: false });
 ACT["lv-menu"] = () => openSheet("lvmenu", {});
 ACT["lv-start"] = () => { audioOn(); const [L] = LR(); L.clk = { start: nowMs() + PLAYER().prep * 1000, acc: 0, paused: false }; TICK_LAST = {}; CUE_DONE = new Set(); saveWK(); scheduleRender(); };
@@ -12440,7 +12501,7 @@ ACT["gear-cu-del"] = el => { const G = GEARS(); gearSave({ custom: G.custom.filt
 FORMS["gear-al"] = () => { const v = ($("#gear-al")?.value || "").trim().slice(0, 40); if (!v) return; const G = GEARS(); if (!G.always.includes(v)) gearSave({ always: [...G.always, v] }); scheduleRender(); };
 FORMS["gear-cu"] = () => { const item = ($("#gear-cu-i")?.value || "").trim().slice(0, 40), kw = ($("#gear-cu-k")?.value || "").trim().slice(0, 120); if (!item || !kw) { toast("Write what to bring and the words that call for it."); return; } gearSave({ custom: [...GEARS().custom, { item, kw }] }); scheduleRender(); };
 /* before starting: the checklist right under the title, in both previews (sets and runs) */
-function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = h.indexOf('class="lv-card pv-top"'); if (!G.length || a < 0) return h;
+function gearInPreview(h, L) { const G = L.free ? [] : gearList(L.script, L.date), a = Math.max(h.indexOf('class="lv-card sg"'), h.indexOf('class="lv-card pv-top"')); if (!G.length || a < 0) return h;
   const b = h.indexOf("</section>", a) + 10; return h.slice(0, b) + `<section class="lv-card gear-pv"><span class="eyebrow">${ic("bag", "sm")}Bring</span>${gearChecklist(G, L.date)}</section>` + h.slice(b); }
 const _livePreviewG = livePreview, _runPreviewG = runPreview;
 livePreview = L => gearInPreview(_livePreviewG(L), L);
@@ -12609,10 +12670,10 @@ function recapsCard() { const L = recapList(); if (!L.length) return "";
   if (R && id) mutateLog(d, day => { day.wsess = (day.wsess || []).map(s => s.id === id ? { ...s, recap: R, journal: (L.journal || []).slice(-200) } : s); });
   saveWK(); return out; }; }
 { const _sd = sessionDetailHTML; sessionDetailHTML = function (s, noFoot) { return (s.recap ? recapHTML(s.recap, false) : "") + _sd(s, noFoot); }; }
-{ const _lp = livePreview; livePreview = function (L) { const h = _lp(L), P = lastRecap(L.tplId, L.date, L.name); if (!P) return h;
+/* last session of this workout, one line, at the top of the suggestions */
+function recapNote(L) { const P = lastRecap(L.tplId, L.date, L.name); if (!P) return "";
   const tips = P.ex.filter(x => x.sets_ || (x.under && !x.tm)).map(x => x.sets_ ? `${x.name}: ${x.sets_.text}` : `${x.name}: ${x.under} set${x.under > 1 ? "s" : ""} under target last time`);
-  const note = `<div class="rc-last"><b>${fmtDM(P.date)}</b><span>${esc(P.lines[0])}</span>${tips.length ? `<span class="muted">${esc(tips.slice(0, 3).join(" · "))}</span>` : ""}${P.ai?.headline ? `<span class="muted">${ic("spark", "sm")} ${esc(P.ai.headline)}</span>` : ""}</div>`;
-  return h.replace('<span class="eyebrow">Last time · your call</span>', '<span class="eyebrow">Last time · your call</span>').replace(/(<section class="lv-card"><div class="lv-eb"><span class="eyebrow">Last time · your call<\/span>[\s\S]*?<\/div>)/, `$1${note}`); }; }
+  return `<div class="rc-last"><b>${fmtDM(P.date)}</b><span>${esc(P.lines[0])}</span>${tips.length ? `<span class="muted">${esc(tips.slice(0, 3).join(" · "))}</span>` : ""}${P.ai?.headline ? `<span class="muted">${ic("spark", "sm")} ${esc(P.ai.headline)}</span>` : ""}</div>`; }
 /* ================= edit the AMRAP before it starts =================
    On the AMRAP screen, before Start: minutes, exercises and reps per round, add or drop one. Today only, or also
    in the saved workout (its AMRAP line is rewritten). A changed AMRAP is a different test in Records. */
@@ -13104,6 +13165,7 @@ const woImportOn = () => (S.settings?.aiFeat || {}).woimport !== false;
 function sgToday(date) { const S0 = suggestFor(date), s = S0.list[0]; if (!s) return "";
   return `<div class="ov-x sg-t"><span>Free day · <b>${esc(s.t)}</b> <small>${esc(s.note)} · ${esc(S0.why)}</small></span><span class="ov-a"><button class="link" data-act="free-open">More</button><button class="btn tonal sm" data-act="sg-go" data-date="${date}" data-i="0">Start</button></span></div>`; }
 /* ================= import a recipe from a photo or pasted text: the AI reads it, you check every line, then it is made ================= */
+AI_FEATS.push(["sugg", "Workout suggestions", "On the page before a workout: the AI suggests changes to reps, load, sets or an exercise; you choose which to apply."]);
 AI_FEATS.push(["recipeimport", "Import a recipe", "A photo of a recipe or pasted text → servings, ingredients matched to your foods and the method. You check everything before anything is saved."]);
 const RI_GOOD = 2;   // a food from your library is picked for you only when it matches the name this well
 SHEETS.rcimp = sh => { const can = AIF("recipeimport") && !!Sync.sample, img = can && Sync.sampleImages, R = sh.res;

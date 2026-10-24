@@ -203,3 +203,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Eliminato / unificato:** il wrapper di `SHEETS.freewo` (regex sul testo) è sostituito da un elemento della sheet di base; i due modi diversi di mettere la marca (testo in `foodSub`, prefisso nella riga Foods, solo nelle liste della spesa) passano da `brandOf`/`bdHTML`; testi accorciati senza perdere informazione («/100 g», «set aside»).
 
 **Aperto:** la vista settimanale ha la marca nella riga piccola ma può andare a capo in colonne strette; verificare con dati reali.
+
+## M10a Pagina prima dell'avvio con modifiche suggerite (24/10/2026)
+**Verificato:** `preview-suggestions` (6: editScript su rep/carico/serie/cambio con riga a due esercizi e prima occorrenza, elenco delle modifiche e di ciò che resta uguale, Apply/Undo, giornata «lighter», idee dell'AI filtrate sullo script con errore gestito, 3 viewport e player con i nuovi target); suite completa.
+
+**Bug trovato dai test mentre rifacevo la pagina:** `startWorkout` richiamava ancora `proposalsFor` (rimossa): l'app non partiva solo su quel percorso; il caricamento a freddo (`err.js`) non lo vede, i test sì.
+
+**Eliminato / unificato:** il meccanismo a interruttori `L.adj`/`adjFor`/`proposalsFor`/`lv-adj`/`lv-adj-all`/`holdAdd` (cambiava solo i target nel player) è sostituito da modifiche allo script; il wrapper del richiamo dell'ultima seduta (regex sul vecchio titolo) è diventato `recapNote` dentro la pagina; la scheda «Bring» (gear) ora segue le modifiche suggerite.
+
+**Compatibilità:** le sessioni dal vivo salvate con `adj`/`holdAdd` si leggono senza problemi (campi ignorati); nuovo `L.sg` nel documento dell'allenamento in corso.
+
+**Aperto:** le modifiche di tenuta (hold) e gli schemi di ripetizioni (5-3-2) non producono modifiche automatiche (restano in «Staying the same»); la logica di progressione è quella esistente basata sul RIR dell'ultima serie: affinamenti in M11.
