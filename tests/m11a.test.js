@@ -28,26 +28,29 @@ test("icons sit on the text line, a link with an icon centres it, and the recipe
   assert.notEqual(r.va, "baseline"); assert.equal(r.disp, "inline-flex"); assert.equal(r.same, true); assert.equal(r.trash, false);
 });
 
-test("one section pattern: titles use the same header and rows are divided by a line, no boxes, in Ready to start, Programs, Workouts and History", async () => {
+test("one pattern: Programs and Workouts are the same rows as Today's workouts, titles use the same header everywhere, Ready to start has no boxes", async () => {
   const page = await open(H.VIEWPORTS.phone, { withPlan: false });
   const r = await page.evaluate(async () => { const t = todayISO(); WK().tpls = [{ id: "t1", name: "Day B", sport: strengthSport(), script: "Pull 4x\n- 6 Pull-up" }]; const days = Object.fromEntries(DOWK.map(k => [k, null])); days[DOWK[0]] = "t1";
     S.train.progs = [{ id: "pg1", name: "Block 1", sport: strengthSport(), start: weekStartOf(t), weeks: 6, days, rule: "reps", step: 1, deload: 4 }]; DATA_V++; UI.tab = "train"; UI.trainSeg = "wk"; render(); await new Promise(r => setTimeout(r, 250));
-    const cs = e => getComputedStyle(document.querySelector(e)), wk = { prog: cs(".pg-card").boxShadow, wl: cs(".wl-c").boxShadow, h: document.querySelectorAll(".section-h h2").length };
+    const wk = { rows: document.querySelectorAll(".wl-card .td-s").length, go: document.querySelectorAll(".wl-card .td-go").length, h: document.querySelectorAll(".section-h h2").length };
     startWorkout({ script: "Pull 4x\n- 6 Pull-up +10kg", name: "T", sport: strengthSport(), date: t }); UI.tab = "live"; render(); await new Promise(r => setTimeout(r, 250));
     return { wk, pv: { heads: [...document.querySelectorAll(".pv-sec .section-h h2")].map(h => h.innerText), eyebrows: document.querySelectorAll(".pv-sec .eyebrow").length, cards: document.querySelectorAll(".lv-main .lv-card").length } }; });
-  assert.equal(r.wk.prog, "none"); assert.equal(r.wk.wl, "none"); assert.ok(r.wk.h >= 3); assert.ok(r.pv.heads.length >= 3); assert.equal(r.pv.eyebrows, 0); assert.equal(r.pv.cards, 0);
+  assert.equal(r.wk.rows, 2, "a program and a workout, both as the rows Today uses"); assert.equal(r.wk.go, 1, "the workout has Start, the program opens"); assert.ok(r.wk.h >= 3); assert.ok(r.pv.heads.length >= 3); assert.equal(r.pv.eyebrows, 0); assert.equal(r.pv.cards, 0);
 });
 
-test("the week board: seven days with workouts (time, name), meals, kcal and supplements; one tap opens each; previous/next/this week; side menu on desktop, Today's week card on the phone; fits the three screens", async () => {
+test("the week board shows the food of the seven days on one aligned grid (no workouts): meals per day, kcal against target, protein; a tap opens the day, an empty cell adds to that meal; navigation; menu and Today card; fits the three screens", async () => {
   for (const vp of Object.values(H.VIEWPORTS)) {
     const page = await open(vp, { withPlan: false });
-    const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t); mutateLog(addDays(ws, 2), d => { d.planned = [{ sport: strengthSport(), min: 55, note: "Day B", at: "19:00", int: "Hard" }]; }); DATA_V++; UI.tab = "week"; render(); await new Promise(r => setTimeout(r, 250));
-      const days = document.querySelectorAll(".wb-d").length, s = document.querySelector(".wb-s"), txt = s?.innerText.replace(/\s+/g, " ") || "", meals = document.querySelector(".wb-m")?.innerText.replace(/\s+/g, " ") || "", over = document.documentElement.scrollWidth > innerWidth + 1;
-      s?.click(); await new Promise(r => setTimeout(r, 250)); const sheet = UI.sheet?.type; closeSheet();
+    const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), A = activeMeals(); mutateDay(addDays(ws, 2), x => { x.meals[A[0].id] = [{ id: uid(), kind: "food", ref: "t-rice", qty: 150, eaten: false }]; }); mutateLog(addDays(ws, 2), d => { d.planned = [{ sport: strengthSport(), min: 55, note: "Day B", at: "19:00" }]; }); DATA_V++; UI.tab = "week"; render(); await new Promise(r => setTimeout(r, 250));
+      const rows = document.querySelectorAll(".wb-r").length, cells = document.querySelectorAll(".wb-c").length, filled = document.querySelectorAll(".wb-c:not(.empty)").length, txt = document.body.innerText, over = document.documentElement.scrollWidth > innerWidth + 1;
+      const rects = [...document.querySelectorAll(".wb-r")].map(r => r.getBoundingClientRect()), aligned = innerWidth < 640 || new Set(rects.map(r => Math.round(r.left))).size === 1;
+      document.querySelector('.wb-c:not(.empty)').click(); await new Promise(r => setTimeout(r, 250)); const opened = UI.tab; UI.tab = "week"; render(); await new Promise(r => setTimeout(r, 200));
+      document.querySelector(".wb-c.empty").click(); await new Promise(r => setTimeout(r, 250)); const sheet = UI.sheet?.type; closeSheet();
       ACT["wk-nav"]({ dataset: { d: "1" } }); const next = UI.wk === addDays(ws, 7); ACT["wk-nav"]({ dataset: { d: "0" } }); const back = UI.wk === ws;
       UI.tab = "today"; render(); await new Promise(r => setTimeout(r, 200)); const link = document.querySelector('.td-week')?.dataset.tab, side = !!document.querySelector('#side [data-tab="week"]');
-      return { days, txt, meals, over, sheet, next, back, link, side }; });
-    assert.equal(r.days, 7, vp.width + "px"); assert.match(r.txt, /19:00 Day B/); assert.match(r.meals, /No meals planned|LUNCH|Lunch/i); assert.equal(r.over, false); assert.equal(r.sheet, "wo"); assert.ok(r.next && r.back); assert.equal(r.link, "week");
+      return { rows, cells, filled, work: /Day B|19:00/.test(txt), over, aligned, opened, sheet, next, back, link, side, tiles: document.querySelectorAll(".glance").length >= 0 }; });
+    assert.equal(r.rows, 7, vp.width + "px"); assert.equal(r.cells, 7 * 3); assert.equal(r.filled, 1); assert.equal(r.work, false, "no workouts on this board"); assert.equal(r.over, false); assert.ok(r.aligned, "rows line up");
+    assert.equal(r.opened, "plan"); assert.equal(r.sheet, "add"); assert.ok(r.next && r.back); assert.equal(r.link, "week");
     if (vp.width >= 820) assert.equal(r.side, true, "the Week item is in the side menu");
     await app.close(); app = null;
   }
@@ -59,13 +62,17 @@ test("the deload option is in Settings (live workouts), applies to the Season an
   assert.deepEqual(r, { has: true, mode: "smart", draft: "smart", where: true });
 });
 
-test("a personal best is spotted by itself: more reps without weight (near-max set) go into the records, a heavier top set is announced, the session keeps a PB tag; the first result is a baseline, not a PB", async () => {
+test("a personal best is announced, never written to the records by itself: the session offers it («Add to records» / «Not now»), only a yes adds it; the first result is a baseline, not a PB", async () => {
   const page = await open(H.VIEWPORTS.phone, { withPlan: false });
-  const save = (reps, rir, load = 0) => `(async () => { startWorkout({ script: "Pull 1x\\n- 6 Pull-up", name: "PB day", sport: strengthSport(), date: todayISO() }); ACT["lv-begin"](); const L = LV(); L.tasks.forEach((t, i) => { if (t.t === "set") L.res[i] = { done: true, ex: [{ reps: [${reps}], load: ${load}, rir: ${rir}, hold: [], mini: 0 }] }; }); L.phase = "done"; L.minutes = 30; L.rpe = 7; ACT["lv-save"](); await new Promise(r => setTimeout(r, 300)); return { toast: document.querySelector("#toast")?.innerText || "", calis: (S.train.calis || []).filter(c => c.ex === "Pull-up").map(c => [c.test, c.val, !!c.auto]), pb: (Object.values(S.logm).flatMap(m => Object.values(m.days || {})).flatMap(d => d.wsess || []).map(s => s.pb || []).flat()) }; })()`;
-  const first = await page.evaluate(save(10, 1)); assert.doesNotMatch(first.toast, /PB/); assert.deepEqual(first.calis, [["Max reps (BW)", 10, true]]); assert.deepEqual(first.pb, []);
+  const save = (reps, rir, load = 0) => `(async () => { startWorkout({ script: "Pull 1x\\n- 6 Pull-up", name: "PB day", sport: strengthSport(), date: todayISO() }); ACT["lv-begin"](); const L = LV(); L.tasks.forEach((t, i) => { if (t.t === "set") L.res[i] = { done: true, ex: [{ reps: [${reps}], load: ${load}, rir: ${rir}, hold: [], mini: 0 }] }; }); L.phase = "done"; L.minutes = 30; L.rpe = 7; ACT["lv-save"](); await new Promise(r => setTimeout(r, 300)); const ws = Object.values(S.logm).flatMap(m => Object.values(m.days || {})).flatMap(d => d.wsess || []); return { toast: document.querySelector("#toast")?.innerText || "", calis: (S.train.calis || []).filter(c => c.ex === "Pull-up").map(c => [c.test, c.val]), rec: ws.flatMap(s => s.rec || []).map(r => [r.k, r.val, r.pb]), pb: ws.flatMap(s => s.pb || []), id: ws[0]?.id }; })()`;
+  const first = await page.evaluate(save(10, 1)); assert.doesNotMatch(first.toast, /PB:/); assert.deepEqual(first.calis, [], "nothing is written by itself"); assert.deepEqual(first.rec, [["reps", 10, false]], "offered as a first record"); assert.deepEqual(first.pb, []);
+  await page.evaluate((id) => { const el = { dataset: { id, i: "0" } }; ACT["pb-add"](el); }, first.id);
+  const added = await page.evaluate(() => (S.train.calis || []).filter(c => c.ex === "Pull-up").map(c => [c.test, c.val, !!c.auto])); assert.deepEqual(added, [["Max reps (BW)", 10, true]]);
   await page.evaluate(() => { for (const m of Object.values(S.logm)) for (const d of Object.values(m.days || {})) { d.wsess = null; d.workouts = null; } WK().live = null; DATA_V++; });
-  const second = await page.evaluate(save(13, 0)); assert.match(second.toast, /PB: Pull-up 13 reps/); assert.ok(second.calis.some(c => c[1] === 13 && c[2])); assert.ok(second.pb.some(x => /Pull-up 13 reps/.test(x)));
-  const easy = await page.evaluate(`(() => { const s = pbSnap(); return { reps: s.reps["Pull-up"] }; })()`); assert.equal(easy.reps, 13);
+  const second = await page.evaluate(save(13, 0)); assert.match(second.toast, /PB: Pull-up 13 reps/); assert.match(second.toast, /add to the records/); assert.deepEqual(second.calis, [["Max reps (BW)", 10]], "still only the one you accepted"); assert.deepEqual(second.rec, [["reps", 13, true]]);
+  const html = await page.evaluate(id => { const s = Object.values(S.logm).flatMap(m => Object.values(m.days || {})).flatMap(d => d.wsess || [])[0]; return sessionDetailHTML(s); }, second.id);
+  assert.match(html, /PB · Pull-up 13 reps/); assert.match(html, /data-act="pb-add"/); assert.match(html, /data-act="pb-no"/);
+  await page.evaluate(id => ACT["pb-no"]({ dataset: { id, i: "0" } }), second.id); const no = await page.evaluate(() => (S.train.calis || []).filter(c => c.ex === "Pull-up").length); assert.equal(no, 1, "Not now adds nothing");
   const run = await page.evaluate(() => { S.train.pbs = [{ id: "p1", date: addDays(todayISO(), -90), dist: "5k", sec: 1500 }]; openSheet("result", { rtype: "pb", draft: { date: todayISO(), dist: "5k", time: "23:20" } }); ACT["rs-save"](); return document.querySelector("#toast")?.innerText || ""; });
   assert.match(run, /New PB · 5k 23:20/);
 });

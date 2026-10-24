@@ -268,3 +268,13 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `wsess[].pb` e `calis[].auto` opzionali; `UI.wk` e `UI.volW` solo di sessione; i record automatici sono normali righe di `train.calis`.
 
 **Aperto:** il modello di sezione piatto è applicato a «Ready to start» e a Train › Workouts; le altre pagine (Fuel, Progress, Today) vi passeranno in M13 con il resto del redesign. PB di corsa solo da gare/PB inseriti; i PB dalle attività importate arrivano con gli split (G3).
+
+## M11b Corsie una volta, una freccia, riga workout unica, Settimana, scontrino che impara, segnaposto, PB da confermare (24/10/2026)
+**Verificato:** `m12.test.js` (5 test: marcatore `engine.catfix`, una sola freccia nei gruppi di Settings, riga di Workouts con le stesse parti di quella di Today, scontrino che impara — abbinamento, `rcMap`, riconoscimento automatico al secondo scontrino, prezzo per supermercato, creazione dal foglio cibo —, segnaposto con stima AI, Invio e tag «Placeholder») e `m11a.test.js` aggiornato (Settimana solo pasti, PB come suggerimento). Screenshot a 360/390/820/1400 px della Settimana.
+
+**Eliminato / unificato:** le righe di workout scritte a mano in Workouts e Programs (ora `woRow`, come Today); la scrittura automatica dei record di calisthenics in `lv-save` (sostituita dal suggerimento `pb-add`/`pb-no`); la vecchia griglia della Settimana con allenamenti e integratori; il doppio chevron in Settings (CSS).
+
+**Compatibilità:** `S.shop.rcMap` opzionale; `items[].ph` opzionale (l'elemento è un normale cheat meal con tag); `wsess[].rec` opzionale; marcatore `engine.catfix` solo locale.
+
+**Aperto:** la sottostima per dispositivo (D20) e le prestazioni (P1) sono pianificate in M7b e M14/M15; l'AI sullo scontrino non è provata su uno scontrino vero (richiede la tua chiave); l'abbinamento per parole singole può proporre cibi poco pertinenti (si sceglie a mano).
+

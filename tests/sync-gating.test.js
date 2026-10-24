@@ -36,7 +36,7 @@ test("a stale cached copy does not trigger the clean-up; the account's data (alr
 test("when the account really has the food in the wrong aisle, it is fixed once, with one message", async () => {
   const page = await setup();
   const r = await page.evaluate(async () => {
-    const remote = clone(S.foods);
+    const remote = clone(S.foods); localStorage.removeItem("engine.catfix"); /* a device that has not run the fix yet */
     applyCollection("foods", { docs: Object.values(remote).map(f => ({ id: f.id, data: () => f })), metadata: { fromCache: false } }); await new Promise(r => setTimeout(r, 700));
     return { toasts: [...__toasts], fixed: S.foods["t-banana"].cat, v: S.foods["t-banana"].catV, written: __writes.some(p => p.endsWith("foods/t-banana")) };
   });
