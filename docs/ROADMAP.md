@@ -11,7 +11,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | **Fatta e pubblicata (24/10)** |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3, A4 (schermata) | M | Medio | **Fatta e pubblicata (24/10)** |
 | M3 Spesa: extra, costi, liste lunghe | B5, B6 (B4 fatto) | M | Basso | **Fatta (24/10)**, in revisione |
-| **M4f Ritocchi alle milestone fatte** (richieste 24/10: L1–L11) | L1–L11 | M | Basso | **In corso** |
+| **M4f Ritocchi alle milestone fatte** (richieste 24/10: L1–L11) | L1–L11 | M | Basso | **Fatta (24/10)**, in revisione |
 | M3b Spesa: supermercati, prezzi, sostituzioni, scansione | L17 | L | Medio | Aggregata (dopo M5) |
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Fatta (24/10)**, in revisione |
@@ -85,4 +85,5 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M4c (feedback su M4/M4b): Check-in sempre in vista su Today, integrazioni nel Check-in, volti disegnati al posto delle emoji, «Top» tolto da Foods e sostituito dal report Habits in Progress | vedi `git log` |
 | 2026-10-24 | M4d: una regola sola tra piano, dispensa e lista (il piano prenota ciò che c'è in casa, mangiare lo toglie, la lista mostra solo ciò che manca); via l'interruttore «From the pantry» per singolo cibo e «Use them»; vasetto sul piano; «Stock on» richiudibile; spiegazione nella Dispensa; «add extra» in cima alla lista | vedi `git log` |
 | 2026-10-24 | M6: audit di sicurezza (`docs/SECURITY_AUDIT.md`), scritture verso intervals.icu verificate con API simulata e corretto il piano che partiva con l'interruttore spento, Open Food Facts senza blocco di sessione, scansione barcode dentro le ricette, etichette dei segmenti mai tagliate | vedi `git log` |
+| 2026-10-24 | M4f: NEAT dai passi (formula approvata), editor «New food» con prezzo chiaro, integratori nel Check-in a righe, «Left on» per la settimana dopo, dimensione del pack dalla lista, «left over» coerente, lista della spesa ridisegnata, ✓/✗ nella settimana, Timer a tutta larghezza sul computer, transizioni leggere su telefono | vedi `git log` |
 

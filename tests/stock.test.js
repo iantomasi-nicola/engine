@@ -131,7 +131,7 @@ test("windows: this week starts today (past days left out), next week is Monday 
 test("the shopping panel shows the covered list, and the window chips (this week, next week, custom)", async () => {
   const page = await start();
   const html = await page.evaluate(() => { S.shop.pantry["t-rice"] = { g: 400 }; S.shop.mode = "custom"; S.shop.cFrom = todayISO(); S.shop.cTo = addDays(todayISO(), 1); DATA_V++; applyShopMode(); return shopPanel(false).h; });
-  for (const t of ["This week", "Next week", "Next 7 days", "Custom", "covered by what's at home", "from home", "runs out", "partly", 'id="shop-from"', 'id="shop-to"']) assert.ok(html.includes(t), "missing: " + t);
+  for (const t of ["This week", "Next week", "7 days", "Custom", "covered by what's at home", "from home", "runs out", "partly", 'id="shop-from"', 'id="shop-to"']) assert.ok(html.includes(t), "missing: " + t);
   assert.deepEqual(app.errors, []);
 });
 
@@ -159,7 +159,7 @@ test("only four window chips remain; an older 1/3/14-day choice becomes a custom
   const r = await page.evaluate(() => {
     S.shop.mode = "days"; S.shop.range = 3; UI.shopStart = todayISO(); applyShopMode();
     const legacy = { mode: S.shop.mode, from: S.shop.cFrom === todayISO(), to: S.shop.cTo === addDays(todayISO(), 2), n: S.shop.range };
-    const html = shopPanel(false).h, chips = (html.match(/class="chip sm"/g) || []).length;
+    const html = shopPanel(false).h, chips = (html.match(/data-act="shop-(?:mode|range)"/g) || []).length;
     S.shop.mode = "days"; S.shop.range = 7; applyShopMode();
     return { legacy, chips, seven: [S.shop.mode, UI.shopStart === todayISO(), S.shop.range], noDateChip: !/shop-start/.test(html), noOld: !/1 d|3 d|14 d/.test(html) };
   });

@@ -105,3 +105,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Aperto:** S-1 (chiavi nel documento cloud) in attesa di decisione; SRI su xlsx; restringimento di `connect-src`.
 
+## M4f Ritocchi alle milestone fatte (24/10/2026)
+**Verificato:** `tests/neat-steps`, `food-price`, `m4f`, `stock-model` aggiornato, `ux-fit` (nessuna etichetta tagliata a 360 e 390 px); suite completa; controllo visivo su telefono e computer.
+
+**Eliminato:** `pantryHowHTML` e il suo stato (rimosso su richiesta); `shopRowHTML` base (debito n. 5 del report M1/M2: restava una sola definizione); `suppCard` base (il wrapper a chip è ora l'unica definizione, la lista grande è `suppListHTML`); chip del periodo della spesa (ora segmenti); CSS `.supp-*`; la regola «Next 7 days» → «7 days».
+
+**Regressione mia dichiarata:** il menu laterale a rail/full (M4) rendeva il Timer e l'allenamento dal vivo larghi 208 px sul computer (la colonna del menu). Corretto con una regola più specifica e test.
+
+**Formula (L1):** `STEP_KCAL` = 0.5 kcal/kg/km, passo 0.415 × altezza (ACSM, fonte primaria ancora da riverificare: il Compendium non era raggiungibile); approvata dall'utente il 24/10 con base appresa ≥ 14 giorni; stessi coefficienti dello shadow.
+
+**Aperto:** da confermare sul telefono reale il lampeggio della barra (rimossa la causa probabile); S-1 chiavi nel cloud; le richieste aggregate L12–L21 nelle milestone indicate.
+

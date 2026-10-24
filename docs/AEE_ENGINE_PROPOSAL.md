@@ -90,3 +90,9 @@ Tutte partono da dati locali in attesa e da flag espliciti; senza di essi il syn
 | `PUT /wellness/<data>` | peso, FC a riposo, HRV, sonno, body fat inseriti in Engine e assenti su intervals.icu (ultimi 15 giorni) |
 | `PUT /activity/<id>` | RPE modificato in Engine; dettagli di una sessione di forza eseguita |
 | `POST /activities/manual` | allenamento fatto in Engine (live) non ancora presente su intervals.icu |
+
+## §10 P2 (parte NEAT) attivata — 24/10/2026
+Approvata dall'utente («OKAY») la formula proposta: **giorno con passi e senza corsa/camminata, senza kcal d'orologio digitate: NEAT = costo dei passi + base appresa** (mediana, sui 90 giorni precedenti, di «NEAT d'orologio − costo dei passi» nei giorni con entrambi e senza corsa/camminata; servono ≥ 14 giorni). Costo dei passi = 0,5 kcal/kg/km × passo 0,415 × altezza (ACSM, camminata, netto del riposo). Il valore d'orologio digitato resta prioritario nel suo giorno. Giorni senza passi, con corsa/camminata o con base non apprendibile: comportamento precedente (media dei 7 giorni), ora dichiarato «(no steps for this day)». La base è **causale** (solo giorni precedenti), quindi un dato nuovo non cambia i giorni passati. In `energySeries` (`neatSrc: "steps"`); testato con numeri calcolati a parte (`tests/neat-steps.test.js`). Non cambiano: BMR, TEF, EAT, calibrazione.
+
+Restano da fare (P2 resto e P3): togliere «Watch kcal» dal Check-in e dall'editor sessione, EAT con candidati al posto del valore del dispositivo — solo dopo il backtest sui dati reali e con approvazione esplicita.
+

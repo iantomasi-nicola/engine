@@ -168,17 +168,17 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 
 | ID | Richiesta | Milestone | Stato |
 |---|---|---|---|
-| L1 | NEAT giorno per giorno dai passi (formula approvata dall'utente il 24/10): giorni con passi e senza corsa/camminata = costo dei passi + base appresa (≥14 giorni con orologio e passi); altrimenti comportamento attuale, segnalato | M7a2/P2 (ora) | In corso |
-| L2 | Sezione prezzo/stock di «New food» più curata (screen) | M4f (ora) | In corso |
-| L3 | Integratori nel Check-in: design e usabilità migliori | M4f (ora) | In corso |
-| L4 | Togliere «How the pantry works» | M4f (ora) | In corso |
-| L5 | «Stock on» gestito meglio; vedere cosa e quanto resta in magazzino per la settimana successiva (spesa settimanale con piano già fatto per la prossima) | M4f (ora) | In corso |
-| L6 | Modificare la grandezza del pack dalla lista della spesa | M4f (ora) | In corso |
-| L7 | Lista «prossima settimana»: «x g left over» non coerente (finiscono prima) — controlli di coerenza su tutta la catena piano ↔ scorta ↔ lista | M4f (ora) | In corso |
-| L8 | Design della lista della spesa (barre, chip, campo extra) | M4f (ora) | In corso |
-| L9 | Today › This week: ✗ rosso e ✓ verde se salto l'allenamento | M4f (ora) | In corso |
-| L10 | «Grafica time» buggata nella vista PC | M4f (ora) se riproducibile | Da riprodurre |
-| L11 | Passaggio tra pagine da smartphone: il menù scompare per un attimo | M4f (ora) | In corso |
+| L1 | NEAT giorno per giorno dai passi (formula approvata dall'utente il 24/10): giorni con passi e senza corsa/camminata = costo dei passi + base appresa (≥14 giorni con orologio e passi); altrimenti comportamento attuale, segnalato | M7a2/P2 (ora) | **Fatto (24/10)** `tests/neat-steps.test.js`: stesso risultato dei calcoli indipendenti; base appresa solo dai giorni precedenti; il valore digitato dell'orologio vince |
+| L2 | Sezione prezzo/stock di «New food» più curata (screen) | M4f (ora) | **Fatto**: «Price paid» + «for 1 kg / 1 pack / 1 piece» a larghezza uguale e i tre prezzi calcolati dal vivo |
+| L3 | Integratori nel Check-in: design e usabilità migliori | M4f (ora) | **Fatto**: lista a righe grandi (preso / in ritardo / non preso), «Mark all as taken», stock che segue |
+| L4 | Togliere «How the pantry works» | M4f (ora) | **Fatto**: rimosso |
+| L5 | «Stock on» gestito meglio; vedere cosa e quanto resta in magazzino per la settimana successiva (spesa settimanale con piano già fatto per la prossima) | M4f (ora) | **Fatto**: «Left on <data>» con Questa settimana / Prossima / 14 giorni, tutti gli articoli, quelli che finiscono prima, barra, «Show all» |
+| L6 | Modificare la grandezza del pack dalla lista della spesa | M4f (ora) | **Fatto**: campo «Pack size in the shop» nella scheda del prodotto in lista (cambia il cibo ovunque) |
+| L7 | Lista «prossima settimana»: «x g left over» non coerente (finiscono prima) — controlli di coerenza su tutta la catena piano ↔ scorta ↔ lista | M4f (ora) | **Fatto**: «left over» tiene conto dei giorni dopo la finestra («for later days»); stessa catena piano → scorta → lista verificata dai test |
+| L8 | Design della lista della spesa (barre, chip, campo extra) | M4f (ora) | **Fatto**: selettore di periodo a segmenti, riepilogo su una riga, campo extra snello, gruppi e righe più ariosi |
+| L9 | Today › This week: ✗ rosso e ✓ verde se salto l'allenamento | M4f (ora) | **Fatto**: ✓ verde, ✗ rosso, «n/m» ambra se a metà |
+| L10 | «Grafica time» buggata nella vista PC | M4f (ora) se riproducibile | **Fatto**: riprodotto (Timer e allenamento dal vivo schiacciati in una colonna di 256 px sul computer: regressione del menu laterale di M4) e corretto |
+| L11 | Passaggio tra pagine da smartphone: il menù scompare per un attimo | M4f (ora) | **Fatto**: su telefono niente più View Transition a schermo intero (faceva lampeggiare la barra in basso), dissolvenza leggera della sola pagina; da confermare sul telefono |
 | L12 | Animazioni minimal e moderne in generale; valutare i gesti | M13 | Aggregata |
 | L13 | Mezzo pack / un pack come quantità di un ingrediente di ricetta | M5 | Aggregata |
 | L14 | «What can I cook»: scegliere pasto e data | M5 | Aggregata |
