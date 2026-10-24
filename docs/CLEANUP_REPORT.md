@@ -5,6 +5,9 @@ Un report breve per milestone (regola permanente in `AGENTS.md`). Il più recent
 ## Scansione usata
 Dal 24/10/2026 ogni revisione confronta il sorgente con la baseline (`git show cae350d:source/engine.html`): funzioni e `const` di primo livello senza altri riferimenti (anche in `source/web/*.js`), azioni `ACT[...]` senza `data-act` né chiamate, handler `INP`/`CHG` senza campo `data-in`/`data-chg`. Il confronto con la baseline separa il debito preesistente da quello introdotto. (Lo script è un'utilità locale di revisione; i risultati stanno qui.)
 
+## Errore mio da dichiarare: `tests/check-build.js` era vuoto (24/10/2026)
+Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da allora `check-build` terminava con successo **senza controllare nulla**, quindi i «release-check verdi» dei commit di build di M1, M2 e UX non includevano davvero il confronto dei file. I file di root erano comunque generati dallo stesso sorgente un attimo prima di ogni commit; ho ripetuto ora il confronto vero (index.html, sw.js, manifest: identici al sorgente) e ripristinato lo script con una guardia: se non confronta tutti i file, esce con errore 2.
+
 ## M4 (24/10/2026)
 **Verificato:** 78 test (6 nuovi per M4: allineamento icona su 3 viewport con misura geometrica, rail/drawer con dimensione delle icone e persistenza dopo reload, Check-in su giorno passato, obiettivo km con storico, classifica Top, luogo del meteo); screenshot telefono/tablet/desktop; console pulita.
 **Trovato e corretto durante il lavoro:** il passaggio del rail a `body.side-rail` aveva reso le icone a larghezza zero (regola `.side-btn .ic` con `!important` solo per 600–1023): ora vale anche ≥1024 e c'è un test sulle dimensioni delle icone.
