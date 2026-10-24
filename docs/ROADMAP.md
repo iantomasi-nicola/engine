@@ -23,7 +23,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
 | M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15, **L16** | L | Medio | In attesa |
-| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21** | L | Medio | – |
+| M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21**, L30–L32 | L | Medio | **M8a fatta (24/10)**: A6, A7, L21, L30–L32; **M8b da fare**: C3 (import ricetta con AI), H10 (workout a parole) |
 | M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara), **L28** (auto-plan su intervallo, senza sovrascrivere) | XL | Alto | – |
 | M10 Meteo e preparazione workout | F2, F3, F4, **L26** (pagina pre-avvio, suggerimenti e tasto «applica») | M | Basso | – |
 | M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20**, **L26** (logica di progressione) | XL | Medio | – |

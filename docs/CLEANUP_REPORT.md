@@ -156,3 +156,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** campo opzionale `food.stores`; gli id di negozi rimossi restano nel food ma vengono ignorati in lettura, così Annulla della rimozione ripristina tutto. La migrazione Lidl si esegue una sola volta per account (`S.shop.mig.lidl`), 4 s dopo l'avvio, solo sui food dell'utente senza negozio; se esiste già un negozio «Lidl» viene riusato. Rischio noto: su un dispositivo nuovo che sincronizza foods e impostazioni in momenti diversi la migrazione potrebbe girare prima che arrivi il flag dal cloud (in tal caso non fa danni: i food con negozio non vengono toccati).
 
 **Aperto:** i food predefiniti (non aggiunti da te) restano «ovunque» finché non imposti un negozio.
+
+## M8a Food: duplicati, «At home», etichetta, edit dalla lista (24/10/2026)
+**Verificato:** `foods-m8a` (6: edit dalla lista con ritorno al foglio Buy, duplicati per nome/barcode/valori e marca diversa, avviso in tempo reale e doppio Save, «At home» su 3 viewport, etichetta nell'editor con le quattro uscite, suggerimento di corsia con l'AI); suite completa; scansione codice morto; screenshot a 390 px.
+
+**Eliminato / unificato:** il vecchio testo di «At home» con prezzi duplicati (le tariffe stanno già nella sezione prezzo) sostituito dal blocco nuovo; i due punti di arrivo della lettura etichetta passano da `labelDone` (se l'editor di un food è aperto confronta e aggiorna quello, altrimenti crea un food nuovo come prima).
+
+**Compatibilità dati:** nessun campo nuovo (la data di scadenza usa il campo `exp` già presente in `S.shop.pantry`).
+
+**Aperto (M8b):** C3 import ricetta da testo/immagine con AI e H10 workout a parole; il confronto etichetta non sceglie riga per riga (si usa tutto o niente); il controllo dei duplicati non esamina i food che arrivano da Open Food Facts salvati senza passare dall'editor (hanno comunque il controllo del barcode in `lookupAndAdd`).

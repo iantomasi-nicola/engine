@@ -25,8 +25,8 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | A3 | Pantry: ricerca, A–Z/Z–A, filtri utili, preferenze persistenti | Should | S | – | **Fatto nel sorgente** (24/10): ricerca (nome, marca, nome italiano), ordine scadenza/A–Z/Z–A/categoria, filtri Use soon/Spare/Set aside, preferenze salvate nelle impostazioni | Preferenza sopravvive al reload; recuperabile da `02f43a9` previa verifica |
 | A4 | Inventario predittivo a data X con pasti/ricette associati e data di esaurimento | Must | L | M1 | **Fatto nel sorgente** (24/10): scheda «Stock on <data>» nel Pantry (3/7/14 giorni o data): scorta oggi → alla data, giorno di esaurimento, pasti collegati; sola lettura | Proiezione non altera la giacenza; risultato coincide con simulazione giorno per giorno |
 | A5 | Open Food Facts: ricerca, barcode, normalizzazione, porzioni, dati incompleti, dedup, errori, cache, attribuzione | Should | M | – | **Fatto (M6)**: pausa di 60 s al posto del blocco di sessione, cache con scadenza, prodotto senza valori da completare, attribuzione ODbL, `tests/off.test.js`; aggiunta anche la scansione da dentro una ricetta | Nessun latch permanente; cache con scadenza; attribuzione ODbL visibile; test con risposte simulate |
-| A6 | Alimento mancante: ricerca esterna o stima AI, distinti da dati ufficiali, conferma prima di salvare | Should | M | A5 | Non verificato | Badge "stima"; nessun salvataggio senza conferma |
-| A7 | Comando AI per suggerire/correggere la categoria dei nuovi Foods, senza ricategorizzare gli esistenti | Could | S | – | Mancante | Solo su richiesta; mai in massa |
+| A6 | Alimento mancante: ricerca esterna o stima AI, distinti da dati ufficiali, conferma prima di salvare | Should | M | A5 | **Verificato (M8a)**: badge «Claude», note «Values estimated», si salva solo dall'editor | Badge "stima"; nessun salvataggio senza conferma |
+| A7 | Comando AI per suggerire/correggere la categoria dei nuovi Foods, senza ricategorizzare gli esistenti | Could | S | – | **Fatto (M8a)**: «Suggest» accanto a Aisle nell'editor, solo su richiesta, opzione AI «Suggest the aisle» | Solo su richiesta; mai in massa |
 
 ## B. Shopping List e costi
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
@@ -188,7 +188,7 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L18 | Reminder impostabili per misure, foto e test di corsa (con il test da fare) per ricalcolare zone e ritmi | M11 | Aggregata |
 | L19 | Consigli alimentari dettagliati pre-gara (per sport) e post-gara; strategia di gara dettagliata | M9 (Food Coach) / M11 | Aggregata |
 | L20 | Segnalare i PB di corsa e calisthenics e metterli in automatico nei record | M11 | Aggregata |
-| L21 | Modificare i macro scansionando l'etichetta | M8 | Aggregata |
+| L21 | Modificare i macro scansionando l'etichetta | M8a | **Fatto (24/10)**: «Scan label» nell'editor di un food, confronto «Now / Label», «Use label values» o «Keep mine» |
 | L22 | Avviso se il check-in giornaliero non è fatto, con «Skip today»; promemoria opzionale (spento di default) | M4f | **Fatto (24/10)**: card su Today finché c'è una pesata/% grasso/kcal digitate o un salto; il salto vale solo per quel giorno |
 | L23 | «Left on» chiuso di default; selettore del periodo della spesa che non si sovrappone | M4f | **Fatto (24/10)** |
 | L24 | Spesa: «Replace» anche con uno swipe sulla riga; «Bought» prima dello scanner; pulsante Shopping veloce nella riga rapida di Today | M3b (ritocco) | **Fatto (24/10)** |
@@ -197,4 +197,7 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L27 | Contaflessioni con sensore negli allenamenti live, disattivabile | M12 (con lo spike push-up I4) | Aggregata |
 | L28 | Auto-plan: intervallo di date personalizzato (da X a Y) e nessuna sovrascrittura se un pasto ha già qualcosa | M9 | Aggregata |
 | L29 | Campo «Bought at» in ogni food (più negozi possibili: lo stesso prodotto può stare in più supermercati); tutti i food già aggiunti = Lidl (una volta, con Annulla); scansione dentro un filtro negozio → nuovo prodotto di quel negozio, prodotto già noto non duplicato ma con il negozio aggiunto; brand piccolo nelle righe della lista; lista da Today a tutto schermo | M3b (ritocco) | **Fatto (24/10)** |
+| L30 | Modifica del food (tasto edit) dalla lista della spesa, con ritorno al foglio Buy | M8a | **Fatto (24/10)** |
+| L31 | Avviso di duplicati quando si inserisce un food: stesso nome (parole in qualsiasi ordine, accenti), stesso barcode, altro nome con gli stessi valori; un secondo Save per aggiungerlo comunque | M8a | **Fatto (24/10)** |
+| L32 | «At home» nell'editor più completo e veloce: +½ pack / +1 pack / +2 packs (o +100/250/500 g), Used up con annulla, data di scadenza, confezioni, quanto è impegnato dal piano e quando finisce | M8a | **Fatto (24/10)** |
 

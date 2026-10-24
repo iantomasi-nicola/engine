@@ -110,7 +110,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pan-q{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
 .pan-q b{min-width:58px;text-align:center;font-weight:600}
 .pan-q small{font-size:11.5px;color:var(--muted);margin-left:2px;font-weight:400}
-.stock-box{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin-top:8px;border-radius:16px;background:var(--md-sc-high,var(--surface-2))}.stock-box .flabel{display:inline-flex;align-items:center;gap:6px;margin:0}.stock-box .pan-q{margin-left:auto}.sb-v{background:none;padding:2px 4px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:36px}.sb-s{flex-basis:100%;font-size:12.5px}
+.stock-box{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin-top:8px;border-radius:16px;background:var(--md-sc-high,var(--surface-2))}.stock-box .flabel{display:inline-flex;align-items:center;gap:6px;margin:0}.stock-box .pan-q{margin-left:auto}.sb-v{background:none;padding:2px 4px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:36px}.sb-s{flex-basis:100%;font-size:12.5px}.lc-t{padding:4px 12px}.lc-r{display:grid;grid-template-columns:minmax(0,1fr) 84px 84px;gap:8px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.lc-r:first-child{border-top:0}.lc-r span:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}.lc-h{font-size:12px;color:var(--muted);padding:6px 0}.lc-r.ch{font-weight:600}.lc-r.ch span:last-child{color:var(--accent)}.fd-cat-l{display:flex;justify-content:space-between;align-items:center;gap:6px}.fd-cat-l .link{font-size:12.5px;display:inline-flex;align-items:center;gap:3px}.sb-top{display:flex;align-items:center;gap:10px;flex-basis:100%}.sb-add{flex-basis:100%}.sb-exp{display:flex;align-items:center;gap:8px;flex-basis:100%}.sb-exp .inp{width:auto;min-width:0;flex:0 1 170px}.fd-dup{display:flex;align-items:center;justify-content:space-between;gap:10px}.fd-dup .link{flex:none}
 .fd-bar{justify-content:space-between;align-items:center;gap:8px}.fd-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fd-macros .inp,.fd-g4 .inp{padding-inline:10px}.fd-serv{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:6px;align-items:center}
 .fd-more{border-radius:16px;background:var(--md-sc-high,var(--surface-2));padding:0 12px}.fd-more>summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;list-style:none}.fd-more>summary::-webkit-details-marker{display:none}.fd-more>summary b{font-weight:600;font-size:14px}.fd-more>summary small{font-size:12.5px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fd-more>summary::after{content:"▾";color:var(--faint);flex:none}.fd-more[open]>summary::after{content:"▴"}.fd-in{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
 .top-row .s{white-space:normal!important;display:block!important;overflow:visible!important}
@@ -4929,14 +4929,15 @@ SHEETS.food = sh => {
       ${d.source === "ai" ? `<div class="note accent">Values estimated by Claude. Check them against the pack if you have it.</div>` : ""}
       ${isBuiltinEdit ? `<div class="note">Built-in reference food. Your changes are saved as your own version.</div>` : ""}
       <div class="field"><label for="fd-name">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input id="fd-name" class="inp" value="${esc(d.name)}" data-in="fd" data-k="name" placeholder="e.g. Spaghetti n.5"><button class="icon-btn" data-act="fd-toggle" data-k="fav" aria-pressed="${!!d.fav}" aria-label="${d.fav ? "Remove from favourites" : "Add to favourites"}" title="Favourite: shown first" style="flex:none;color:${d.fav ? "var(--carb)" : "var(--faint)"}">${ic("star")}</button></div></div>
-      <div class="row fd-bar"><div class="seg" role="group" aria-label="Values per">${["g", "ml"].map(x => `<button data-act="fd-unit" data-u="${x}" aria-pressed="${u === x}">100 ${x}</button>`).join("")}</div><button type="button" class="chip sm" data-act="fd-auto" aria-pressed="${!!d.autoKcal}" title="kcal = 4 × protein + 4 × carbs + 9 × fat + 2 × fibre">kcal from macros</button></div>
+      <div id="fd-dup">${fdDupHTML(sh)}</div>
+      <div class="row fd-bar"><div class="seg" role="group" aria-label="Values per">${["g", "ml"].map(x => `<button data-act="fd-unit" data-u="${x}" aria-pressed="${u === x}">100 ${x}</button>`).join("")}</div><button type="button" class="chip sm" data-act="fd-label" title="Read the nutrition table and update these values">${ic("camera", "sm")}Scan label</button><button type="button" class="chip sm" data-act="fd-auto" aria-pressed="${!!d.autoKcal}" title="kcal = 4 × protein + 4 × carbs + 9 × fat + 2 × fibre">kcal from macros</button></div>
       <div class="fd-macros">${nf("kcal", "kcal")}${nf("c", "Carbs g", "carb")}${nf("p", "Protein g", "pro")}${nf("f", "Fat g", "fat")}</div>
       <div id="fd-calc" class="faint" style="font-size:12.5px">${fdCalcHTML(d)}</div>
       <div class="field"><span class="flabel">Portions</span>
         ${(d.servings || []).map((s, i) => `<div class="fd-serv"><input id="fd-sl-${i}" class="inp" value="${esc(s.l)}" data-in="fd-serv" data-i="${i}" data-k="l" aria-label="Portion name"><div class="unit-inp"><input id="fd-sg-${i}" class="inp" inputmode="decimal" value="${s.g}" data-in="fd-serv" data-i="${i}" data-k="g" aria-label="Portion size"><span>${u}</span></div><button class="icon-btn sm" data-act="fd-serv-del" data-i="${i}" aria-label="Remove portion">${ic("close", "sm")}</button></div>`).join("")}
         <button class="link" data-act="fd-serv-add" style="align-self:flex-start">${ic("plus", "sm")} Add a portion (slice, pot, scoop…)</button></div>
       <div class="grid2"><div class="field"><label for="fd-pack">Pack size</label><div class="unit-inp"><input id="fd-pack" class="inp" inputmode="decimal" value="${d.pack || ""}" data-in="fd" data-k="pack" placeholder="optional"><span>${u}</span></div></div>
-        <div class="field"><label for="fd-cat">Aisle</label><select id="fd-cat" class="inp" data-chg="fd-cat">${AISLES.map(([k, l]) => `<option value="${k}" ${d.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
+        <div class="field"><label for="fd-cat" class="fd-cat-l">Aisle${AIF("category") && d.name ? `<button type="button" class="link" data-act="fd-cat-ai"${sh.catBusy ? " disabled" : ""}>${ic("spark", "sm")}${sh.catBusy ? "…" : "Suggest"}</button>` : ""}</label><select id="fd-cat" class="inp" data-chg="fd-cat">${AISLES.map(([k, l]) => `<option value="${k}" ${d.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
       <button type="button" class="chip sm" data-act="fd-vary" aria-pressed="${varPack(d)}" title="Loose fruit and veg: the list asks for grams and the price is averaged per kg" style="align-self:flex-start">Sold loose · price per kg</button>
       ${sec("more", checkValues, "More nutrition", esc(more || "Fibre, sugars, saturated, salt"), `<div class="grid4 fd-g4">${nf("fib", "Fibre g")}${nf("sug", "Sugars g")}${nf("sat", "Saturated g")}${nf("salt", "Salt g")}</div>
         ${proMicro() ? `<details class="nut-more"><summary>Vitamins and minerals <span class="faint">per 100 ${u}${BUILTIN_MX[d.id] ? " · empty = typical values" : ""}</span></summary><div class="grid4">${["mono", "poly", ...Object.keys(NUT).filter(k => NUT[k].micro)].map(k => { const l = k === "mono" ? "Monounsat." : k === "poly" ? "Polyunsat." : NUT[k].l, un = k === "mono" || k === "poly" ? "g" : NUT[k].u; return `<div class="field"><label for="fd-mx-${k}">${l}</label><div class="unit-inp"><input id="fd-mx-${k}" class="inp" inputmode="decimal" value="${d.mx?.[k] ?? ""}" placeholder="${BUILTIN_MX[d.id]?.[k] ?? ""}" data-in="fd-mx" data-k="${k}"><span>${un}</span></div></div>`; }).join("")}</div></details>` : ""}
@@ -5427,6 +5428,22 @@ function offToFood(code, p) {
   return clean0({ id: "off-" + code, name, brand: (p.brands || "").split(",")[0].trim(), barcode: code, unit, per, orig: clone(per), mx: Object.keys(mx).length ? mx : null, servings, pack: pq, cat, role, meals, fav: false, source: "off", edited: false, incomplete: incomplete || undefined,
     img: /^https:\/\/images\.openfoodfacts\.org\//.test(p.image_front_small_url || "") ? p.image_front_small_url : null, nutri: /^[a-e]$/.test(ns) ? ns : null, nova: +p.nova_group || null, qtyText: p.quantity || null });
 }
+/* the same food twice: same name (words in any order, and the same brand unless they differ), same barcode, or another name with the same values */
+const nameKey = x => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+const tokKey = x => nameKey(x).split(" ").filter(Boolean).sort().join(" ");
+function foodDupes(d) {
+  const out = { barcode: null, name: [], values: [] }, key = tokKey(d.name), bc = String(d.barcode || "").replace(/\D/g, ""), bk = nameKey(d.brand), per = d.per || {}, k = num(per.kcal), P = num(per.p), C = num(per.c), F = num(per.f), has = k > 0 || P > 0 || C > 0 || F > 0;
+  for (const f of allFoods()) { if (!f || f.id === d.id) continue;
+    if (bc && f.barcode === bc) { out.barcode = out.barcode || f; continue; }
+    const fb = nameKey(f.brand);
+    if (key && tokKey(f.name) === key && (!bk || !fb || bk === fb)) { out.name.push(f); continue; }
+    if (has && Math.abs(num(f.per?.kcal) - k) <= 1.5 && Math.abs(num(f.per?.p) - P) <= .3 && Math.abs(num(f.per?.c) - C) <= .3 && Math.abs(num(f.per?.f) - F) <= .3 && (f.unit || "g") === (d.unit || "g")) out.values.push(f); }
+  out.values = out.values.slice(0, 3); out.name = out.name.slice(0, 3); return out;
+}
+function fdDupHTML(sh) {
+  const d = sh.draft, X = foodDupes(d), row = (f, t) => `<div class="note warn fd-dup"><span>${t} <b>${esc(f.name)}</b>${f.brand ? ` · ${esc(f.brand)}` : ""}</span><button class="link" data-act="fd-dup-open" data-id="${f.id}">Open it</button></div>`;
+  return [X.barcode ? row(X.barcode, "This barcode is already on") : "", ...X.name.map(f => row(f, "Already in your foods:")), ...X.values.map(f => row(f, "Same values as"))].join("");
+}
 function findByBarcode(code) { return Object.values(S.foods).find(f => !f.hidden && f.barcode === code) || null; }
 
 /* ================= scanner sheet ================= */
@@ -5755,8 +5772,10 @@ function labelFromText(text, sh, fromPhoto, pre) {
   }
   const { role, meals } = guessRoleMeals(r.per, "pantry", "");
   const draft = { ...blankFood(sh.name || ""), barcode: sh.code || "", unit: r.unit, per: r.per, orig: clone(r.per), cat: "pantry", role, meals, source: "ocr", ocrText: text.trim().slice(0, 1500) };
-  openSheet("food", { draft, isNew: true, then: "qty", date: sh.date || UI.date, meal: sh.meal || suggestMeal(), back: sh.back });
+  labelDone(draft, { draft, isNew: true, then: "qty", date: sh.date || UI.date, meal: sh.meal || suggestMeal(), back: sh.back });
 }
+/* a label read from inside a food's editor updates that food's values (after a look at the difference); anywhere else it starts a new food */
+function labelDone(draft, props) { if (UI.labelFor) openSheet("labelcmp", { label: draft }); else openSheet("food", props); }
 /* the same, read by Claude (only when you ask for it) */
 async function handleLabelClaude(files, fallback) {
   const sh = UI.sheet; if (!sh || !files.length) return;
@@ -5771,7 +5790,7 @@ async function handleLabelClaude(files, fallback) {
     const { role, meals } = guessRoleMeals(per, cat, j.name || "");
     const code = (sh.code || String(j.barcode || "").replace(/\D/g, "")) || "";
     const draft = { ...blankFood(j.name || ""), brand: j.brand || "", barcode: code, unit: j.unit === "ml" ? "ml" : "g", per, orig: clone(per), servings: j.servingG ? [{ l: "1 serving", g: num(j.servingG) }] : [], pack: num(j.packG) || 0, cat, role, meals, source: "label" };
-    openSheet("food", { draft, isNew: true, then: "qty", date: sh.date || UI.date, meal: sh.meal || suggestMeal() });
+    labelDone(draft, { draft, isNew: true, then: "qty", date: sh.date || UI.date, meal: sh.meal || suggestMeal() });
   } catch (e) {
     if (UI.sheet !== sh) return;
     if (fallback && e?.name !== "AbortError") { toast("Claude couldn't read it: trying the on-device reader…"); return ocrLabelFiles(files); }
@@ -6001,7 +6020,9 @@ ACT["fuel-tab"] = el => { UI.tab = UI.fuelTab = el.dataset.k; scheduleRender(); 
 ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
-ACT["close-sheet"] = () => { const sh = UI.recipeSheet; if (UI.dest === "recipe" && sh && UI.sheet !== sh) { UI.recipeSheet = null; UI.dest = null; camClose(); UI.sheet = sh; renderSheet(); return; } UI.recipeSheet = null; closeSheet(); };
+ACT["close-sheet"] = () => { const ed = UI.labelFor; if (ed) { UI.labelFor = null; if (UI.sheet !== ed) { camClose(); UI.sheet = ed; renderSheet(); return; } }
+  const bb = UI.sheet?.type === "food" && UI.sheet.backBuy; if (bb) { openSheet("buy", bb); return; }
+  const sh = UI.recipeSheet; if (UI.dest === "recipe" && sh && UI.sheet !== sh) { UI.recipeSheet = null; UI.dest = null; camClose(); UI.sheet = sh; renderSheet(); return; } UI.recipeSheet = null; closeSheet(); };
 ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo = null; if (u) { u(); toast("Undone"); } };
 
 /* plan */
@@ -6228,6 +6249,26 @@ ACT.fav = el => {
 ACT["new-food"] = el => { const sh = S_(), fromAdd = sh && (sh.type === "add" || sh.type === "offsearch"); const typed = fromAdd && el.dataset.name == null && sh.q ? (entryOf(sh.q.trim()).name || sh.q.trim()) : ""; openSheet("food", { draft: blankFood(el.dataset.name || typed || ""), isNew: true, then: fromAdd ? "qty" : null, date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), ...(fromAdd ? { back: "add", addQ: sh.addQ ?? sh.q ?? "", addSeg: sh.addSeg || sh.seg || "recent" } : {}) }); };
 ACT["edit-food"] = el => { const f = getFood(el.dataset.id); if (!f) return; const back = S_()?.type === "qty" ? { ...S_() } : null; openSheet("food", { draft: clone({ ...blankFood(), ...f, per: { ...blankFood().per, ...f.per } }), isNew: false, backQty: back }); };
 ACT["scan-manual"] = () => { const sh = S_(); openSheet("food", { draft: { ...blankFood(""), barcode: sh.code || "" }, isNew: true, then: "qty", date: sh.date, meal: sh.meal }); };
+ACT["fd-dup-open"] = el => { const sh = S_(), f = getFood(el.dataset.id); if (!f) return; openSheet("food", { draft: clone({ ...blankFood(), ...f, per: { ...blankFood().per, ...f.per } }), isNew: false, then: sh.then, date: sh.date, meal: sh.meal, back: sh.back, backBuy: sh.backBuy }); if (sh.then === "qty") UI.dest = UI.dest; };
+ACT["fd-label"] = () => { const ed = S_(); if (ed?.type !== "food") return; UI.labelFor = ed; openSheet("scan", { stage: "label", labelOnly: true, date: UI.date, meal: suggestMeal() }); };
+const LC_ROWS = [["kcal", "Energy", "kcal"], ["c", "Carbs", "g"], ["p", "Protein", "g"], ["f", "Fat", "g"], ["fib", "Fibre", "g"], ["sug", "Sugars", "g"], ["sat", "Saturated", "g"], ["salt", "Salt", "g"]];
+SHEETS.labelcmp = sh => { const d = UI.labelFor?.draft, L = sh.label; if (!d) return { title: "Label", body: `<div class="empty slim"><p>Nothing to update.</p></div>`, foot: `<button class="btn primary" data-act="close-sheet">Close</button>` };
+  const rows = LC_ROWS.filter(([k]) => num(L.per[k]) > 0 || num(d.per[k]) > 0), diff = rows.filter(([k]) => Math.abs(num(L.per[k]) - num(d.per[k])) > .05).length;
+  return { title: "Update from the label", body: `<div class="note">${diff ? `<b>${diff}</b> value${diff === 1 ? "" : "s"} differ${diff === 1 ? "s" : ""} from what ${esc(d.name || "this food")} has now.` : "The label matches what this food already has."} Per 100 ${L.unit === "ml" ? "ml" : "g"}.</div>
+    <div class="card lc-t"><div class="lc-r lc-h"><span></span><span>Now</span><span>Label</span></div>${rows.map(([k, l, u]) => { const a = num(d.per[k]), b = num(L.per[k]), ch = Math.abs(a - b) > .05; return `<div class="lc-r${ch ? " ch" : ""}"><span>${l}</span><span>${r1(a)} ${u}</span><span><b>${r1(b)}</b> ${u}</span></div>`; }).join("")}</div>
+    ${L.name && L.name !== d.name ? `<small class="faint">Name on the label: ${esc(L.name)}. The name stays as it is.</small>` : ""}`,
+    foot: `<button class="btn soft" data-act="lc-back">Keep mine</button><button class="btn primary" data-act="lc-apply">${ic("check", "sm")}Use label values</button>` }; };
+ACT["lc-back"] = () => { const ed = UI.labelFor; UI.labelFor = null; if (ed) { UI.sheet = ed; renderSheet(); } else closeSheet(); };
+ACT["lc-apply"] = () => { const sh = S_(), ed = UI.labelFor, L = sh.label; UI.labelFor = null; if (!ed) return closeSheet(); const d = ed.draft;
+  d.per = { ...d.per, ...Object.fromEntries(LC_ROWS.map(([k]) => [k, L.per[k] ?? d.per[k]])) }; d.unit = L.unit === "ml" ? "ml" : d.unit; d.autoKcal = false; d.edited = true;
+  if (!d.brand && L.brand) d.brand = L.brand; if (!d.barcode && L.barcode) d.barcode = L.barcode; if (!(d.pack > 0) && L.pack > 0) d.pack = L.pack; if (!(d.servings || []).length && (L.servings || []).length) d.servings = clone(L.servings);
+  UI.sheet = ed; renderSheet(); toast("Values updated from the label: check and save"); };
+ACT["fd-cat-ai"] = async () => { const sh = S_(), d = sh?.draft; if (!d?.name || !Sync.sample || sh.catBusy) return; sh.catBusy = true; renderSheet();
+  try { const j = await Sync.sample.json(`In which supermarket aisle would you find this food? Food: "${d.name.slice(0, 80)}"${d.brand ? ` by ${d.brand.slice(0, 40)}` : ""}. Per 100 g: ${d.per.kcal} kcal, protein ${d.per.p} g, carbs ${d.per.c} g, fat ${d.per.f} g.
+Choose exactly one of: ${AISLES.map(a => a[0]).join(", ")}. Reply with only JSON: {"category": "one of them"}`, { modelTier: "quick" });
+    if (UI.sheet !== sh) return; const k = String(j?.category || "").toLowerCase(); if (AISLE_NAME[k]) { d.cat = k; d.catUser = true; toast(`Aisle: ${AISLE_NAME[k]} (suggested, change it if it's wrong)`); } else toast("No clear suggestion: pick the aisle yourself."); }
+  catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
+  if (UI.sheet === sh) { sh.catBusy = false; renderSheet(); } };
 ACT["fd-unit"] = el => { S_().draft.unit = el.dataset.u; renderSheet(); };
 ACT["fd-usecalc"] = () => { const d = S_().draft; d.per.kcal = kcalFromMacros(d.per); renderSheet(); };
 ACT["fd-reset"] = () => { const d = S_().draft; d.per = clone(d.orig); d.edited = false; renderSheet(); };
@@ -6237,6 +6278,7 @@ ACT["fd-toggle"] = el => { const d = S_().draft; d[el.dataset.k] = !d[el.dataset
 ACT["fd-save"] = () => {
   const sh = S_(); const d = clone(sh.draft); delete d.ocrText;
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the food a name."); $("#fd-name")?.focus(); return; }
+  if (sh.isNew && !sh.dupOk) { const X = foodDupes(d), first = X.barcode || X.name[0]; if (first) { sh.dupOk = true; toast(`“${first.name}” is already in your foods: tap Save again to add this one anyway`); return; } }
   for (const k of Object.keys(d.per)) d.per[k] = num(d.per[k]);
   if (!d.per.kcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
   if (d.mx) { for (const k of Object.keys(d.mx)) { if (d.mx[k] === "" || d.mx[k] == null) delete d.mx[k]; else d.mx[k] = num(d.mx[k]); } if (!Object.keys(d.mx).length) delete d.mx; }
@@ -6256,6 +6298,7 @@ ACT["fd-save"] = () => {
   if (sh.then === "qty" && UI.dest) destPick(d);
   else if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: defaultQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
   else if (sh.backQty) { openSheet("qty", sh.backQty); toast("Saved"); }
+  else if (sh.backBuy) { openSheet("buy", sh.backBuy); toast("Saved"); }
   else { closeSheet(); toast(`Saved ${d.name}`); }
 };
 ACT["fd-del"] = () => { const id = S_().draft.id; const prev = clone(S.foods[id]); closeSheet(); if (BUILTIN[id]) put("foods", id, { id, hidden: true }); else del("foods", id); toast("Food deleted", () => { if (prev) put("foods", id, prev); else del("foods", id); }); };
@@ -6463,11 +6506,11 @@ const INP = {
   "lb-text": v => { const sh = S_(); if (sh) sh.text = v; },
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
   qty: v => { S_().qty = num(v); updQtyStrip(); },
-  fd: (v, el) => { const d = S_().draft; d[el.dataset.k] = v; if (el.dataset.k === "_pv" || el.dataset.k === "pack") { const q = $("#fd-eq"); if (q) q.innerHTML = fdEqHTML(d, d.unit || "g"); } },
+  fd: (v, el) => { const d = S_().draft; d[el.dataset.k] = v; if (["name", "brand", "barcode"].includes(el.dataset.k)) { const q = $("#fd-dup"); if (q) q.innerHTML = fdDupHTML(S_()); } if (el.dataset.k === "_pv" || el.dataset.k === "pack") { const q = $("#fd-eq"); if (q) q.innerHTML = fdEqHTML(d, d.unit || "g"); } },
   "fd-mx": (v, el) => { const d = S_().draft; d.mx = { ...(d.mx || {}), [el.dataset.k]: v }; },
   "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; const calc = kcalFromMacros(d.per);
     if (d.autoKcal && el.dataset.k !== "kcal") { d.per.kcal = calc; const k = $("#fd-kcal"); if (k) k.value = calc; }
-    const c = $("#fd-calc"); if (c) c.innerHTML = fdCalcHTML(d); },
+    const c = $("#fd-calc"); if (c) c.innerHTML = fdCalcHTML(d); const q = $("#fd-dup"); if (q) q.innerHTML = fdDupHTML(S_()); },
   "fd-serv": (v, el) => { S_().draft.servings[+el.dataset.i][el.dataset.k] = v; },
   rc: (v, el) => { S_().draft[el.dataset.k] = v; if (el.dataset.k === "servings") updRecipePer(); },
   "rc-g": (v, el) => { S_().draft.ingredients[+el.dataset.i].g = v; updRecipePer(); },
@@ -9756,6 +9799,7 @@ for (const ln of BUILTIN_MICRO.split("\n")) { const [id, ...v] = ln.trim().split
 
 /* ================= AI features: each one can be switched off in Settings ================= */
 const AI_FEATS = [
+  ["category", "Suggest the aisle", "On request, in a food's editor: the AI proposes the aisle. Nothing is changed in bulk."],
   ["label", "Read nutrition labels", "Photo of the table → values. If the AI can't, the reader on this device does it."],
   ["plan", "Weekly meal plan", "Dishes chosen from your habits, cuisines and pantry; portions still calculated here."],
   ["describe", "Describe a meal", "“A plate of carbonara and a salad” → foods and amounts."],
@@ -10045,7 +10089,7 @@ SHEETS.buy = sh => {
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); const f = getFood(sh.id) || BUILTIN[sh.id]; if (!f) return { title: "Not found", body: "" };
   const u = f.unit || "g", p = priceOf(sh.id), k = eurPerG(sh.id), g = num(sh.g), est = k != null && g ? k * g : null;
   const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtN(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean);
-  return { title: f.name, focus: "by-g",
+  return { title: f.name, head: `<button class="icon-btn" data-act="by-edit" aria-label="Edit ${esc(f.name)}" title="Edit food">${ic("edit")}</button>`, focus: "by-g",
     body: `${r ? `<div class="faint" style="font-size:13px">Planned: ${fmtN(r.need)} ${u}${r.have ? ` · ${fmtN(r.have)} ${u} at home` : ""}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}</div>` : ""}
       <div class="grid2"><div class="field"><label for="by-g">You're taking</label><div class="unit-inp"><input id="by-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="by" data-k="g"><span>${u}</span></div></div>
       <div class="field"><label for="by-eur">Price paid</label><div class="unit-inp"><input id="by-eur" class="inp" inputmode="decimal" value="${sh.eur ?? ""}" placeholder="${est != null ? est.toFixed(2) : ""}" data-in="by" data-k="eur"><span>€</span></div></div></div>
@@ -10255,10 +10299,18 @@ function priceSet(id, v, unit) {
 }
 function stockBoxHTML(id) {
   const f = getFood(id) || BUILTIN[id]; if (!f) return "";
-  const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(planReserved()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, pr = priceViews(id);
-  const sub = [res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside` : "", f.pack > 0 ? `pack ${fmtN(f.pack)} ${u}` : "", pr ? [`${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}`, pr.perPack != null ? `${fmtEur(pr.perPack)}/pack` : "", pr.perUnit != null ? `${fmtEur(pr.perUnit)}/piece` : ""].filter(Boolean).join(" · ") : ""].filter(Boolean).join(" · ");
-  return `<div class="stock-box" data-stock="${id}"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${id}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span>${sub ? `<span class="faint sb-s">${esc(sub)}</span>` : ""}</div>`;
+  const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(planReserved()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, today = todayISO();
+  const piece = f.countable && f.servings?.[0]?.g > 0 ? f.servings[0].g : 0, add = f.pack > 0 ? [[f.pack / 2, "½ pack"], [f.pack, "1 pack"], [f.pack * 2, "2 packs"]] : piece ? [[piece, "1"], [piece * 2, "2"], [piece * 6, "6"]] : [[100, `100 ${u}`], [250, `250 ${u}`], [500, `500 ${u}`]];
+  const ends = g > 0 ? stockPlan(today, 14).endsOn[id] : null, packs = f.pack > 0 && g >= f.pack / 10 ? Math.round(g / f.pack * 10) / 10 : null;
+  const facts = [packs != null && !(p?.u === "pack") ? `${packs} pack${packs === 1 ? "" : "s"}` : "", res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside by the plan` : "", ends ? `runs out ${ends === today ? "today" : fmtDM(ends)}` : g > 0 && !res ? "not in the plan" : ""].filter(Boolean).join(" · ");
+  return `<div class="stock-box" data-stock="${id}"><div class="sb-top"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${id}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span></div>
+    <div class="chips sb-add">${add.map(([v, l]) => `<button class="chip sm" data-act="stock-add" data-id="${id}" data-g="${v}">+ ${esc(l)}</button>`).join("")}${g > 0 ? `<button class="chip sm" data-act="stock-zero" data-id="${id}">Used up</button>` : ""}</div>
+    ${facts ? `<span class="faint sb-s">${esc(facts)}</span>` : ""}
+    ${g > 0 ? `<label class="sb-exp"><span class="faint">Use by</span><input type="date" class="inp" value="${esc(p?.exp || "")}" data-chg="stock-exp" data-id="${id}" aria-label="Use by date"></label>` : ""}</div>`;
 }
+ACT["stock-add"] = el => { stockAdd(el.dataset.id, +el.dataset.g); if (UI.sheet) renderSheet(); };
+ACT["stock-zero"] = el => { const id = el.dataset.id; stockSet(id, 0); if (UI.sheet) renderSheet(); toast(`${(getFood(id) || BUILTIN[id])?.name || "Item"} used up`, () => { undoStock(); if (UI.sheet) renderSheet(); }); };
+CHG["stock-exp"] = (v, el) => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!p) return; S.shop.pantry[id] = clean0({ ...p, exp: /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null }); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
 /* the exact amount, units, fractions and use-by date: the pantry sheet, from any screen, and back to where you were */
 ACT["stock-open"] = el => { const id = el.dataset.id, f = getFood(id) || BUILTIN[id], p = S.shop.pantry[id]; if (!f) return; const cur = S_(), back = cur && (cur.type === "qty" || cur.type === "food") ? cur : null;
   openSheet("pantry", { food: id, g: p?.g ?? "", exp: p?.exp || "", u: p?.u || (f.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk, back }); };
@@ -10339,6 +10391,7 @@ SHEETS.swapfood = sh => {
     foot: `<button class="btn soft" data-act="sf-back">Back</button><button class="btn primary" data-act="sf-do">${ic("swap", "sm")}Replace</button>` };
 };
 INP["sf-q"] = v => { S_().q = v; renderSheet(); };
+ACT["by-edit"] = () => { const sh = S_(), f = getFood(sh.id) || BUILTIN[sh.id]; if (!f) return; openSheet("food", { draft: clone({ ...blankFood(), ...f, per: { ...blankFood().per, ...f.per } }), isNew: false, backBuy: { ...sh } }); };
 ACT["by-swap"] = () => { const sh = S_(); UI.swapFrom = sh.id; openSheet("swapfood", { from: sh.id }); };
 ACT["sf-pick"] = el => { S_().to = el.dataset.id; renderSheet(); };
 ACT["sf-back"] = () => { const sh = S_(); sh.to = null; renderSheet(); };
