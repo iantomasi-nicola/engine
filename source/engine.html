@@ -8200,13 +8200,19 @@ function icuState() { const s = S.settings?.intervals || {}; return { aid: s.aid
 function icuSet(o) { S.settings.intervals = { ...(S.settings.intervals || {}), ...o }; saveSettings(); }
 function icuDisconnect() { const { key, bridge, athlete, ...rest } = S.settings.intervals || {}; S.settings.intervals = rest; saveSettings(); toast("Disconnected from intervals.icu"); scheduleRender(); }
 const isIcu = w => String(w?.ext || "").startsWith("icu-");
+/* more of what intervals.icu knows about an activity, kept as read-only facts for the energy model (nothing here changes a number yet):
+   climb (m), average speed (m/s), average power (W), cadence, maximum heart rate and the name of the recording device. Absent = left out, never 0. */
+function icuExtras(x) {
+  const pos = v => { v = +v; return isFinite(v) && v > 0 ? v : null; }, pw = pos(x.icu_average_watts ?? x.average_watts), spd = pos(x.average_speed);
+  return wClean({ elev: pos(x.total_elevation_gain) != null ? r0(x.total_elevation_gain) : null, spd: spd != null ? Math.round(spd * 100) / 100 : null, pw: pw != null ? r0(pw) : null, cad: pos(x.average_cadence) != null ? r0(x.average_cadence) : null, hrmax: pos(x.max_heartrate) != null ? r0(x.max_heartrate) : null, devn: x.device_name ? String(x.device_name).slice(0, 40) : null });
+}
 function icuApplyActivities(acts) {
   const groups = {};
   for (const x of acts) {
     const d = String(x.start_date_local || x.start_date || "").slice(0, 10); if (!d || d > todayISO()) continue;
     const min = r0((x.moving_time || x.elapsed_time || 0) / 60), km = x.distance ? r1(x.distance / 1000) : null, sport = icuSport(x.type || x.name);
     if (min < 8 && !(km >= 1)) continue;
-    const w = wClean({ sport, min: min || null, km: km && km > 0.2 ? km : null, hr: x.average_heartrate ? r0(x.average_heartrate) : null, kcal: x.calories ? r0(x.calories) : null, rpe: x.perceived_exertion || x.icu_rpe || null, int: icuIntensity(x.name || "", "", min, +x.icu_training_load || 0), ext: "icu-a-" + x.id, src: "intervals", note: (x.name || "").slice(0, 80) || null });
+    const w = wClean({ ...icuExtras(x), sport, min: min || null, km: km && km > 0.2 ? km : null, hr: x.average_heartrate ? r0(x.average_heartrate) : null, kcal: x.calories ? r0(x.calories) : null, rpe: x.perceived_exertion || x.icu_rpe || null, int: icuIntensity(x.name || "", "", min, +x.icu_training_load || 0), ext: "icu-a-" + x.id, src: "intervals", note: (x.name || "").slice(0, 80) || null });
     (groups[d + "|" + sport] = groups[d + "|" + sport] || []).push({ w, xid: x.external_id });
   }
   let n = 0;
