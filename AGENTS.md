@@ -45,6 +45,12 @@ Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commi
 ## Commit e push
 Concordato con l'utente: commit atomici e push **frequenti** sul branch di lavoro (`git push -u origin <branch>`), mai su `main` e mai force-push senza autorizzazione. Il backlog (`docs/PRODUCT_REQUIREMENTS.md`) e la roadmap (`docs/ROADMAP.md`) con le cose implementate e da implementare si aggiornano **passo passo**, nello stesso commit della modifica; il resto della documentazione dopo. Rebuild dei file di root e pubblicazione solo su richiesta.
 
+## Stile visivo (richiesta dell'utente, 24/10/2026)
+Minimale, in pieno stile Material Design (Google, evoluzione recente): superfici tonali, raggi coerenti, nessun bordino/filetto decorativo colorato (es. barra verde a sinistra o contorno sulla cella «oggi»: si usa solo un fondo tenue), ombre e linee ridotte al necessario. Prima di ogni commit visivo: allineamenti e simmetrie su 390/820/1440 px. M14 include la verifica di allineamento e design di tutte le schermate.
+
+## Passaggio di consegne
+Per riprendere il lavoro leggere **`docs/HANDOFF.md`** (stato esatto, procedure, trappole, prossimi passi, decisioni aperte) prima di tutto il resto.
+
 ## Stato del lavoro
 Vedi `docs/ROADMAP.md` (milestone e stato) e `docs/PRODUCT_REQUIREMENTS.md` (backlog con ID). Aggiornarli a fine di ogni milestone.
 
