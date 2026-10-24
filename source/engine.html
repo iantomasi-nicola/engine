@@ -141,7 +141,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .xp-t b{font-weight:500;font-size:14.5px}
 .xp-t small{font-size:12.5px;color:var(--muted)}
 .xp-row.bad .xp-t small{color:var(--bad)}
-.tab-dot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+.tab-dot{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin-left:4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;vertical-align:5px;line-height:1}.tab-dot.soon{background:var(--warn,#c77d00)}.tab-l{white-space:nowrap}
 
 .en-card{display:flex;flex-direction:column;gap:12px}
 .en-big{display:flex;flex-direction:column;gap:2px}.en-big b{font-size:34px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.en-big span{font-size:13px;color:var(--muted)}
@@ -1400,7 +1400,7 @@ body.live-mode .main{padding-bottom:120px!important}
 .sg-row{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;text-align:left;width:100%;padding:12px 0;border-top:1px solid var(--line)}.sg-row:first-of-type{border-top:0}
 .sg-chk{width:24px;height:24px;border-radius:50%;border:1.8px solid var(--surface-3);display:grid;place-items:center;color:transparent;margin-top:1px}.sg-chk .ic{width:15px;height:15px}
 .sg-row[aria-pressed=true] .sg-chk{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-.sg-t b{display:block;font-size:15px;font-weight:600}.sg-t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}.sg-d{display:block;font-size:14px;margin-top:2px}.sg-d strong{font-weight:650}
+.sg-item{border-top:1px solid var(--line)}.sg-item:first-of-type{border-top:0}.sg-item .sg-row{border-top:0;padding-bottom:6px}.sg-adj{display:flex;align-items:center;gap:6px;padding:0 0 10px 38px}.sg-adj .inp{width:74px;min-height:36px;text-align:center}.sg-adj span{color:var(--muted);font-size:13px}.sg-row.tip{cursor:default}.sg-chk.tipi{border:0;color:var(--muted)}.sg-t b{display:block;font-size:15px;font-weight:600}.sg-t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}.sg-d{display:block;font-size:14px;margin-top:2px}.sg-d strong{font-weight:650}
 .sg-tag{font-style:normal;font-size:11px;font-weight:650;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:4px;vertical-align:1px}
 .sg-done{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:8px 0}.sg-done .ic{width:16px;height:16px;flex:none;color:var(--good)}.sg-done span{flex:1;min-width:0}
 .sg-same{border-top:1px solid var(--line);padding-top:6px}.sg-same>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}.sg-s{padding:6px 0}.sg-s b{display:block;font-size:14px;font-weight:600}.sg-s small{font-size:12.5px;color:var(--muted)}
@@ -3987,7 +3987,7 @@ const colorVar = c => `var(--${COLOR_TOKENS.includes(c) ? c : "accent"})`;
 /* ================= navigation ================= */
 const TABS = [["today", "Today", "home"], ["train", "Train", "fitness"], ["plan", "Fuel", "plate"], ["progress", "Progress", "chart"], ["dash", "Dashboard", "dash"]];
 const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
-let fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const xp = k === "pantry" ? (E => E.expired.length + E.soon.length)(expiryList()) : 0; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`; }).join("")}</nav>`;
+const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const E = k === "pantry" ? expiryList() : null, xp = E ? E.expired.length + E.soon.length : 0, why = E ? [E.expired.length ? `${E.expired.length} expired` : "", E.soon.length ? `${E.soon.length} to use soon` : ""].filter(Boolean).join(" · ") : ""; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}${xp ? ` title="${why}"` : ""}><span class="tab-l">${l}${xp ? `<span class="tab-dot${E.expired.length ? "" : " soon"}" role="img" aria-label="${why}">${xp}</span>` : ""}</span></button>`; }).join("")}</nav>`;
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
   return (side ? [...TABS, ["timer", "Timer", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
@@ -7774,7 +7774,8 @@ function lastFor(e, date) {
 }
 /* ---------- progression engine: final-set RIR drives the next session ---------- */
 const exTarget = e => e.scheme ? e.scheme.reduce((a, b) => a + b, 0) : e.range ? e.range[1] : e.reps || null;
-const loadStep = l => (l || 0) >= 20 ? 2.5 : 1.25;
+/* the smallest weight you add: Settings › Live workouts › Load progression (2 kg until you change it) */
+const loadStep = () => { const v = +FIT().player?.loadStep; return v > 0 ? v : 2; };
 function decideNext(e, sets, loadNow) {
   if (!sets?.length) return null;
   const final = sets.find(x => x.final) || sets[sets.length - 1], tRir = e.rir != null ? e.rir : 2;
@@ -8101,17 +8102,31 @@ function editScript(script, ed) {
       if (re.test(line)) return line.replace(re, (m, pre, sg, n, kg) => { if (+n.replace(",", ".") === ed.to) return m; hit++; return pre + sg + fmtKg(ed.to) + kg; });
       if (ed.to > 0) { hit++; return line.replace(new RegExp(`(${nm})`, "i"), `$1 +${fmtKg(ed.to)}kg`); } return line; }
     if (ed.type === "swap") return line.replace(new RegExp(nm, "i"), () => { hit++; return ed.to; });
+    if (ed.type === "ring") { const re = /\b(rings?|anelli)\s*(?:@|h|height|altezza|length|lunghezza|at)?\s*\d+(?:[.,]\d+)?\s*(?:cm|holes?|fori|foro)?/i, txt = `rings ${ed.n}${ed.unit === "cm" ? "cm" : " " + ed.unit}`;
+      hit++; return re.test(line) ? line.replace(re, txt) : line.replace(/\s*$/, " " + txt); }
     return line;
   }).join("\n");
   return hit ? out : null;
+}
+/* rings: when an exercise on rings was too easy (reps in hand) the rings go lower, when reps were missed they go higher. The strap length in the script (or from last time) moves one notch;
+   without a length there is nothing to write, so it stays a tip. Only rows and push-ups, where the height changes the difficulty. */
+const parseRing = t => { const m = String(t || "").match(/(\d+(?:[.,]\d+)?)\s*(cm|holes?|fori|foro)?/i); return m ? { n: +m[1].replace(",", "."), unit: (m[2] || "cm").toLowerCase().replace(/^holes$/, "hole").replace(/^fori$|^foro$/, "hole") } : null; };
+function ringAdvice(e, p, L) {
+  if (!/\b(rows?|rematore|push-?ups?|piegamenti|flessioni)\b/i.test(e.name) || !(/ring|anell/i.test(e.name) || e.ring || p?.last?.ring)) return null;
+  const easy = p && (p.kind === "load" || p.kind === "reps"), hard = p && p.kind === "none" && /^Missed/.test(p.text); if (!easy && !hard) return null;
+  const cur = parseRing(e.ring || p.last?.ring), notch = cur && cur.unit === "hole" ? 1 : 5, dir = easy ? 1 : -1, tip = easy ? "lower the rings: harder" : "raise the rings: easier", why = easy ? "You had reps in hand" : "Reps were missed last time";
+  if (!cur) return { name: e.name, from: "", to: tip.charAt(0).toUpperCase() + tip.slice(1), why, last: "", edit: null };
+  const n = Math.max(1, cur.n + dir * notch), ed = { type: "ring", name: e.name, n, unit: cur.unit };
+  return { from: `strap ${cur.n} ${cur.unit}`, to: `${n} ${cur.unit} · ${tip}`, why, last: "", edit: ed };
 }
 function sgBuild(L) {
   const items = [], same = [], seen = new Set(), st = L.date === todayISO() ? loadState() : null, soft = st && (st.ready === "yellow" || st.ready === "red");
   for (const t of L.tasks) if (t.t === "set") for (const e of t.exs) { const k = normEx(e.name); if (seen.has(k)) continue; seen.add(k);
     const p = progressionFor(e, L.date); if (!p) continue; const last = lastText(p.last), base = { name: e.name, why: p.text, last: `Last ${fmtDM(p.last.date)}: ${last}` }; let ed = null, from = "", to = "";
-    if (p.kind === "load") { const cur = e.load ?? p.last.load ?? 0; ed = { type: "load", name: e.name, to: p.to }; from = cur ? `+${fmtKg(cur)} kg` : "bodyweight"; to = `+${fmtKg(p.to)} kg`; }
+    if (p.kind === "load") { const cur = e.load ?? p.last.load ?? 0, tgt = Math.max(0, L.sg?.over?.["p:" + k] ?? p.to); ed = { type: "load", name: e.name, to: tgt }; from = cur ? `+${fmtKg(cur)} kg` : "bodyweight"; to = `+${fmtKg(tgt)} kg`; }
     else if (p.kind === "reps" && e.reps && !e.scheme && !e.range) { ed = { type: "reps", name: e.name, to: e.reps + p.delta }; from = `${e.reps} reps`; to = `${e.reps + p.delta} reps`; }
-    if (ed && editScript(L.script, ed)) items.push({ id: "p:" + k, kind: "prog", ...base, from, to, edit: ed }); else same.push({ ...base, id: "s:" + k });
+    if (ed && (editScript(L.script, ed) || (ed.type === "load" && L.sg?.over?.["p:" + k] != null))) items.push({ id: "p:" + k, kind: "prog", ...base, from, to, edit: ed, adj: ed.type === "load" ? loadStep() : 0 }); else same.push({ ...base, id: "s:" + k });
+    const rg = ringAdvice(e, p, L); if (rg) items.push({ id: "r:" + k, kind: "ring", ...base, ...rg });
   }
   if (soft && !L.sg?.lightDone) items.push({ id: "lighter", kind: "lighter", name: "A lighter day", from: "every block of 3+ sets", to: "one set less", why: `Readiness is ${st.ready === "red" ? "low" : "reduced"}${readyWhy(st) ? ` (${readyWhy(st)})` : ""}`, last: "", edit: { type: "sets_all", by: -1 } });
   for (const a of L.sg?.ai || []) if (editScript(L.script, a.edit)) items.push(a);
@@ -8119,12 +8134,14 @@ function sgBuild(L) {
 }
 const sgOn = L => (L.sg = L.sg || { on: {}, ai: [], done: [], undo: null });
 ACT["sg-toggle"] = el => { const L = LV(), g = sgOn(L), id = el.dataset.id; g.on[id] = !g.on[id]; scheduleRender(); };
-ACT["sg-all"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), all = B.items.every(i => g.on[i.id]); B.items.forEach(i => { g.on[i.id] = !all; }); scheduleRender(); };
-ACT["sg-apply"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => g.on[i.id]); if (!pick.length) return;
+/* the weight is yours to adjust: no plates of that size, then add what you can */
+ACT["sg-load"] = el => { const L = LV(), g = sgOn(L), id = el.dataset.id, it = sgBuild(L).items.find(i => i.id === id); if (!it?.edit) return; g.over = g.over || {}; g.over[id] = Math.max(0, Math.round((it.edit.to + (+el.dataset.d) * loadStep()) * 100) / 100); g.on[id] = true; scheduleRender(); };
+ACT["sg-all"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => i.edit), all = pick.every(i => g.on[i.id]); pick.forEach(i => { g.on[i.id] = !all; }); scheduleRender(); };
+ACT["sg-apply"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => i.edit && g.on[i.id]); if (!pick.length) return;
   const old = L.script; let sc = old, n = 0; const names = [];
-  for (const i of pick) { const r = editScript(sc, i.edit); if (r) { sc = r; n++; names.push(i.kind === "lighter" ? "lighter day" : i.name); if (i.kind === "lighter") g.lightDone = true; } }
+  for (const i of pick) { const r = editScript(sc, i.edit); if (r) { sc = r; n++; names.push(i.kind === "lighter" ? "lighter day" : i.kind === "ring" ? i.name + " rings" : i.name); if (i.kind === "lighter") g.lightDone = true; } }
   if (!n || !applyEdit(sc)) { toast("Nothing could be changed in the script."); return; }
-  g.on = {}; g.ai = (g.ai || []).filter(a => !pick.some(i => i.id === a.id)); g.done = names; g.undo = old; saveWK(); scheduleRender();
+  g.on = {}; g.over = {}; g.ai = (g.ai || []).filter(a => !pick.some(i => i.id === a.id)); g.done = names; g.undo = old; saveWK(); scheduleRender();
   toast(`${n} change${n === 1 ? "" : "s"} written into the workout`, () => { const L2 = LV(); if (!L2) return; applyEdit(old); const g2 = sgOn(L2); g2.done = []; g2.undo = null; g2.lightDone = false; saveWK(); scheduleRender(); }); };
 ACT["sg-ai"] = async () => { const L = LV(), g = sgOn(L); if (!Sync.sample || g.busy) return; g.busy = true; g.err = ""; scheduleRender();
   const st = L.date === todayISO() ? loadState() : null, hist = [...new Set(L.tasks.filter(t => t.t === "set").flatMap(t => t.exs.map(e => e.name)))].map(n => { const l = lastFor({ name: n }, L.date); return l ? `${n}: ${lastText(l)} (${l.date})` : `${n}: no history`; });
@@ -8143,19 +8160,21 @@ Reply with only JSON: {"changes":[{"change":"...", "exercise":"...", "block":"..
     if (!n) g.err = "The AI found nothing worth changing."; } catch (e) { g.err = sampleErr(e); }
   g.busy = false; saveWK(); scheduleRender(); };
 function livePreview(L) {
-  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), n = B.items.filter(i => g.on[i.id]).length, st = B.st;
+  const tasks = L.tasks, est = Math.round(estimateScript(tasks) / 60), P = L.prog ? progById(L.prog) : null, g = sgOn(L), B = sgBuild(L), n = B.items.filter(i => i.edit && g.on[i.id]).length, st = B.st;
   const ready = st && st.ready ? `<span class="pv-ready ${st.ready}"><i></i>${st.ready === "green" ? "Ready" : st.ready === "yellow" ? "Reduced" : "Low"}${st.ready !== "green" && readyWhy(st) ? ` · ${esc(readyWhy(st))}` : ""}</span>` : "";
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
   h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-meta"><span>${ic("timer", "sm")}≈ ${est} min</span><span>${tasks.filter(t => t.t === "set").length} sets</span>${P ? `<span class="chip-s">${esc(P.name)} · week ${L.week}/${P.weeks}${isDeload(P, L.week) ? " · deload" : ""}</span>` : ""}${ready}</div>
     <div class="wl-tags">${blockTags(L.script).map(x => `<i>${esc(x)}</i>`).join("")}</div>${P ? `<div class="faint" style="font-size:12.5px">${esc(progRuleText(P, L.week))}${P.over?.[L.tplId] ? ` · edited weeks: ${Object.keys(P.over[L.tplId]).map(w => "W" + w).join(", ")}` : ""}</div>` : ""}</section>`;
-  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Suggested changes${B.items.length ? ` · ${B.items.length}` : ""}</span>${B.items.length > 1 ? `<button class="link" data-act="sg-all">${B.items.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>${recapNote(L)}
-    ${B.items.length ? B.items.map(i => `<button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span><span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span></button>`).join("")
+  h += `<section class="lv-card sg"><div class="lv-eb"><span class="eyebrow">Suggested changes${B.items.length ? ` · ${B.items.length}` : ""}</span>${B.items.filter(i => i.edit).length > 1 ? `<button class="link" data-act="sg-all">${B.items.filter(i => i.edit).every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>${recapNote(L)}
+    ${B.items.length ? B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
+        const adj = i.adj && i.edit?.type === "load" ? `<span class="sg-adj" role="group" aria-label="Adjust the load of ${esc(i.name)}"><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="-1" aria-label="Less weight">${ic("minus", "sm")}</button><input class="inp sm" inputmode="decimal" value="${fmtKg(i.edit.to)}" data-chg="sg-load" data-id="${esc(i.id)}" aria-label="Load in kg"><span>kg</span><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="1" aria-label="More weight">${ic("plus", "sm")}</button></span>` : "";
+        return i.edit ? `<div class="sg-item"><button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span>${body}</button>${adj}</div>` : `<div class="sg-row tip"><span class="sg-chk tipi">${ic("trend", "sm")}</span>${body}</div>`; }).join("")
       : g.done.length ? "" : `<p class="muted" style="margin:0;font-size:14px">${B.same.length ? "Nothing to change: your last sessions say repeat." : "First time with these exercises: today is your baseline. Log the RIR of each final set and next time you get a suggestion."}</p>`}
     ${g.done.length ? `<div class="sg-done">${ic("check", "sm")}<span>Written in: ${esc(g.done.join(", "))}</span>${g.undo ? `<button class="link" data-act="sg-undo">Undo</button>` : ""}</div>` : ""}
     ${B.same.length ? `<details class="sg-same"><summary>Staying the same · ${B.same.length}</summary>${B.same.map(i => `<div class="sg-s"><b>${esc(i.name)}</b><small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></div>`).join("")}</details>` : ""}
     ${g.err ? `<div class="note">${esc(g.err)}</div>` : ""}
-    <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${B.items.length ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
+    <div class="row sg-acts">${AIF("sugg") ? `<button class="btn soft sm" data-act="sg-ai" ${g.busy ? "disabled" : ""}>${g.busy ? '<span class="spinner"></span>Thinking…' : ic("spark", "sm") + "Ask the AI for ideas"}</button>` : ""}${B.items.some(i => i.edit) ? `<button class="btn primary sm" data-act="sg-apply" ${n ? "" : "disabled"}>${ic("check", "sm")}Apply${n ? ` ${n}` : ""}</button>` : ""}</div></section>`;
   h += `<section class="lv-card">${prepChips()}</section>`;
   const dk = `<div class="lv-dock"><button class="btn tonal" data-act="lv-edit">${ic("edit", "sm")}Edit</button><button class="btn primary grow" data-act="lv-begin">${ic("play", "sm")}Start workout</button></div>`;
   h += `${dk}</div><aside class="lv-side show"><section class="lv-card"><div class="lv-eb"><span class="eyebrow">Workout</span><button class="link" data-act="lv-edit">${ic("edit", "sm")} Edit</button></div>${scriptPreview(L.script)}</section></aside></div>`;
@@ -9606,6 +9625,7 @@ function playerSettings() {
   return `<div class="grid4">${fitSel("player.voice", "Voice call-outs", [["it", "Italiano"], ["en", "English"], ["off", "Off · beeps only"]])}${fitSel("player.calls", "Minute call-outs", [["on", "On"], ["off", "Off"]])}<div class="field"><span class="flabel">Countdown before starting</span>${prepChips().replace('<span>Countdown</span>', '')}</div>
     <div class="field"><span class="flabel">Sounds</span><button class="btn ${w.mute ? "soft" : "tonal"}" data-act="snd-mute">${ic(w.mute ? "bellOff" : "bell", "sm")}${w.mute ? "Muted · vibration" : "On"}</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="snd-test">${ic("play", "sm")}Test 3-2-1</button><button class="btn soft sm" data-act="timer-open">${ic("timer", "sm")}Open the timer</button></div>
+    <div class="set-sub"><span class="flabel">Load progression</span><div class="grid2">${fitIn("player.loadStep", "Weight added when you progress", "kg")}</div><small class="faint">What a suggestion adds to a weighted exercise when you hit every rep with reps in hand: 2 kg until you change it. Set it to the smallest plate you can add; each suggestion can still be adjusted before you apply it.</small></div>
     <div class="set-sub"><span class="flabel">Cycling</span><div class="grid2">${fitIn("bike.ftp", "FTP", "W")}${fitIn("bike.speed", "Usual speed", "km/h")}</div><small class="faint">Power steps ("- 10m 88-94% FTP", "- 5m Z4") show and say watts; distance steps ("- 20km Z2") are timed from your usual speed.</small></div>
     <div class="faint" style="font-size:12.5px">Beeps are scheduled on the audio clock, so they land exactly on the second. AMRAP: the minute you're in, the last 30 s and a spoken 10-second countdown. Running: each step's target is spoken as it starts. Keep the phone unlocked during a session (the screen stays on by itself).</div>`;
 }
@@ -12278,9 +12298,6 @@ ACT["jr-ai"] = async () => {
   try { const r = await Sync.sample(jrAiPrompt(P.a, P.b < t ? P.b : t), { modelTier: "quick" }); UI.jrAi = { text: String(r.text || "").trim() || "No answer." }; } catch (e) { UI.jrAi = { text: sampleErr(e) }; }
   scheduleRender();
 };
-/* Fuel: one row of four, no second bar under it */
-fuelNav = () => { const xp = (E => E.expired.length + E.soon.length)(expiryList());
-  return `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${k === "pantry" && xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`).join("")}</nav>`; };
 if (location.hash === "#dash") { UI.tab = "progress"; UI.progSeg = "reports"; }
 SETTINGS_CARDS.push({ o: -2, fn: navPosCard });
 /* on a phone the tab rows scroll: keep the open one in view */
@@ -13595,6 +13612,7 @@ function catGuess(name, tags) {
 { const _off = offToFood; offToFood = function (code, p) { const f = _off(code, p); const g = catGuess(f.name, p?.categories_tags); if (g) f.cat = g.cat; return f; }; }
 CHG["pl-from"] = v => { const sh = S_(); if (!v) return; sh.from = v; if (!sh.to || sh.to < v) sh.to = v; renderSheet(); };
 CHG["pl-to"] = v => { const sh = S_(); if (!v) return; sh.to = v; if (!sh.from || sh.from > v) sh.from = v; renderSheet(); };
+CHG["sg-load"] = (v, el) => { const L = LV(), g = L && sgOn(L), id = el.dataset.id, n = num(v); if (!g || !(n >= 0)) return; g.over = g.over || {}; g.over[id] = Math.round(n * 100) / 100; g.on[id] = true; scheduleRender(); };
 CHG["fd-cat"] = v => { const d = S_().draft; d.cat = v; d.catUser = true; };
 /* once: foods you scanned or estimated get the aisle their name says (not the ones whose aisle you chose) */
 let CATFIX_DONE = false;

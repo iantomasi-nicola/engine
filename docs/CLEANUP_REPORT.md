@@ -214,3 +214,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** le sessioni dal vivo salvate con `adj`/`holdAdd` si leggono senza problemi (campi ignorati); nuovo `L.sg` nel documento dell'allenamento in corso.
 
 **Aperto:** le modifiche di tenuta (hold) e gli schemi di ripetizioni (5-3-2) non producono modifiche automatiche (restano in «Staying the same»); la logica di progressione è quella esistente basata sul RIR dell'ultima serie: affinamenti in M11.
+
+## M10a ritocchi: badge Pantry, peso regolabile, anelli (24/10/2026)
+**Verificato:** `preview-suggestions` esteso (9 test: passo come impostazione, −/+ e valore scritto, anelli con e senza lunghezza, badge della scheda Pantry); suite completa.
+
+**Eliminato / unificato:** `fuelNav` era definita due volte (la seconda, più in basso, sovrascriveva la prima senza dirlo): ora una sola, `const`; `loadStep` non dipende più dal carico (1,25/2,5 fissi) ma dall'impostazione.
+
+**Compatibilità:** nuovo `settings.fit.player.loadStep` opzionale (default 2); `L.sg.over` solo nell'allenamento in corso.
+
+**Aperto:** il verso «strap più lunga = anelli più bassi» è una convenzione (il campo si chiama «Ring length»): se la tua è l'altezza dal suolo, dimmelo e inverto il segno; il consiglio a parole resta valido in entrambi i casi.
