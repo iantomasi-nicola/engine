@@ -834,6 +834,24 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .hm-g i{aspect-ratio:1;border-radius:3px;background:var(--surface-2);min-width:0}
 .hm-g i.now{outline:2px solid var(--ink);outline-offset:-1px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
+.jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
+.jr-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.jr-row button{min-height:48px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.jr-row.emo button{font-size:26px;line-height:1}
+.jr-row button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.jr-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.jr-card .jr-row{margin-top:8px}
+.jr-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.jr-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.jr-h{text-align:center;color:var(--faint);font-size:11px}
+.jr-d{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:52px;padding:4px 2px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;min-width:0;cursor:pointer}
+.jr-d small{font-size:10.5px;color:var(--muted)}.jr-d b{font-size:15px;line-height:1.1}
+.jr-d i{position:absolute;left:4px;bottom:3px;height:3px;max-width:calc(100% - 8px);border-radius:2px;background:var(--accent)}
+.jr-d.none{border-style:dashed;background:transparent}.jr-d.none b{color:var(--faint);font-weight:400}.jr-d.now{outline:2px solid var(--ink);outline-offset:-1px}
+.jr-cal.wk .jr-d{min-height:68px}.jr-cal.wk .jr-d b{font-size:20px}
+.jr-year{display:flex;flex-direction:column;gap:2px}
+.jr-ym{display:grid;grid-template-columns:34px minmax(0,1fr) 34px 44px;gap:8px;align-items:center;padding:8px 2px;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.jr-ym .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}.jr-ym .bar i{display:block;height:100%;background:var(--accent)}
+.jr-ym small{color:var(--faint);text-align:right}
 .hm-leg{margin-top:10px;flex-wrap:wrap;gap:10px}
 .mix{display:flex;flex-direction:column;gap:12px}
 .mix-r{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 40px;gap:10px;align-items:center}
@@ -3296,6 +3314,80 @@ function weightsSeries(withEst = false) {
   return Object.entries(w).sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+/* ================= daily journal: data =================
+   Mood, energy, productivity and stress (1–5) and a one-line note live in the day's log document as
+   jr = { p, m, e, s, n, t }: they sync, back up, export and stay private with the rest of the log.
+   t holds the time each field was last edited, so two devices merge field by field and a cleared field
+   (kept as null) is an edit too. A day without an entry is not a zero: it is left out of every average. */
+const JR_KEYS = ["p", "m", "e", "s"], JR_NAME = { p: "productivity", m: "mood", e: "energy", s: "stress" };
+const JR_FROM_H = 18, JR_MIN_N = 14, JR_MIN_RHO = .3;
+const jrOf = d => logGet(d)?.jr || null;
+const jrHas = (j, k) => !!j && Number.isInteger(j[k]) && j[k] >= 1 && j[k] <= 5;
+const jrFilled = d => { const j = jrOf(d); return !!j && (JR_KEYS.some(k => jrHas(j, k)) || (typeof j.n === "string" && j.n.length > 0)); };
+function jrSet(d, k, v) {
+  if (!JR_KEYS.includes(k) || (v !== null && !(Number.isInteger(v) && v >= 1 && v <= 5))) return;
+  mutateLog(d, x => { const j = { ...(x.jr || {}) }; j[k] = v; j.t = { ...(j.t || {}), [k]: Math.max(Date.now(), (j.t?.[k] || 0) + 1) }; x.jr = j; });
+}
+function jrNote(d, text) {
+  const n = String(text || "").replace(/\s+/g, " ").trim().slice(0, 140);
+  mutateLog(d, x => { const j = { ...(x.jr || {}) }; j.n = n || null; j.t = { ...(j.t || {}), n: Math.max(Date.now(), (j.t?.n || 0) + 1) }; x.jr = j; });
+}
+/* the same day edited on two devices: per field, the newest edit wins (a tie goes to the copy from the server) */
+function jrMergeDay(a, b) {
+  const x = a?.jr, y = b?.jr; if (!x && !y) return null; if (!x) return clone(y); if (!y) return clone(x);
+  const out = { t: {} };
+  for (const k of [...JR_KEYS, "n"]) { const tx = x.t?.[k] || 0, ty = y.t?.[k] || 0, src = tx > ty ? x : y, st = tx > ty ? tx : ty;
+    if (k in src) { out[k] = src[k] ?? null; if (st) out.t[k] = st; } else if (k in (src === x ? y : x)) { const o = src === x ? y : x; out[k] = o[k] ?? null; if (o.t?.[k]) out.t[k] = o.t[k]; } }
+  return out;
+}
+const jrSig = j => JSON.stringify([...JR_KEYS, "n"].map(k => [j?.[k] ?? null, j?.t?.[k] || 0]));
+/* a server copy of a month, with this device's newer journal fields put back in; null when the server copy already has everything */
+function jrMergeDoc(loc, rem) {
+  let changed = false; const out = clone(rem);
+  for (const [d, x] of Object.entries(loc?.days || {})) { if (!x.jr) continue;
+    const m = jrMergeDay(x, rem.days?.[d]); if (jrSig(m) !== jrSig(rem.days?.[d]?.jr)) { out.days = out.days || {}; out.days[d] = { ...(out.days[d] || {}), jr: m }; changed = true; } }
+  return changed ? out : null;
+}
+/* the days with an entry in [from, to], oldest first, with the values that were given */
+function jrDays(from, to) {
+  const out = [];
+  for (const mk of Object.keys(S.logm || {})) { if (mk < from.slice(0, 7) || mk > to.slice(0, 7)) continue;
+    for (const [d, x] of Object.entries(S.logm[mk]?.days || {})) if (d >= from && d <= to && jrFilled(d)) { const r = { d, n: x.jr.n || null }; for (const k of JR_KEYS) r[k] = jrHas(x.jr, k) ? x.jr[k] : null; out.push(r); } }
+  return out.sort((a, b) => a.d.localeCompare(b.d));
+}
+/* how good a day felt, from the values present (stress counts the other way); needs three of the four */
+function jrScore(r) { const v = [r.p, r.m, r.e, r.s == null ? null : 6 - r.s].filter(x => x != null); return v.length >= 3 ? v.reduce((a, b) => a + b, 0) / v.length : null; }
+function jrStats(from, to) {
+  const rows = jrDays(from, to), mean = {}, n = {};
+  for (const k of JR_KEYS) { const v = rows.map(r => r[k]).filter(x => x != null); n[k] = v.length; mean[k] = v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }
+  const ranked = rows.map(r => ({ ...r, c: jrScore(r) })).filter(r => r.c != null).sort((a, b) => (b.c - a.c) || a.d.localeCompare(b.d)), k = Math.min(3, Math.floor(ranked.length / 2));
+  const span = daysBetween(from, to) + 1;
+  return { from, to, span, filled: rows.length, coverage: span > 0 ? rows.length / span : 0, mean, n, rows, best: k ? ranked.slice(0, k) : null, worst: k ? ranked.slice(-k).reverse() : null };
+}
+/* rank correlation (ties share the average rank); null when it can't be told */
+function jrSpearman(xs, ys) {
+  const n = xs.length; if (n < 3 || ys.length !== n) return null;
+  const rank = a => { const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]), r = Array(n); for (let i = 0; i < n;) { let j = i; while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++; const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k][1]] = avg; i = j + 1; } return r; };
+  const a = rank(xs), b = rank(ys), ma = a.reduce((s, v) => s + v, 0) / n, mb = b.reduce((s, v) => s + v, 0) / n; let sab = 0, saa = 0, sbb = 0;
+  for (let i = 0; i < n; i++) { sab += (a[i] - ma) * (b[i] - mb); saa += (a[i] - ma) ** 2; sbb += (b[i] - mb) ** 2; }
+  return saa > 0 && sbb > 0 ? sab / Math.sqrt(saa * sbb) : null;
+}
+/* what the Check-in already holds, per day: the Journal reads it, it never asks for it again */
+const JR_EXT = [["sleep", "sleep", ["more", "less"], x => x.sleep > 0 ? +x.sleep : null], ["hrv", "HRV", ["higher", "lower"], x => x.hrv > 0 ? +x.hrv : null], ["rhr", "resting heart rate", ["a higher", "a lower"], x => x.rhr > 0 ? +x.rhr : null],
+  ["steps", "steps", ["more", "fewer"], x => x.steps > 0 ? +x.steps : null], ["train", "training time", ["more", "less"], x => (x.workouts || []).reduce((a, w) => a + (w.sport && w.sport !== "Rest" ? +w.min || 0 : 0), 0)]];
+function jrCorr(from, to) {
+  const days = jrDays(from, to), rows = [];
+  for (const a of JR_KEYS) for (const [b, label, dir, get] of JR_EXT) {
+    const pairs = days.map(r => [r[a], get(logGet(r.d) || {})]).filter(p => p[0] != null && p[1] != null), n = pairs.length; if (n < JR_MIN_N) continue;
+    const rho = jrSpearman(pairs.map(p => p[0]), pairs.map(p => p[1])); if (rho == null || Math.abs(rho) < JR_MIN_RHO) continue;
+    const z = Math.atanh(clamp(rho, -.9999, .9999)), se = 1 / Math.sqrt(n - 3), ci = [Math.tanh(z - 1.96 * se), Math.tanh(z + 1.96 * se)]; if (ci[0] <= 0 && ci[1] >= 0) continue;
+    const nm = JR_NAME[a]; rows.push({ a, b, rho, n, ci, text: `${nm[0].toUpperCase() + nm.slice(1)} tends to coincide with ${dir[rho > 0 ? 0 : 1]} ${label}` });
+  }
+  return { rows: rows.sort((p, q) => Math.abs(q.rho) - Math.abs(p.rho)).slice(0, 6), n: days.length, need: JR_MIN_N };
+}
+/* the rows of the Excel sheet «Journal» */
+const journalRows = () => allLogDates().filter(jrFilled).map(d => { const j = jrOf(d); return { Date: xd(d), Productivity: j.p ?? null, Mood: j.m ?? null, Energy: j.e ?? null, Stress: j.s ?? null, Note: j.n || "" }; });
+
 /* ================= memo (recomputed when data changes) ================= */
 let DATA_V = 0; const MEMO = {};
 function memo(key, fn) { const k = key + "|" + DATA_V + "|" + todayISO(); if (MEMO[key]?.k !== k) MEMO[key] = { k, v: fn() }; return MEMO[key].v; }
@@ -4908,6 +5000,7 @@ SHEETS.checkin = sh => {
   const food = S.days[d] ? dayTotals(S.days[d], true) : ZERO();
   let body = "";
   const wl = E.watchMode === "active" ? "Watch AEE" : E.watchMode === "neat" ? "Watch NEAT" : "Watch total";
+  if (past && FEAT("journal")) body += `<button class="ci-more" data-act="jr-open" data-date="${d}"><span><b>Journal</b><small>${jrFilled(d) ? esc(JR_KEYS.filter(k => jrHas(jrOf(d), k)).map(k => `${JR_NAME[k]} ${k === "m" ? jrMoodOf(jrOf(d).m)[0] : jrOf(d)[k]}`).join(" · ") || "One sentence") : "Mood, energy, productivity, stress · ten seconds"}</small></span>${ic("book", "sm")}</button>`;
   if (past) {
     // the three numbers you type; the rest comes from intervals.icu and the plan
     body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
@@ -8714,6 +8807,7 @@ function applyCollection(kind, qs) {
     if (job) { if (job.data === null) delete next[id]; else next[id] = job.data; }
     else if (S[kind][id] !== undefined) next[id] = S[kind][id]; else delete next[id];
   }
+  if (kind === "logm") for (const [mk, rem] of Object.entries(next)) { if (isPending(kind + "|" + mk)) continue; const m = jrMergeDoc(S.logm[mk], rem); if (m) { next[mk] = m; put(kind, mk, m); } }
   if (kind === "queue") notifyQueue(S.queue, next);
   if (!qs.docs.length && !qs.metadata.fromCache && !Sync.known[kind]) {
     // migrate this browser's local data into the account once
@@ -11220,7 +11314,7 @@ exportSheets = function () {
   const buys = (S.shop.buys || []).map(b => ({ Date: xd(b.d), Item: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", Amount: b.g || null, "€": b.eur ?? null, Type: b.x ? "Extra" : "Food", Estimated: b.est ? "yes" : "" }));
   const supp = (S.settings.supps || []).map(x => ({ Supplement: x.name, Dose: x.dose || "", Times: (x.times || []).join(", "), Days: x.days?.length && x.days.length < 7 ? x.days.map(d => DOW[d]).join(" ") : "every day", Stock: x.stock ?? null, Active: x.on === false ? "paused" : "yes" }));
   const photos = (S.body.photos || []).map(p => ({ Date: xd(p.date), Pose: p.pose, "Weight kg": bodyAt(p.date).w ? r1(bodyAt(p.date).w) : null, "In the cloud": p.cloud ? "yes" : "no" }));
-  return [...L, ["Routes", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos]];
+  return [...L, ["Routes", runs], ["Water & caffeine", water], ["Goals", goals], ["Season", season], ["Supplements", supp], ["Pantry", pantry], ["Purchases", buys], ["Progress photos", photos], ["Journal", journalRows()]];
 };
 /* ================= on-screen keyboard: sheets and the field you type in stay above it =================
    Android resizes the page with the keyboard (viewport meta); where it doesn't (iOS, older browsers) the visual
@@ -11240,14 +11334,14 @@ refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[d
 /* ================= features you can switch off: the app stays simple if you don't need them ================= */
 const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
   ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
-  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"]];
+  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"]];
 const FEAT = k => (S.settings?.feat || {})[k] !== false;
 function featCard() { const F = S.settings.feat || {};
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
     ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
 SETTINGS_CARDS.push({ o: -1, fn: featCard });
 ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !FEAT(k); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
-  if (k === "period" && !on && UI.trainSeg === "season") UI.trainSeg = "cal"; if (k === "goals" && !on && UI.progSeg === "goals") UI.progSeg = "overview"; saveSettings(); };
+  if (k === "period" && !on && UI.trainSeg === "season") UI.trainSeg = "cal"; if ((k === "goals" && !on && UI.progSeg === "goals") || (k === "journal" && !on && UI.progSeg === "journal")) UI.progSeg = "overview"; saveSettings(); };
 /* where each switch acts */
 {
   const _phPill = phPill; phPill = (ph, sm) => FEAT("period") ? _phPill(ph, sm) : "";
@@ -11464,6 +11558,7 @@ const subBar = (act, cur, opts) => `<div class="subseg" role="tablist">${opts.ma
 function navFix() {
   const T = UI.trainSeg; if (T === "week") { UI.trainSeg = "cal"; UI.calView = "week"; } else if (T === "races") UI.trainSeg = "season"; else if (["fitness", "running", "records"].includes(T)) { UI.perfSeg = T; UI.trainSeg = "perf"; }
   const P = UI.progSeg; if (P === "energy" || P === "nutrition") { UI.foodSeg = P === "energy" ? "energy" : "intake"; UI.progSeg = "food"; } else if (P === "days" || P === "weeks") { UI.repSeg = "hist"; UI.histSeg = P; UI.progSeg = "reports"; }
+  if (P === "journal" && !FEAT("journal")) UI.progSeg = "overview";
   if (P === "training") { UI.progSeg = "overview"; if (UI.tab === "progress") { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "strength"; } }
   if (UI.repSeg === "days" || UI.repSeg === "weeks") { UI.histSeg = UI.repSeg; UI.repSeg = "hist"; }
   if (UI.tab === "dash") { UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = UI.dashSeg === "month" ? "month" : UI.dashSeg === "all" ? "all" : "week"; }
@@ -11481,10 +11576,11 @@ VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
 };
 ACT["perf-seg"] = el => { UI.perfSeg = el.dataset.k; scheduleRender(); };
 VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
-  const segs = [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["body", "Body"], ["food", "Nutrition"], ["reports", "Reports"]];
-  const sub = { overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", food: "What you ate, and the energy behind it", reports: "Week, month, all-time and every day" }[seg] || "";
+  const segs = [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["body", "Body"], ["food", "Nutrition"], ["reports", "Reports"], ...(FEAT("journal") ? [["journal", "Journal"]] : [])];
+  const sub = { journal: "Mood, energy, productivity and stress", overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", food: "What you ate, and the energy behind it", reports: "Week, month, all-time and every day" }[seg] || "";
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${sub}</div></div>${settingsBtn()}</div><div style="padding:10px 0 12px">${segBar("prog-seg", seg, segs)}</div></header>`;
   if (seg === "goals" && FEAT("goals")) return h + goalsView();
+  if (seg === "journal" && FEAT("journal")) return h + journalView();
   if (seg === "body") return h + bodyView();
   if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"]]) + (f === "energy" ? energyView() : VIEWS.stats(true) + macroGkg()); }
   if (seg === "reports") { const r = UI.repSeg || "week"; UI.dashSeg = r === "month" ? "month" : "week";
@@ -11498,6 +11594,122 @@ ACT["rep-seg"] = el => { UI.repSeg = el.dataset.k; UI.repOff = 0; scheduleRender
 ACT["hist-seg"] = el => { UI.histSeg = el.dataset.k; scheduleRender(); };
 ACT["rep-open"] = () => { UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = "week"; UI.dashSeg = "week"; UI.repOff = -1; scheduleRender(); window.scrollTo(0, 0); };
 ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
+/* ================= daily journal: the entry sheet, Today card, Progress › Journal =================
+   One screen, one tap per answer, saved at once. Today shows a card in the evening while the day is empty;
+   past days open with the same day picker as the Check-in. Recaps skip empty days and always say how many count. */
+const JR_FIELDS = [["p", "Productivity", "Little done", "Very productive"], ["m", "Mood", "Awful", "Great"], ["e", "Energy", "Drained", "Fully charged"], ["s", "Stress", "Calm", "Very stressed"]];
+const JR_MOODS = [["😞", "Awful"], ["🙁", "Low"], ["😐", "Okay"], ["🙂", "Good"], ["😄", "Great"]];
+const jrMoodOf = v => JR_MOODS[clamp(Math.round(v), 1, 5) - 1];
+const jrShow = (k, v) => v == null ? "–" : k === "m" ? jrMoodOf(v)[0] : r1(v);
+SHEETS.journal = sh => {
+  const d = sh.date, j = jrOf(d) || {}, L = logGet(d) || {}, nW = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest").length;
+  const ctx = [L.sleep > 0 ? `${r1(L.sleep)} h sleep` : "", L.hrv > 0 ? `HRV ${L.hrv}` : "", L.steps > 0 ? `${fmtN(L.steps)} steps` : "", nW ? `${nW} workout${nW > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+  const q = ([k, l, lo, hi]) => `<div class="jr-q"><div class="jr-qh"><span class="flabel">${l}</span>${k === "m" && jrHas(j, "m") ? `<small class="faint">${jrMoodOf(j.m)[1]}</small>` : ""}</div>
+    <div class="jr-row${k === "m" ? " emo" : ""}" role="group" aria-label="${l}">${[1, 2, 3, 4, 5].map(v => `<button type="button" data-act="jr-set" data-k="${k}" data-v="${v}" aria-pressed="${j[k] === v}" aria-label="${l} ${v} of 5${k === "m" ? ", " + JR_MOODS[v - 1][1] : ""}">${k === "m" ? JR_MOODS[v - 1][0] : v}</button>`).join("")}</div>
+    <div class="jr-ends"><span>${lo}</span><span>${hi}</span></div></div>`;
+  return { title: "Journal", titleHTML: dayNavHTML(d, "jr-go"),
+    body: `${JR_FIELDS.map(q).join("")}
+      <div class="field"><label for="jr-n">One sentence <span class="faint">(optional)</span></label><input id="jr-n" class="inp" maxlength="140" value="${esc(j.n || "")}" placeholder="What stood out today?" data-chg="jr-note" autocomplete="off"></div>
+      <small class="faint">${ctx ? `From your Check-in: ${esc(ctx)}. ` : ""}Nothing here is required; tap a chosen answer again to clear it.</small>`,
+    foot: `<button class="btn soft" data-act="open-checkin" data-date="${d}">Check-in</button><button class="btn primary" data-act="close-sheet">Done</button>` };
+};
+ACT["jr-open"] = el => { const t = todayISO(), d = el?.dataset?.date || t; openSheet("journal", { date: d > t ? t : d, live: true }); };
+ACT["jr-go"] = el => { const sh = S_(); if (sh?.type !== "journal" || !el.dataset.date) return; const t = todayISO(); sh.date = el.dataset.date > t ? t : el.dataset.date; renderSheet(); };
+ACT["jr-set"] = el => { const sh = S_(), d = sh?.date || todayISO(), k = el.dataset.k, v = +el.dataset.v; jrSet(d, k, jrOf(d)?.[k] === v ? null : v); renderSheet(); };
+CHG["jr-note"] = v => { const sh = S_(); if (sh?.type === "journal") jrNote(sh.date, v); };
+/* Today: shown in the evening while the day is empty; a tap on the mood saves it and opens the rest */
+function journalCard(hour = new Date().getHours()) {
+  const t = todayISO(); if (!FEAT("journal") || hour < JR_FROM_H || jrFilled(t)) return "";
+  return `<section class="card pad jr-card"><div class="row" style="justify-content:space-between"><span class="flabel">How was today?</span><button class="link" data-act="jr-open" data-date="${t}">Journal</button></div>
+    <div class="jr-row emo" role="group" aria-label="Mood">${JR_MOODS.map(([e, l], i) => `<button type="button" data-act="jr-quick" data-v="${i + 1}" aria-label="Mood ${i + 1} of 5, ${l}">${e}</button>`).join("")}</div></section>`;
+}
+ACT["jr-quick"] = el => { const t = todayISO(); jrSet(t, "m", +el.dataset.v); openSheet("journal", { date: t, live: true }); };
+TODAY_CARDS.push({ col: "b", o: 3, fn: () => journalCard() });
+/* the evening nudge: off until switched on; works while Engine is open, like the other reminders */
+function journalTick(now = nowHM()) {
+  const J = S.settings?.jr || {}, R = S.settings?.reminders || {};
+  if (!S.settings || !FEAT("journal") || !J.rem || !R.on || !("Notification" in window) || Notification.permission !== "granted") return;
+  const d = todayISO(), key = d + "|journal"; if (now < (J.at || "21:00") || remSent()[key] === d || jrFilled(d)) return;
+  remMark(key); notify("How was today?", "Mood, energy, productivity and stress: ten seconds.", "engine-journal", { tab: "journal" });
+}
+setInterval(() => journalTick(), 30000);
+navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-tab" && e.data.tab === "journal") { UI.tab = "today"; ACT["jr-open"]({ dataset: {} }); } });
+const jrAiOn = () => !!Sync.sample && S.settings.jr?.ai === true;
+function jrSettingsCard() {
+  if (!FEAT("journal")) return ""; const J = S.settings.jr || {}, sw = (act, on, l, s, dis) => `<label class="row sw-row" style="${dis ? "opacity:.55" : ""}"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(l)}" ${dis ? "disabled" : ""}></button><span>${l}<small class="faint" style="display:block;font-size:12.5px">${s}</small></span></label>`;
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><span class="flabel">Daily journal</span>
+    ${sw("jr-rem", !!J.rem, "Evening reminder", S.settings.reminders?.on ? "A notification if the day is still empty. It comes while Engine is open." : "Turn on notifications in Reminders first.", false)}
+    ${J.rem ? `<div class="row" style="gap:8px;align-items:center"><label class="faint" for="jr-at" style="font-size:13px">Remind me at</label><input id="jr-at" class="inp" type="time" value="${esc(J.at || "21:00")}" data-chg="jr-at" style="max-width:130px"></div>` : ""}
+    ${sw("jr-ai-toggle", !!J.ai && !!Sync.sample, "AI summary", Sync.sample ? "Off by default. It receives only averages and counts, never your notes." : "Add an AI service first.", !Sync.sample)}</section>`;
+}
+SETTINGS_CARDS.push({ o: 1, fn: jrSettingsCard });
+ACT["jr-rem"] = () => { const J = S.settings.jr || {}; S.settings.jr = { ...J, rem: !J.rem }; saveSettings(); scheduleRender(); };
+CHG["jr-at"] = v => { S.settings.jr = { ...(S.settings.jr || {}), at: v || "21:00" }; saveSettings(); };
+ACT["jr-ai-toggle"] = () => { const J = S.settings.jr || {}; S.settings.jr = { ...J, ai: !J.ai }; saveSettings(); scheduleRender(); };
+
+/* Progress › Journal */
+const p2 = n => String(n).padStart(2, "0");
+function jrPeriod(kind, off, today = todayISO()) {
+  if (kind === "week") { const a = addDays(weekStartOf(today), 7 * off), b = addDays(a, 6); return { a, b, label: off === 0 ? "This week" : off === -1 ? "Last week" : `${fmtDM(a)} – ${fmtDM(b)}` }; }
+  if (kind === "year") { const y = +today.slice(0, 4) + off; return { a: `${y}-01-01`, b: `${y}-12-31`, label: String(y) }; }
+  const dt = new Date(+today.slice(0, 4), +today.slice(5, 7) - 1 + off, 1), y = dt.getFullYear(), m = dt.getMonth() + 1, last = new Date(y, m, 0).getDate();
+  return { a: `${y}-${p2(m)}-01`, b: `${y}-${p2(m)}-${p2(last)}`, label: dt.toLocaleString("en", { month: "long", year: "numeric" }) };
+}
+const JR_RANGES = [["week", "Week"], ["month", "Month"], ["year", "Year"]];
+function jrCell(r, k, d, big) {
+  const v = r?.[k] ?? null, tip = `${DOW[dow(d)]} ${fmtDM(d)} · ${v == null ? "no entry" : `${JR_NAME[k]} ${v} of 5${k === "m" ? ", " + jrMoodOf(v)[1] : ""}`}`;
+  return `<button class="jr-d${v == null ? " none" : ""}${d === todayISO() ? " now" : ""}" data-act="jr-open" data-date="${d}" aria-label="${tip}" title="${tip}"><small>${big ? DOW[dow(d)] + " " : ""}${+d.slice(8)}</small><b>${jrShow(k, v)}</b><i style="width:${v == null ? 0 : v * 20}%;${k === "s" ? "background:var(--bad)" : ""}"></i></button>`;
+}
+function journalView() {
+  const today = todayISO(), kind = JR_RANGES.some(r => r[0] === UI.jrRange) ? UI.jrRange : "month", off = Math.min(0, UI.jrOff || 0), P = jrPeriod(kind, off, today), end = P.b < today ? P.b : today;
+  const Q = jrPeriod(kind, off - 1, today), cur = jrStats(P.a, end), prev = jrStats(Q.a, Q.b), met = JR_KEYS.includes(UI.jrMetric) ? UI.jrMetric : "m", byD = Object.fromEntries(cur.rows.map(r => [r.d, r]));
+  let h = `<div class="chips" role="group" aria-label="Period">${JR_RANGES.map(([k, l]) => `<button class="chip" data-act="jr-range" data-k="${k}" aria-pressed="${kind === k}">${l}</button>`).join("")}</div>
+    <div class="jr-nav"><button class="icon-btn sm" data-act="jr-nav" data-d="-1" aria-label="Earlier">${ic("chevL")}</button><b>${esc(P.label)}</b><button class="icon-btn sm" data-act="jr-nav" data-d="1" aria-label="Later" ${off >= 0 ? "disabled" : ""}>${ic("chevR")}</button></div>
+    <div class="card pad"><div class="row" style="justify-content:space-between"><span><b class="num">${cur.filled}</b> of ${cur.span} days filled</span><button class="btn soft sm" data-act="jr-open" data-date="${today}">${ic("plus", "sm")}${jrFilled(today) ? "Edit today" : "Add today"}</button></div>
+    <div class="nut-bar" style="margin-top:8px"><i style="width:${clamp(cur.coverage * 100, 0, 100)}%;background:var(--accent)"></i></div>
+    <small class="faint">Days without an entry are left out of every average, not counted as zero.</small></div>`;
+  if (!cur.filled) return h + `<div class="note">Nothing in this period yet. Tap a day, or add today: four taps and an optional sentence.</div>`;
+  const tile = ([k, l]) => { const m = cur.mean[k], pm = prev.mean[k], dl = m != null && pm != null && cur.n[k] >= 3 && prev.n[k] >= 3 ? m - pm : null;
+    return `<div class="stat"><b>${k === "m" && m != null ? jrMoodOf(m)[0] + " " : ""}${m == null ? "–" : r1(m)}</b><small>${l}${cur.n[k] ? ` · ${cur.n[k]} day${cur.n[k] > 1 ? "s" : ""}` : ""}</small>${dl != null && Math.abs(dl) >= .05 ? `<small class="faint" style="display:block">${dl > 0 ? "+" : "−"}${r1(Math.abs(dl))} vs ${kind === "week" ? "last week" : kind === "month" ? "last month" : "last year"}</small>` : ""}</div>`; };
+  h += `<div class="stat-grid four">${JR_FIELDS.map(f => tile(f)).join("")}</div>
+    <div class="chips" role="group" aria-label="Show">${JR_FIELDS.map(([k, l]) => `<button class="chip" data-act="jr-metric" data-k="${k}" aria-pressed="${met === k}">${l}</button>`).join("")}</div>`;
+  if (kind === "year") {
+    h += `<div class="card pad jr-year">${[...Array(12)].map((_, i) => { const a = `${P.a.slice(0, 4)}-${p2(i + 1)}-01`; if (a > today) return ""; const b = `${a.slice(0, 8)}${p2(new Date(+a.slice(0, 4), i + 1, 0).getDate())}`, s = jrStats(a, b < today ? b : today), m = s.mean[met];
+      return `<button class="jr-ym" data-act="jr-month" data-d="${a}" aria-label="${new Date(+a.slice(0, 4), i, 1).toLocaleString("en", { month: "long" })}: ${m == null ? "no entry" : `${JR_NAME[met]} ${r1(m)} of 5`}, ${s.filled} of ${s.span} days"><span>${new Date(+a.slice(0, 4), i, 1).toLocaleString("en", { month: "short" })}</span><span class="bar"><i style="width:${m == null ? 0 : m * 20}%;${met === "s" ? "background:var(--bad)" : ""}"></i></span><b>${m == null ? "–" : r1(m)}</b><small>${s.filled}/${s.span}</small></button>`; }).join("")}</div>`;
+  } else {
+    const days = []; for (let d = P.a; d <= P.b; d = addDays(d, 1)) days.push(d);
+    h += `<div class="jr-cal${kind === "week" ? " wk" : ""}" role="group" aria-label="${esc(JR_NAME[met])} by day">${kind === "month" ? DOW.map(n => `<small class="jr-h">${n[0]}</small>`).join("") + `<i></i>`.repeat(dow(P.a)) : ""}${days.map(d => d > today ? `<i></i>` : jrCell(byD[d], met, d, kind === "week")).join("")}</div>`;
+    const pts = cur.rows.filter(r => r[met] != null).map(r => [r.d, r[met]]);
+    if (kind === "month" && pts.length >= 3) h += `<div class="card pad"><div class="flabel" style="margin-bottom:6px">${esc(JR_FIELDS.find(f => f[0] === met)[1])} · days with an entry</div>${seriesChart([{ name: JR_NAME[met], color: "var(--accent)", pts }], { fmt: v => r1(v), label: `${JR_NAME[met]} by day`, minPad: .4, h: 160 })}<small class="faint">Days without an entry are skipped, not drawn as zero.</small></div>`;
+  }
+  if (cur.best) { const li = (r, tone) => `<button class="lrow" data-act="jr-open" data-date="${r.d}"><span style="min-width:0"><span class="t">${relDay(r.d)} · ${fmtDM(r.d)}</span><span class="s">${esc(JR_FIELDS.filter(f => r[f[0]] != null).map(f => `${f[1].toLowerCase()} ${f[0] === "m" ? jrMoodOf(r.m)[0] : r[f[0]]}`).join(" · "))}${r.n ? ` · “${esc(r.n)}”` : ""}</span></span></button>`;
+    h += `<div class="section-h"><h2>Best days</h2></div><div class="card">${cur.best.map(r => li(r)).join("")}</div><div class="section-h"><h2>Harder days</h2></div><div class="card">${cur.worst.map(r => li(r)).join("")}</div>`; }
+  const C = jrCorr(P.a, end);
+  h += `<div class="section-h"><h2>Patterns</h2></div>` + (C.n < C.need ? `<div class="note">Patterns need at least ${C.need} days with entries; this period has ${C.n}.</div>` : C.rows.length
+    ? `<div class="card">${C.rows.map(r => `<div class="lrow"><span style="min-width:0"><span class="t" style="white-space:normal">${esc(r.text)}</span><span class="s" style="white-space:normal">rank correlation ${r.rho > 0 ? "+" : "−"}${Math.abs(r.rho).toFixed(2)} (range ${r.ci[0].toFixed(2)} to ${r.ci[1].toFixed(2)}) · ${r.n} days</span></span></div>`).join("")}</div><small class="faint">These are associations, not causes: many pairs are compared, so a few can look linked by chance. Use them as a prompt to look, not as a rule.</small>`
+    : `<div class="note">No clear link between these answers and your sleep, recovery or training in this period.</div>`);
+  if (jrAiOn()) h += `<div class="section-h"><h2>AI summary</h2></div>${UI.jrAi?.text ? `<div class="card pad"><span class="pill">Generated by AI</span><div style="margin-top:8px">${esc(UI.jrAi.text).replace(/\n/g, "<br>")}</div></div>` : ""}<button class="btn tonal sm" data-act="jr-ai" ${UI.jrAi?.busy ? "disabled" : ""}>${ic("spark", "sm")}${UI.jrAi?.busy ? "Thinking…" : "Summarise this period"}</button>`;
+  return h;
+}
+ACT["jr-range"] = el => { UI.jrRange = el.dataset.k; UI.jrOff = 0; scheduleRender(); };
+ACT["jr-nav"] = el => { UI.jrOff = Math.min(0, (UI.jrOff || 0) + +el.dataset.d); scheduleRender(); };
+ACT["jr-metric"] = el => { UI.jrMetric = el.dataset.k; scheduleRender(); };
+ACT["jr-month"] = el => { const t = todayISO(); UI.jrRange = "month"; UI.jrOff = (+el.dataset.d.slice(0, 4) - +t.slice(0, 4)) * 12 + (+el.dataset.d.slice(5, 7) - +t.slice(5, 7)); scheduleRender(); };
+/* what the AI sees: counts and averages, the pattern lines, and the best and hardest dates; never the notes */
+function jrAiPrompt(from, to) {
+  const s = jrStats(from, to), C = jrCorr(from, to), f = k => s.mean[k] == null ? "no data" : `${r1(s.mean[k])} of 5 (${s.n[k]} days)`;
+  return `You are a calm, practical coach. An athlete kept a short daily journal (1–5 scales; for stress, higher is more stress). ${s.filled} of ${s.span} days have an entry; the other days are unknown, not zero.
+Averages: mood ${f("m")}, energy ${f("e")}, productivity ${f("p")}, stress ${f("s")}.
+${s.best ? `Best days: ${s.best.map(r => r.d).join(", ")}. Harder days: ${s.worst.map(r => r.d).join(", ")}.` : ""}
+${C.rows.length ? "Associations seen (rank correlation, not causation): " + C.rows.map(r => `${r.text} (${r.rho.toFixed(2)}, ${r.n} days)`).join("; ") + "." : "No clear association with sleep, recovery or training."}
+Write 3 short lines in Italian: what stands out, one thing that seems to help, one small practical suggestion. Kind and non-judgmental. Do not invent numbers, do not claim causes, do not diagnose.`;
+}
+ACT["jr-ai"] = async () => {
+  const kind = JR_RANGES.some(r => r[0] === UI.jrRange) ? UI.jrRange : "month", P = jrPeriod(kind, Math.min(0, UI.jrOff || 0)), t = todayISO(); if (!jrAiOn()) return;
+  UI.jrAi = { busy: true }; scheduleRender();
+  try { const r = await Sync.sample(jrAiPrompt(P.a, P.b < t ? P.b : t), { modelTier: "quick" }); UI.jrAi = { text: String(r.text || "").trim() || "No answer." }; } catch (e) { UI.jrAi = { text: sampleErr(e) }; }
+  scheduleRender();
+};
 /* Fuel: one row of four, no second bar under it */
 fuelNav = () => { const xp = (E => E.expired.length + E.soon.length)(expiryList());
   return `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}>${l}${k === "pantry" && xp ? `<span class="tab-dot" aria-label="${xp} to check">${xp}</span>` : ""}</button>`).join("")}</nav>`; };

@@ -57,3 +57,18 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Aperto:** lo scanner segnala `spendRangeOf` come «senza riferimenti» (falso positivo: usata con lo spread `...spendRangeOf(`); i 3 vecchi punti di debito (`FA_DEF`, `cFinal`, `plPrefs`) restano per M14; gli acquisti con prezzo stimato (`est`, alimentari come extra) entrano nello speso come già prima, ma la scheda non li distingue: valutare un'etichetta «di cui stimato» (B6, rifinitura).
 
+## M4b Daily Journal (24/10/2026)
+**Verificato:** 20 test nuovi (`tests/journal.test.js`): un tap = un valore salvato, valori non validi rifiutati, giorni vuoti ≠ zero, migliori/peggiori, Spearman contro valori calcolati a mano (anche con ripetizioni), soglie dei pattern e formulazione, unione per campo e snapshot del server, backup→azzeramento→ripristino, nessuna duplicazione col Check-in, 3 viewport senza overflow, card serale, promemoria (una volta, solo a giorno vuoto), AI solo aggregati, interruttore Features; suite completa 117 test, smoke su 3 viewport; controllo visivo di sheet e vista su telefono e desktop.
+
+**Riuso (nessun componente nuovo parallelo):** `dayNavHTML`/`INP["day-pick"]`, `seriesChart`, `segBar`/chip, `kpi`/`stat-grid`, `TODAY_CARDS`, `SETTINGS_CARDS`, `FEATS`, `notify`/`remMark`, `Sync.sample`, `exportSheets`. I dati stanno nel documento mensile del log: sync, backup JSON e isolamento per account restano quelli esistenti.
+
+**Eliminato:** nulla da rimuovere (funzione nuova); nessun campo del Check-in ripetuto.
+
+**Compatibilità dati:** campo opzionale `jr = {p,m,e,s,n,t}` nel giorno del log; i dati precedenti non cambiano; `S.settings.jr` (`rem`, `at`, `ai`) opzionale. Una versione vecchia dell'app ignora `jr` ma, riscrivendo il mese, può non conservarlo: usare un solo dispositivo aggiornato prima di compilare.
+
+**Aperto / dichiarato:**
+1. Il promemoria serale funziona solo con l'app aperta (come gli altri promemoria locali); con push attivo il server non lo conosce ancora.
+2. L'unione per campo protegge il Journal, non gli altri campi del giorno: per quelli resta «l'ultimo documento vince» (limite preesistente del sync).
+3. Le correlazioni sono associazioni su dati osservati: con molti confronti qualcuna può essere casuale (dichiarato in schermata).
+4. `VIEWS.progress` ha ancora una definizione base non più raggiunta (sostituita più sotto): debito preesistente, da togliere in M14.
+
