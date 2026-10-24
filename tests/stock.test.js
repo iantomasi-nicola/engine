@@ -154,3 +154,9 @@ test("the covered list and chips render on a phone without overflow", async () =
   assert.ok(r.card[1] <= r.iw);
   await app.page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "shop-phone.png") });
 });
+
+test("compatibility: an item eaten before this version (pan, no 'took') still gives back its full amount when un-eaten", async () => {
+  const page = await start(F.seed({ withPantry: false }));
+  const g = await page.evaluate(() => { const d = todayISO(); S.shop.pantry["t-rice"] = { g: 50 }; S.days[d].meals.d[0].pan = true; S.days[d].meals.d[0].eaten = true; mutateDay(d, day => { const x = day.meals.d[0]; x.eaten = false; pantryAdjust(x, -1); }); return S.shop.pantry["t-rice"].g; });
+  assert.equal(g, 150);
+});
