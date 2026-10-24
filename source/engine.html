@@ -113,6 +113,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .stock-box{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin-top:8px;border-radius:16px;background:var(--md-sc-high,var(--surface-2))}.stock-box .flabel{display:inline-flex;align-items:center;gap:6px;margin:0}.stock-box .pan-q{margin-left:auto}.sb-v{background:none;padding:2px 4px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:36px}.sb-s{flex-basis:100%;font-size:12.5px}
 .fd-bar{justify-content:space-between;align-items:center;gap:8px}.fd-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fd-macros .inp,.fd-g4 .inp{padding-inline:10px}.fd-serv{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:6px;align-items:center}
 .fd-more{border-radius:16px;background:var(--md-sc-high,var(--surface-2));padding:0 12px}.fd-more>summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;list-style:none}.fd-more>summary::-webkit-details-marker{display:none}.fd-more>summary b{font-weight:600;font-size:14px}.fd-more>summary small{font-size:12.5px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fd-more>summary::after{content:"▾";color:var(--faint);flex:none}.fd-more[open]>summary::after{content:"▴"}.fd-in{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
+.top-row .s{white-space:normal!important;display:block!important;overflow:visible!important}
 .pa-tools{display:flex;flex-direction:column;gap:8px;padding:8px 0 4px}.pa-forecast{margin:8px 0;padding:10px 12px}.pa-forecast summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.pa-forecast summary .faint{font-size:12.5px}.pa-fchips{margin:8px 0 4px}
 .lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
 .lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
@@ -4011,7 +4012,8 @@ VIEWS.foods = function () {
     <div class="row"><button class="btn soft sm" data-act="new-recipe">${ic("recipe", "sm")}Recipe</button><button class="btn ink sm" data-act="new-food">${ic("plus", "sm")}Food</button></div></div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:10px 0 12px">
     <div class="search">${ic("search")}<input id="foods-q" type="search" placeholder="Search foods and recipes" value="${esc(q)}" data-in="foods-q" autocomplete="off"><button class="icon-btn" data-act="open-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
-    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div></div></header>`;
+    <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ["top", "Top"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div></div></header>`;
+  if (seg === "top") return h + topFoodsHTML();
   if (seg === "hidden") { const hf = hiddenFoods().filter(f => !q || matchScore(foodKeys(f), q) > 0).sort((a, b) => a.name.localeCompare(b.name));
     return h + `<div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px"><span class="faint" style="font-size:13px">Deleted foods stay here 3 days, then they're gone for good.</span>${hf.length > 1 ? `<button class="btn soft sm" data-act="fd-unhide-all">Restore all</button>` : ""}</div>
       <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${f.id}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
@@ -4023,6 +4025,30 @@ VIEWS.foods = function () {
   return h;
 };
 
+/* what you actually eat: per food and recipe, how often, how much, in which meals, when last, and what a use costs. Counts what you ticked as eaten;
+   when nothing in the period was ticked, the plan stands in. Cost counts the ingredients that have a price and says so when some don't. */
+function foodUsage(n = 60) {
+  const today = todayISO(), from = addDays(today, -(n - 1)), dates = Object.keys(S.days).filter(d => d >= from && d <= today).sort();
+  const basis = dates.some(d => dayItems(S.days[d]).some(([, it]) => it.eaten)) ? "eaten" : "planned", rows = new Map(), weeks = {};
+  for (const d of dates) for (const [m, it] of dayItems(S.days[d])) {
+    if (it.kind === "quick" || (basis === "eaten" && !it.eaten)) continue;
+    const key = it.kind + ":" + it.ref, r = rows.get(key) || { key, kind: it.kind, ref: it.ref, n: 0, qty: 0, last: "", meals: {}, cost: 0, priced: 0, lines: 0 };
+    r.n++; r.qty += +it.qty || 0; r.last = d > r.last ? d : r.last; r.meals[m] = (r.meals[m] || 0) + 1;
+    for (const [id, g] of itemStockLines(it)) { r.lines++; const k = eurPerG(id); if (k != null) { r.cost += k * g; r.priced++; } }
+    rows.set(key, r); (weeks[weekStartOf(d)] = weeks[weekStartOf(d)] || new Set()).add(key);
+  }
+  const out = [...rows.values()].map(r => ({ ...r, partial: r.priced > 0 && r.priced < r.lines, cost: r.priced ? r.cost : null })).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last));
+  const uses = out.reduce((a, r) => a + r.n, 0), top5 = out.slice(0, 5).reduce((a, r) => a + r.n, 0);
+  return { basis, n, rows: out, uses, top5share: uses ? top5 / uses : 0, variety: Object.keys(weeks).length ? Object.values(weeks).reduce((a, w) => a + w.size, 0) / Object.keys(weeks).length : 0 };
+}
+function topFoodsHTML() {
+  const n = UI.topDays || 60, U = foodUsage(n), today = todayISO(), nm = r => r.kind === "recipe" ? getRecipe(r.ref)?.name : (getFood(r.ref) || BUILTIN[r.ref])?.name;
+  const chips = `<div class="chips">${[30, 60, 90].map(k => `<button class="chip sm" data-act="top-days" data-n="${k}" aria-pressed="${n === k}">${k} days</button>`).join("")}</div>`;
+  if (!U.rows.length) return chips + `<div class="empty"><h3>No data yet</h3><p>Plan a few days, or tick what you eat, and your most-used foods and recipes appear here.</p></div>`;
+  const ins = [`${r0(U.top5share * 100)}% of what you ${U.basis === "eaten" ? "ate" : "planned"} comes from your top 5`, `about ${r1(U.variety)} different foods and recipes a week`, ...(U.basis === "planned" ? ["based on the plan: nothing was ticked as eaten in this period"] : [])];
+  return chips + `<div class="faint" style="font-size:12.5px;padding:4px 2px">${esc(ins.join(" · "))}</div><div class="card">${U.rows.filter(r => nm(r)).slice(0, 40).map(r => { const u = r.kind === "recipe" ? "srv" : (getFood(r.ref)?.unit || "g"), meals = Object.entries(r.meals).sort((a, b) => b[1] - a[1]).map(([m, c]) => `${esc(mealName(m))} ${c}`).join(", "), d = daysBetween(r.last, today);
+    return `<div class="lrow top-row"><button data-act="${r.kind === "recipe" ? "edit-recipe" : "edit-food"}" data-id="${esc(r.ref)}" style="text-align:left;min-width:0"><span class="t">${r.kind === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(nm(r))}</span><span class="s">${r.n}× · avg ${fmtN(r0(r.qty / r.n))} ${u} · ${meals} · last ${d === 0 ? "today" : d === 1 ? "yesterday" : d + " days ago"}${r.cost != null ? ` · ${r.partial ? "≥ " : "≈ "}${fmtEur(r.cost / r.n)} a time` : ""}</span></button><span class="end num">${r.n}×</span></div>`; }).join("")}</div>`;
+}
 function hiddenFoods() { return Object.values(S.foods || {}).filter(x => x && x.hidden && BUILTIN[x.id]).map(x => BUILTIN[x.id]); }
 /* ================= stats view ================= */
 VIEWS.stats = function (embedded) {
@@ -5710,6 +5736,7 @@ function endDrag(cancel) {
 (function initFabScroll() { let y = scrollY, t = 0; addEventListener("scroll", () => { if (t) return; t = requestAnimationFrame(() => { t = 0; const f = $("#fab"); if (!f) return; const ny = scrollY; if (Math.abs(ny - y) > 8) { f.classList.toggle("away", ny > y && ny > 200); y = ny; } }); }, { passive: true }); })();
 /* ================= actions ================= */
 const ACT = {};
+ACT["top-days"] = el => { UI.topDays = +el.dataset.n; scheduleRender(); };
 ACT["side-toggle"] = () => { try { localStorage.setItem(SIDE_KEY, sideMode() === "rail" ? "full" : "rail"); } catch (e) {} applySide(); scheduleRender(); };
 const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
@@ -12090,28 +12117,30 @@ function wxBars(date, start, dur) {
   return `<div class="wx-bars" aria-hidden="true">${g}</div><div class="wx-ax"><span>${hrs[0][0].slice(11, 13)}</span><span>${hrs[Math.floor(hrs.length / 2)][0].slice(11, 13)}</span><span>${hrs[hrs.length - 1][0].slice(11, 13)}</span></div>`;
 }
 /* one row in Today's training card: forecast at the session's time, and a better time if it rains */
+/* the place the forecast is for, short enough for the row (the full name and coordinates are in the weather sheet) */
+const wxPlaceShort = () => { const p = WX().place || ""; return !p ? "Location" : /^Current location/.test(p) ? "Current location" : p.split(",")[0]; };
 function wxRow(date, sessions) {
   const out = sessions.filter(w => OUTDOOR(w.sport)); if (!out.length) return "";
   if (!wxKey()) return `<div class="wx-row"><span class="faint">Rain alerts at training time</span><button class="link" data-act="wx-locate">Set location</button></div>`;
   wxFetch();
   const L = logGet(date) || {}, set = L.wxAt || WX().time, nm = date === todayISO() ? Math.ceil(hmMin(nowHM()) / 30) * 30 : 0, at = hmMin(set) + 30 < nm ? minHM(nm) : set, dur = Math.max(30, Math.min(240, out.reduce((a, w) => a + (+w.min || workoutGist(w).min || 60), 0)));
-  const s = wxSlot(date, at, dur), day = date === todayISO() ? "" : "Tomorrow ";
+  const s = wxSlot(date, at, dur), day = date === todayISO() ? "" : "Tomorrow ", loc = `<button class="link wx-loc" data-act="wx-place" aria-label="Weather location: ${esc(WX().place || "set")}" title="${esc(WX().place || "")}">${esc(wxPlaceShort())}</button>`;
   const tin = `<input class="wx-t" type="time" value="${esc(at)}" data-chg="wx-at" data-date="${date}" aria-label="Training time">`;
-  if (!s) return `<div class="wx-row"><span>${day}${tin}</span><span class="faint">${WXC.busy ? "Loading the forecast…" : navigator.onLine ? "Forecast not available yet" : "Offline"}</span></div>`;
+  if (!s) return `<div class="wx-row"><span>${day}${tin}</span><span class="faint">${WXC.busy ? "Loading the forecast…" : navigator.onLine ? "Forecast not available yet" : "Offline"}</span>${loc}</div>`;
   const wet = wxWet(s), main = `${r0(s.c)}°${wet ? ` · ${s.peak >= 4 ? "heavy" : s.peak >= 1 ? "moderate" : "light"} rain, <b>${r1(s.mm)} mm</b> in ${dur}′` : s.mm >= 0.1 ? ` · ${r1(s.mm)} mm` : " · dry"}${s.pr ? ` · ${r0(s.pr)}%` : ""}${s.wind >= 25 ? ` · wind ${r0(s.wind)} km/h` : ""}`;
   let tip = "";
   if (wet) { const D = wxDry(date, at, dur), a = hmMin(at), fmt = m => `${minHM(m)} (${Math.abs(m - a) / 60 | 0} h ${m < a ? "earlier" : "later"})`;
     const opts = [D.early, D.late].filter(m => m != null).sort((x, y) => Math.abs(x - a) - Math.abs(y - a));
     tip = opts.length ? `Dry at ${opts.map(fmt).join(" or ")}` : "No dry window today: take a jacket or go indoors"; }
-  return `<div class="wx-row${wet ? " wet" : ""}"><span class="wx-m">${wxIcon(s)}<span>${day}${tin}<span class="wx-v">${main}</span></span></span><button class="link wx-loc" data-act="wx-place" aria-label="Weather location: ${esc(WX().place || "set")}">${esc((WX().place || "Location").split(",")[0])}</button>${tip ? `<small>${esc(tip)}</small>` : ""}${wxBars(date, at, dur)}</div>`;
+  return `<div class="wx-row${wet ? " wet" : ""}"><span class="wx-m">${wxIcon(s)}<span>${day}${tin}<span class="wx-v">${main}</span></span></span>${loc}${tip ? `<small>${esc(tip)}</small>` : ""}${wxBars(date, at, dur)}</div>`;
 }
-SHEETS.wxloc = () => ({ title: "Weather", body: `${WX().place ? `<div class="faint" style="font-size:13px">Now: <b>${esc(WX().place)}</b>${WX().lat != null ? ` · ${(+WX().lat).toFixed(2)}, ${(+WX().lon).toFixed(2)}` : ""}</div>` : ""}${wxSettings().replace('<span class="flabel" style="margin-top:6px">Weather</span>', "")}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
+SHEETS.wxloc = () => ({ title: "Weather", body: `${WX().place ? `<div class="faint" style="font-size:13px">Now: <b>${esc(WX().place)}</b>${WX().lat != null && !/^Current location/.test(WX().place) ? ` · ${(+WX().lat).toFixed(2)}, ${(+WX().lon).toFixed(2)}` : ""}</div>` : ""}${wxSettings().replace('<span class="flabel" style="margin-top:6px">Weather</span>', "")}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
 ACT["wx-place"] = () => openSheet("wxloc", { live: true });
 CHG["wx-at"] = (v, el) => { const d = el.dataset.date; if (!v) return; mutateLog(d, day => { day.wxAt = v === WX().time ? null : v; }); scheduleRender(); };
 CHG["wx-time"] = v => { if (v) { WX().time = v; saveSettings(); scheduleRender(); } };
 ACT["wx-locate"] = () => {
   if (!navigator.geolocation) { toast("Location isn't available here: type your city in Settings › Live workouts & timer."); return; }
-  navigator.geolocation.getCurrentPosition(p => { const x = WX(); x.lat = +p.coords.latitude.toFixed(3); x.lon = +p.coords.longitude.toFixed(3); x.place = "Current location"; saveSettings(); WXC.at = 0; wxFetch(true); toast("Location saved for the forecast"); scheduleRender(); if (UI.sheet?.type === "wxloc") renderSheet(); },
+  navigator.geolocation.getCurrentPosition(p => { const x = WX(); x.lat = +p.coords.latitude.toFixed(3); x.lon = +p.coords.longitude.toFixed(3); x.place = `Current location (${x.lat.toFixed(2)}, ${x.lon.toFixed(2)})`; saveSettings(); WXC.at = 0; wxFetch(true); toast("Location saved for the forecast"); scheduleRender(); if (UI.sheet?.type === "wxloc") renderSheet(); },
     () => toast("No location permission: type your city in Settings › Live workouts & timer."), { timeout: 10000, maximumAge: 6 * 3600e3 });
 };
 CHG["wx-city"] = async v => { const q = v.trim(), x = WX(); if (!q) { delete x.lat; delete x.lon; delete x.place; saveSettings(); scheduleRender(); return; }
@@ -12120,9 +12149,9 @@ CHG["wx-city"] = async v => { const q = v.trim(), x = WX(); if (!q) { delete x.l
     Object.assign(x, { lat: +g.latitude.toFixed(3), lon: +g.longitude.toFixed(3), place: [g.name, g.admin1, g.country_code].filter(Boolean).join(", ") }); saveSettings(); WXC.at = 0; wxFetch(true); toast(`Forecast for ${x.place}`); scheduleRender(); if (UI.sheet?.type === "wxloc") renderSheet();
   } catch (e) { toast("Couldn't look up the place: check the connection."); } };
 function wxSettings() { const x = WX();
-  return `<span class="flabel" style="margin-top:6px">Weather</span><div class="grid2"><div class="field"><label for="wx-city">Place</label><input id="wx-city" class="inp" value="${esc(x.place || "")}" placeholder="City, e.g. Milano" data-chg="wx-city" autocomplete="off"></div>
+  return `<span class="flabel" style="margin-top:6px">Weather</span><div class="grid2"><div class="field"><label for="wx-city">Place</label><input id="wx-city" class="inp" value="${esc(/^Current location/.test(x.place || "") ? "" : x.place || "")}" placeholder="${esc(/^Current location/.test(x.place || "") ? "Type a city to change it" : "City, e.g. Milano")}" data-chg="wx-city" autocomplete="off"></div>
     <div class="field"><label for="wx-time">Usual training time</label><input id="wx-time" class="inp" type="time" value="${esc(x.time)}" data-chg="wx-time"></div></div>
-    <div class="faint" style="font-size:12.5px">Open-Meteo forecast, free, no key. Today shows the rain at that time for outdoor sessions; change the time there for a single day. <button class="link" data-act="wx-locate">Use my location</button></div>`; }
+    <div class="faint" style="font-size:12.5px">Open-Meteo forecast, free, no key. Today shows the rain at that time for outdoor sessions; change the time there for a single day. <button class="link" data-act="wx-locate">Use my current location</button> (asks your permission; the position stays on this device and only goes to Open-Meteo for the forecast).</div>`; }
 { const _ps = playerSettings; playerSettings = function () { return _ps() + wxSettings(); }; }
 /* ================= skip a planned session: out of the day's energy maths (target follows), still in intervals.icu ================= */
 const planKey = w => w?.ext || [w?.sport, w?.min || "", w?.note || w?.tpl || ""].join("|");

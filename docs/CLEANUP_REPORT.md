@@ -5,6 +5,13 @@ Un report breve per milestone (regola permanente in `AGENTS.md`). Il più recent
 ## Scansione usata
 Dal 24/10/2026 ogni revisione confronta il sorgente con la baseline (`git show cae350d:source/engine.html`): funzioni e `const` di primo livello senza altri riferimenti (anche in `source/web/*.js`), azioni `ACT[...]` senza `data-act` né chiamate, handler `INP`/`CHG` senza campo `data-in`/`data-chg`. Il confronto con la baseline separa il debito preesistente da quello introdotto. (Lo script è un'utilità locale di revisione; i risultati stanno qui.)
 
+## M4 (24/10/2026)
+**Verificato:** 78 test (6 nuovi per M4: allineamento icona su 3 viewport con misura geometrica, rail/drawer con dimensione delle icone e persistenza dopo reload, Check-in su giorno passato, obiettivo km con storico, classifica Top, luogo del meteo); screenshot telefono/tablet/desktop; console pulita.
+**Trovato e corretto durante il lavoro:** il passaggio del rail a `body.side-rail` aveva reso le icone a larghezza zero (regola `.side-btn .ic` con `!important` solo per 600–1023): ora vale anche ≥1024 e c'è un test sulle dimensioni delle icone.
+**Eliminato:** CSS `.shop-date` e le regole `:has(.shop-date)` (non più usate; classe condivisa `.date-pick`), regole del rail duplicate nei due media query, vecchio `.item-name` a blocco.
+**Aggiornato:** `.item-name` (struttura icona + `.nm`), `ACT/CHG` registrati dopo i loro registri (tre volte il test ha intercettato il TDZ prima della consegna).
+**Aperto:** `Foods › Top` mostra solo la base (le correlazioni e i trend stanno nel Journal K5–K8); il luogo del meteo da geolocalizzazione non ha il nome della città (nessun servizio di geocodifica inversa senza chiave: resta «Current location (lat, lon)»).
+
 ## Fix: «17 foods moved to the right aisle» a ogni refresh (24/10/2026)
 **Causa trovata (riprodotta con test):** da account, `Sync.ready` diventa vero appena parte la sottoscrizione, **prima** che arrivino i dati del server. Le pulizie una tantum (`catFix`, `binPurge`, `panMigrate`) giravano quindi sulla copia locale/in cache, anche se vecchia, rifacevano le stesse modifiche e le **scrivevano di nuovo** (rischio: sovrascrivere versioni più recenti degli stessi cibi). **Correzione:** `dataReady(...)` — le pulizie partono solo dopo la prima risposta *non da cache* per i documenti che toccano. In più, se la memoria del dispositivo è piena, ora lo si dice (prima `saveLocal` falliva in silenzio). **Non verificabile qui:** se sul tuo account le scritture non arrivano al server (coda bloccata), il messaggio può restare: in quel caso lo stato di sync in Settings lo mostra.
 

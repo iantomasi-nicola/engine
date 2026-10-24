@@ -48,7 +48,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | C5 | Scambio pranzo↔cena con un'azione | Should | S | – | Mancante | Ingredienti/dosi/ricette preservati; undo |
 | C6 | Filtri in aggiunta Foods: P/C/F, combinazioni, verdure, in/fuori Storage, classificazioni motivate | Should | M | – | Parziale | Regole documentate (soglie % energia) e testate |
 | C7 | Food Coach realistico: ricette/integrazioni coerenti, niente cibi casuali per chiudere i macro; whey se appropriata | Should | L | E5 | Parziale/Buggato | Nessun alimento fuori dalle preferenze/porzioni abituali; spiegazione di ogni suggerimento |
-| C8 | Icona ricetta disallineata nel Meal Plan e problemi UI analoghi | Must | S | – | Buggato | Screenshot prima/dopo su 3 viewport |
+| C8 | Icona ricetta disallineata nel Meal Plan e problemi UI analoghi | Must | S | – | **Fatto** (24/10): icona e nome sulla stessa riga (flex), con barattolo dispensa, misurato su 3 viewport (era 3,5 px fuori asse) | Screenshot prima/dopo su 3 viewport |
 | C9 | Editor Food più semplice e compatto (richieste 24/10, due passaggi): preferito come stella accanto al nome, un solo menu «Counts as» (scelto dai valori per un cibo nuovo), niente «Good for» né «Leave out of auto-plan» a schermo; scheda unica con macro, porzioni, confezione e corsia in vista e tre sezioni richiudibili (More nutrition, Price and stock, Details) che ricordano se erano aperte; i dati già salvati (pasti adatti, esclusione dal planner) restano e un cibo escluso ha il link «Include it again» | Should | S | – | **Fatto nel sorgente** (24/10; `tests/food-editor.test.js`) | Nessun dato perso; 3 viewport |
 | C10 | Versione dell'app nelle Settings (Data) con «Check for updates» (richiesta 24/10) | Should | S | – | **Fatto nel sorgente** (`tests/version.test.js`) | Mostra data/ora UTC della build; il controllo scarica l'ultima e ricarica se più recente |
 
@@ -87,7 +87,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 ## F. Meteo e workout planning
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| F1 | Posizione meteo chiara, modificabile, geolocalizzazione consensuale | Should | S | – | Parziale | Nome luogo sempre visibile |
+| F1 | Posizione meteo chiara, modificabile, geolocalizzazione consensuale | Should | S | – | **Fatto** (24/10): il luogo è sempre nella riga meteo, «Use my current location» con permesso e coordinate; cambio con la città | Nome luogo sempre visibile |
 | F2 | Grafico meteo riprogettato: pioggia nell'intervallo di allenamento, probabilità, intensità, durata, vento, temperatura percepita, incertezza | Should | M | – | Parziale | Evidenzia intervallo; mai certezza assoluta |
 | F3 | Orario allenamento da intervals.icu, modificabile con sync coerente | Could | M | ENG-07 | Parziale | Nessuna scrittura remota non voluta |
 | F4 | "How it will run" migliorato (fasi, intervalli, recuperi, passo, zone, condizioni) | Could | M | F2 | Parziale | Confronto con script reale |
@@ -96,7 +96,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
 | G1 | Running prediction validata con storico, incertezza, backtest | Could | L | ENG-02 | Parziale | Errore medio su dati reali sintetici/anonimi documentato |
-| G2 | Obiettivo km settimanali con progresso e storico | Should | S | – | Mancante (in `02f43a9`) | Persistente; storico settimane |
+| G2 | Obiettivo km settimanali con progresso e storico | Should | S | – | **Fatto** (24/10): card «Weekly running goal» in Train › Stats › Running, storico con l'obiettivo valido in ogni settimana, grafico con linea obiettivo | Persistente; storico settimane |
 | G3 | Report gara: split, passo, FC, confronto con obiettivi/precedenti | Could | L | – | Parziale | Dati mancanti gestiti |
 | G4 | Sport: calcio a 5, nuoto piscina/mare, camminata, Other, importati; metriche per sport | Should | M | – | Parziale | Unità e campi per sport; nessun NaN |
 | G5 | Import/sync workout verificati senza modifiche remote indesiderate | Must | M | ENG-07 | Non verificato | Test con API simulata |
@@ -118,15 +118,15 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 ## I. Check-in, Analytics, Tools
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| I1 | Selettore data nel Check-in, modifica giorni passati, ricalcolo statistiche | Should | S | – | Parziale | Ricalcolo coerente; test su 3 giorni |
-| I2 | Report piatti/Foods/ricette più usati, frequenze, abitudini, costi | Should | M | – | Parziale | Numeri riconciliati con il piano |
+| I1 | Selettore data nel Check-in, modifica giorni passati, ricalcolo statistiche | Should | S | – | **Fatto** (24/10): Check-in con giorno precedente/successivo e selettore data; giorni passati modificabili | Ricalcolo coerente; test su 3 giorni |
+| I2 | Report piatti/Foods/ricette più usati, frequenze, abitudini, costi | Should | M | – | **Fatto nella forma base** (24/10): Foods › Top (30/60/90 giorni): volte, quantità media, pasti, ultimo uso, costo a uso; dal mangiato, o dal piano se non c'è nulla di spuntato. Insight avanzati e trend: in M4b/M11 | Numeri riconciliati con il piano |
 | I3 | Calcolatori sportivi (1RM, carichi fino a 10RM, ritmi…), formule e limiti | Could | M | – | Mancante (in `02f43a9`) | Più formule a confronto |
 | I4 | Contatore push-up via sensore di prossimità | Won't (ora) | L | spike | Mancante | Spike: se non fattibile, alternativa (DeviceMotion/camera) |
 
 ## J. Redesign UX/UI
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| J1 | Sidebar richiudibile desktop/tablet, preferenza persistente | Should | S | – | Mancante (in `02f43a9`) | Persistente; screenshot 3 viewport |
+| J1 | Sidebar richiudibile desktop/tablet, preferenza persistente | Should | S | – | **Fatto** (24/10): menu laterale ↔ rail su tablet e desktop, scelta ricordata, bottom bar su telefono | Persistente; screenshot 3 viewport |
 | J2 | Animazioni di sezione, movimento ridotto rispettato | Could | S | – | Parziale | Nessuna animazione con `prefers-reduced-motion` |
 | J3 | Correzione sistematica di overlap, overflow, icone, testi tagliati, touch | Must | L | ENG-01 | Non verificato | Scansione automatica + screenshot; target touch ≥44px |
 | J4 | Design system condiviso (colori, tipografia, spacing, componenti, grafici, stati) | Should | XL | J3 | Parziale | Token documentati; riduzione `!important` |

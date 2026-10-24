@@ -84,3 +84,41 @@ test("G2: weekly running goal — progress, history judged by the goal of each w
   await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "km-goal.png") });
   await app.reload(); assert.equal(await page.evaluate(() => kmGoalFor(weekStartOf(todayISO()))), 25);
 });
+
+test("I2: most-used foods and recipes — counts, amounts, meals, last use, cost per use; eaten counts, the plan stands in when nothing was ticked", async () => {
+  const page = await start(F.seed({ withPlan: false }), H.VIEWPORTS.phone);
+  const r = await page.evaluate(async () => {
+    const t = todayISO(), bowl = (id, eaten) => ({ id, kind: "recipe", ref: "t-bowl", qty: 2, eaten }), rice = (id, eaten) => ({ id, kind: "food", ref: "t-rice", qty: 100, eaten });
+    S.days = { [addDays(t, -3)]: { date: addDays(t, -3), meals: { lunch: [bowl("a", true)], dinner: [rice("b", true)] } }, [addDays(t, -2)]: { date: addDays(t, -2), meals: { lunch: [bowl("c", true)] } }, [addDays(t, -1)]: { date: addDays(t, -1), meals: { lunch: [bowl("d", false)] } }, [addDays(t, -90)]: { date: addDays(t, -90), meals: { lunch: [bowl("e", true)] } } };
+    S.shop.prices = { "t-rice": { eur: 4.8, g: 1000, at: t, hist: [{ eur: 4.8, g: 1000, at: t }] } }; DATA_V++;
+    const U = foodUsage(60), by = k => U.rows.find(x => x.key === k);
+    const eaten = { basis: U.basis, bowl: by("recipe:t-bowl") && [by("recipe:t-bowl").n, by("recipe:t-bowl").meals], rice: by("food:t-rice") && [by("food:t-rice").n, by("food:t-rice").qty, by("food:t-rice").meals, Math.round(by("food:t-rice").cost * 100) / 100], bowlCost: [Math.round(by("recipe:t-bowl").cost * 100) / 100, by("recipe:t-bowl").partial], first: U.rows[0].key, lastBowl: by("recipe:t-bowl").last === addDays(t, -2) };
+    const wide = foodUsage(120).rows.find(x => x.key === "recipe:t-bowl").n;
+    for (const d of Object.values(S.days)) for (const [, it] of dayItems(d)) it.eaten = false; DATA_V++;
+    const planned = { basis: foodUsage(60).basis, bowl: foodUsage(60).rows.find(x => x.key === "recipe:t-bowl").n };
+    for (const d of Object.values(S.days)) for (const [, it] of dayItems(d)) it.eaten = d.date !== addDays(t, -1); DATA_V++;
+    UI.tab = "foods"; UI.foodsSeg = "top"; scheduleRender(); await new Promise(r => setTimeout(r, 400));
+    const html = document.querySelector("#main")?.innerText || "";
+    return { eaten, wide, planned, html: html.slice(0, 600), sw: document.documentElement.scrollWidth <= innerWidth, seg: !!document.querySelector('[data-act="foods-seg"][data-seg="top"]') };
+  });
+  assert.equal(r.eaten.basis, "eaten"); assert.deepEqual(r.eaten.bowl, [2, { lunch: 2 }]); assert.deepEqual(r.eaten.rice, [1, 100, { dinner: 1 }, 0.48]);
+  assert.deepEqual(r.eaten.bowlCost, [1.92, true], "cost counts the priced ingredient only and says so"); assert.equal(r.eaten.first, "recipe:t-bowl"); assert.equal(r.eaten.lastBowl, true);
+  assert.equal(r.wide, 3, "a longer period includes older days"); assert.deepEqual(r.planned, { basis: "planned", bowl: 3 });
+  assert.match(r.html, /Test bowl/); assert.match(r.html, /2×/); assert.ok(r.sw && r.seg); assert.deepEqual(app.errors, []);
+  await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "top-foods.png") });
+});
+
+test("F1: the forecast says where it is for; 'Use my current location' asks, names the place with its coordinates, and the place can be changed", async () => {
+  const page = await start(F.seed({ withPlan: false }), H.VIEWPORTS.phone);
+  const r = await page.evaluate(async () => {
+    const t = todayISO(); const run = [{ sport: "Running", min: 40, km: 6, int: "Moderate" }];
+    const row = () => wxRow(t, run), none = /Set location/.test(row());
+    navigator.geolocation.getCurrentPosition = ok => ok({ coords: { latitude: 45.4642, longitude: 9.19 } });
+    const msgs = []; toast = m => msgs.push(m); window.fetch = () => Promise.reject(new Error("offline"));
+    ACT["wx-locate"](); await new Promise(r => setTimeout(r, 200));
+    const placeNow = WX().place, html = row(), sheet = SHEETS.wxloc().body;
+    WX().place = "Milano, Lombardia, IT"; const city = wxPlaceShort();
+    return { none, place: placeNow, short: /data-act="wx-place"[^>]*>Current location</.test(html), title: /title="Current location \(45\.46, 9\.19\)"/.test(html), sheet: /Current location \(45\.46, 9\.19\)/.test(sheet) && /Use my current location/.test(sheet) && /permission/.test(sheet), city };
+  });
+  assert.equal(r.none, true); assert.equal(r.place, "Current location (45.46, 9.19)"); assert.equal(r.short, true); assert.equal(r.title, true); assert.equal(r.sheet, true); assert.equal(r.city, "Milano");
+});
