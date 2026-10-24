@@ -2415,6 +2415,11 @@ html .ov-x .btn.tonal{background:var(--md-primary)!important;color:var(--md-on-p
 /* session rows are cards now: room on both sides */
 .td-s{padding:12px 14px!important}.td-s.done .td-s-a{right:14px!important}
 .td-nudge,.td-q{min-width:0}.td-nudge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* a sheet that takes the whole screen (the shopping list opened from Today): edge to edge on a phone or tablet, a tall panel on a computer */
+html body .sheet.full{left:0!important;right:0!important;top:0!important;bottom:var(--kb,0px)!important;width:100%!important;max-width:none!important;height:auto;max-height:none!important;border-radius:0!important;transform:none!important;padding-top:env(safe-area-inset-top,0px)}
+html body .sheet.full .sheet-b{flex:1 1 auto;min-height:0}
+html body .sheet.full .sheet-h::before{display:none}
+@media (min-width:1024px){html body .sheet.full{left:50%!important;right:auto!important;width:min(720px,100%)!important;transform:translateX(-50%)!important;top:2vh!important;bottom:2vh!important;border-radius:28px!important;padding-top:0}}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -2781,7 +2786,7 @@ function loadLocal() {
     if (j) for (const k of Object.keys(S)) if (j[k] != null) S[k] = j[k];
   } catch (e) {}
   if (S.settings) S.settings = normalizeSettings(S.settings);
-  S.shop = { checked: {}, extras: [], pantry: {}, range: 7, stores: [], pref: {}, ...(S.shop || {}) };
+  S.shop = { checked: {}, extras: [], pantry: {}, range: 7, stores: [], ...(S.shop || {}) };
   S.body = { w: {}, m: {}, ...(S.body || {}) };
   S.train = { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...(S.train || {}) };
   DATA_V++;
@@ -4755,7 +4760,7 @@ function renderSheet() {
   if (!sh) { root.innerHTML = ""; return; }
   const f = captureFocus(); const sc = $(".sheet-b")?.scrollTop || 0;
   const def = SHEETS[sh.type](sh), enter = sh._new ? " enter" : "";
-  root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
+  root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${def.full ? " full" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
     <div class="sheet-h"><h3>${def.titleHTML || esc(def.title)}</h3>${def.head || ""}<button class="icon-btn" data-act="close-sheet" aria-label="Close">${ic("close")}</button></div>
     <div class="sheet-b">${def.body}</div>${def.foot ? `<div class="sheet-f">${def.foot}</div>` : ""}</div>`;
   document.body.style.overflow = "hidden";
@@ -4936,7 +4941,7 @@ SHEETS.food = sh => {
       ${sec("more", checkValues, "More nutrition", esc(more || "Fibre, sugars, saturated, salt"), `<div class="grid4 fd-g4">${nf("fib", "Fibre g")}${nf("sug", "Sugars g")}${nf("sat", "Saturated g")}${nf("salt", "Salt g")}</div>
         ${proMicro() ? `<details class="nut-more"><summary>Vitamins and minerals <span class="faint">per 100 ${u}${BUILTIN_MX[d.id] ? " · empty = typical values" : ""}</span></summary><div class="grid4">${["mono", "poly", ...Object.keys(NUT).filter(k => NUT[k].micro)].map(k => { const l = k === "mono" ? "Monounsat." : k === "poly" ? "Polyunsat." : NUT[k].l, un = k === "mono" || k === "poly" ? "g" : NUT[k].u; return `<div class="field"><label for="fd-mx-${k}">${l}</label><div class="unit-inp"><input id="fd-mx-${k}" class="inp" inputmode="decimal" value="${d.mx?.[k] ?? ""}" placeholder="${BUILTIN_MX[d.id]?.[k] ?? ""}" data-in="fd-mx" data-k="${k}"><span>${un}</span></div></div>`; }).join("")}</div></details>` : ""}
         ${orig ? `<button class="btn ghost sm" data-act="fd-reset" style="align-self:flex-start">${ic("undo", "sm")}Reset to ${d.source === "off" ? "Open Food Facts" : "original"} values</button>` : ""}`)}
-      ${sec("price", false, "Price and stock", esc([pTxt, home].filter(Boolean).join(" · ") || "Price, what you have at home"), `${fdPriceHTML(d, u, pu, pTxt)}${!sh.isNew && d.id ? stockBoxHTML(d.id) : ""}`)}
+      ${sec("price", false, "Price and stock", esc([fdStores(sh).map(storeName).join(", "), pTxt, home].filter(Boolean).join(" · ") || "Store, price, what you have at home"), `${fdPriceHTML(d, u, pu, pTxt, sh)}${!sh.isNew && d.id ? stockBoxHTML(d.id) : ""}`)}
       ${sec("details", false, "Details", esc([d.brand, d.barcode, (ROLES.find(r => r[0] === d.role) || [0, ""])[1] && `counts as ${(ROLES.find(r => r[0] === d.role) || [0, ""])[1].toLowerCase()}`].filter(Boolean).join(" · ") || "Brand, barcode, how the planner uses it"), `<div class="grid2"><div class="field"><label for="fd-brand">Brand</label><input id="fd-brand" class="inp" value="${esc(d.brand || "")}" data-in="fd" data-k="brand"></div>
         <div class="field"><label for="fd-barcode">Barcode</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input id="fd-barcode" class="inp" inputmode="numeric" value="${esc(d.barcode || "")}" data-in="fd" data-k="barcode"><button class="icon-btn" data-act="fd-scan" aria-label="Scan the barcode" title="Scan the barcode" style="flex:none">${ic("scan")}</button></div></div></div>
         <div class="field"><label for="fd-role">Counts as <small class="faint">· how the planner uses it${sh.isNew && !d._roleSet ? " (picked from the values)" : ""}</small></label><select id="fd-role" class="inp" data-chg="fd-role">${ROLES.map(([k, l]) => `<option value="${k}" ${d.role === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
@@ -5385,9 +5390,16 @@ function fdEqHTML(d, u = d.unit || "g") {
   if (!v) return "";
   return t(u === "ml" ? "per litre" : "per kg", v.perKg) + t("per pack", v.perPack, "Type the pack size to see this") + t("per piece", v.perUnit, "Needs a portion that is one piece");
 }
-function fdPriceHTML(d, u, pu, pTxt) {
+const fdStores = sh => sh.draft.stores ?? (sh.isNew && curStore() ? [curStore()] : []);
+function fdStoreHTML(sh) {
+  const L = storeList(), on = fdStores(sh);
+  return `<div class="field fd-st"><span class="flabel">Bought at</span><div class="chips">${L.map(x => `<button class="chip sm" data-act="fd-store" data-id="${x.id}" aria-pressed="${on.includes(x.id)}">${esc(x.name)}</button>`).join("")}${sh.stNew ? "" : `<button class="chip sm" data-act="fd-store-new" aria-label="Add a store">${ic("plus", "sm")}${L.length ? "" : "Add a store"}</button>`}</div>
+    ${sh.stNew ? `<div class="row st-add"><input id="fd-st-in" class="inp" placeholder="Store name" maxlength="30" autocomplete="off" aria-label="Store name" data-in="fd-st-in"><button class="btn soft" data-act="fd-store-add">${ic("plus", "sm")}Add</button></div>` : ""}
+    <small class="faint">${on.length ? "" : "No store set: it shows on every list. "}The same product can be bought at several.</small></div>`;
+}
+function fdPriceHTML(d, u, pu, pTxt, sh) {
   const eq = fdEqHTML(d, u);
-  return `<div class="fd-price"><div class="field"><label for="fd-pv">Price paid</label><div class="unit-inp"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv"><span>€</span></div></div>
+  return `${sh ? fdStoreHTML(sh) : ""}<div class="fd-price"><div class="field"><label for="fd-pv">Price paid</label><div class="unit-inp"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv"><span>€</span></div></div>
     <div class="field"><span class="flabel">for</span><div class="seg fill" role="group" aria-label="The price is for">${[["kg", u === "ml" ? "1 litre" : "1 kg"], ["pack", "1 pack"], ["unit", "1 piece"]].map(([k, l]) => `<button data-act="price-unit" data-k="${k}" aria-pressed="${pu === k}">${l}</button>`).join("")}</div></div></div>
     <div id="fd-eq" class="fd-eq">${eq}</div>
     ${eq ? "" : `<span class="faint" style="font-size:12.5px">${pTxt ? `Now: ${esc(pTxt)}` : "No price yet: it is also remembered when you shop."}</span>`}`;
@@ -5467,10 +5479,13 @@ async function lookupAndAdd(code) {
   if (code.length < 6) { toast("That doesn't look like a barcode number."); return; }
   sh.code = code;
   const own = findByBarcode(code);
-  if (own) { toast(`Found in your foods: ${own.name}`); return goQty(own, sh); }
+  const here = curStore();
+  if (own) { if (here && (UI.dest === "tick" || UI.dest === "swap" || UI.tab === "shop")) addFoodStore(own.id, here);   // the same product can be sold in several stores
+    toast(`Found in your foods: ${own.name}`); return goQty(own, sh); }
   sh.stage = "busy"; sh.msg = `Looking up ${code} on Open Food Facts…`; renderSheet();
   const r = await fetchOFF(code);
   if (UI.sheet !== sh) return;
+  if (r.food && here) r.food.stores = [here];   // scanning while filtering by a store: it is bought there
   if (r.food && r.food.incomplete) { const d = UI.dest; toast("Open Food Facts has the name but no nutrition values: type them from the label"); openSheet("food", { draft: clone(r.food), isNew: true, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
   if (r.food) { put("foods", r.food.id, r.food);
     if (UI.dest && UI.dest !== "recipe") { const d = UI.dest; toast(`From Open Food Facts: check the values and the pack`); openSheet("food", { draft: clone(r.food), isNew: false, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
@@ -6232,6 +6247,8 @@ ACT["fd-save"] = () => {
   if (BUILTIN[d.id] && !sh.isNew) d.source = "builtin-edit";
   if (!d.id) d.id = (d.barcode ? "bc-" + d.barcode : "f-" + uid());
   delete d.hidden;
+  if (d.stores == null && sh.isNew && curStore()) d.stores = [curStore()];
+  if (!(d.stores || []).length) delete d.stores;
   const pv = num(d._pv), pu = d._pu || "kg"; delete d._pv; delete d._pu; delete d._roleSet;
   put("foods", d.id, d);
   if (pv > 0 && !priceSet(d.id, pv, pu)) toast(pu === "pack" ? "Price not saved: type the pack size first." : "Price not saved: this food has no piece weight.");
@@ -9966,7 +9983,7 @@ function stockOn(date) {
 /* prices: the last price paid for a food, per gram */
 const priceOf = id => { const p = S.shop.prices?.[id]; return p && p.g > 0 && p.eur >= 0 ? p : null; };
 /* ================= stores: a price for each supermarket =================
-   S.shop.stores = [{ id, name }]; S.shop.store = the store you are in now (none = any); S.shop.pref[foodId] = where you usually buy it;
+   S.shop.stores = [{ id, name }]; S.shop.store = the store you are in now (none = any); food.stores = [storeId…] = where you buy it (empty = anywhere; the same product can be sold in several);
    S.shop.prices[foodId].st[storeId] = the price paid there, same shape as the usual price. A store with no price for a food falls back to the usual one. */
 const storeList = () => S.shop.stores || [];
 const storeName = id => storeList().find(x => x.id === id)?.name || "";
@@ -9975,9 +9992,24 @@ function storeAdd(name) { const n = String(name || "").replace(/\s+/g, " ").trim
   const st = { id: "st-" + uid(), name: n }; S.shop.stores = [...storeList(), st]; put("shop", "", S.shop); return st.id; }
 function storeRename(id, name) { const n = String(name || "").replace(/\s+/g, " ").trim().slice(0, 30); if (!n) return; S.shop.stores = storeList().map(x => x.id === id ? { ...x, name: n } : x); put("shop", "", S.shop); }
 function storeDel(id) { S.shop.stores = storeList().filter(x => x.id !== id); if (S.shop.store === id) S.shop.store = null;
-  for (const [f, v] of Object.entries(S.shop.pref || {})) if (v === id) delete S.shop.pref[f];
   for (const p of Object.values(S.shop.prices || {})) if (p.st) { delete p.st[id]; if (!Object.keys(p.st).length) delete p.st; }
   put("shop", "", S.shop); }
+/* where a food is bought: a field of the food itself (stale ids of removed stores are ignored, so Undo of a removal brings everything back) */
+const foodStores = id => { const f = getFood(id) || BUILTIN[id]; return (f?.stores || []).filter(x => storeList().some(y => y.id === x)); };
+const soldAt = (id, sid) => { const L = foodStores(id); return !L.length || L.includes(sid); };
+function setFoodStores(id, list) { const f = getFood(id) || BUILTIN[id]; if (!f) return false; const a = [...new Set(list)], nf = clone(f);
+  if (JSON.stringify(a) === JSON.stringify(f.stores || [])) return false; if (a.length) nf.stores = a; else delete nf.stores; if (BUILTIN[id] && !S.foods[id]) nf.source = "builtin-edit"; put("foods", id, nf); return true; }
+const addFoodStore = (id, sid) => !!sid && !foodStores(id).includes(sid) && setFoodStores(id, [...foodStores(id), sid]);
+/* once: the single "usual store" of earlier versions becomes the food's own field; and every food you had added so far is bought at Lidl (your instruction, 24/10/2026) */
+function storesMigrate() {
+  if (S.shop.pref && Object.keys(S.shop.pref).length) { for (const [id, sid] of Object.entries(S.shop.pref)) addFoodStore(id, sid); delete S.shop.pref; put("shop", "", S.shop); }
+  if (S.shop.mig?.lidl) return;
+  const mine = Object.values(S.foods).filter(f => f && !f.hidden && f.name && !(f.stores || []).length); if (!mine.length) return;
+  const before = { shop: clone(S.shop), foods: mine.map(f => clone(f)) }, sid = storeAdd("Lidl");
+  for (const f of mine) setFoodStores(f.id, [sid]);
+  S.shop.mig = { ...(S.shop.mig || {}), lidl: 1 }; put("shop", "", S.shop);
+  toast(`${mine.length} food${mine.length === 1 ? "" : "s"} set to Lidl: change it in each food`, () => { for (const f of before.foods) put("foods", f.id, f); S.shop = { ...before.shop, mig: { ...(before.shop.mig || {}), lidl: 1 } }; put("shop", "", S.shop); });
+}
 const priceAt = (id, sid) => { const p = sid ? S.shop.prices?.[id]?.st?.[sid] : null; return p && p.g > 0 && p.eur >= 0 ? p : null; };
 /* price per gram: the middle of your last purchases (at that store when you are in one), so a cheap or dear week doesn't swing the estimate */
 const eurPerG = (id, sid = curStore()) => { const p = priceAt(id, sid) || priceOf(id); if (!p) return null; const h = (p.hist || []).filter(x => x.g > 0 && x.eur >= 0).slice(-5); if (h.length >= 2) { const v = h.map(x => x.eur / x.g).sort((a, b) => a - b); return v[v.length >> 1]; } return p.eur / p.g; };
@@ -10037,12 +10069,14 @@ function setFoodPack(id, pack) {
 const packChanged = sh => { const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); sh.g = r ? buyG(r) : ""; renderSheet(); toast("Pack size saved"); };
 CHG["by-pack"] = v => { const sh = S_(); if (sh?.type === "buy" && setFoodPack(sh.id, v)) packChanged(sh); };
 ACT["by-pack-set"] = el => { const sh = S_(); if (sh?.type === "buy" && setFoodPack(sh.id, +el.dataset.v)) packChanged(sh); };
-ACT["stores-open"] = () => openSheet("stores", { live: true });
-ACT["store-pick"] = el => { S.shop.store = el.dataset.k || null; put("shop", "", S.shop); if (UI.sheet?.type === "stores") closeSheet(); };
+ACT["stores-open"] = () => openSheet("stores", { live: true, back: UI.sheet?.type === "shopq" ? "shopq" : null });
+const storesBack = () => { const b = UI.sheet?.back; closeSheet(); if (b) openSheet(b, { live: true }); };
+ACT["stores-done"] = storesBack;
+ACT["store-pick"] = el => { S.shop.store = el.dataset.k || null; put("shop", "", S.shop); if (UI.sheet?.type === "stores") storesBack(); };
 ACT["store-new"] = () => { const i = $("#st-new"), id = storeAdd(i?.value); if (i) i.value = ""; if (id && !curStore() && storeList().length === 1) { S.shop.store = null; } renderSheet(); setTimeout(() => $("#st-new")?.focus(), 30); };
 CHG["store-name"] = (v, el) => { storeRename(el.dataset.id, v); renderSheet(); };
 ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); toast(`${nm} removed`, () => { S.shop = snap; put("shop", "", S.shop); if (UI.sheet?.type === "stores") renderSheet(); }); };
-ACT["shop-here"] = el => { const sid = curStore(); if (!sid) return; S.shop.pref = { ...(S.shop.pref || {}), [el.dataset.id]: sid }; put("shop", "", S.shop); };
+ACT["shop-here"] = el => { const sid = curStore(); if (sid) addFoodStore(el.dataset.id, sid); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
 ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
   S.shop.checked[sh.id] = { g: g || null, eur: eur != null && eur >= 0 ? Math.round(eur * 100) / 100 : null, ...((sh.sid ?? curStore()) ? { sid: sh.sid ?? curStore() } : {}), ...(sh.offer ? { offer: true } : {}) }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
@@ -10064,7 +10098,7 @@ ACT["shop-done"] = () => {
     const sid = c.sid ?? curStore();
     if (c.eur != null && !c.offer) { const old = S.shop.prices[id]; S.shop.prices[id] = { ...(old?.st ? { st: old.st } : {}), eur: c.eur, g, at: today, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: c.eur, g, at: today }].slice(-8) };
       if (sid) { const pr = S.shop.prices[id], o = pr.st?.[sid]; pr.st = { ...(pr.st || {}), [sid]: { eur: c.eur, g, at: today, hist: [...(o?.hist || []), { eur: c.eur, g, at: today }].slice(-8) } }; } }
-    if (sid) { S.shop.pref = { ...(S.shop.pref || {}), [id]: sid }; }
+    if (sid) addFoodStore(id, sid);
     S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null, ...(sid ? { sid } : {}), ...(c.offer ? { offer: true } : {}) }); if (eur != null) tot += eur; n++; }
   const again = [], xh = S.shop.xhist = S.shop.xhist || {};
   for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null, x: 1, ...(x.est ? { est: true } : {}), ...(curStore() ? { sid: curStore() } : {}) }); if (x.eur != null) tot += +x.eur; n++;
@@ -13051,7 +13085,7 @@ ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab 
 /* a row: tick = in the cart; packs get a − n + stepper for when you take more or fewer than the plan needs */
 function shopRowHTML(r) {
   const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
-  const sub = [r.covered ? `${fmtN(r.covered)} ${u} from home` : r.free ? `${fmtN(r.free)} ${u} at home` : "", !got && r.left - r.usedLater >= 10 ? `${fmtN(r.left - r.usedLater)} ${u} left over` : "", !got && r.usedLater >= 10 ? `${fmtN(r.usedLater)} ${u} for later days` : ""].filter(Boolean).join(" · ");
+  const sub = [r.f.brand || "", r.covered ? `${fmtN(r.covered)} ${u} from home` : r.free ? `${fmtN(r.free)} ${u} at home` : "", !got && r.left - r.usedLater >= 10 ? `${fmtN(r.left - r.usedLater)} ${u} left over` : "", !got && r.usedLater >= 10 ? `${fmtN(r.usedLater)} ${u} for later days` : ""].filter(Boolean).join(" · ");
   let q;
   if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack), dn = got ? n - r.packs : 0;
     q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${r.id}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
@@ -13091,10 +13125,10 @@ SHEETS.stores = sh => { const cur = curStore() || "", L = storeList();
     <div class="row st-add"><input id="st-new" class="inp" placeholder="New store" maxlength="30" autocomplete="off" aria-label="New store"><button class="btn soft" data-act="store-new">${ic("plus", "sm")}Add</button></div>
     ${L.length ? `<details class="st-edit"${sh.edit ? " open" : ""}><summary>Rename or remove</summary><div class="card">${L.map(x => `<div class="lrow st-row"><input class="inp" value="${esc(x.name)}" data-chg="store-name" data-id="${x.id}" aria-label="Store name" maxlength="30"><button class="icon-btn" data-act="store-del" data-id="${x.id}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}</div></details>
     <small class="faint">A store without a price for a product uses the usual price.</small>` : ""}`,
-  foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
+  foot: `<button class="btn primary" data-act="stores-done">Done</button>` }; };
 function shopPanel(inSheet) {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), ck = S.shop.checked || {}, mode = S.shop.mode || "days";
-  const sid = curStore(), elsewhere = sid ? toBuy.filter(r => S.shop.pref?.[r.id] && S.shop.pref[r.id] !== sid) : [], here = elsewhere.length ? toBuy.filter(r => !elsewhere.includes(r)) : toBuy, T = shopTotals(here);
+  const sid = curStore(), elsewhere = sid ? toBuy.filter(r => !soldAt(r.id, sid)) : [], here = elsewhere.length ? toBuy.filter(r => !elsewhere.includes(r)) : toBuy, T = shopTotals(here);
   const covered = shoppingCovered(start, n);
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
   const inCart = T.inCart ? ` · ${fmtEur(T.inCart)} in the cart` : "";
@@ -13102,8 +13136,8 @@ function shopPanel(inSheet) {
     <div class="sq-sum"><span><b>${here.filter(r => !ck[r.id]).length + visibleExtras().filter(x => !x.done).length}</b> to buy${elsewhere.length ? ` here (${elsewhere.filter(r => !ck[r.id]).length} elsewhere)` : ""}${T.est ? ` · ≈ <b>${fmtEur(T.est)}</b>${inCart}` : ""}</span>${storePillHTML()}</div></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(here, true)}</div>` : `<div class="shop-list">${extraFormHTML()}</div><div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
-  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
-  if (elsewhere.length) h += `<details class="shop-other"><summary>At other stores · ${elsewhere.length}</summary><div class="shop-list">${elsewhere.map(r => `<div class="so-r">${shopRowHTML(r)}<div class="so-a"><span class="faint">usually at ${esc(storeName(S.shop.pref[r.id]))}</span><button class="btn soft sm" data-act="shop-here" data-id="${r.id}">Buy it here</button></div></div>`).join("")}</div></details>`;
+  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${esc([f.brand, "to the pantry"].filter(Boolean).join(" · "))}</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
+  if (elsewhere.length) h += `<details class="shop-other"><summary>At other stores · ${elsewhere.length}</summary><div class="shop-list">${elsewhere.map(r => `<div class="so-r">${shopRowHTML(r)}<div class="so-a"><span class="faint">at ${esc(foodStores(r.id).map(storeName).join(", "))}</span><button class="btn soft sm" data-act="shop-here" data-id="${r.id}">Buy it here</button></div></div>`).join("")}</div></details>`;
   h += shopCoveredHTML(covered);
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || visibleExtras().some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
@@ -13116,7 +13150,7 @@ VIEWS.shop = function () {
   return h + spendCard();
 };
 SHEETS.shopq = () => { const P = shopPanel(true);
-  return { title: `Shopping · ${P.left} to buy`, body: P.h, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto" aria-label="Copy the list">${ic("copy", "sm")}</button><button class="btn soft" data-act="shop-prod" style="flex:0 0 auto">${ic("plus", "sm")}Bought</button>${P.anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Finish${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` }; };
+  return { full: true, title: `Shopping · ${P.left} to buy`, body: P.h, foot: `<button class="btn tonal" data-act="copy-list" style="flex:0 0 auto" aria-label="Copy the list">${ic("copy", "sm")}</button><button class="btn soft" data-act="shop-prod" style="flex:0 0 auto">${ic("plus", "sm")}Bought</button>${P.anyCk ? `<button class="btn primary" data-act="shop-done">${ic("check", "sm")}Finish${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button>` : `<button class="btn primary" data-act="close-sheet">Done</button>`}` }; };
 /* the dashboard line on top: the four numbers of the day, each opening its section */
 function glanceHTML() {
   const t = todayISO(), T = targetsFor(t), eat = eatenFor(t), D = typeof dayDeficit === "function" ? dayDeficit(t) : null;
@@ -13372,6 +13406,10 @@ ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.o
   camOpen("barcode"); };
 CHG["km-goal"] = v => { kmGoalSet(num(v)); scheduleRender(); };
 CHG["fd-role"] = v => { const d = S_().draft; d.role = v; d._roleSet = true; d.meals = mealsForRole(v, d.name); renderSheet(); };
+ACT["fd-store"] = el => { const sh = S_(), on = fdStores(sh), id = el.dataset.id; sh.draft.stores = on.includes(id) ? on.filter(x => x !== id) : [...on, id]; renderSheet(); };
+ACT["fd-store-new"] = () => { S_().stNew = true; renderSheet(); setTimeout(() => $("#fd-st-in")?.focus(), 30); };
+INP["fd-st-in"] = v => { S_().stIn = v; };
+ACT["fd-store-add"] = () => { const sh = S_(), id = storeAdd($("#fd-st-in")?.value ?? sh.stIn); sh.stNew = false; sh.stIn = ""; if (id) sh.draft.stores = [...new Set([...fdStores(sh), id])]; renderSheet(); };
 ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
 { const _c = ACT["cam-close"], _t = ACT["cam-type"]; ACT["cam-close"] = el => { CAM.onCode = null; return _c(el); }; ACT["cam-type"] = el => { if (CAM.onCode) { CAM.onCode = null; camClose(); setTimeout(() => $("#fd-barcode")?.focus(), 60); return; } return _t(el); }; }
 /* ================= swipe a row: planned foods and pantry items go away (Undo); a shopping row asks for a replacement. A deliberate swipe (40% of the row) ================= */
@@ -13524,6 +13562,7 @@ ACT["check-update"] = async () => {
   if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(null, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
   render();
+  setTimeout(() => { try { storesMigrate(); } catch (e) {} }, 4000);
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }
   Promise.all([use("db"), use("user"), use("sample"), use("downloads")]).then(async ([db, user, sample, downloads]) => {

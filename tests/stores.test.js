@@ -9,11 +9,11 @@ const win = page => page.evaluate(() => { UI.shopStart = todayISO(); S.shop.rang
 
 test("stores: add (no duplicates, any case), rename and delete; deleting one forgets where things were bought but keeps the usual prices", async () => {
   const page = await start();
-  const r = await page.evaluate(() => { const a = storeAdd("  Esselunga "), a2 = storeAdd("esselunga"), b = storeAdd("Lidl"); S.shop.pref["t-rice"] = b; S.shop.prices = { "t-rice": { eur: 2, g: 1000, at: todayISO(), hist: [{ eur: 2, g: 1000, at: todayISO() }], st: { [b]: { eur: 1.8, g: 1000, at: todayISO(), hist: [{ eur: 1.8, g: 1000, at: todayISO() }] } } } };
+  const r = await page.evaluate(() => { const a = storeAdd("  Esselunga "), a2 = storeAdd("esselunga"), b = storeAdd("Lidl"); setFoodStores("t-rice", [b]); S.shop.prices = { "t-rice": { eur: 2, g: 1000, at: todayISO(), hist: [{ eur: 2, g: 1000, at: todayISO() }], st: { [b]: { eur: 1.8, g: 1000, at: todayISO(), hist: [{ eur: 1.8, g: 1000, at: todayISO() }] } } } };
     const names = storeList().map(x => x.name); storeRename(b, "Lidl Via Roma"); const renamed = storeName(b); S.shop.store = b; storeDel(b);
-    return { same: a === a2, names, renamed, after: storeList().map(x => x.name), cur: curStore(), pref: S.shop.pref["t-rice"] ?? null, st: S.shop.prices["t-rice"].st?.[b] ?? null, usual: S.shop.prices["t-rice"].eur }; });
+    return { same: a === a2, names, renamed, after: storeList().map(x => x.name), cur: curStore(), pref: foodStores("t-rice").length, st: S.shop.prices["t-rice"].st?.[b] ?? null, usual: S.shop.prices["t-rice"].eur }; });
   assert.equal(r.same, true); assert.deepEqual(r.names, ["Esselunga", "Lidl"]); assert.equal(r.renamed, "Lidl Via Roma"); assert.deepEqual(r.after, ["Esselunga"]);
-  assert.deepEqual([r.cur, r.pref, r.st, r.usual], [null, null, null, 2]);
+  assert.deepEqual([r.cur, r.pref, r.st, r.usual], [null, 0, null, 2]);
 });
 
 test("the same product has a price at each store; the one you are in is used for the list, and any store falls back to the usual price", async () => {
@@ -31,17 +31,17 @@ test("paying: the price is saved for the store you bought at and becomes the usu
     S.shop.prices = { "t-rice": { eur: 2, g: 1000, at: t, hist: [{ eur: 2, g: 1000, at: t }] } };
     S.shop.checked = { "t-rice": { g: 1000, eur: 2.4 }, "t-chicken": { g: 400, eur: 1.5, offer: true } }; DATA_V++; ACT["shop-done"]();
     const rp = S.shop.prices["t-rice"], cp = S.shop.prices["t-chicken"]; const b = S.shop.buys.slice(-2);
-    return { riceStore: rp.st?.[a]?.eur, riceUsual: rp.eur, chickenPrice: cp ?? null, offer: b.find(x => x.id === "t-chicken").offer === true, sid: b.map(x => x.sid), pref: S.shop.pref["t-rice"] === a, spent: spendIn(t, t).total }; });
+    return { riceStore: rp.st?.[a]?.eur, riceUsual: rp.eur, chickenPrice: cp ?? null, offer: b.find(x => x.id === "t-chicken").offer === true, sid: b.map(x => x.sid), pref: foodStores("t-rice").includes(a), spent: spendIn(t, t).total }; });
   assert.equal(r.riceStore, 2.4); assert.equal(r.riceUsual, 2.4); assert.equal(r.chickenPrice, null, "an offer price never becomes the usual price"); assert.equal(r.offer, true);
-  assert.deepEqual(r.sid, [r.sid[0], r.sid[0]]); assert.equal(r.pref, true, "the store you buy it at becomes its usual store"); assert.equal(r.spent, 3.9);
+  assert.deepEqual(r.sid, [r.sid[0], r.sid[0]]); assert.equal(r.pref, true, "the store you buy it at is added to the food"); assert.equal(r.spent, 3.9);
 });
 
 test("the list for the store you are in: what you usually buy elsewhere moves to «At other stores», still on the list, with a button to buy it here instead", async () => {
   const page = await start(); await win(page);
-  const r = await page.evaluate(() => { const a = storeAdd("A"), b = storeAdd("B"); S.shop.pref["t-rice"] = a; S.shop.pref["t-chicken"] = b; S.shop.store = a; DATA_V++;
+  const r = await page.evaluate(() => { const a = storeAdd("A"), b = storeAdd("B"); setFoodStores("t-rice", [a]); setFoodStores("t-chicken", [b]); S.shop.store = a; DATA_V++;
     const h = shopPanel(false).h, d = document.createElement("div"); d.innerHTML = h; const here = [...d.querySelectorAll(".shop-list .shop-row .t")].map(x => x.innerText), other = [...d.querySelectorAll(".shop-other .shop-row .t")].map(x => x.innerText);
     const total = shopToBuy().length; ACT["shop-here"]({ dataset: { id: "t-chicken" } }); DATA_V++; const d2 = document.createElement("div"); d2.innerHTML = shopPanel(false).h;
-    return { here, other, total, pref: S.shop.pref["t-chicken"] === a, hereAfter: [...d2.querySelectorAll(".shop-list .shop-row .t")].map(x => x.innerText).sort(), otherAfter: d2.querySelectorAll(".shop-other").length }; });
+    return { here, other, total, pref: foodStores("t-chicken").includes(a), hereAfter: [...d2.querySelectorAll(".shop-list .shop-row .t")].map(x => x.innerText).sort(), otherAfter: d2.querySelectorAll(".shop-other").length }; });
   assert.deepEqual(r.here.filter(x => /rice/.test(x)), ["Test rice"]); assert.deepEqual(r.other, ["Test chicken"]); assert.equal(r.total, 3); assert.ok(r.pref);
   assert.ok(r.hereAfter.includes("Test chicken") && r.hereAfter.includes("Test rice")); assert.equal(r.otherAfter, 0);
 });

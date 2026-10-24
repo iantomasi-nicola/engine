@@ -196,4 +196,5 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L26 | Pagina prima di avviare un allenamento rifatta (più smart, bella, usabile); allenamento del giorno con suggerimenti: progressione, meno ripetizioni/serie, cambio esercizio (anche con IA) e un tasto che applica le modifiche scelte tra quelle consigliate | M10 (pagina e applicazione) + M11 (logica di progressione dai dati) | Aggregata |
 | L27 | Contaflessioni con sensore negli allenamenti live, disattivabile | M12 (con lo spike push-up I4) | Aggregata |
 | L28 | Auto-plan: intervallo di date personalizzato (da X a Y) e nessuna sovrascrittura se un pasto ha già qualcosa | M9 | Aggregata |
+| L29 | Campo «Bought at» in ogni food (più negozi possibili: lo stesso prodotto può stare in più supermercati); tutti i food già aggiunti = Lidl (una volta, con Annulla); scansione dentro un filtro negozio → nuovo prodotto di quel negozio, prodotto già noto non duplicato ma con il negozio aggiunto; brand piccolo nelle righe della lista; lista da Today a tutto schermo | M3b (ritocco) | **Fatto (24/10)** |
 

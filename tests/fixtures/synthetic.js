@@ -18,7 +18,7 @@ function seed({ withPlan = true, withPantry = false } = {}) {
     },
     recipes: { "t-bowl": { id: "t-bowl", name: "Test bowl", servings: 2, meals: ["m"], source: "custom", note: "", ingredients: [{ food: "t-rice", g: 200 }, { food: "t-chicken", g: 300 }, { food: "t-oil", g: 10 }] } },
     days,
-    shop: { checked: {}, extras: [], pantry: withPantry ? { "t-rice": { g: 150 } } : {}, range: 7 },
+    shop: { checked: {}, extras: [], pantry: withPantry ? { "t-rice": { g: 150 } } : {}, range: 7, mig: { lidl: 1 } },
   };
 }
 module.exports = { seed, plus, iso };

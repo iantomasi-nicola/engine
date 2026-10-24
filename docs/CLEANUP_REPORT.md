@@ -147,3 +147,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Bug trovato dai test:** lo swipe orizzontale su una riga della lista cambiava anche scheda (gesto globale di cambio tab): `.shop-row` aggiunto alle zone escluse. Una regola CSS tardiva (`.sq-top`) annullava il layout a colonna del riepilogo: resa più specifica.
 
 **Aperto:** lo swipe esiste solo su touch (su desktop resta il pulsante Replace nel foglio Buy).
+
+## M3b ritocchi 2 (24/10/2026): negozio come campo del food
+**Verificato:** `stores-food` (7: migrazione Lidl una tantum con Annulla, conversione del vecchio «negozio abituale», più negozi per prodotto, scansione dentro il filtro negozio, food a mano, campo «Bought at» nell'editor, brand e lista a tutto schermo su 3 viewport con ritorno dal selettore negozio) e `stores` aggiornato; suite completa.
+
+**Eliminato / unificato:** `S.shop.pref[foodId]` (un solo negozio) sostituito da `food.stores` (elenco; migrazione automatica `storesMigrate`, poi `pref` sparisce); un solo punto di scrittura (`setFoodStores`/`addFoodStore`), un solo punto di lettura (`foodStores`/`soldAt`); `storeBarHTML` già rimossa nel passo precedente. Nuova opzione `full` dei fogli (`.sheet.full`) usata dalla lista da Today.
+
+**Compatibilità dati:** campo opzionale `food.stores`; gli id di negozi rimossi restano nel food ma vengono ignorati in lettura, così Annulla della rimozione ripristina tutto. La migrazione Lidl si esegue una sola volta per account (`S.shop.mig.lidl`), 4 s dopo l'avvio, solo sui food dell'utente senza negozio; se esiste già un negozio «Lidl» viene riusato. Rischio noto: su un dispositivo nuovo che sincronizza foods e impostazioni in momenti diversi la migrazione potrebbe girare prima che arrivi il flag dal cloud (in tal caso non fa danni: i food con negozio non vengono toccati).
+
+**Aperto:** i food predefiniti (non aggiunti da te) restano «ovunque» finché non imposti un negozio.
