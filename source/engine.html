@@ -1415,6 +1415,10 @@ body.live-mode .main{padding-bottom:120px!important}
 .lv-main>.pv-sec:first-child,.lv-side>.pv-sec:first-child{border-top:0}
 .pv-hero .lv-h1{font-size:34px;line-height:1.1}.pv-hero .pv-tiles{display:flex;flex-wrap:wrap;gap:8px 28px}.pv-hero .pv-tiles>div{background:none;border:0;border-radius:0;padding:0;text-align:left}
 .lv-side .pv-sec{padding-top:6px}
+/* the check-ups in Reminders: switch, name with its next date, interval */
+/* time fields fit «09:00 AM» in every locale (they were cut to «09:00 AN») */
+input.inp[type=time]{max-width:none!important;min-width:9.5em;width:auto}
+.ck-row{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}.ck-t small{display:block;font-size:12.5px}.ck-n{max-width:118px;justify-self:end}span.ck-n{font-size:13px;white-space:nowrap}
 /* Shopping on the phone: «Bought» shows only its + so the title and the dates fit */
 @media (max-width:420px){.shop-prod .lbl{display:none}.shop-prod{padding-inline:10px!important;min-width:40px}}
 /* the run preview: its sections lose the box too, divided by a line like the strength one */
@@ -4011,8 +4015,6 @@ function loadState() {
     if (rest === 0) alerts.push("No rest day in the last 7");
     if (build >= R.deloadAfter) alerts.push("Deload week due (−40% volume)");
     if (rs.source === "provisional") alerts.push("Running zones are provisional: do the lactate test");
-    if (rs.daysSince != null && rs.daysSince > R.retest) alerts.push("Lactate retest due");
-    if (nextCal && today > nextCal) alerts.push("Calisthenics retest due");
     return { l7, usual, ratio, hard, rest, km7, weeks, build, sleepLast, sleep3, rhr7, base, hrv7, hrvBase, hrvSd, hrvZ, hrvLast, hrvOk, ready, readyText, alerts, lastCal, nextCal };
   });
 }
@@ -6946,7 +6948,7 @@ function coachInsights(date) {
   if (smart && date === today) {
     const C = coaching(); if (/Consider/.test(C.weekly)) out.push({ pr: 3, tone: "accent", icon: "chart", t: "Weekly check", d: esc(C.weekly), act: "tab", data: `data-tab="progress"`, btn: "Progress" });
     if (C.brk && /due/.test(C.brk)) out.push({ pr: 4, tone: "accent", icon: "leaf", t: "Diet break due", d: esc(C.brk.replace(/^Diet break due:\s*/, "")), act: "ph-break", btn: "Start break" });
-    for (const a of loadState().alerts.slice(0, 2)) out.push({ pr: 5, tone: "warn", icon: "bolt", t: a, d: /deload/i.test(a) ? "Cut volume about 40% this week; keep intensity short." : /lactate/i.test(a) ? "Do the 30′ test when rested: it updates zones and paces." : /calisthenics/i.test(a) ? "Same order and warm-up as last time so results compare." : "Keep the next sessions easy.", act: "tab", data: `data-tab="train"`, btn: "Train" });
+    for (const a of loadState().alerts.slice(0, 2)) out.push({ pr: 5, tone: "warn", icon: "bolt", t: a, d: /deload/i.test(a) ? "Cut volume about 40% this week; keep intensity short." : /lactate/i.test(a) ? "Do the 30′ test when rested: it updates zones and paces." : "Keep the next sessions easy.", act: "tab", data: `data-tab="train"`, btn: "Train" });
   }
   if (typeof cheatTips === "function") out.push(...cheatTips(date));
   if (typeof nextRace === "function" && date === today) { const r = nextRace(); if (r) { const I = raceInsight(r), d = I.days;
@@ -9230,6 +9232,8 @@ VIEWS.today = function () {
   const rows = [
     `<button class="td-row" data-act="${tl.length ? "wo-open" : "plan-wo"}" data-date="${tm}" data-i="0" data-list="planned"><span><b>Tomorrow</b><small>${tl.length ? esc(tl.map(w => (w.tpl ? tplById(w.tpl)?.name : w.note || w.sport)).join(" + ")) + (typeof gearShort === "function" ? gearShort(tl, tm) : "") : "Rest"}</small></span><span class="faint">${tl.length ? hm(tl.reduce((a, w) => a + (+w.min || 0), 0)) : ""}</span></button>`,
     race ? `<button class="td-row" data-act="rc-edit" data-id="${race.id}"><span><b>${esc(race.name)}</b><small>${(() => { const I = raceInsight(race); return [fmtDM(race.date), race.goal ? "goal " + esc(race.goal) : "", I.pred ? "predicted " + fmtClock(I.pred) : ""].filter(Boolean).join(" · "); })()}</small></span><span class="td-cd"><b>${daysBetween(today, race.date)}</b><small>days</small></span></button>` : "",
+    (() => { const C = checksDue(today); if (!C.length) return ""; const c = C[0];   /* the check-ups due: one row, the first one's button */
+      return `<button class="td-row ck-due" data-act="${c.act}" ${c.data}><span><b>${C.length === 1 ? `${c.t} due` : `Check-ups due · ${C.map(x => x.t).join(", ")}`}</b><small>${esc(c.what)} · last ${fmtDM(c.last)}</small></span><span class="link">${c.btn}</span></button>`; })(),
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
@@ -11116,8 +11120,9 @@ function reminderPrefs() {
   return `<div class="field"><span class="flabel">Reminders</span>
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!R.on && perm === "granted"}" data-act="rem-toggle" aria-label="Notifications"></button><span>Notifications on this device<small class="faint" style="display:block;font-size:12.5px">${perm === "denied" ? "Blocked for this site: allow notifications in the browser settings." : perm === "unsupported" ? "This browser can't show notifications." : "At each supplement time, and for the pantry at the time below. They arrive while the app is open or in the background."}</small></span></label>
     <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rem-xp" style="font-size:13px">Pantry check at</label><input id="rem-xp" class="inp" type="time" value="${esc(R.pantryAt || "18:00")}" data-chg="rem-xp" style="max-width:130px"></div>
+    ${checkPrefs()}
     <button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
-    <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating) and the use-by dates in your pantry: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div></div>`;
+    <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating), the use-by dates in your pantry and the next check-ups: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div></div>`;
 }
 ACT["rem-toggle"] = async () => { const R = S.settings.reminders || {};
   if (R.on && "Notification" in window && Notification.permission === "granted") { S.settings.reminders = { ...R, on: false }; saveSettings(); scheduleRender(); return; }
@@ -11143,13 +11148,40 @@ function reminderTick() {
   for (const [t, g] of Object.entries(by)) { g.forEach(s => remMark(d + "|" + s.k)); const m = suppMessage(g); notify(m.title, m.body, "supp-" + t, { k: g.map(s => s.k).join(","), date: d }); }
   const at = R.pantryAt || "18:00", key = d + "|pantry"; if (now >= at && sent[key] !== d) { const E = expiryList(), items = [...E.expired, ...E.soon.filter(x => x.dl <= 1)]; remMark(key);
     if (items.length) notify("Pantry: use soon", items.slice(0, 4).map(x => `${x.f.name}: ${dlTxt(x.dl)}`).join("\n") + (items.length > 4 ? `\n+${items.length - 4} more` : ""), "engine-expiry", { tab: "pantry" }); }
+  checksTick(d, now, sent);
 }
+function checksTick(d, now, sent) { const C = S.settings.reminders?.checks || {}, key = d + "|checks"; if (now < (C.at || "09:00") || sent[key] === d) return; remMark(key); const m = checksNotice(d); if (m) notify(m.title, m.body, "engine-checks", { tab: "progress" }); }
 function addMin(hm, m) { const [h, mi] = hm.split(":").map(Number); const t = Math.max(0, h * 60 + mi + m); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); }
 setInterval(reminderTick, 30000); setTimeout(reminderTick, 4000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(reminderTick, 800); });
 /* "Taken" pressed on a notification: the service worker tells the open app, or opens it with ?supp= */
 navigator.serviceWorker?.addEventListener?.("message", e => { const m = e.data || {}; if (m.type === "supp-taken" && m.k) { suppMark(m.date || todayISO(), m.k); } if (m.type === "open-tab" && m.tab) { UI.tab = m.tab; if (FUEL_TABS.includes(m.tab)) UI.fuelTab = m.tab; scheduleRender(); } });
 function suppMark(date, k) { if (String(k).includes(",")) { String(k).split(",").forEach(x => suppMark(date, x)); return; } if (suppTaken(date, k)) return; mutateLog(date, day => { day.supp = { ...(day.supp || {}), [k]: nowHM() }; }); const x = SUPPS().find(s => s.id === k.split("@")[0]); if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock - 1); saveSettings(); } toast(`${x?.name || "Supplement"} ticked`); scheduleRender(); }
+/* ================= check-ups: measurements, progress photos and the tests come back on a schedule (L18) =================
+   Each one has its interval (measurements and photos here; the two tests follow «Retest every» in Training) and a switch.
+   When one is due it shows on Today with what to do and a button; a notification comes on the day it falls due and once
+   a week after that, until it is done. Nothing is due before the first one is logged. */
+function checkList() {
+  const C = S.settings.reminders?.checks || {}, every = +FIT().run.retest || 42, last = a => a.length ? a.sort().pop() : null;
+  return [
+    { k: "meas", t: "Measurements", every: +C.measEvery || 28, last: last(Object.keys(S.body.m || {})), what: "Waist, hips, chest, arms and thighs: in the morning, before eating, same tape", act: "open-result", data: 'data-type="measure"', btn: "Measure" },
+    { k: "photo", t: "Progress photos", every: +C.photoEvery || 28, last: last((S.body.photos || []).map(p => p.date)), what: "Front, side and back: same light, distance and time of day", act: "pp-new", data: "", btn: "Take them" },
+    { k: "run", t: "Lactate test", every, last: runState().src?.date || null, what: `${FIT().run.testMin || 30}′ test when rested: it recalculates your running zones and paces`, act: "open-result", data: 'data-type="run"', btn: "Log it" },
+    { k: "cal", t: "Calisthenics test", every, last: last((S.train.calis || []).map(c => c.date)), what: "Max reps and holds, same order and warm-up as last time, so the results compare", act: "open-result", data: 'data-type="calis"', btn: "Log it" }
+  ].map(c => ({ ...c, on: C[c.k] !== false, next: c.last ? addDays(c.last, c.every) : null }));
+}
+function checksDue(d = todayISO()) { return checkList().filter(c => c.on && c.next && d >= c.next); }
+/* the message for a day: on the day a check-up falls due and every 7 days after */
+function checksNotice(d) { const L = checksDue(d).filter(c => daysBetween(c.next, d) % 7 === 0); if (!L.length) return null;
+  return { title: L.length === 1 ? `${L[0].t} due` : `Check-ups due · ${L.length}`, body: L.map(c => `${c.t}: ${c.what}`).join("\n") }; }
+function checkPrefs() { const t = todayISO(), C = S.settings.reminders?.checks || {};
+  return `<div class="field ck-set"><span class="flabel">Check-ups</span>${checkList().map(c => `<div class="row sw-row ck-row"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="${c.k}" aria-label="${c.t} reminder"></button><span class="ck-t">${c.t}<small class="faint">${!c.last ? "Starts after the first one you log" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${c.k === "meas" || c.k === "photo" ? `<div class="unit-inp ck-n"><input class="inp" inputmode="numeric" value="${c.every}" data-chg="ck-every" data-k="${c.k}" aria-label="${c.t} every how many days"><span>days</span></div>` : `<span class="faint ck-n">every ${c.every} d</span>`}</div>`).join("")}
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="ck-at" style="font-size:13px">Check-up reminders at</label><input id="ck-at" class="inp" type="time" value="${esc(C.at || "09:00")}" data-chg="ck-at" style="max-width:130px"></div>
+    <small class="faint" style="font-size:12.5px">The two tests follow «Retest every» in Training. The new results update zones, paces and the trends.</small></div>`; }
+const ckSet = o => { const R = S.settings.reminders || {}; S.settings.reminders = { ...R, checks: { ...(R.checks || {}), ...o } }; saveSettings(); };
+ACT["ck-toggle"] = el => { const k = el.dataset.k, C = S.settings.reminders?.checks || {}; ckSet({ [k]: C[k] === false }); scheduleRender(); };
+CHG["ck-every"] = (v, el) => { ckSet({ [el.dataset.k + "Every"]: clamp(Math.round(num(v)) || 28, 7, 180) }); scheduleRender(); };
+CHG["ck-at"] = v => ckSet({ at: v || "09:00" });
 /* the calendar file */
 function icsEsc(t) { return String(t || "").replace(/[\\;,]/g, m => "\\" + m).replace(/\n/g, "\\n"); }
 ACT["rem-ics"] = async () => {
@@ -11162,6 +11194,9 @@ ACT["rem-ics"] = async () => {
   const at = (S.settings.reminders?.pantryAt || "18:00").replace(":", "") + "00";
   for (const [id, p] of Object.entries(S.shop.pantry || {})) { const f = getFood(id) || BUILTIN[id]; if (!f || !p.exp || !(p.g > 0) || p.exp < todayISO()) continue; const day = addDays(p.exp, -1) < todayISO() ? p.exp : addDays(p.exp, -1);
     L.push("BEGIN:VEVENT", `UID:engine-exp-${id}-${p.exp}@engine`, `DTSTAMP:${stamp}`, `DTSTART:${dt(day)}T${at}`, "DURATION:PT5M", `SUMMARY:${icsEsc(`Use soon: ${f.name} (by ${fmtDM(p.exp)})`)}`, "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(f.name + " expires " + fmtDM(p.exp))}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT"); }
+  const cAt = (S.settings.reminders?.checks?.at || "09:00").replace(":", "") + "00";
+  for (const c of checkList()) { if (!c.on || !c.next) continue; const day = c.next < todayISO() ? todayISO() : c.next;
+    L.push("BEGIN:VEVENT", `UID:engine-check-${c.k}@engine`, `DTSTAMP:${stamp}`, `DTSTART:${dt(day)}T${cAt}`, "DURATION:PT10M", `RRULE:FREQ=DAILY;INTERVAL=${c.every}`, `SUMMARY:${icsEsc(c.t)}`, `DESCRIPTION:${icsEsc(c.what)}`, "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(c.t)}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT"); }
   L.push("END:VCALENDAR");
   const txt = L.join("\r\n"), n = L.filter(l => l === "BEGIN:VEVENT").length; if (!n) { toast("Nothing to remind yet: add a supplement or a use-by date."); return; }
   if (await saveFile("engine-reminders.ics", txt, `Calendar file saved · ${n} reminder${n > 1 ? "s" : ""}`)) return; toast("Couldn't save the file here.");
@@ -12146,6 +12181,7 @@ function pushPlan() {
     const H = HYD(); if (H.on && H.remind && H.every) { const g = waterGoal(d), a = hm2h(H.from), b = hm2h(H.to);
       for (let h = a + H.every; h <= b; h += H.every) { const hm = `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round(h % 1 * 60)).padStart(2, "0")}`, exp = r0((h - a) / Math.max(1, b - a) * g);
         out.push({ key: `water|${d}|${hm}`, at: atLocal(d, hm), title: "Drink some water", body: `About ${r1(exp / 1000)} l by now, ${r1(g / 1000)} l today.`, tag: "engine-water", data: { tab: "today" }, cond: { date: d, water_lt: exp - 250 } }); } }
+    const ck = checksNotice(d); if (ck) out.push({ key: `checks|${d}`, at: atLocal(d, R.checks?.at || "09:00"), title: ck.title, body: ck.body, tag: "engine-checks", data: { tab: "progress" } });
     const RP = S.settings.report || {}; if (dow(d) === 0 && RP.notify !== false) out.push({ key: `report|${d}`, at: atLocal(d, RP.at || "08:30"), title: "Your week in review", body: "Last week's numbers and three things to change.", tag: "engine-report", data: { tab: "report" } });
   }
   return out.filter(x => x.at > now);

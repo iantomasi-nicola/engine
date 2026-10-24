@@ -84,3 +84,42 @@ test("Shopping on the phone: the title and the dates are whole (not cut by the b
   assert.equal(r.cut, false, "«Shopping» is not cut"); assert.equal(r.subLines, 1, "the dates stay on one line"); assert.equal(r.label, "Bought");
   assert.deepEqual(app.errors, []);
 });
+
+test("L18 check-ups: Reminders lists measurements, photos and the two tests (28/28/42/42 days, starting after the first one), the switches and intervals survive a reload", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const L = checkList(), box = document.createElement("div"); box.innerHTML = checkPrefs();
+    const rows = [...box.querySelectorAll(".ck-row")].map(e => e.textContent.replace(/\s+/g, " ").trim());
+    ACT["ck-toggle"]({ dataset: { k: "photo" } }); CHG["ck-every"]("21", { dataset: { k: "meas" } }); CHG["ck-at"]("07:30");
+    return { every: L.map(c => [c.k, c.every, c.on, c.next]), rows }; });
+  assert.deepEqual(r.every, [["meas", 28, true, null], ["photo", 28, true, null], ["run", 42, true, null], ["cal", 42, true, null]]);
+  assert.equal(r.rows.length, 4); assert.ok(r.rows.every(x => /Starts after the first one you log/.test(x)), r.rows.join(" | "));
+  await app.reload();
+  const after = await app.page.evaluate(() => ({ L: checkList().map(c => [c.k, c.every, c.on]), at: S.settings.reminders.checks.at, set: (UI.tab = "settings", render(), document.body.innerText.includes("check-ups")) }));
+  assert.deepEqual(after.L, [["meas", 21, true], ["photo", 28, false], ["run", 42, true], ["cal", 42, true]]); assert.equal(after.at, "07:30");
+  assert.deepEqual(app.errors, []);
+});
+
+test("L18 check-ups: what is due shows on Today with the thing to do and a button; the message comes on the due day and weekly after; push queue and calendar file carry it", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { const t = todayISO();
+    S.body.m = { [addDays(t, -28)]: { waist: 80 } }; S.body.photos = [{ id: "p1", date: addDays(t, -10), pose: "front" }]; S.train.calis = [{ id: "c1", date: addDays(t, -45), ex: "Pull-up", test: "Max reps (BW)", val: 10 }];
+    DATA_V++; UI.tab = "today"; render();
+    const due = checksDue(t).map(c => c.k), txt = document.body.innerText, btn = !!document.querySelector('[data-act="open-result"][data-type="measure"]');
+    const n0 = checksNotice(t), n3 = checksNotice(addDays(t, 3)), n7 = checksNotice(addDays(t, 7)), push = (() => { const m0 = S.body.m; S.body.m = { [addDays(t, -27)]: { waist: 80 } }; DATA_V++; const k = pushPlan().filter(x => x.key.startsWith("checks|")).map(x => x.key); S.body.m = m0; DATA_V++; return k; })();
+    let sent = []; const _n = notify; notify = (title, body, tag) => { sent.push([title, tag]); }; checksTick(t, "23:59", {}); notify = _n;
+    let ics = ""; const _s = saveFile; saveFile = async (n, txt) => { ics = txt; return true; }; await ACT["rem-ics"](); saveFile = _s;
+    return { due, row: [...document.querySelectorAll(".ck-due")].map(e => e.innerText.replace(/\s+/g, " ")), photo: /Progress photos/.test(document.querySelector(".ck-due")?.innerText || ""), btn, n0, n3, n7: n7?.title, push, sent, ics: (ics.match(/UID:engine-check-[a-z]+/g) || []).sort(), rr: /RRULE:FREQ=DAILY;INTERVAL=28/.test(ics) }; });
+  assert.deepEqual(r.due, ["meas", "cal"]); assert.equal(r.row.length, 1, "one row on Today"); assert.match(r.row[0], /Check-ups due · Measurements, Calisthenics test/); assert.match(r.row[0], /Waist, hips/); assert.ok(!r.photo); assert.ok(r.btn, "a button opens the measurements");
+  assert.equal(r.n0.title, "Measurements due", "only the one falling due today"); assert.equal(r.n3, null); assert.equal(r.n7, "Measurements due", "once a week after");
+  assert.deepEqual(r.push, [`checks|${await app.page.evaluate(() => addDays(todayISO(), 1))}`], "the push queue carries the one falling due tomorrow"); assert.deepEqual(r.sent, [["Measurements due", "engine-checks"]]);
+  assert.deepEqual(r.ics, ["UID:engine-check-cal", "UID:engine-check-meas", "UID:engine-check-photo"]); assert.ok(r.rr);
+  assert.deepEqual(app.errors, []);
+});
+
+test("time fields are not cut (the AM/PM shows whole)", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const box = document.createElement("div"); box.className = "main"; box.innerHTML = reminderPrefs(); document.body.appendChild(box);
+    const L = [...box.querySelectorAll('input[type="time"]')].map(i => ({ id: i.id, w: Math.round(i.getBoundingClientRect().width) })); box.remove(); return L; });
+  assert.ok(r.length >= 3); for (const x of r) assert.ok(x.w >= 140, `${x.id} is ${x.w} px`);
+  assert.deepEqual(app.errors, []);
+});
