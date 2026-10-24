@@ -24,7 +24,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
 | M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15, **L16** | L | Medio | In attesa |
 | M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21**, L30–L32 | L | Medio | **Fatta (24/10)** in due passi: M8a (A6, A7, L21, L30–L32) e M8b (C3 import ricetta con AI, H10 verificato, L33–L37) |
-| M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara), **L28** (auto-plan su intervallo, senza sovrascrivere) | XL | Alto | – |
+| M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara), **L28** (auto-plan su intervallo, senza sovrascrivere) | XL | Alto | **M9a fatta (24/10)**: L28, E1; restano M9b (L19 consigli pre/post gara) e E2–E5, C7 (motore di ottimizzazione, da proporre a parte) |
 | M10 Meteo e preparazione workout | F2, F3, F4, **L26** (pagina pre-avvio, suggerimenti e tasto «applica») | M | Basso | – |
 | M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20**, **L26** (logica di progressione) | XL | Medio | – |
 | M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4, **L27** (contaflessioni nel live, disattivabile) | M | Basso | – |

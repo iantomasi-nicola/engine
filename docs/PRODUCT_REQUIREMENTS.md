@@ -78,7 +78,7 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 ## E. AI Meal Planning
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| E1 | Piani da data X a Y e scorciatoie (settimana, prossima, N giorni, intervallo) | Should | M | B2 | Parziale | Stesso selettore di B2 |
+| E1 | Piani da data X a Y e scorciatoie (settimana, prossima, N giorni, intervallo) | Should | M | B2 | **Fatto (M9a)**: Auto-plan su Today/7 giorni/prossima settimana/intervallo da oggi (max 31 giorni) | Stesso selettore di B2 |
 | E2 | Pasti realistici: abitudini, preferenze, disponibilità, allenamenti, fabbisogni, varietà | Should | L | C1, E5 | Parziale | Metriche di varietà e vincoli verificabili |
 | E3 | Modalità Svuota Storage (scadenze, confezioni aperte, minimo spreco/acquisti) | Should | L | A4, E5 | Parziale | Risparmio misurabile su fixture |
 | E4 | Strategie spesa economica/normale/premium con prezzi reali o stime dichiarate | Could | M | B6 | Mancante | Prezzo reale vs stima etichettato |
@@ -195,7 +195,7 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L25 | Sezione supermercati compatta (una sola riga con la pillola del negozio, scelta e gestione nel foglio «Store») e funzioni aggiunte coerenti col design | M3b (ritocco) | **Fatto (24/10)**; regola permanente in AGENTS.md |
 | L26 | Pagina prima di avviare un allenamento rifatta (più smart, bella, usabile); allenamento del giorno con suggerimenti: progressione, meno ripetizioni/serie, cambio esercizio (anche con IA) e un tasto che applica le modifiche scelte tra quelle consigliate | M10 (pagina e applicazione) + M11 (logica di progressione dai dati) | Aggregata |
 | L27 | Contaflessioni con sensore negli allenamenti live, disattivabile | M12 (con lo spike push-up I4) | Aggregata |
-| L28 | Auto-plan: intervallo di date personalizzato (da X a Y) e nessuna sovrascrittura se un pasto ha già qualcosa | M9 | Aggregata |
+| L28 | Auto-plan: intervallo di date personalizzato (da X a Y) e nessuna sovrascrittura se un pasto ha già qualcosa | M9a | **Fatto (24/10)**: «Keep, fill the gaps» lascia intatti i pasti già riempiti (verificato da test) e lo dice prima («1 meal already has food…») e dopo («N meals left as they were»); «Start fresh» dice quanti elementi sostituisce; gli eaten restano sempre |
 | L29 | Campo «Bought at» in ogni food (più negozi possibili: lo stesso prodotto può stare in più supermercati); tutti i food già aggiunti = Lidl (una volta, con Annulla); scansione dentro un filtro negozio → nuovo prodotto di quel negozio, prodotto già noto non duplicato ma con il negozio aggiunto; brand piccolo nelle righe della lista; lista da Today a tutto schermo | M3b (ritocco) | **Fatto (24/10)** |
 | L30 | Modifica del food (tasto edit) dalla lista della spesa, con ritorno al foglio Buy | M8a | **Fatto (24/10)** |
 | L31 | Avviso di duplicati quando si inserisce un food: stesso nome (parole in qualsiasi ordine, accenti), stesso barcode, altro nome con gli stessi valori; un secondo Save per aggiungerlo comunque | M8a | **Fatto (24/10)** |

@@ -187,3 +187,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** nuovo campo `buys[].tick` (opzionale); `catV: 2` sugli alimenti riparati; l'interfaccia di runtime `window.claude` resta (è il contratto con lo shim).
 
 **Aperto:** il ritorno `keep`/`_ret` copre solo la lista da Today: gli altri percorsi (Add → qty, check-in → giornale, ecc.) hanno ritorni propri e vanno censiti in M14; «Ticked today» e l'annulla di «Finish» vivono solo nella sessione corrente per lo snapshot dell'annulla (la spunta, invece, si può sempre riprendere).
+
+## M9a Auto-plan su intervallo, senza sovrascrivere (24/10/2026)
+**Verificato:** `planner-range` (4: riempimento di un intervallo con pasti già scritti e mangiati intatti e messaggio, «Start fresh» con conteggio e eaten conservati, selettore Today/7 days/Next week/Custom con limiti — da oggi, massimo 31 giorni, da > a corretto — e piè di foglio, 3 viewport); suite completa.
+
+**Eliminato / unificato:** il calcolo delle date duplicato in `runPlanner` e nel foglio sostituito da `plannerDates`; l'anteprima di cosa viene toccato (`plannerPreview`) è unica per foglio e messaggio finale.
+
+**Compatibilità:** gli ingressi esistenti (`scope: "day"|"week"`) continuano a funzionare; nuovi `next` e `range` con `from`/`to`.
+
+**Aperto:** E2–E5 e C7 (motore di ottimizzazione con vincoli, svuota storage, strategie di spesa, Food Coach) sono lavori grandi e a rischio alto: vanno proposti a parte con criteri di completamento; M9b (consigli alimentari pre/post gara, L19) è il prossimo passo.
