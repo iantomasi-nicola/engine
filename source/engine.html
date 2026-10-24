@@ -111,6 +111,8 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pan-q b{min-width:58px;text-align:center;font-weight:600}
 .pan-q small{font-size:11.5px;color:var(--muted);margin-left:2px;font-weight:400}
 .stock-box{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin-top:8px;border-radius:16px;background:var(--md-sc-high,var(--surface-2))}.stock-box .flabel{display:inline-flex;align-items:center;gap:6px;margin:0}.stock-box .pan-q{margin-left:auto}.sb-v{background:none;padding:2px 4px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:36px}.sb-s{flex-basis:100%;font-size:12.5px}
+.fd-bar{justify-content:space-between;align-items:center;gap:8px}.fd-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fd-macros .inp,.fd-g4 .inp{padding-inline:10px}.fd-serv{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:6px;align-items:center}
+.fd-more{border-radius:16px;background:var(--md-sc-high,var(--surface-2));padding:0 12px}.fd-more>summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;list-style:none}.fd-more>summary::-webkit-details-marker{display:none}.fd-more>summary b{font-weight:600;font-size:14px}.fd-more>summary small{font-size:12.5px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fd-more>summary::after{content:"▾";color:var(--faint);flex:none}.fd-more[open]>summary::after{content:"▴"}.fd-in{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
 .pa-tools{display:flex;flex-direction:column;gap:8px;padding:8px 0 4px}.pa-forecast{margin:8px 0;padding:10px 12px}.pa-forecast summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.pa-forecast summary .faint{font-size:12.5px}.pa-fchips{margin:8px 0 4px}
 .lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
 .lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
@@ -3230,6 +3232,9 @@ function defaultFit() {
   return {
     targetMode: "simple",
     profile: { sex: "Male", dob: "", height: 175, startWeight: 75, bf: null, maxHr: null },
+    /* the sensors that give the heart rate: the watch on the wrist or an armband. kcal basis = what the app that records the workout reports (gross includes resting energy) */
+    devices: [{ id: "zepp", name: "Amazfit (wrist)", kind: "wrist", kcal: "gross" }, { id: "polar", name: "Polar armband", kind: "strap", kcal: "gross" }],
+    sportDevice: { Running: "polar", Calisthenics: "zepp" },
     goal: { type: "bf", value: 15, date: "", leanShare: 0.1 },
     phases: [{ start: todayISO(), phase: "Maintenance", kcal: 0 }],
     phaseParams: {
@@ -3442,9 +3447,9 @@ function energySeries() {
       const eat = kcals.reduce((a, b) => a + b, 0);
       // the day's watch total holds everything the watch counted, extra minutes of a session left running included: take out the raw value, not the trimmed one
       const watchView = (L.workouts || []).reduce((a, w) => a + (w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal), 0);
-      let neat = null;
+      let neat = null, neatSrc = "watch";
       if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= E.minWatchNeat) neat = v; }
-      if (neat == null) { const prev = neats.slice(-7); neat = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : E.neat; }
+      if (neat == null) { const prev = neats.slice(-7); neat = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : E.neat; neatSrc = prev.length ? "avg" : "default"; }
       neats.push(neat);
       const tef = E.tef * (bmr + neat + eat);
       const tdeeW = bmr + neat + eat + tef;
@@ -3463,7 +3468,7 @@ function energySeries() {
       const target = tdee + (+ph.kcal || 0);
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
-      rows[d] = { d, real, trend, bf, bmr, neat, eat, sess, kcals, tef, tdeeW, factor: f, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
       order.push(d);
     }
     return { rows, order, start, end };
@@ -4178,12 +4183,13 @@ VIEWS.settings = function () {
       <div class="faint" style="font-size:12.5px">The planner learns from what you plan and eat: foods you use often in a meal come back there, favourites (★) and pantry items get priority, and nothing repeats from yesterday.</div>
     </div>`)],
     [50, setGrp("icu", "intervals.icu", icuState().key ? (icuFail() ? "Sync failed" : icuAgo() + " · syncs by itself") : "Not connected", icuSettingsCard())],
-    [60, setGrp("live", "Live workouts & timer", "Voice, sounds, gear, weather, cycling", `<div class="set-in">${playerSettings()}</div>`)],
+    [60, setGrp("live", "Live workouts & timer", "Voice, sounds, gear, weather, cycling, heart-rate sensors", `<div class="set-in">${playerSettings()}</div>${devSettings()}`)],
     [95, setGrp("data", "Data", "Excel export, full backup, setup again", `    <div class="card">
       <div class="lrow"><span><span class="t">Sync</span><span class="s">${Sync.db ? "Saved to your Claude account and synced on every device where you open this page." : "Saved in this browser only. Open the page inside Claude while signed in to sync."}</span></span><span class="end">${syncPill()}</span></div>
       <button class="lrow" data-act="export-xlsx"><span><span class="t">Export to Excel</span><span class="s">Daily log, workouts, meals, weekly table, tests, records, measurements and your foods, one sheet each</span></span><span class="end">${ic("download")}</span></button>
       <button class="lrow" data-act="export"><span><span class="t">Full backup (JSON)</span><span class="s">Everything, including settings, to keep or restore later</span></span><span class="end">${ic("download")}</span></button>
       <button class="lrow" data-act="reset-onboard"><span><span class="t">Run setup again</span><span class="s">Recalculate everything from weight, goal and schedule</span></span><span class="end">${ic("chevR")}</span></button>
+      <div class="lrow"><span><span class="t">Version</span><span class="s" id="app-version">${esc(buildLabel(BUILD()))}</span></span><button class="btn soft sm" data-act="check-update">Check for updates</button></div>
     </div>`)],
     ...SET_EXTRA()].sort((a, b) => a[0] - b[0]).map(x => x[1]).join("")}
   </div>`;
@@ -4638,10 +4644,12 @@ SHEETS.qty = sh => {
 function blankFood(name = "") { return { id: "", name, brand: "", barcode: "", unit: "g", per: { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, sat: 0, salt: 0 }, servings: [], pack: 0, cat: "pantry", role: "P", meals: ["m"], fav: false, noPlan: false, source: "custom" }; }
 SHEETS.food = sh => {
   const d = sh.draft; if (sh.isNew && !d._roleSet && (!d.source || d.source === "custom") && (num(d.per.p) || num(d.per.c) || num(d.per.f))) { const g = guessRoleMeals({ kcal: num(d.per.kcal), p: num(d.per.p), c: num(d.per.c), f: num(d.per.f), sug: num(d.per.sug) }, d.cat, d.name); d.role = g.role; d.meals = g.meals; }
-  if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per); const calc = kcalFromMacros(d.per);
-  const isBuiltinEdit = BUILTIN[d.id] && !sh.isNew;
-  const orig = d.orig;
-  const nfield = (k, l, color, u = "g") => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><div class="unit-inp"><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? "" : ""}" data-in="fd-per" data-k="${k}"><span>${u}</span></div></div>`;
+  if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per);
+  const isBuiltinEdit = BUILTIN[d.id] && !sh.isNew, orig = d.orig, u = d.unit || "g", checkValues = ["off", "label", "ocr", "ai"].includes(d.source);
+  const nf = (k, l, color) => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? "" : ""}" ${k === "kcal" && d.autoKcal ? "readonly " : ""}data-in="fd-per" data-k="${k}"></div>`;
+  const sec = (k, dflt, title, hint, inner) => `<details class="fd-more" data-k="${k}" ${(UI.fdOpen?.[k] ?? dflt) ? "open" : ""}><summary><b>${title}</b><small class="faint">${hint}</small></summary><div class="fd-in">${inner}</div></details>`;
+  const v = k => d.per[k] > 0 ? d.per[k] : "", more = [["Fibre", "fib"], ["Sugars", "sug"], ["Sat.", "sat"], ["Salt", "salt"]].filter(([, k]) => v(k) !== "").map(([l, k]) => `${l} ${r1(v(k))}`).join(" · ");
+  const pr = d.id ? priceViews(d.id) : null, pTxt = pr ? `${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}${pr.perPack != null ? ` · ${fmtEur(pr.perPack)}/pack` : ""}` : "", home = S.shop.pantry[d.id]?.g > 0 ? (q => `${q.v} ${q.u} at home`)(pantryQty(d, S.shop.pantry[d.id])) : "", pu = d._pu || "kg";
   return {
     title: sh.isNew ? (d.source === "off" ? "Imported product" : d.source === "label" ? "Check the label values" : "New food") : "Edit food",
     focus: sh.isNew && !d.name ? "fd-name" : null,
@@ -4651,22 +4659,24 @@ SHEETS.food = sh => {
       ${d.source === "ai" ? `<div class="note accent">Values estimated by Claude. Check them against the pack if you have it.</div>` : ""}
       ${isBuiltinEdit ? `<div class="note">Built-in reference food. Your changes are saved as your own version.</div>` : ""}
       <div class="field"><label for="fd-name">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input id="fd-name" class="inp" value="${esc(d.name)}" data-in="fd" data-k="name" placeholder="e.g. Spaghetti n.5"><button class="icon-btn" data-act="fd-toggle" data-k="fav" aria-pressed="${!!d.fav}" aria-label="${d.fav ? "Remove from favourites" : "Add to favourites"}" title="Favourite: shown first" style="flex:none;color:${d.fav ? "var(--carb)" : "var(--faint)"}">${ic("star")}</button></div></div>
-      <div class="grid2"><div class="field"><label for="fd-brand">Brand</label><input id="fd-brand" class="inp" value="${esc(d.brand || "")}" data-in="fd" data-k="brand"></div>
-        <div class="field"><label for="fd-barcode">Barcode</label><input id="fd-barcode" class="inp" inputmode="numeric" value="${esc(d.barcode || "")}" data-in="fd" data-k="barcode"></div></div>
-      <div class="field"><span class="flabel">Values per 100</span><div class="seg" style="max-width:200px">${["g", "ml"].map(u => `<button data-act="fd-unit" data-u="${u}" aria-pressed="${d.unit === u}">100 ${u}</button>`).join("")}</div></div>
-      <div class="grid4">${nfield("kcal", "Calories", "", "kcal").replace('data-in="fd-per"', d.autoKcal ? 'readonly data-in="fd-per"' : 'data-in="fd-per"')}${nfield("c", "Carbs", "carb")}${nfield("p", "Protein", "pro")}${nfield("f", "Fat", "fat")}</div>
-      <label class="row sw-row fd-auto"><button type="button" class="switch" role="switch" aria-checked="${!!d.autoKcal}" data-act="fd-auto" aria-label="Calculate calories from macros"></button><span>Calories from macros<small class="faint" style="display:block;font-size:12px">4 × protein + 4 × carbs + 9 × fat + 2 × fibre</small></span></label>
-      <div id="fd-calc" class="faint" style="font-size:12.5px">${d.autoKcal ? "" : Math.abs(calc - num(d.per.kcal)) > 15 ? `Macros add up to ${calc} kcal. <button class="link" data-act="fd-usecalc">Use ${calc}</button>` : `Macros add up to ${calc} kcal.`}</div>
-      <div class="grid4">${nfield("fib", "Fibre")}${nfield("sug", "Sugars")}${nfield("sat", "Saturated")}${nfield("salt", "Salt")}</div>
-      ${proMicro() ? `<details class="nut-more"><summary>Vitamins and minerals <span class="faint">per 100 ${d.unit || "g"}${BUILTIN_MX[d.id] ? " · empty = typical values" : ""}</span></summary><div class="grid4">${["mono", "poly", ...Object.keys(NUT).filter(k => NUT[k].micro)].map(k => { const l = k === "mono" ? "Monounsat." : k === "poly" ? "Polyunsat." : NUT[k].l, u = k === "mono" || k === "poly" ? "g" : NUT[k].u; return `<div class="field"><label for="fd-mx-${k}">${l}</label><div class="unit-inp"><input id="fd-mx-${k}" class="inp" inputmode="decimal" value="${d.mx?.[k] ?? ""}" placeholder="${BUILTIN_MX[d.id]?.[k] ?? ""}" data-in="fd-mx" data-k="${k}"><span>${u}</span></div></div>`; }).join("")}</div></details>` : ""}
-      ${orig ? `<button class="btn ghost sm" data-act="fd-reset" style="align-self:flex-start">${ic("undo", "sm")}Reset to ${d.source === "off" ? "Open Food Facts" : "original"} values</button>` : ""}
+      <div class="row fd-bar"><div class="seg" role="group" aria-label="Values per">${["g", "ml"].map(x => `<button data-act="fd-unit" data-u="${x}" aria-pressed="${u === x}">100 ${x}</button>`).join("")}</div><button type="button" class="chip sm" data-act="fd-auto" aria-pressed="${!!d.autoKcal}" title="kcal = 4 × protein + 4 × carbs + 9 × fat + 2 × fibre">kcal from macros</button></div>
+      <div class="fd-macros">${nf("kcal", "kcal")}${nf("c", "Carbs g", "carb")}${nf("p", "Protein g", "pro")}${nf("f", "Fat g", "fat")}</div>
+      <div id="fd-calc" class="faint" style="font-size:12.5px">${fdCalcHTML(d)}</div>
       <div class="field"><span class="flabel">Portions</span>
-        ${(d.servings || []).map((s, i) => `<div class="grid2" style="grid-template-columns:minmax(0,1fr) 110px 44px"><input id="fd-sl-${i}" class="inp" value="${esc(s.l)}" data-in="fd-serv" data-i="${i}" data-k="l" aria-label="Portion name"><div class="unit-inp"><input id="fd-sg-${i}" class="inp" inputmode="decimal" value="${s.g}" data-in="fd-serv" data-i="${i}" data-k="g" aria-label="Portion size"><span>${d.unit}</span></div><button class="icon-btn" data-act="fd-serv-del" data-i="${i}" aria-label="Remove portion">${ic("close", "sm")}</button></div>`).join("")}
-        <button class="btn soft sm" data-act="fd-serv-add" style="align-self:flex-start">${ic("plus", "sm")}Add portion (slice, pot, scoop…)</button></div>
-      <div class="grid2"><div class="field"><label for="fd-pack">Pack size</label><div class="unit-inp"><input id="fd-pack" class="inp" inputmode="decimal" value="${d.pack || ""}" data-in="fd" data-k="pack" placeholder="for the shopping list"><span>${d.unit}</span></div></div>
+        ${(d.servings || []).map((s, i) => `<div class="fd-serv"><input id="fd-sl-${i}" class="inp" value="${esc(s.l)}" data-in="fd-serv" data-i="${i}" data-k="l" aria-label="Portion name"><div class="unit-inp"><input id="fd-sg-${i}" class="inp" inputmode="decimal" value="${s.g}" data-in="fd-serv" data-i="${i}" data-k="g" aria-label="Portion size"><span>${u}</span></div><button class="icon-btn sm" data-act="fd-serv-del" data-i="${i}" aria-label="Remove portion">${ic("close", "sm")}</button></div>`).join("")}
+        <button class="link" data-act="fd-serv-add" style="align-self:flex-start">${ic("plus", "sm")} Add a portion (slice, pot, scoop…)</button></div>
+      <div class="grid2"><div class="field"><label for="fd-pack">Pack size</label><div class="unit-inp"><input id="fd-pack" class="inp" inputmode="decimal" value="${d.pack || ""}" data-in="fd" data-k="pack" placeholder="optional"><span>${u}</span></div></div>
         <div class="field"><label for="fd-cat">Aisle</label><select id="fd-cat" class="inp" data-chg="fd-cat">${AISLES.map(([k, l]) => `<option value="${k}" ${d.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
-      <div class="field"><label for="fd-role">Counts as <small class="faint">· how the planner uses it${sh.isNew && !d._roleSet ? " (picked from the values)" : ""}</small></label><select id="fd-role" class="inp" data-chg="fd-role">${ROLES.map(([k, l]) => `<option value="${k}" ${d.role === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-      ${d.noPlan ? `<div class="note">Left out of auto-plan. <button class="link" data-act="fd-toggle" data-k="noPlan">Include it again</button></div>` : ""}`,
+      <button type="button" class="chip sm" data-act="fd-vary" aria-pressed="${varPack(d)}" title="Loose fruit and veg: the list asks for grams and the price is averaged per kg" style="align-self:flex-start">Sold loose · price per kg</button>
+      ${sec("more", checkValues, "More nutrition", esc(more || "Fibre, sugars, saturated, salt"), `<div class="grid4 fd-g4">${nf("fib", "Fibre g")}${nf("sug", "Sugars g")}${nf("sat", "Saturated g")}${nf("salt", "Salt g")}</div>
+        ${proMicro() ? `<details class="nut-more"><summary>Vitamins and minerals <span class="faint">per 100 ${u}${BUILTIN_MX[d.id] ? " · empty = typical values" : ""}</span></summary><div class="grid4">${["mono", "poly", ...Object.keys(NUT).filter(k => NUT[k].micro)].map(k => { const l = k === "mono" ? "Monounsat." : k === "poly" ? "Polyunsat." : NUT[k].l, un = k === "mono" || k === "poly" ? "g" : NUT[k].u; return `<div class="field"><label for="fd-mx-${k}">${l}</label><div class="unit-inp"><input id="fd-mx-${k}" class="inp" inputmode="decimal" value="${d.mx?.[k] ?? ""}" placeholder="${BUILTIN_MX[d.id]?.[k] ?? ""}" data-in="fd-mx" data-k="${k}"><span>${un}</span></div></div>`; }).join("")}</div></details>` : ""}
+        ${orig ? `<button class="btn ghost sm" data-act="fd-reset" style="align-self:flex-start">${ic("undo", "sm")}Reset to ${d.source === "off" ? "Open Food Facts" : "original"} values</button>` : ""}`)}
+      ${sec("price", false, "Price and stock", esc([pTxt, home].filter(Boolean).join(" · ") || "Price, what you have at home"), `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="unit-inp" style="max-width:140px"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv" aria-label="Price"><span>€</span></div><div class="seg sm" role="group" aria-label="Price per">${[["kg", u === "ml" ? "€/l" : "€/kg"], ["pack", "€/pack"], ["unit", "€/piece"]].map(([k, l]) => `<button data-act="price-unit" data-k="${k}" aria-pressed="${pu === k}">${l}</button>`).join("")}</div></div>
+        <span class="faint" style="font-size:12.5px">${pTxt ? `Now: ${esc(pTxt)}` : "No price yet: it is also remembered when you shop."}</span>${!sh.isNew && d.id ? stockBoxHTML(d.id) : ""}`)}
+      ${sec("details", false, "Details", esc([d.brand, d.barcode, (ROLES.find(r => r[0] === d.role) || [0, ""])[1] && `counts as ${(ROLES.find(r => r[0] === d.role) || [0, ""])[1].toLowerCase()}`].filter(Boolean).join(" · ") || "Brand, barcode, how the planner uses it"), `<div class="grid2"><div class="field"><label for="fd-brand">Brand</label><input id="fd-brand" class="inp" value="${esc(d.brand || "")}" data-in="fd" data-k="brand"></div>
+        <div class="field"><label for="fd-barcode">Barcode</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input id="fd-barcode" class="inp" inputmode="numeric" value="${esc(d.barcode || "")}" data-in="fd" data-k="barcode"><button class="icon-btn" data-act="fd-scan" aria-label="Scan the barcode" title="Scan the barcode" style="flex:none">${ic("scan")}</button></div></div></div>
+        <div class="field"><label for="fd-role">Counts as <small class="faint">· how the planner uses it${sh.isNew && !d._roleSet ? " (picked from the values)" : ""}</small></label><select id="fd-role" class="inp" data-chg="fd-role">${ROLES.map(([k, l]) => `<option value="${k}" ${d.role === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+        ${d.noPlan ? `<div class="note">Left out of auto-plan. <button class="link" data-act="fd-toggle" data-k="noPlan">Include it again</button></div>` : ""}`)}`,
     foot: `${!sh.isNew ? `<button class="btn danger" data-act="fd-del" style="flex:0 0 auto" aria-label="Delete food">${ic("trash", "sm")}</button>${isBuiltinEdit && S.foods[d.id] ? `<button class="btn ghost" data-act="fd-restore">Restore default</button>` : ""}` : ""}<button class="btn primary" data-act="fd-save">${sh.then ? "Save and add" : "Save"}</button>`
   };
 };
@@ -4828,6 +4838,7 @@ SHEETS.onboard = sh => ({
     <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Plan my next 7 days now</span><span class="s">Uses common Italian and Mediterranean staples until it learns your habits</span></span><button class="switch" role="switch" aria-checked="${sh.plan}" data-act="ob-plan" aria-label="Plan the next 7 days"></button></div>`,
   foot: `<button class="btn primary" data-act="ob-done">Start</button>`
 });
+const NEAT_SRC = { watch: "from your watch", avg: "average of the last 7 days", default: "default value: no data yet" };
 /* ================= day check-in ================= */
 const sessRow = (w, d, act, list, i) => { const k = sessionKcal(w, d); return `<button class="lrow" data-act="${act}" data-list="${list}" data-i="${i}" data-date="${d}"><span style="min-width:0"><span class="t">${esc(sessionLabel(w))}</span><span class="s">${w.sport === "Rest" ? "Planned rest" : `${fmtN(k.kcal)} kcal · ${{ watch: "watch", device: "watch · intervals.icu", load: "from intervals.icu load", logged: "logged", km: "from km", hr: "from avg HR", own: "your kcal/min", met: "MET estimate", none: "", rest: "" }[k.how]}${w.hr ? ` · HR ${w.hr}` : ""}${w.note ? ` · ${esc(w.note)}` : ""}`}</span></span><span class="end">${ic("edit", "sm")}</span></button>`; };
 SHEETS.checkin = sh => {
@@ -4860,8 +4871,8 @@ SHEETS.checkin = sh => {
       <div class="row"><button class="btn soft sm" data-act="add-session" data-list="planned" data-date="${d}">${ic("plus", "sm")}Plan a session</button>${plan.list.length ? `<button class="btn ghost sm" data-act="plan-rest" data-date="${d}">${pm ? "Clear (rest day)" : "Rest day"}</button>` : ""}${!pm && Array.isArray(L.planned) ? `<button class="btn ghost sm" data-act="plan-pattern" data-date="${d}">Use weekly pattern</button>` : ""}</div>${pm ? `<span class="faint" style="font-size:12px">Changes here go to your intervals.icu calendar when you tap Sync.</span>` : ""}</div>`;
   }
   const row = (l, v, s = "") => `<div class="lrow" style="padding:8px 14px"><span><span class="t" style="font-weight:550">${l}</span>${s ? `<span class="s">${s}</span>` : ""}</span><span class="end num">${v}</span></div>`;
-  body += past && !sh.energy ? `<button class="ci-more" data-act="ci-energy" aria-expanded="false"><span><b>Energy for this day</b><small>TDEE ${fmtN(r.tdee)} · target ${fmtN(r.target)}${r.intake ? ` · balance ${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : ""}</small></span>${ic("chevD", "sm")}</button>` : `<div class="field"><span class="flabel">Energy for this day</span>${deficitHTML(d)}<div class="card">
-    ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), L.watch > 0 ? "from your watch" : "average of the last 7 days")}
+  body += past && !sh.energy ? `<button class="ci-more" data-act="ci-energy" aria-expanded="false"><span><b>Energy for this day</b><small>TDEE ${fmtN(r.tdee)} · target ${fmtN(r.target)}${r.intake ? ` · balance ${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : ""}</small></span>${ic("chevD", "sm")}</button>` : `${profileNote()}<div class="field"><span class="flabel">Energy for this day</span>${deficitHTML(d)}<div class="card">
+    ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), NEAT_SRC[r.neatSrc] || "average of the last 7 days")}
     ${row("Training", fmtN(r.eat), r.sess.list.length ? `${(SESS_SRC[r.sess.src] || "").toLowerCase()} · ${esc(r.sess.list.map(w => `${w.note || w.sport} ${fmtN(sessionKcal(w, d).kcal)}`).join(" + "))}` : "rest")}${row("Digestion (TEF)", fmtN(r.tef), `${r0(E.tef * 100)}% of the above`)}
     ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
     ${row(esc(r.phase.phase), (r.phase.kcal > 0 ? "+" : "") + fmtN(r.phase.kcal), "kcal/day vs TDEE")}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
@@ -4901,6 +4912,7 @@ SHEETS.session = sh => {
           <textarea id="ss-script" class="inp mono" rows="${w.script ? Math.min(14, Math.max(5, String(w.script).split("\n").length + 1)) : 5}" spellcheck="false" data-in="ss-script" placeholder="${isStrength(w.sport) ? "A1/A2 Pull + Push 4x\n- 5 Pull-up +10kg\n- 8 Dip\n- 90s Rest" : "Warmup\n- 15m Z2\n\n5x\n- 3m Z4\n- 2m Z1\n\n- 10m Z1"}">${esc(w.script || "")}</textarea>
           <div id="ss-gist" class="faint" style="font-size:12.5px">${g?.text ? `${esc(g.text)}${g.min ? ` · ≈ ${g.min} min` : ""}` : "Steps start with “-”, a line like “5x” repeats the steps under it."}</div>
           ${isStrength(w.sport) && w.script ? `<details class="card wo-pv"><summary class="lrow"><span class="t">How it will run</span></summary><div class="pad" id="ss-prev">${scriptPreview(w.script)}</div></details>` : ""}</div>` : ""}`}
+      ${devPicker(w)}
       <div class="note" id="ss-est">Estimated <b>${fmtN(est.kcal)} kcal</b> · ${{ watch: "your watch value", device: "recorded by your watch (intervals.icu)", load: "from the planned intervals.icu load and your own kcal vs load", logged: "logged value", km: "from distance (your kcal per km)", hr: "from average heart rate (Keytel, calibrated on your watch)", own: "from your own kcal per minute", met: "from the MET table until you have enough sessions with watch kcal", none: "add minutes", rest: "", trimmed: "watch kcal cut to Engine's session time (the watch kept running)" }[est.how]}</div>`}`,
     foot: `${sh.idx != null ? `<button class="btn danger" data-act="ss-del" style="flex:0 0 auto" aria-label="Delete">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="ss-save">${isPlan && pm ? "Save · update intervals.icu" : "Save"}</button>`
   };
@@ -5087,6 +5099,7 @@ function mealsForRole(role, name) {
   if (/cereal|muesli|granola|oat|fette|biscott|biscuit|cornflakes|porridge|jam|marmellat/.test(norm(name))) meals = ["b", "s"];
   return meals;
 }
+const fdCalcHTML = d => { const calc = kcalFromMacros(d.per); return d.autoKcal ? "kcal = 4 × protein + 4 × carbs + 9 × fat + 2 × fibre" : Math.abs(calc - num(d.per.kcal)) > 15 ? `Macros add up to ${calc} kcal. <button class="link" data-act="fd-usecalc">Use ${calc}</button>` : `Macros add up to ${calc} kcal.`; };
 const clean0 = o => { for (const k of Object.keys(o)) if (o[k] == null) delete o[k]; return o; };
 function offToFood(code, p) {
   const n = p.nutriments || {}; const g = k => { const v = n[k]; return v == null || v === "" ? null : +v; };
@@ -5839,8 +5852,6 @@ ACT["fd-usecalc"] = () => { const d = S_().draft; d.per.kcal = kcalFromMacros(d.
 ACT["fd-reset"] = () => { const d = S_().draft; d.per = clone(d.orig); d.edited = false; renderSheet(); };
 ACT["fd-serv-add"] = () => { S_().draft.servings.push({ l: "1 portion", g: 100 }); renderSheet(); };
 ACT["fd-serv-del"] = el => { S_().draft.servings.splice(+el.dataset.i, 1); renderSheet(); };
-ACT["fd-role"] = el => { S_().draft.role = el.dataset.k; renderSheet(); };
-ACT["fd-meal"] = el => { const d = S_().draft; const k = el.dataset.k; d.meals = d.meals || []; d.meals = d.meals.includes(k) ? d.meals.filter(x => x !== k) : [...d.meals, k]; renderSheet(); };
 ACT["fd-toggle"] = el => { const d = S_().draft; d[el.dataset.k] = !d[el.dataset.k]; renderSheet(); };
 ACT["fd-save"] = () => {
   const sh = S_(); const d = clone(sh.draft); delete d.ocrText;
@@ -6047,7 +6058,6 @@ ACT["ob-done"] = () => {
 /* ================= input / change / submit wiring ================= */
 const INP = {
   "foods-q": v => { UI.foodsQ = v; scheduleRender(); },
-  "shop-start": v => { if (v) { S.shop.mode = "days"; UI.shopStart = v; scheduleRender(); } },
   // typing only refreshes the results: the field keeps focus, the keyboard and what you're composing
   "lb-text": v => { const sh = S_(); if (sh) sh.text = v; },
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
@@ -6056,7 +6066,7 @@ const INP = {
   "fd-mx": (v, el) => { const d = S_().draft; d.mx = { ...(d.mx || {}), [el.dataset.k]: v }; },
   "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; const calc = kcalFromMacros(d.per);
     if (d.autoKcal && el.dataset.k !== "kcal") { d.per.kcal = calc; const k = $("#fd-kcal"); if (k) k.value = calc; }
-    const c = $("#fd-calc"); if (c) c.innerHTML = d.autoKcal ? "" : Math.abs(calc - num(d.per.kcal)) > 15 ? `Macros add up to ${calc} kcal. <button class="link" data-act="fd-usecalc">Use ${calc}</button>` : `Macros add up to ${calc} kcal.`; },
+    const c = $("#fd-calc"); if (c) c.innerHTML = fdCalcHTML(d); },
   "fd-serv": (v, el) => { S_().draft.servings[+el.dataset.i][el.dataset.k] = v; },
   rc: (v, el) => { S_().draft[el.dataset.k] = v; if (el.dataset.k === "servings") updRecipePer(); },
   "rc-g": (v, el) => { S_().draft.ingredients[+el.dataset.i].g = v; updRecipePer(); },
@@ -9525,12 +9535,6 @@ function stockPlan(start, n) {
   }
   return { need, cov, buyWhy, uses, endsOn, free, stock };
 }
-/* what's left to buy per food (need minus what the linked stock covers) */
-function shoppingNeeds(start, n) {
-  const P = stockPlan(start, n), need = {}, src = {};
-  for (const id of Object.keys(P.need)) { const net = P.need[id] - P.cov[id]; if (net > 0.5) { need[id] = net; src[id] = P.buyWhy[id] || new Set(); } }
-  return { need, src };
-}
 /* the rows still to buy. need = planned in the range, covered = from the linked stock, free = at home and not set aside */
 function shoppingRows(start, n) {
   const P = stockPlan(start, n), rows = [];
@@ -9919,6 +9923,8 @@ ACT["tp-circ"] = el => { UI.tpCirc = el.dataset.k; scheduleRender(); };
 ACT["tp-dist"] = el => { UI.tpDist = el.dataset.k; scheduleRender(); };
 
 /* ================= Progress › Energy: BMR, NEAT, training, TEF, TDEE and how they're estimated ================= */
+const profileGaps = () => { const p = FIT().profile || {}, g = []; if (!p.dob) g.push("date of birth (age 30 is assumed)"); return g; };
+const profileNote = () => { const g = profileGaps(); return g.length ? `<div class="note warn" role="note">Energy numbers are provisional: ${esc(g.join(", "))} missing. <button class="link" data-act="tab" data-tab="settings">Add it in Settings</button></div>` : ""; };
 function energyView() {
   const s = energySeries(), today = todayISO(), r = s.rows[today] || energyAt(today), E = FIT().energy, prof = FIT().profile;
   if (!r) return `<div class="note">Add your profile (Settings → Profile) and a weight to see your energy numbers.</div>`;
@@ -9927,7 +9933,7 @@ function energyView() {
   const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
   const L7 = last(7);
   const parts = [["BMR", r.bmr, "var(--accent)"], ["Daily activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
-  let hh = `<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
+  let hh = `${profileNote()}<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
     <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
@@ -11861,9 +11867,8 @@ function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m
 { const _qs = ACT["qty-save"]; ACT["qty-save"] = (...a) => { const sh = S_(); NEW_PAN = !!sh?.pan && !sh.itemId; try { return _qs(...a); } finally { NEW_PAN = false; } }; }
 /* the item: a jar when it comes from the pantry; its sheet can link or unlink it */
 { const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId); return it.pan ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="From the pantry">${ic("jar", "sm")}</span>`) : h; }; }
-{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); const atHome = sh.kind === "food" ? !!S.shop.pantry[sh.ref] : sh.kind === "recipe" && itemStockLines({ kind: "recipe", ref: sh.ref, qty: 1 }).some(([id]) => S.shop.pantry[id]); if (!sh.itemId || !atHome) return o; const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return o;
-  o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? (sh.kind === "recipe" ? "Ingredients set aside at home as far as they go, taken off when you eat it" : "Set aside at home, taken off when you eat it") : sh.kind === "recipe" ? "Off: all its ingredients go on the shopping list" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; return o; }; }
-{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref])) o.body += stockBoxHTML(sh.ref); return o; }; }
+{ const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh), box = sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref]) ? stockBoxHTML(sh.ref) : ""; const atHome = sh.kind === "food" ? !!S.shop.pantry[sh.ref] : sh.kind === "recipe" && itemStockLines({ kind: "recipe", ref: sh.ref, qty: 1 }).some(([id]) => S.shop.pantry[id]); if (!sh.itemId || !atHome) { o.body += box; return o; } const it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) { o.body += box; return o; }
+  o.body += `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${!!it.pan}" data-act="qty-pan" aria-label="From the pantry"></button><span>From the pantry<small class="faint" style="display:block;font-size:12.5px">${it.pan ? (sh.kind === "recipe" ? "Ingredients set aside at home as far as they go, taken off when you eat it" : "Set aside at home, taken off when you eat it") : sh.kind === "recipe" ? "Off: all its ingredients go on the shopping list" : `${fmtN(panFree(sh.ref))} ${getFood(sh.ref)?.unit || "g"} free at home · off: it goes on the shopping list`}</small></span></label>`; o.body += box; return o; }; }
 ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
 /* the list: what's free at home for food you'd otherwise buy */
 ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
@@ -12635,8 +12640,6 @@ function catFix() { let n = 0;
 /* ================= loose food (apples, courgettes…): no fixed pack, you take what you need and the price is per kg ================= */
 const varPack = f => !!f && (f.varPack ?? (f.cat === "produce" && !(f.countable && f.pack > 0 && f.pack <= 30)));
 { const _sr = shoppingRows; shoppingRows = function (start, n) { return _sr(start, n).map(r => varPack(r.f) ? { ...r, packs: 0, left: 0, vary: true } : r); }; }
-{ const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh), d = sh.draft, on = varPack(d);
-  o.body = o.body.replace(/(<div class="grid2"><div class="field"><label for="fd-pack">)/, `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="fd-vary" aria-label="Weight and price vary"></button><span>Weight and price vary<small class="faint" style="display:block;font-size:12.5px">Loose fruit and veg: the list asks for grams, the price is averaged per kg.</small></span></label>$1`); return o; }; }
 ACT["fd-vary"] = () => { const d = S_().draft; d.varPack = !varPack(d); renderSheet(); };
 /* buying it: what you took on the scale and what it cost, the €/kg shown */
 { const _b = SHEETS.buy; SHEETS.buy = sh => { const o = _b(sh), f = getFood(sh.id) || BUILTIN[sh.id]; if (!f || !varPack(f)) return o; const k = eurPerG(sh.id);
@@ -12661,16 +12664,8 @@ function gearView() {
 ACT["fd-scan"] = () => { const sh = S_(); if (sh?.type !== "food") return; CAM.onCode = code => { if (UI.sheet !== sh) return; const dup = findByBarcode(code);
     sh.draft.barcode = code; renderSheet(); toast(dup && dup.id !== sh.draft.id ? `Barcode ${code} · already used by ${dup.name}` : `Barcode ${code}`); };
   camOpen("barcode"); };
-/* price and stock inside the food editor */
-{ const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh), d = sh.draft, id = d.id, u = d.unit || "g", pu = d._pu || "kg", pr = id ? priceViews(id) : null;
-  const cur = pr ? [`${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}`, pr.perPack != null ? `${fmtEur(pr.perPack)}/pack` : "", pr.perUnit != null ? `${fmtEur(pr.perUnit)}/piece` : ""].filter(Boolean).join(" · ") : "";
-  o.body += `<div class="field pr-box"><span class="flabel">Price</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="unit-inp" style="max-width:150px"><input id="fd-pv" class="inp" inputmode="decimal" value="${esc(String(d._pv ?? ""))}" placeholder="0,00" data-in="fd" data-k="_pv" aria-label="Price"><span>€</span></div><div class="seg sm" role="group" aria-label="Price per">${[["kg", u === "ml" ? "€/l" : "€/kg"], ["pack", "€/pack"], ["unit", "€/piece"]].map(([k, l]) => `<button data-act="price-unit" data-k="${k}" aria-pressed="${pu === k}">${l}</button>`).join("")}</div></div><span class="faint" style="font-size:12.5px">${cur ? `Now: ${esc(cur)}` : "No price yet: it is also remembered when you shop."}</span></div>`;
-  if (!sh.isNew && id) o.body += stockBoxHTML(id);
-  return o; }; }
 CHG["fd-role"] = v => { const d = S_().draft; d.role = v; d._roleSet = true; d.meals = mealsForRole(v, d.name); renderSheet(); };
 ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
-{ const _fs = SHEETS.food; SHEETS.food = sh => { const o = _fs(sh);
-  o.body = o.body.replace(/(<input id="fd-barcode"[^>]*>)/, `<span class="row" style="gap:6px;flex-wrap:nowrap">$1<button class="icon-btn" data-act="fd-scan" aria-label="Scan the barcode" title="Scan the barcode" style="flex:0 0 auto">${ic("scan")}</button></span>`); return o; }; }
 { const _c = ACT["cam-close"], _t = ACT["cam-type"]; ACT["cam-close"] = el => { CAM.onCode = null; return _c(el); }; ACT["cam-type"] = el => { if (CAM.onCode) { CAM.onCode = null; camClose(); setTimeout(() => $("#fd-barcode")?.focus(), 60); return; } return _t(el); }; }
 /* ================= swipe a row away: planned foods and pantry items. A deliberate swipe (40% of the row), then Undo ================= */
 (function () {
@@ -12773,6 +12768,44 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   put("shop", "", S.shop); try { linkFromPantry(UI.shopStart, S.shop.range || 7, [id]); } catch (e) {} haptic(10);
   toast(`${r.f.name} · ${fmtN(g)} ${r.f.unit || "g"} in the pantry`, () => { if (before) S.shop.pantry[id] = before; else delete S.shop.pantry[id]; S.shop.buys = (S.shop.buys || []).slice(0, nb); put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); });
   scheduleRender(); if (UI.sheet) renderSheet(); }; }
+
+/* ================= heart-rate sensor per sport: smartwatch or armband (stored with the workout; no number changes yet) ================= */
+const devList = () => FIT().devices || [];
+const devById = id => devList().find(x => x.id === id) || null;
+/* the sensor of a workout: the one picked for it, else the default of its sport, else none */
+const devOf = w => { const own = devById(w?.dev); if (own) return own.id; const d = devById(FIT().sportDevice?.[w?.sport]); return d ? d.id : null; };
+/* the picker inside the session editor */
+const devPicker = w => { const cur = devOf(w); return !devList().length || w.sport === "Rest" ? "" : `<div class="field"><span class="flabel">Heart-rate sensor</span><div class="chips">${devList().map(x => `<button class="chip" data-act="ss-dev" data-id="${esc(x.id)}" aria-pressed="${cur === x.id}">${esc(x.name)}</button>`).join("")}</div></div>`; };
+ACT["ss-dev"] = el => { const w = S_().draft, id = el.dataset.id; w.dev = devOf(w) === id && w.dev === id ? undefined : id; if (w.dev === undefined) delete w.dev; renderSheet(); };
+function devSettings() {
+  const fit = FIT(), D = devList(), opt = (v, cur, l) => `<option value="${esc(v)}" ${cur === v ? "selected" : ""}>${esc(l)}</option>`;
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Heart-rate sensors</span>
+    <span class="faint" style="font-size:12.5px">Which sensor gives the heart rate of each sport. It is saved with every workout (you can change it per workout). Calories are not recalculated yet: this only records which sensor was used.</span>
+    ${D.map(x => `<div class="grid2" style="grid-template-columns:minmax(0,1fr) 120px 40px;align-items:end"><div class="field"><label for="dv-n-${esc(x.id)}">Name</label><input id="dv-n-${esc(x.id)}" class="inp" value="${esc(x.name)}" data-chg="dev-name" data-id="${esc(x.id)}"></div>
+      <div class="field"><label for="dv-k-${esc(x.id)}">Calories shown</label><select id="dv-k-${esc(x.id)}" class="inp" data-chg="dev-kcal" data-id="${esc(x.id)}">${opt("gross", x.kcal, "Total")}${opt("net", x.kcal, "Active only")}${opt("unknown", x.kcal, "Not sure")}</select></div>
+      <button class="icon-btn" data-act="dev-del" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}
+    <button class="btn soft sm" data-act="dev-add" style="align-self:flex-start">${ic("plus", "sm")}Add a sensor</button>
+    <span class="flabel">Default for each sport</span>
+    <div class="grid2">${fit.sports.map(sp => `<div class="field"><label for="dv-s-${esc(sp.name)}">${esc(sp.name)}</label><select id="dv-s-${esc(sp.name)}" class="inp" data-chg="dev-sport" data-sport="${esc(sp.name)}">${opt("", fit.sportDevice?.[sp.name] || "", "None")}${D.map(x => opt(x.id, fit.sportDevice?.[sp.name] || "", x.name)).join("")}</select></div>`).join("")}</div></section>`;
+}
+CHG["dev-name"] = (v, el) => { const x = devById(el.dataset.id); if (x && v.trim()) { x.name = v.trim(); saveSettings(); scheduleRender(); } };
+CHG["dev-kcal"] = (v, el) => { const x = devById(el.dataset.id); if (x) { x.kcal = v; saveSettings(); } };
+CHG["dev-sport"] = (v, el) => { const fit = FIT(); fit.sportDevice = { ...(fit.sportDevice || {}) }; if (v) fit.sportDevice[el.dataset.sport] = v; else delete fit.sportDevice[el.dataset.sport]; saveSettings(); scheduleRender(); };
+ACT["dev-add"] = () => { const fit = FIT(); fit.devices = [...devList(), { id: "d" + uid(), name: "New sensor", kind: "wrist", kcal: "unknown" }]; saveSettings(); scheduleRender(); };
+ACT["dev-del"] = el => { const fit = FIT(), id = el.dataset.id, prev = clone([fit.devices, fit.sportDevice]); fit.devices = devList().filter(x => x.id !== id); fit.sportDevice = Object.fromEntries(Object.entries(fit.sportDevice || {}).filter(([, v]) => v !== id)); saveSettings(); scheduleRender(); toast("Sensor removed", () => { fit.devices = prev[0]; fit.sportDevice = prev[1]; saveSettings(); scheduleRender(); }); };
+document.addEventListener("toggle", e => { const el = e.target; if (el.matches?.("details.fd-more")) UI.fdOpen = { ...(UI.fdOpen || {}), [el.dataset.k]: el.open }; }, true);
+/* the build the page is running (stamped by the build script) and a way to fetch the newest one right now */
+const BUILD = () => document.querySelector('meta[name="engine-build"]')?.content || "";
+const buildLabel = b => /^\d{12}$/.test(b) ? `Build ${b.slice(0, 4)}-${b.slice(4, 6)}-${b.slice(6, 8)} ${b.slice(8, 10)}:${b.slice(10)} UTC` : "Development build";
+function reloadApp() { location.reload(); }
+ACT["check-update"] = async () => {
+  toast("Checking…");
+  try {
+    const t = await (await fetch("index.html?" + Date.now(), { cache: "no-store" })).text(), latest = t.match(/name="engine-build" content="(\d{12})"/)?.[1];
+    try { (await navigator.serviceWorker?.getRegistration())?.update(); } catch (e) {}
+    if (latest && latest > BUILD()) { toast(`New version found (${buildLabel(latest)}): reloading`); setTimeout(reloadApp, 900); } else toast("You have the latest version");
+  } catch (e) { toast("Can't check right now: no connection?"); }
+};
 /* ================= boot ================= */
 (function boot() {
   loadLocal();

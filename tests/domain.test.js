@@ -74,7 +74,7 @@ test("shopping: eaten items are not needed any more; a seven-day range adds up a
 });
 
 test("shopping: computing needs never changes the real pantry (projections are read-only)", async () => {
-  const same = await ev(() => { S.shop.pantry["t-rice"] = { g: 150 }; const before = JSON.stringify([S.shop, S.days]); shoppingRows(todayISO(), 7); shoppingNeeds(todayISO(), 14); shoppingRows(addDays(todayISO(), 3), 3); shopToBuy(); const ok = before === JSON.stringify([S.shop, S.days]); delete S.shop.pantry["t-rice"]; return ok; });
+  const same = await ev(() => { S.shop.pantry["t-rice"] = { g: 150 }; const before = JSON.stringify([S.shop, S.days]); shoppingRows(todayISO(), 7); stockPlan(todayISO(), 14); shoppingRows(addDays(todayISO(), 3), 3); shopToBuy(); const ok = before === JSON.stringify([S.shop, S.days]); delete S.shop.pantry["t-rice"]; return ok; });
   assert.ok(same);
 });
 

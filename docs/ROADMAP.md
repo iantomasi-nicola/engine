@@ -14,7 +14,8 @@ Stato: **M0 e M1 completate (24/10) sul branch di lavoro, non pubblicate. Prossi
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | – |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
 | M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | – |
-| M7a Nutrizione: base sicura (nessun numero cambia) | D16 (fatto), D9, D6 (provenienza), **D5a** dispositivi FC per sport | M | Basso | Audit presentato, **in attesa di approvazione** |
+| M7a Nutrizione: base sicura (nessun numero cambia) | D16 (fatto), D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Approvata e fatta nel sorgente (24/10)**; pubblicata con la prossima build |
+| M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | Proposta presentata, **in attesa di approvazione** |
 | M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
@@ -70,3 +71,5 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | Nutrizione: ricevuta e copiata `docs/NUTRITION_SPEC.md`; audit dettagliato `docs/NUTRITION_AUDIT.md` (fonti verificate/non verificate, matrice EN-01…10, F-01…F-12); suite di baseline `tests/nutrition-baseline.test.js` (9 test, fotografano i difetti dimostrati, nessuna formula modificata); nuovi requisiti D5–D18 (dispositivo FC per sport, AEE senza kcal orologio) | vedi `git log` |
 | 2026-10-24 | M2: funzioni di scorta condivise (`stockSet/stockAdd/undoStock`, `stockBoxHTML`), riquadro «At home» in Foods e Meal Plan, prezzi per kg/confezione/pezzo, frazioni di confezione, Pantry con ricerca/filtri/ordine/preferenze e previsione a una data (51 test verdi, verificato su 3 viewport) | vedi `git log` |
 | 2026-10-24 | UX: filtri della spesa ridotti a This week / Next week / Next 7 days / Custom; editor Food semplificato (stella, «Counts as», senza Good for e Leave out) — richieste dell'utente; 56 test verdi | vedi `git log` |
+| 2026-10-24 | Pubblicazione: `main` allineato al branch di lavoro (df96e46; Pages «pages build and deployment» riuscito alle 10:35 UTC); punto di ripristino precedente = `02f43a9` (tag remoto `restore/pre-m1-publish-2026-10-23`) | df96e46 |
+| 2026-10-24 | M7a fatta: sensori FC per sport (D5a), avviso profilo incompleto (D9), provenienza del NEAT (D6), nessun numero cambia; editor Food compatto; versione nelle Settings; regola permanente Consistency & Cleanup e primo report; proposta `AEE_ENGINE_PROPOSAL.md` | vedi `git log` |

@@ -50,3 +50,36 @@ test("the editor fits a phone and a desktop without sideways scroll", async () =
     await app.close(); app = null;
   }
 });
+
+test("compact editor: macros, portions, pack and aisle are on the first screen; extras fold into three sections that stay as you left them", async () => {
+  app = await H.startApp({ dir: H.build(H.tmp("fe2-build")), seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(async () => {
+    ACT["edit-food"]({ dataset: { id: "t-rice" } }); await new Promise(r => setTimeout(r, 400));
+    const vis = sel => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; };
+    const first = { kcal: vis("#fd-kcal"), carbs: vis("#fd-c"), pack: vis("#fd-pack"), aisle: vis("#fd-cat"), save: vis("[data-act=fd-save]") };
+    const secs = [...document.querySelectorAll("details.fd-more")].map(d => [d.dataset.k, d.open]);
+    document.querySelector('details[data-k="price"]').open = true; document.querySelector('details[data-k="price"]').dispatchEvent(new Event("toggle"));
+    await new Promise(r => setTimeout(r, 50)); ACT["fd-unit"]({ dataset: { u: "ml" } }); await new Promise(r => setTimeout(r, 100));   // the sheet redraws
+    return { first, secs, priceStillOpen: document.querySelector('details[data-k="price"]')?.open, moreStillClosed: !document.querySelector('details[data-k="more"]')?.open };
+  });
+  assert.deepEqual(r.first, { kcal: true, carbs: true, pack: true, aisle: true, save: true });
+  assert.deepEqual(r.secs, [["more", false], ["price", false], ["details", false]]);
+  assert.equal(r.priceStillOpen, true); assert.equal(r.moreStillClosed, true);
+});
+
+test("compact editor: typing a macro recalculates kcal when 'kcal from macros' is on; the hint explains it; saving keeps every field", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    openSheet("food", { draft: { ...blankFood("Test oats"), per: { kcal: 0, p: 13, c: 60, f: 7, fib: 10, sug: 1, sat: 1.2, salt: 0.01 } }, isNew: true });
+    SHEETS.food(S_()); const auto = S_().draft.autoKcal, hint = fdCalcHTML(S_().draft);
+    INP["fd-per"]("70", { dataset: { k: "c" } }); const kcal = S_().draft.per.kcal;
+    ACT["fd-auto"](); const off = S_().draft.autoKcal; INP["fd-per"]("500", { dataset: { k: "kcal" } }); const warn = fdCalcHTML(S_().draft);
+    S_().draft.servings = [{ l: "1 bowl", g: 40 }]; S_().draft.pack = "500"; ACT["fd-save"]();
+    const f = Object.values(S.foods).find(x => x.name === "Test oats");
+    return { auto, hint, kcal, off, warn, saved: f && { kcal: f.per.kcal, fib: f.per.fib, salt: f.per.salt, serv: f.servings, pack: f.pack } };
+  });
+  assert.equal(r.auto, true); assert.match(r.hint, /4 × protein/); assert.equal(r.kcal, 4 * 13 + 4 * 70 + 9 * 7 + 2 * 10);
+  assert.equal(r.off, false); assert.match(r.warn, /Use \d+/);
+  assert.deepEqual(r.saved, { kcal: 500, fib: 10, salt: 0.01, serv: [{ l: "1 bowl", g: 40 }], pack: 500 });
+});

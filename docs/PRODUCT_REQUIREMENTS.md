@@ -49,7 +49,8 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | C6 | Filtri in aggiunta Foods: P/C/F, combinazioni, verdure, in/fuori Storage, classificazioni motivate | Should | M | – | Parziale | Regole documentate (soglie % energia) e testate |
 | C7 | Food Coach realistico: ricette/integrazioni coerenti, niente cibi casuali per chiudere i macro; whey se appropriata | Should | L | E5 | Parziale/Buggato | Nessun alimento fuori dalle preferenze/porzioni abituali; spiegazione di ogni suggerimento |
 | C8 | Icona ricetta disallineata nel Meal Plan e problemi UI analoghi | Must | S | – | Buggato | Screenshot prima/dopo su 3 viewport |
-| C9 | Editor Food più semplice (richiesta 24/10): preferito come stella accanto al nome, un solo menu «Counts as» (scelto dai valori per un cibo nuovo), niente «Good for» né «Leave out of auto-plan» a schermo; i dati già salvati (pasti adatti, esclusione dal planner) restano e un cibo escluso ha il link «Include it again» | Should | S | – | **Fatto nel sorgente** (24/10; `tests/food-editor.test.js`) | Nessun dato perso; 3 viewport |
+| C9 | Editor Food più semplice e compatto (richieste 24/10, due passaggi): preferito come stella accanto al nome, un solo menu «Counts as» (scelto dai valori per un cibo nuovo), niente «Good for» né «Leave out of auto-plan» a schermo; scheda unica con macro, porzioni, confezione e corsia in vista e tre sezioni richiudibili (More nutrition, Price and stock, Details) che ricordano se erano aperte; i dati già salvati (pasti adatti, esclusione dal planner) restano e un cibo escluso ha il link «Include it again» | Should | S | – | **Fatto nel sorgente** (24/10; `tests/food-editor.test.js`) | Nessun dato perso; 3 viewport |
+| C10 | Versione dell'app nelle Settings (Data) con «Check for updates» (richiesta 24/10) | Should | S | – | **Fatto nel sorgente** (`tests/version.test.js`) | Mostra data/ora UTC della build; il controllo scarica l'ultima e ricarica se più recente |
 
 ## D. Nutrizione scientifica (documento di riferimento: `NUTRITION_SPEC.md`; audit e proposte: `NUTRITION_AUDIT.md`, in attesa di approvazione; nessun algoritmo va modificato senza approvazione)
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
@@ -130,6 +131,15 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | J3 | Correzione sistematica di overlap, overflow, icone, testi tagliati, touch | Must | L | ENG-01 | Non verificato | Scansione automatica + screenshot; target touch ≥44px |
 | J4 | Design system condiviso (colori, tipografia, spacing, componenti, grafici, stati) | Should | XL | J3 | Parziale | Token documentati; riduzione `!important` |
 | J5 | Redesign progressivo verificato su telefono, tablet, desktop | Should | XL | J4 | Non verificato | Screenshot per milestone |
+
+## Debito tecnico e pulizia (regola permanente)
+| ID | Voce | Stato |
+|---|---|---|
+| T1 | `FA_DEF`, `cFinal`, `plPrefs` definiti e mai usati (baseline) | Proposto per M14 |
+| T2 | ≈34 wrapper di `SHEETS.*`/`VIEWS.*` che modificano l'HTML con regex (conteggio indicativo) | Ridurre quando si tocca la sezione |
+| T3 | `shopRowHTML`: definizione base + ridefinizione successiva | Unificare con la lista spesa |
+| T4 | Testi sorgente con «Claude» sostituiti in build con «AI» | Uniformare nel sorgente |
+| T5 | ~960 `!important` nel CSS | J4 |
 
 ## Won't Have per ora (rinviati, non cancellati)
 - I4 contatore push-up (dopo spike di fattibilità).

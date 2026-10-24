@@ -20,13 +20,14 @@
 | Running | `VDOT`, `racePredictions`, zone Friel, carico/fitness/fatica/forma | |
 | Forza | `e1rm`, `calisTable`, `topSetTable`, script parser (sintassi tipo intervals.icu) | |
 | Pasti | `dayTotals`, `balanceDay`, auto-planner, `recipePerServing` | `balanceDay` altera quantità per colpire i macro |
-| Spesa/Dispensa | `shoppingNeeds`, `shoppingRows`, `panLinked`, `pantryAdjust`, `rowCost`, `eurPerG` | Confronto giacenza↔fabbisogno **non temporale** |
+| Spesa/Dispensa | `stockPlan` (modello unico: scorta prenotata dai pasti collegati `it.pan`, giorno per giorno da oggi, ricette incluse; sola lettura), `shoppingRows`, `shoppingCovered`, `stockOn`, `pantryForecast`, `stockSet/stockAdd/undoStock`, `stockBoxHTML`, `priceSet/priceViews`, `pantryAdjust` (reversibile, `it.took`), `linkFromPantry`, `applyShopMode` (finestre della lista) | La scorta riduce la lista solo per i pasti collegati alla dispensa (scelta di prodotto) |
+| Sensori FC | `devList`, `devOf` (sensore della sessione, altrimenti predefinito dello sport) | Solo dati: nessuna kcal cambia (M7a) |
 | Integrazioni | intervals.icu (sync diretta bidirezionale), Open-Meteo, Open Food Facts, OCR Tesseract, ZXing, AI (Gemini/Groq/OpenRouter con chiave utente) | |
 
 ## Debito tecnico rilevante (vedi rischi R2–R10 in `BASELINE_AND_AUDIT.md`)
 1. Unico scope con `const` top-level → rischio TDZ.
 2. Pattern "wrapper": una sezione più in basso riassegna `SHEETS.x`/`VIEWS.x` e modifica la stringa HTML con `replace(regex)`.
-3. Logiche duplicate: `pantryUnits/pantryQty/paFac` in più punti, formule macro in più punti.
+3. Logiche duplicate: formule macro in più punti. (Le tre ridefinizioni di `shoppingNeeds/shoppingRows` sono state unificate in M1.)
 4. Nessun test; stato di build non verificato automaticamente.
 
 ## Principi per l'evoluzione
