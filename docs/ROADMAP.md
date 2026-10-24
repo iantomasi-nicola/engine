@@ -14,7 +14,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Fatta (24/10)**, in revisione |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
-| M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | – |
+| M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | **Fatta (24/10)**, in revisione; S-1 (chiavi nel cloud) in attesa di decisione |
 | M7a Nutrizione: base sicura (nessun numero cambia) | D16, D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Fatta e pubblicata (24/10)** |
 | M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **P0 e P1 fatti (24/10)**: import in sola lettura e AEE in ombra; nessun numero in uso cambia. P2–P3 in attesa del confronto sui dati reali |
 | M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
@@ -82,4 +82,5 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M4b Daily Journal: voci del giorno con salvataggio a ogni tap, card serale su Today, collegamento dal Check-in, Progress › Journal (recap, calendario, giorni migliori/duri, pattern non causali), unione per campo tra dispositivi, export; interruttore in Settings › Features | vedi `git log` |
 | 2026-10-24 | M4c (feedback su M4/M4b): Check-in sempre in vista su Today, integrazioni nel Check-in, volti disegnati al posto delle emoji, «Top» tolto da Foods e sostituito dal report Habits in Progress | vedi `git log` |
 | 2026-10-24 | M4d: una regola sola tra piano, dispensa e lista (il piano prenota ciò che c'è in casa, mangiare lo toglie, la lista mostra solo ciò che manca); via l'interruttore «From the pantry» per singolo cibo e «Use them»; vasetto sul piano; «Stock on» richiudibile; spiegazione nella Dispensa; «add extra» in cima alla lista | vedi `git log` |
+| 2026-10-24 | M6: audit di sicurezza (`docs/SECURITY_AUDIT.md`), scritture verso intervals.icu verificate con API simulata e corretto il piano che partiva con l'interruttore spento, Open Food Facts senza blocco di sessione, scansione barcode dentro le ricette, etichette dei segmenti mai tagliate | vedi `git log` |
 

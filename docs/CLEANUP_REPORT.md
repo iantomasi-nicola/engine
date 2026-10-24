@@ -94,3 +94,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 
 **Test:** 11 nuovi (`tests/stock-model.test.js`); riscritti i test che codificavano il vecchio collegamento (stock, domain, pantry, scenario, m4).
 
+## M6 Sicurezza e integrazioni (24/10/2026)
+**Verificato:** 33 test nuovi (`security`, `intervals-writes`, `off`, `recipe-scan`, `ux-fit`); suite completa 171 test; nessun codice morto nuovo (scanner invariato rispetto a prima: `icuExtras` e `spendRangeOf` restano falsi positivi da spread).
+
+**Eliminato:** `OFF_UNREACHABLE` (latch) → `offDown/offFailed`; doppia definizione di `lookupAndAdd` (base + ridefinizione) → una sola; costante `NO_PUSH` mai vera in `icu-direct.js`; regola CSS `.seg>button{overflow:hidden;text-overflow:ellipsis}` che tagliava le etichette.
+
+**Aggiornato:** `docs/SECURITY_AUDIT.md` (nuovo), backlog ENG-06/07, G5, A5, roadmap.
+
+**Compatibilità dati:** nessuna migrazione; campo opzionale `incomplete` sui cibi OFF in bozza; ciò che era in coda per intervals.icu con «Plan from intervals.icu» spento resta in coda (non viene inviato né cancellato).
+
+**Aperto:** S-1 (chiavi nel documento cloud) in attesa di decisione; SRI su xlsx; restringimento di `connect-src`.
+

@@ -2058,7 +2058,7 @@ body.kb-open .add-acts,body.kb-open .add-tip{display:none}
 .set-grp-in>.card{box-shadow:none;border:1px solid var(--line)}
 /* Today: quick actions in one row that scrolls sideways on phones */
 @media (max-width:640px){.td-nudges{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.td-nudges::-webkit-scrollbar{display:none}.td-nudges>*{flex:none}}
-.seg>button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.seg{max-width:100%}.seg>button{flex:1 0 auto;min-width:0;overflow:visible;text-overflow:clip}   /* a label is never cut with «…»: a long row scrolls instead */
 .acc-sw{display:flex;flex-wrap:wrap;gap:12px}
 .acc-b{width:40px;height:40px;border-radius:50%;background:var(--sw);border:0;position:relative;display:grid;place-items:center;color:#fff;cursor:pointer;transition:transform var(--t3,.3s) var(--spring,ease)}
 .acc-b[aria-pressed="true"]{border-radius:14px}
@@ -4837,7 +4837,7 @@ SHEETS.food = sh => {
   return {
     title: sh.isNew ? (d.source === "off" ? "Imported product" : d.source === "label" ? "Check the label values" : "New food") : "Edit food",
     focus: sh.isNew && !d.name ? "fd-name" : null,
-    body: `${d.source === "off" ? `<div class="note off-note">${d.img ? `<img data-blob="${esc(d.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span>From Open Food Facts${d.barcode ? " · " + esc(d.barcode) : ""}${d.nutri ? ` · Nutri-Score ${nutriTag(d)}` : ""}${d.nova ? ` · NOVA ${d.nova}` : ""}. Change any value; your version is what gets used.${d.barcode && !sh.isNew ? ` <button class="link" data-act="off-refresh">Update from Open Food Facts</button>` : ""}</span></div>` : ""}
+    body: `${d.source === "off" ? `<div class="note off-note">${d.img ? `<img data-blob="${esc(d.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span>From Open Food Facts (<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>)${d.barcode ? " · " + esc(d.barcode) : ""}${d.nutri ? ` · Nutri-Score ${nutriTag(d)}` : ""}${d.nova ? ` · NOVA ${d.nova}` : ""}. ${d.incomplete ? "No nutrition values there: type them from the label. " : ""}Change any value; your version is what gets used.${d.barcode && !sh.isNew ? ` <button class="link" data-act="off-refresh">Update from Open Food Facts</button>` : ""}</span></div>` : ""}
       ${d.source === "label" ? `<div class="note accent">Claude read these from your photo. Compare them with the label before saving.</div>` : ""}
       ${d.source === "ocr" ? `<div class="note accent">Read from the label on this device. Compare the numbers with the pack and give the food a name before saving.${d.ocrText ? `<details class="ocr-t"><summary>Text that was read</summary><pre>${esc(d.ocrText)}</pre></details>` : ""}</div>` : ""}
       ${d.source === "ai" ? `<div class="note accent">Values estimated by Claude. Check them against the pack if you have it.</div>` : ""}
@@ -4878,8 +4878,8 @@ SHEETS.recipe = sh => {
       <div class="grid2"><div class="field"><label for="rc-serv">Servings</label><input id="rc-serv" class="inp" inputmode="decimal" value="${d.servings}" data-in="rc" data-k="servings"></div>
       <div class="field"><span class="flabel">Per serving</span><div class="num" id="rc-per" style="font-size:15px;padding-top:10px">${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F</div></div></div>
       <div class="field"><span class="flabel">Ingredients · ${fmtN(g)} g total</span><div class="card">${d.ingredients.map((i, k) => { const f = getFood(i.food); return `<div class="lrow" style="grid-template-columns:minmax(0,1fr) 100px 36px"><span style="min-width:0"><span class="t">${esc(f?.name || "Missing food")}</span><span class="s">${f ? fmtN(f.per.kcal * num(i.g) / 100) + " kcal" : ""}</span></span><div class="unit-inp"><input id="rc-g-${k}" class="inp" inputmode="decimal" value="${i.g}" data-in="rc-g" data-i="${k}" style="min-height:38px" aria-label="Grams"><span>${f?.unit || "g"}</span></div><button class="icon-btn" data-act="rc-del" data-i="${k}" aria-label="Remove">${ic("close", "sm")}</button></div>`; }).join("") || `<div class="lrow"><span class="s">No ingredients yet. Search below to add them.</span></div>`}</div></div>
-      <div class="search">${ic("search")}<input id="rc-q" type="search" placeholder="Add an ingredient" value="${esc(iq)}" data-in="rc-q" autocomplete="off"></div>
-      ${res.length ? `<div class="card">${res.map(r => `<button class="lrow" data-act="rc-add" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${foodSub(r.x)}</span></span><span class="end">${ic("plus")}</span></button>`).join("")}</div>` : ""}
+      <div class="search">${ic("search")}<input id="rc-q" type="search" placeholder="Add an ingredient" value="${esc(iq)}" data-in="rc-q" autocomplete="off"><button class="icon-btn" data-act="rc-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
+      ${res.length ? `<div class="card">${res.map(r => `<button class="lrow" data-act="rc-add" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${foodSub(r.x)}</span></span><span class="end">${ic("plus")}</span></button>`).join("")}</div>` : iq.trim() ? `<button class="btn soft block" data-act="rc-new-food">${ic("plus", "sm")}Create “${esc(iq.trim())}” as a new food</button>` : ""}
       <div class="field"><span class="flabel">Good for</span><div class="chips">${[["b", "Breakfast"], ["m", "Lunch & dinner"], ["s", "Snacks"]].map(([k, l]) => `<button class="chip" data-act="rc-meal" data-k="${k}" aria-pressed="${(d.meals || []).includes(k)}">${l}</button>`).join("")}</div></div>
       <div class="field"><label for="rc-note">Notes</label><textarea id="rc-note" class="inp" data-in="rc" data-k="note" placeholder="Method, tips…">${esc(d.note || "")}</textarea></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Favourite</span></span><button class="switch" role="switch" aria-checked="${!!d.fav}" data-act="rc-fav" aria-label="Favourite"></button></div>`,
@@ -5259,9 +5259,11 @@ async function decodeBarcode(img) {
 }
 
 /* ================= Open Food Facts ================= */
-let OFF_UNREACHABLE = false;
+/* a failed call pauses Open Food Facts for a minute, not for the rest of the session */
+let OFF_DOWN_UNTIL = 0;
+const offDown = () => Date.now() < OFF_DOWN_UNTIL, offFailed = () => { OFF_DOWN_UNTIL = Date.now() + 60e3; };
 async function fetchOFF(code) {
-  if (OFF_UNREACHABLE) return { unreachable: true };
+  if (offDown()) return { unreachable: true };
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 7000);
   try {
     const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_it,product_name_en,brands,nutriments,serving_quantity,product_quantity,product_quantity_unit,quantity,categories_tags,image_front_small_url,nutriscore_grade,nova_group`, { signal: ctl.signal });
@@ -5270,7 +5272,7 @@ async function fetchOFF(code) {
     const j = await r.json();
     if (j.status !== 1 || !j.product) return { notFound: true };
     return { food: offToFood(code, j.product) };
-  } catch (e) { OFF_UNREACHABLE = true; return { unreachable: true }; }
+  } catch (e) { offFailed(); return { unreachable: true }; }
   finally { clearTimeout(t); }
 }
 function guessRoleMeals(per, cat, name) {
@@ -5296,6 +5298,7 @@ function offToFood(code, p) {
   const n = p.nutriments || {}; const g = k => { const v = n[k]; return v == null || v === "" ? null : +v; };
   let kcal = g("energy-kcal_100g"); if (kcal == null && g("energy_100g") != null) kcal = g("energy_100g") / 4.184;
   const per = { kcal: r0(kcal || 0), p: r1(g("proteins_100g") || 0), c: r1(g("carbohydrates_100g") || 0), f: r1(g("fat_100g") || 0), fib: r1(g("fiber_100g") || 0), sug: r1(g("sugars_100g") || 0), sat: r1(g("saturated-fat_100g") || 0), salt: r1(g("salt_100g") || 0) };
+  const incomplete = kcal == null && g("proteins_100g") == null && g("carbohydrates_100g") == null && g("fat_100g") == null;   // a name and nothing else
   if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f);
   // vitamins and minerals, when the product has them (Open Food Facts stores them in grams)
   const mx = {}, mxs = { mono: ["monounsaturated-fat_100g", 1], poly: ["polyunsaturated-fat_100g", 1], om3: ["omega-3-fat_100g", 1], k: ["potassium_100g", 1e3], ca: ["calcium_100g", 1e3], fe: ["iron_100g", 1e3], mg: ["magnesium_100g", 1e3], vitc: ["vitamin-c_100g", 1e3], vitd: ["vitamin-d_100g", 1e6], b12: ["vitamin-b12_100g", 1e6], fol: ["vitamin-b9_100g", 1e6] };
@@ -5309,7 +5312,7 @@ function offToFood(code, p) {
   if (sq > 0) servings.push({ l: `1 serving`, g: r1(sq) });
   if (pq > 0 && pq <= 600 && Math.abs(pq - sq) > 1) servings.push({ l: "1 pack", g: r1(pq) });
   const ns = String(p.nutriscore_grade || p.nutrition_grades || "").toLowerCase();
-  return clean0({ id: "off-" + code, name, brand: (p.brands || "").split(",")[0].trim(), barcode: code, unit, per, orig: clone(per), mx: Object.keys(mx).length ? mx : null, servings, pack: pq, cat, role, meals, fav: false, source: "off", edited: false,
+  return clean0({ id: "off-" + code, name, brand: (p.brands || "").split(",")[0].trim(), barcode: code, unit, per, orig: clone(per), mx: Object.keys(mx).length ? mx : null, servings, pack: pq, cat, role, meals, fav: false, source: "off", edited: false, incomplete: incomplete || undefined,
     img: /^https:\/\/images\.openfoodfacts\.org\//.test(p.image_front_small_url || "") ? p.image_front_small_url : null, nutri: /^[a-e]$/.test(ns) ? ns : null, nova: +p.nova_group || null, qtyText: p.quantity || null });
 }
 function findByBarcode(code) { return Object.values(S.foods).find(f => !f.hidden && f.barcode === code) || null; }
@@ -5356,6 +5359,8 @@ async function handleScanFile(file) {
   if (!code) { sh.stage = "nocode"; renderSheet(); return; }
   lookupAndAdd(code);
 }
+/* a code (typed, photographed or scanned): your own foods first, then Open Food Facts. Into the pantry or the shopping trip a found product opens in the
+   editor to check the values and the pack; into a recipe it is just added. A product with a name and no values is never saved empty: you complete it. */
 async function lookupAndAdd(code) {
   const sh = UI.sheet; if (!sh) return;
   code = String(code).replace(/\D/g, "");
@@ -5366,7 +5371,10 @@ async function lookupAndAdd(code) {
   sh.stage = "busy"; sh.msg = `Looking up ${code} on Open Food Facts…`; renderSheet();
   const r = await fetchOFF(code);
   if (UI.sheet !== sh) return;
-  if (r.food) { put("foods", r.food.id, r.food); toast(`Imported from Open Food Facts: ${r.food.name}`); return goQty(r.food, sh); }
+  if (r.food && r.food.incomplete) { const d = UI.dest; toast("Open Food Facts has the name but no nutrition values: type them from the label"); openSheet("food", { draft: clone(r.food), isNew: true, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
+  if (r.food) { put("foods", r.food.id, r.food);
+    if (UI.dest && UI.dest !== "recipe") { const d = UI.dest; toast(`From Open Food Facts: check the values and the pack`); openSheet("food", { draft: clone(r.food), isNew: false, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
+    toast(`Imported from Open Food Facts: ${r.food.name}`); return goQty(r.food, sh); }
   sh.stage = "missing"; sh.unreachable = !!r.unreachable; renderSheet();
 }
 function goQty(food, from) {
@@ -5878,7 +5886,7 @@ ACT["fuel-tab"] = el => { UI.tab = UI.fuelTab = el.dataset.k; scheduleRender(); 
 ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
-ACT["close-sheet"] = () => closeSheet();
+ACT["close-sheet"] = () => { const sh = UI.recipeSheet; if (UI.dest === "recipe" && sh && UI.sheet !== sh) { UI.recipeSheet = null; UI.dest = null; camClose(); UI.sheet = sh; renderSheet(); return; } UI.recipeSheet = null; closeSheet(); };
 ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo = null; if (u) { u(); toast("Undone"); } };
 
 /* plan */
@@ -6075,6 +6083,9 @@ ACT["fd-restore"] = () => { const id = S_().draft.id; const prev = clone(S.foods
 ACT["new-recipe"] = () => openSheet("recipe", { draft: { id: "", name: "", servings: 1, meals: ["m"], ingredients: [], note: "", fav: false, source: "custom" }, isNew: true });
 ACT["edit-recipe"] = el => { const r = getRecipe(el.dataset.id); if (!r) return; openSheet("recipe", { draft: clone(r), isNew: false }); };
 ACT["rc-add"] = el => { const sh = S_(); const f = getFood(el.dataset.id); sh.draft.ingredients.push({ food: f.id, g: defaultQty(f) }); sh.iq = ""; renderSheet(); setTimeout(() => $("#rc-q")?.focus(), 0); };
+/* a barcode or a new food from inside the recipe: the editor waits (UI.recipeSheet) and gets the ingredient back, or just comes back if you give up */
+ACT["rc-scan"] = () => { UI.recipeSheet = S_(); openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); UI.dest = "recipe"; camOpen("barcode"); };
+ACT["rc-new-food"] = () => { const sh = S_(), name = (sh.iq || "").trim(); UI.recipeSheet = sh; openSheet("food", { draft: blankFood(name), isNew: true, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = "recipe"; };
 ACT["rc-del"] = el => { S_().draft.ingredients.splice(+el.dataset.i, 1); renderSheet(); };
 ACT["rc-meal"] = el => { const d = S_().draft; const k = el.dataset.k; d.meals = d.meals.includes(k) ? d.meals.filter(x => x !== k) : [...d.meals, k]; renderSheet(); };
 ACT["rc-fav"] = () => { const d = S_().draft; d.fav = !d.fav; renderSheet(); };
@@ -8322,7 +8333,7 @@ ACT["rc-new"] = el => openSheet("race", { isNew: true, draft: { id: puid("rc"), 
 ACT["rc-edit"] = el => { const r = races().find(x => x.id === el.dataset.id); if (r) openSheet("race", { isNew: false, draft: clone(r) }); };
 ACT["race-save"] = () => { const d = S_().draft; if (!d.date) { toast("Pick the date."); return; } d.name = (d.name || "").trim() || `${d.sport} race`;
   if (d.result && (d.result.time || d.result.place)) d.result.done = true;
-  if (icuLinked()) { if (d.ext) d.dirty = true; else d.pushNew = true; }
+  if (icuPlanMode()) { if (d.ext) d.dirty = true; else d.pushNew = true; }
   const L = races(), i = L.findIndex(x => x.id === d.id); if (i >= 0) L[i] = d; else L.push(d);
   if (d.result?.done && isRunRace(d) && d.km > 0) { const sec = parseClock(d.result.time); if (sec) { const T = S.train; T.tests = T.tests || []; const j = T.tests.findIndex(x => x.race === d.id); const item = { id: j >= 0 ? T.tests[j].id : puid("t"), date: d.date, kind: "Race", km: +d.km, sec, notes: d.name, race: d.id }; if (j >= 0) T.tests[j] = item; else T.tests.push(item); } }
   saveWK(); closeSheet(); toast(d.result?.done ? "Result saved" : `${d.name} · ${daysBetween(todayISO(), d.date)} days to go`); if (icuLinked()) icuKick("race saved", "soon"); };
@@ -8408,7 +8419,7 @@ async function icuKick(reason, mode = false) {
 }
 /* record plan changes for intervals.icu: new items, edits, deletions */
 function planDiff(day, next) {
-  if (!icuLinked()) return next;
+  if (!icuPlanMode()) return next;   // plan changes are queued for intervals.icu only while «Plan from intervals.icu» is on
   const old = Array.isArray(day.planned) ? day.planned : [], strip = w => { const { dirty, pushNew, ...x } = w; return JSON.stringify(x); };
   const keep = new Set(next.map(w => w.ext).filter(Boolean));
   const del = old.filter(w => isIcu(w) && !keep.has(w.ext)).map(w => w.ext);
@@ -8429,7 +8440,7 @@ function icuSettingsCard() {
     <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · first sync in a moment"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
     ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
     <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><span class="faint" style="font-size:13px;flex:1">${busy ? "Syncing…" : P.n ? `${P.n} change${P.n > 1 ? "s" : ""} on the way` : "Up to date · syncs by itself when you open the app and after each change"}</span><button class="btn text sm" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}Sync now</button></div>
-    <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}</div>
+    <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts and races you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}</div>
     <details class="icu-acc"><summary>Account and import</summary>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><label for="icu-aid" class="faint" style="font-size:13px">Athlete ID</label><input id="icu-aid" class="inp" style="max-width:150px" value="${esc(s.aid || "")}" placeholder="i123456" data-chg="icu-aid"></div>
       <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="New API key" style="flex:1;min-width:180px"><button class="btn tonal sm" data-act="icu-save-key">Change key</button></div>
@@ -8735,8 +8746,8 @@ async function offGet(url, ms) {
 }
 /* search-a-licious (fast, ranked, Italian first) and the classic search as a second try */
 async function searchOFF(q) {
-  const key = norm(q); if (OFF_CACHE[key]) return OFF_CACHE[key];
-  if (OFF_UNREACHABLE) return { unreachable: true };
+  const key = norm(q), hit = OFF_CACHE[key]; if (hit && Date.now() - hit.at < 10 * 60e3) return hit.res;
+  if (offDown()) return { unreachable: true };
   let items = null, reached = false;
   try {
     const j = await offGet(`https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&page_size=24&langs=it,en&fields=${OFF_FIELDS}`, 7000); reached = true;
@@ -8749,9 +8760,9 @@ async function searchOFF(q) {
       items = [...(items || []), ...more.filter(p => !seen.has(p.code))];
     } catch (e) { if (e.status) reached = true; }
   }
-  if (!reached) { OFF_UNREACHABLE = true; return { unreachable: true }; }
+  if (!reached) { offFailed(); return { unreachable: true }; }
   const res = { items: (items || []).map(p => offToFood(p.code, p)).filter(f => f.per.kcal > 0).slice(0, 24) };
-  OFF_CACHE[key] = res; return res;
+  OFF_CACHE[key] = { at: Date.now(), res }; return res;
 }
 const offThumb = f => `<span class="off-img">${f.img ? `<img data-blob="${esc(f.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ic("plate", "sm")}</span>`;
 const offRow = (f, i, act) => `<button class="lrow off-r" data-act="${act}" data-i="${i}">${offThumb(f)}<span style="min-width:0"><span class="t">${esc(f.name)}${nutriTag(f)}</span><span class="s">${esc([f.brand, f.qtyText].filter(Boolean).join(" · "))}${f.brand || f.qtyText ? " · " : ""}${fmtN(f.per.kcal)} kcal · ${r1(f.per.c)}C ${r1(f.per.p)}P ${r1(f.per.f)}F /100 ${f.unit}</span></span><span class="end">${ic("plus", "sm")}</span></button>`;
@@ -8759,7 +8770,7 @@ const OFF_HINT = `Check the connection and try again in a moment.`;
 /* inline: after a short pause, if your own foods don't cover it, show the best Open Food Facts matches right in the list */
 let OFF_INL_T = 0;
 function offInline(sh) {
-  clearTimeout(OFF_INL_T); const q = (sh.q || "").trim(); if (q.length < 3 || OFF_UNREACHABLE) return;
+  clearTimeout(OFF_INL_T); const q = (sh.q || "").trim(); if (q.length < 3 || offDown()) return;
   OFF_INL_T = setTimeout(async () => {
     const box = $("#off-inline"); if (!box) return; box.innerHTML = `<div class="off-h"><span>Open Food Facts</span><span class="spinner sm"></span></div>`;
     const r = await searchOFF(q); const cur = S_(); if (!cur || cur.type !== "add" || (cur.q || "").trim() !== q) return;
@@ -10045,6 +10056,7 @@ CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {})
    is added as an extra purchase), in the pantry it's stored with its use-by date. */
 function destPick(food) {
   const dest = UI.dest; UI.dest = null; if (!food) return;
+  if (dest === "recipe") { const sh = UI.recipeSheet; UI.recipeSheet = null; if (!sh) return; camClose(); sh.draft.ingredients.push({ food: food.id, g: defaultQty(food) }); sh.iq = ""; UI.sheet = sh; renderSheet(); toast(`${food.name} added to the recipe`); return; }
   if (dest === "pantry") { const p = S.shop.pantry[food.id], shelf = food.source === "homemade" ? 4 : { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[food.cat] || 14;
     openSheet("pantry", { food: food.id, g: p?.g || food.pack || defaultQty(food), exp: p?.exp || "", u: p?.u || (food.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk }); return; }
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === food.id && x.buy > 0), c = S.shop.checked?.[food.id];
@@ -12200,21 +12212,6 @@ ACT["am-apply"] = () => { const sh = S_(), L = LV(), t = L?.tasks[L.cur], d = sh
    food (values per 100 g, pack size, portions) before you say how much is at home. A barcode nobody knows: describe
    it, the AI estimates the values and the pack, the editor opens with them to check. From a pantry item, the whole
    food can be edited too. */
-lookupAndAdd = async function (code) {
-  const sh = UI.sheet; if (!sh) return;
-  code = String(code).replace(/\D/g, "");
-  if (code.length < 6) { toast("That doesn't look like a barcode number."); return; }
-  sh.code = code;
-  const own = findByBarcode(code);
-  if (own) { toast(`Found in your foods: ${own.name}`); return goQty(own, sh); }
-  sh.stage = "busy"; sh.msg = `Looking up ${code} on Open Food Facts…`; renderSheet();
-  const r = await fetchOFF(code);
-  if (UI.sheet !== sh) return;
-  if (r.food) { put("foods", r.food.id, r.food);
-    if (UI.dest) { const d = UI.dest; toast(`From Open Food Facts: check the values and the pack`); openSheet("food", { draft: clone(r.food), isNew: false, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; }
-    toast(`Imported from Open Food Facts: ${r.food.name}`); return goQty(r.food, sh); }
-  sh.stage = "missing"; sh.unreachable = !!r.unreachable; renderSheet();
-};
 const _scanSheet = SHEETS.scan;
 SHEETS.scan = sh => { const o = _scanSheet(sh); if ((sh.stage || "start") !== "missing" || !AIF("lookup")) return o;
   const ai = `<div class="field sc-ai"><label for="sc-desc">Describe it: the AI estimates the values</label><textarea id="sc-desc" class="inp" rows="2" data-in="sc-desc" placeholder="e.g. Esselunga high-protein yogurt, vanilla, 150 g pot">${esc(sh.desc || "")}</textarea>

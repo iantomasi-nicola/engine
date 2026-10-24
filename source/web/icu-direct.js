@@ -46,7 +46,7 @@ async function icuSyncDirect() {
   function tidy(date) { const mk = date.slice(0, 7), d = docs[mk]?.days?.[date]; if (!d) return; for (const k of Object.keys(d)) if (d[k] === null || d[k] === "" || (Array.isArray(d[k]) && !d[k].length && k !== "planned")) delete d[k]; if (!Object.keys(d).length) delete docs[mk].days[date]; }
   const isIcuW = w => String(w?.ext || "").startsWith("icu-");
   const res = { planned: 0, acts: 0, well: 0, pushed: 0, sent_plan: 0, sent_well: 0, races: 0 };
-  const PLAN_SRC = icu.planSource !== false, SINCE_LINK = icu.bridge?.since || TODAY, NO_PUSH = false;
+  const PLAN_SRC = icu.planSource !== false, SINCE_LINK = icu.bridge?.since || TODAY;
   function itype(sp) { const s = sp || ""; if (/calis|strength|gym|weight|crossfit|hiit/i.test(s)) return "WeightTraining"; if (/run/i.test(s)) return "Run"; if (/cycl|bike|ride/i.test(s)) return "Ride"; if (/walk/i.test(s)) return "Walk"; if (/swim/i.test(s)) return "Swim"; if (/hike/i.test(s)) return "Hike"; return "Workout"; }
   // athlete
   const ath = await req(`/athlete/${AID}`) || {};
@@ -58,7 +58,8 @@ async function icuSyncDirect() {
   const evBody = (date, w) => { let desc = w.script || (w.min ? `- ${Math.trunc(w.min)}m${w.km ? ` ${w.km}km` : ""}` : ""); let min = w.min;
     if (strW(w) && w.script) { desc = desc.replace(/^(\s*)-\s+/gm, "$1• "); try { const g = workoutGist(w).min; if (g > 0) min = g; } catch (e) {} }
     const b = { category: "WORKOUT", start_date_local: `${date}T00:00:00`, type: itype(w.sport), name: w.note || w.sport || "Workout", description: desc }; if (min) b.moving_time = Math.trunc(min * 60); return b; };
-  for (const mk of Object.keys(docs)) for (const [date, dd] of Object.entries(docs[mk].days)) {
+  // with «Plan from intervals.icu» off nothing about the plan is written there; anything queued stays queued
+  if (PLAN_SRC) for (const mk of Object.keys(docs)) for (const [date, dd] of Object.entries(docs[mk].days)) {
     if (date < add(TODAY, -2)) continue;
     for (const ext of [...(dd.plannedDel || [])]) { try { await req(`/athlete/${AID}/events/${String(ext).slice(4)}`, "DELETE"); res.sent_plan++; } catch (e) { if (e.fatal) throw e; if (e.status !== 404) continue; } dd.plannedDel = (dd.plannedDel || []).filter(x => x !== ext); }
     if (!(dd.plannedDel || []).length) delete dd.plannedDel;
@@ -132,7 +133,7 @@ async function icuSyncDirect() {
     const bf = x.bodyFat; if (bf >= 3 && bf <= 60 && !((cur.bf || 0) > 0)) ch.bf = r1_(bf);
     if (Object.keys(ch).length) { Object.assign(day(date), ch); res.well++; } }
   // Engine -> intervals.icu: check-ins intervals.icu doesn't have
-  if (!NO_PUSH && icu.pushWell !== false) { const remote = Object.fromEntries(WELL.filter(x => x && typeof x === "object").map(x => [String(x.id).slice(0, 10), x]));
+  if (icu.pushWell !== false) { const remote = Object.fromEntries(WELL.filter(x => x && typeof x === "object").map(x => [String(x.id).slice(0, 10), x]));
     for (let k = 0; k < 15; k++) { const date = add(TODAY, -k); if (date < SINCE_LINK) continue; const dd = day(date, false) || {}, rx = remote[date] || {}, body = {};
       if ((dd.weight || 0) > 0 && !dd.estW && !rx.weight) body.weight = dd.weight; if ((dd.rhr || 0) > 0 && !rx.restingHR) body.restingHR = dd.rhr; if ((dd.hrv || 0) > 0 && !rx.hrv) body.hrv = dd.hrv;
       if ((dd.sleep || 0) > 0 && !rx.sleepSecs) body.sleepSecs = Math.trunc(dd.sleep * 3600); if ((dd.bf || 0) > 0 && !rx.bodyFat) body.bodyFat = dd.bf;
@@ -143,7 +144,7 @@ async function icuSyncDirect() {
     for (const [k, ss] of Object.entries(byEx)) lines.push(`${k}: ` + ss.map(x => { let p = (x.reps || []).join("-"); if (x.hold) p += " " + x.hold.join("-") + "s"; if (x.load) p += ` +${x.load}kg`; if (x.final && x.rir != null) p += ` (RIR ${x.rir})`; return p.trim(); }).join(" · "));
     for (const a2 of s.amrap || []) lines.push(`${a2.title} AMRAP ${a2.min}': ${a2.rounds}+${a2.partial}`);
     return lines.join("\n") + `\nRPE ${s.rpe}` + (s.note ? `\n${s.note}` : "") + "\n— logged with Engine"; };
-  if (!NO_PUSH && icu.push !== false) for (let k = 0; k < 14; k++) { const date = add(TODAY, -k), dd = day(date, false); if (!dd) continue;
+  if (icu.push !== false) for (let k = 0; k < 14; k++) { const date = add(TODAY, -k), dd = day(date, false); if (!dd) continue;
     for (const w of dd.workouts || []) {
       if (w.rpeDirty && String(w.ext || "").startsWith("icu-a-")) { try { await req(`/activity/${String(w.ext).slice(6)}`, "PUT", cleanO({ perceived_exertion: w.rpe, icu_rpe: w.rpe })); delete w.rpeDirty; res.pushed++; } catch (e) { if (e.fatal) throw e; } continue; }
       if (w.pushed || w.exts || w.sport === "Rest") continue; if (!w.sid && date < SINCE_LINK) continue;
@@ -157,8 +158,8 @@ async function icuSyncDirect() {
   // races
   const T0 = S.train || {}; let races = clone(T0.races || []), racesDel = clone(T0.racesDel || []); const beforeR = JSON.stringify({ r: races, d: racesDel });
   const raceBody = r => { const b = { category: `RACE_${(r.pri || "A").slice(0, 1)}`, start_date_local: `${r.date}T00:00:00`, type: itype(r.sport), name: r.name || "Race", description: [r.goal ? "Goal " + r.goal : "", r.notes || ""].filter(Boolean).join("\n") }; if (r.km) b.distance = Math.trunc(+r.km * 1000); return b; };
-  for (const ext of [...racesDel]) { try { await req(`/athlete/${AID}/events/${String(ext).slice(4)}`, "DELETE"); } catch (e) { if (e.fatal) throw e; if (e.status !== 404) continue; } racesDel = racesDel.filter(x => x !== ext); }
-  for (const r of races) { try { if (r.pushNew && !r.ext) { const o = await req(`/athlete/${AID}/events`, "POST", raceBody(r)); if (o && o.id != null) r.ext = `icu-${o.id}`; delete r.pushNew; res.sent_plan++; } else if (r.dirty && r.ext) { await req(`/athlete/${AID}/events/${String(r.ext).slice(4)}`, "PUT", raceBody(r)); delete r.dirty; res.sent_plan++; } } catch (e) { if (e.fatal) throw e; } }
+  if (PLAN_SRC) for (const ext of [...racesDel]) { try { await req(`/athlete/${AID}/events/${String(ext).slice(4)}`, "DELETE"); } catch (e) { if (e.fatal) throw e; if (e.status !== 404) continue; } racesDel = racesDel.filter(x => x !== ext); }
+  if (PLAN_SRC) for (const r of races) { try { if (r.pushNew && !r.ext) { const o = await req(`/athlete/${AID}/events`, "POST", raceBody(r)); if (o && o.id != null) r.ext = `icu-${o.id}`; delete r.pushNew; res.sent_plan++; } else if (r.dirty && r.ext) { await req(`/athlete/${AID}/events/${String(r.ext).slice(4)}`, "PUT", raceBody(r)); delete r.dirty; res.sent_plan++; } } catch (e) { if (e.fatal) throw e; } }
   const allev = await req(`/athlete/${AID}/events?oldest=${add(TODAY, -180)}&newest=${add(TODAY, 365)}`) || [];
   let rev = allev.filter(e => e && String(e.category || "").startsWith("RACE")); const rdates = new Set(rev.map(e => String(e.start_date_local || "").slice(0, 10)));
   rev = [...rev, ...allev.filter(e => e && e.category === "WORKOUT" && /^\s*(gara|race)\b|\b(competizione|competition)\b/i.test(String(e.name || "")) && !rdates.has(String(e.start_date_local || "").slice(0, 10)))];
