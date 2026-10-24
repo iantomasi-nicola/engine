@@ -2489,7 +2489,11 @@ html body .sheet.full .sheet-h::before{display:none}
 .wb-sum{margin-top:6px}
 /* one section pattern: a title, then rows divided by a line, no boxes: the page before a workout, Programs, Workouts and History share it */
 .card.flat{background:none;box-shadow:none;border-radius:0}.card.flat>.lrow,.card.flat>button.lrow{padding-inline:2px}
-.wl-card{padding:6px 18px}.wl-card .td-s:first-child{border-top:0}.td-s .lin{display:block;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}.td-s .lin i{display:block;height:100%;background:var(--c,var(--ink));border-radius:2px}
+/* workout rows: flat on the page, divided by a line (no box, no tinted box inside a box) */
+.wl-flat{display:flex;flex-direction:column;min-width:0}.wl-flat .td-s:first-child{border-top:0!important}
+.wl-flat .td-s,.td-card .td-s{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding-left:0!important;padding-right:0!important}.td-card .td-s:first-of-type{border-top:0!important}
+.td-card.td-train,.td-card.td-next{background:none!important;box-shadow:none!important;padding-left:0!important;padding-right:0!important}
+.empty.slim.flat{background:none!important;box-shadow:none!important;padding:4px 0 8px!important;text-align:left;align-items:flex-start}.td-s .lin{display:block;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}.td-s .lin i{display:block;height:100%;background:var(--c,var(--ink));border-radius:2px}
 .pv-sec .section-h{margin:0}.pv-sec .section-h h2{font-size:18px!important}
 .set-grp>summary>.ic,.set-grp>summary .ic.chev{display:none}
 /* one chevron for every dropdown: selects and the sections that open and close */
@@ -8654,7 +8658,7 @@ function trainWorkouts() {
     h += up.length ? `<div class="card flat">${up.map(({ d, x, k }) => `<div class="lrow up"><button class="up-d" data-act="wo-open" data-date="${d}" data-i="${k}" data-list="planned" style="text-align:left;color:var(--ink)"><b>${d === t0 ? "Today" : DOW[dow(d)]}</b><small>${fmtDM(d)}</small></button><button data-act="wo-open" data-date="${d}" data-i="${k}" data-list="planned" style="min-width:0;text-align:left;color:var(--ink)"><span class="t">${esc(x.note || x.sport)}</span><span class="s">${esc(x.sport)}${x.min ? ` · ${r0(x.min)} min` : ""}${x.km ? ` · ${r1(x.km)} km` : ""}${x.script ? " · script" : ""}${x.pushNew || x.dirty ? " · to send" : ""}</span></button>${x.script || isStrength(x.sport) ? `<button class="btn tonal sm" data-act="wo-start" data-date="${d}" data-i="${k}" data-list="planned" ${d !== t0 ? 'aria-label="Start now"' : ""}>${ic("play", "sm")}${d === t0 ? "Start" : ""}</button>` : `<span></span>`}</div>`).join("")}</div>` : `<div class="empty slim"><p>No workouts with a script planned on intervals.icu in the next 2 weeks.</p></div>`;
   } else h += `<div class="section-h"><h2>Programs</h2></div><div class="pg-list">${progCards()}</div>`;
   h += `<div class="section-h"><h2>${icuPlanMode() ? "Saved workouts" : "Workouts"}</h2><button class="link" data-act="we-new">${ic("plus", "sm")} New</button></div>`;
-  h += w.tpls.length ? `<div class="td-card wl-card">${w.tpls.map(t => { const tasks = expandTasks(parseScript(t.script).blocks), est = Math.round(estimateScript(tasks) / 60), last = H.find(s => s.tplId === t.id);
+  h += w.tpls.length ? `<div class="wl-flat">${w.tpls.map(t => { const tasks = expandTasks(parseScript(t.script).blocks), est = Math.round(estimateScript(tasks) / 60), last = H.find(s => s.tplId === t.id);
     const days = DOWK.filter(k => (FIT().pattern[k] || []).some(x => x.tpl === t.id)).map(k => DOW[DOWK.indexOf(k)]);
     return woRow({ title: t.name, meta: `≈ ${est} min · ${tasks.filter(x => x.t === "set").length} sets${days.length ? " · " + days.join(", ") : ""}`, g: blockTags(t.script).join(" · "), x: last ? `Last ${fmtDM(last.date)} · ${last.min} min · RPE ${last.rpe}` : "Not done yet", color: "carb", open: `data-act="wo-open" data-tpl="${t.id}"`, edit: `data-act="we-edit" data-tpl="${t.id}"`, go: `data-act="wo-start" data-tpl="${t.id}"` }); }).join("")}</div>`
     : `<div class="empty"><h3>No workouts yet</h3><p>Write one with the intervals.icu syntax and run it with timers, rests and logging.</p><button class="btn primary" data-act="we-new">New workout</button></div>`;
@@ -8833,8 +8837,8 @@ function programFor(date) {
 }
 function progCards() {
   const today = todayISO(), list = progs();
-  if (!list.length) return `<div class="empty slim"><p>Group your workouts into a block of weeks (e.g. 6 weeks Mon/Thu calisthenics, Tue/Sat running). Each week can add reps, load or volume automatically.</p><button class="btn tonal" data-act="pg-new">${ic("plus", "sm")}New program</button></div>`;
-  return `<div class="td-card wl-card">` + list.map(P => { const w = progWeek(P, today), started = P.start <= today, end = addDays(P.start, 7 * P.weeks - 1), past = today > end;
+  if (!list.length) return `<div class="empty slim flat"><p>Group your workouts into a block of weeks (e.g. 6 weeks Mon/Thu calisthenics, Tue/Sat running). Each week can add reps, load or volume automatically.</p><button class="btn tonal" data-act="pg-new">${ic("plus", "sm")}New program</button></div>`;
+  return `<div class="wl-flat">` + list.map(P => { const w = progWeek(P, today), started = P.start <= today, end = addDays(P.start, 7 * P.weeks - 1), past = today > end;
     let next = null; for (let i = 0; i < 14 && !next; i++) { const d = addDays(today, i); const s = programFor(d).find(x => x.prog === P.id); if (s) next = { d, s }; }
     return woRow({ title: P.name, meta: `${past ? `Finished ${fmtDM(end)}` : !started ? `Starts ${fmtDM(P.start)}` : `Week ${w} of ${P.weeks}${isDeload(P, w) ? " · deload" : ""}`} · ${PROG_RULES.find(r => r[0] === P.rule)?.[1] || ""}`, g: P.sport || "", bar: past ? 100 : started ? Math.round((w - 1 + (dow(today) + 1) / 7) / P.weeks * 100) : 0, x: next ? `Next: ${next.d === today ? "today" : DOW[dow(next.d)] + " " + fmtDM(next.d)} · ${next.s.note}` : "", color: "pro", open: `data-act="pg-edit" data-id="${P.id}"`, edit: `data-act="pg-edit" data-id="${P.id}"` }); }).join("") + `</div><button class="btn text" data-act="pg-new">${ic("plus", "sm")}New program</button>`;
 }

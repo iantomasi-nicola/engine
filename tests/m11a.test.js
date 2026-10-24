@@ -32,7 +32,7 @@ test("one pattern: Programs and Workouts are the same rows as Today's workouts, 
   const page = await open(H.VIEWPORTS.phone, { withPlan: false });
   const r = await page.evaluate(async () => { const t = todayISO(); WK().tpls = [{ id: "t1", name: "Day B", sport: strengthSport(), script: "Pull 4x\n- 6 Pull-up" }]; const days = Object.fromEntries(DOWK.map(k => [k, null])); days[DOWK[0]] = "t1";
     S.train.progs = [{ id: "pg1", name: "Block 1", sport: strengthSport(), start: weekStartOf(t), weeks: 6, days, rule: "reps", step: 1, deload: 4 }]; DATA_V++; UI.tab = "train"; UI.trainSeg = "wk"; render(); await new Promise(r => setTimeout(r, 250));
-    const wk = { rows: document.querySelectorAll(".wl-card .td-s").length, go: document.querySelectorAll(".wl-card .td-go").length, h: document.querySelectorAll(".section-h h2").length };
+    const wk = { rows: document.querySelectorAll(".wl-flat .td-s").length, go: document.querySelectorAll(".wl-flat .td-go").length, h: document.querySelectorAll(".section-h h2").length };
     startWorkout({ script: "Pull 4x\n- 6 Pull-up +10kg", name: "T", sport: strengthSport(), date: t }); UI.tab = "live"; render(); await new Promise(r => setTimeout(r, 250));
     return { wk, pv: { heads: [...document.querySelectorAll(".pv-sec .section-h h2")].map(h => h.innerText), eyebrows: document.querySelectorAll(".pv-sec .eyebrow").length, cards: document.querySelectorAll(".lv-main .lv-card").length } }; });
   assert.equal(r.wk.rows, 2, "a program and a workout, both as the rows Today uses"); assert.equal(r.wk.go, 1, "the workout has Start, the program opens"); assert.ok(r.wk.h >= 3); assert.ok(r.pv.heads.length >= 3); assert.equal(r.pv.eyebrows, 0); assert.equal(r.pv.cards, 0);

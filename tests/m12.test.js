@@ -23,7 +23,7 @@ test("workouts in Train › Workouts are the same row as Today's: same dot, titl
   const page = await open(H.VIEWPORTS.phone, { withPlan: false });
   const r = await page.evaluate(async () => { const t = todayISO(); WK().tpls = [{ id: "t1", name: "Day B", sport: strengthSport(), script: "Pull 4x\n- 6 Pull-up" }]; mutateLog(t, d => { d.planned = [{ sport: strengthSport(), min: 40, note: "Pulls", tpl: "t1" }]; }); DATA_V++;
     UI.tab = "today"; render(); await new Promise(r => setTimeout(r, 250)); const today = document.querySelector(".td-s"), a = today ? [...today.querySelectorAll("*")].map(e => e.className).filter(Boolean).sort().join("|") : "";
-    UI.tab = "train"; UI.trainSeg = "wk"; render(); await new Promise(r => setTimeout(r, 250)); const wl = document.querySelector(".wl-card .td-s"), b = wl ? [...wl.querySelectorAll("*")].map(e => e.className).filter(Boolean).sort().join("|") : "";
+    UI.tab = "train"; UI.trainSeg = "wk"; render(); await new Promise(r => setTimeout(r, 250)); const wl = document.querySelector(".wl-flat .td-s"), b = wl ? [...wl.querySelectorAll("*")].map(e => e.className).filter(Boolean).sort().join("|") : "";
     return { a, b, startBtn: !!wl?.querySelector(".td-go"), editBtn: !!wl?.querySelector(".td-edit") }; });
   assert.ok(r.a && r.b); const A = new Set(r.a.split("|")), B = new Set(r.b.split("|")); for (const c of ["td-s-m", "td-s-b", "td-s-a", "td-go", "td-edit"]) { assert.ok(A.has(c), "today " + c); assert.ok(B.has(c), "workouts " + c); }
   assert.ok(r.startBtn && r.editBtn);
