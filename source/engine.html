@@ -1413,8 +1413,10 @@ body.live-mode .main{padding-bottom:120px!important}
 .sg-acts{justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}/* Ready to start: sections on the page itself, divided by a line, not boxes */
 .pv-sec{display:flex;flex-direction:column;gap:10px;padding:20px 0;border-top:1px solid var(--line);min-width:0}.pv-hero{border-top:0;padding-top:6px;gap:14px}
 .lv-main>.pv-sec:first-child,.lv-side>.pv-sec:first-child{border-top:0}
-.pv-hero .lv-h1{font-size:34px;line-height:1.1}.pv-hero .pv-tiles>div{background:transparent;border:1px solid var(--line)}
+.pv-hero .lv-h1{font-size:34px;line-height:1.1}.pv-hero .pv-tiles{display:flex;flex-wrap:wrap;gap:8px 28px}.pv-hero .pv-tiles>div{background:none;border:0;border-radius:0;padding:0;text-align:left}
 .lv-side .pv-sec{padding-top:6px}
+/* the run preview: its sections lose the box too, divided by a line like the strength one */
+.pv-run .lv-card{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding:20px 0!important}.pv-run .lv-main>.lv-card:first-child,.pv-run .lv-side>.lv-card:first-child{border-top:0!important;padding-top:6px!important}.pv-run .lv-card.flush .rs-row{padding-inline:0}
 .pv-sec .pv-b{background:none!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;padding:12px 0 4px!important;margin-top:0}.pv-sec .pv-b:first-of-type{border-top:0!important;padding-top:4px!important}
 .pv-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.pv-tiles>div{background:var(--surface-2);border-radius:14px;padding:10px 6px 8px;text-align:center;min-width:0}
 .pv-tiles b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.pv-tiles b i{font-style:normal;font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}.pv-tiles small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -2491,8 +2493,7 @@ html body .sheet.full .sheet-h::before{display:none}
 .card.flat{background:none;box-shadow:none;border-radius:0}.card.flat>.lrow,.card.flat>button.lrow{padding-inline:2px}
 /* workout rows: flat on the page, divided by a line (no box, no tinted box inside a box) */
 .wl-flat{display:flex;flex-direction:column;min-width:0}.wl-flat .td-s:first-child{border-top:0!important}
-.wl-flat .td-s,.td-card .td-s{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding-left:0!important;padding-right:0!important}.td-card .td-s:first-of-type{border-top:0!important}
-.td-card.td-train,.td-card.td-next{background:none!important;box-shadow:none!important;padding-left:0!important;padding-right:0!important}
+.wl-flat .td-s{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding-left:0!important;padding-right:0!important}
 .empty.slim.flat{background:none!important;box-shadow:none!important;padding:4px 0 8px!important;text-align:left;align-items:flex-start}.td-s .lin{display:block;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}.td-s .lin i{display:block;height:100%;background:var(--c,var(--ink));border-radius:2px}
 .pv-sec .section-h{margin:0}.pv-sec .section-h h2{font-size:18px!important}
 .set-grp>summary>.ic,.set-grp>summary .ic.chev{display:none}
@@ -9640,7 +9641,7 @@ function liveRunTask(L, t, r) {
 function runPreview(L) {
   const tasks = L.tasks, tot = tasks.reduce((a, t) => a + (t.dur || 0), 0), km = runEstKm(tasks);
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), L.free ? `<span></span>` : `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
-  h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
+  h += `<div class="lv-wrap two pv-run"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-meta"><span>${ic("timer", "sm")}${fmtDurShort(tot)}</span>${km ? `<span>≈ ${r1(km)} km</span>` : ""}<span>${tasks.length} steps</span><span class="chip-s">${esc(L.sport)}</span></div>
     <p class="muted" style="margin:0;font-size:13.5px">Runs by itself: every step starts and ends on its own with a 3-2-1 countdown${PLAYER().voice ? " and spoken targets" : ""}. ${isBike(L.sport) ? "Put the phone on the bars and ride" : "Put the phone away and run"}. Pause is there if you need it.</p></section>
     ${(() => { const o = runOverview(tasks, L.sport, L.date, (L.planDate && (logGet(L.planDate)?.planned || []).find(w => w.at)?.at) || logGet(L.date)?.wxAt); return o ? `<section class="lv-card">${o}</section>` : ""; })()}
