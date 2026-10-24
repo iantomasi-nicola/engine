@@ -16,7 +16,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6 | XL | Medio | – |
 | M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | – |
 | M7a Nutrizione: base sicura (nessun numero cambia) | D16, D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Fatta e pubblicata (24/10)** |
-| M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **Approvata (24/10), in corso**: solo import in sola lettura e modalità in ombra, nessun numero visibile cambia |
+| M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **P0 e P1 fatti (24/10)**: import in sola lettura e AEE in ombra; nessun numero in uso cambia. P2–P3 in attesa del confronto sui dati reali |
 | M7b Nutrizione: correttezza dei calcoli (cambia i numeri, una formula alla volta con approvazione) | D7, D8, D11, D17, **D5b**, **D18** (AEE senza kcal orologio) | XL | Alto | In attesa |
 | M7c Nutrizione: trasparenza «Come calcolato» | D3 | M | Basso | In attesa |
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
@@ -77,3 +77,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | Fix «17 foods moved to the right aisle»: pulizie una tantum solo dopo i dati del server; avviso se la memoria del dispositivo è piena | vedi `git log` |
 | 2026-10-24 | Pubblicato `main` = 621da12 (build 202610241056): M0–M2, M7a, UX, editor Food compatto, versione nelle Settings | 621da12 |
 | 2026-10-24 | M4: icona ricetta (C8), menu laterale a rail (J1), Check-in con selettore di giorno (I1), obiettivo km settimanali con storico (G2), Foods › Top (I2), luogo del meteo (F1); 3 trappole TDZ evitate dai test | vedi `git log` |
+| 2026-10-24 | M7a2 P0/P1: campi intervals.icu in sola lettura, AEE «in ombra» con candidati per sessione, NEAT dai passi, backtest; il motore in uso è invariato | vedi `git log` |

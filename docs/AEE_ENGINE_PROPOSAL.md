@@ -1,6 +1,6 @@
 # Motore AEE automatico (NEAT + EAT) senza le kcal dell'orologio — analisi e proposta
 
-Stato: **proposta, nessun codice del motore energetico è stato modificato.** Richiesta dell'utente (24/10): stimare l'AEE in modo accurato e difendibile, eliminare il campo manuale «Watch kcal» dal Check-in, EAT da intervals.icu, NEAT dai passi. Collegato a `NUTRITION_AUDIT.md` (F-03, F-06, F-12) e ai requisiti D5, D7, D8, D17, D18.
+Stato (24/10): **strategia approvata; P0 e P1 fatti** (import in sola lettura + modalità «in ombra»); **il motore in uso non è stato modificato**; P2–P3 aspettano il confronto sui tuoi dati e la tua approvazione. Richiesta dell'utente (24/10): stimare l'AEE in modo accurato e difendibile, eliminare il campo manuale «Watch kcal» dal Check-in, EAT da intervals.icu, NEAT dai passi. Collegato a `NUTRITION_AUDIT.md` (F-03, F-06, F-12) e ai requisiti D5, D7, D8, D17, D18.
 
 ## 1. Cosa fa oggi il codice (baseline `cae350d`, letto e in parte provato)
 
@@ -71,3 +71,22 @@ Sono d'accordo su tutti i punti. Le differenze sono quattro, e vanno nel senso d
 - La strategia (A con B dentro e C come calibrazione del totale).
 - **P0** (importare altri campi in sola lettura) e **P1** (modalità in ombra), cioè nessuna modifica ai numeri che vedi.
 - Rimandare P2–P3 al confronto sui tuoi dati.
+
+## 8. Cosa è stato fatto (24/10)
+- **P0:** l'import di intervals.icu salva in sola lettura dislivello (`elev`), velocità (`spd`), potenza (`pw`), cadenza (`cad`), FC massima (`hrmax`) e nome del dispositivo (`devn`), solo se presenti; non cancella mai valori già presi; i nomi dei campi API (`total_elevation_gain`, `average_speed`, `icu_average_watts`/`average_watts`, `average_cadence`, `max_heartrate`, `device_name`) sono quelli che conosco ma **non ho potuto confermarli sull'API reale da qui**: alla prima sincronizzazione appaiono solo se esistono. Un test con un intervals.icu finto verifica che un sync senza nulla in sospeso **legga soltanto** (nessun POST/PUT/DELETE).
+- **P1:** `Progress › Nutrition › Energy › «AEE in the shadow»` (chiusa di default) confronta, per gli ultimi 7 giorni, NEAT, EAT e AEE «in uso → in ombra» e mostra il confronto con le tue kcal dell'orologio sui giorni passati (ogni giorno escluso da ciò che si impara). **Non entra in nessun target** (test).
+  - **EAT:** candidati per sessione. Corsa/camminata: equazione ACSM da passo e dislivello (`VO2 = 0,2·v + 0,9·v·pendenza` corsa; `0,1·v + 1,8·v·pendenza` camminata; 5 kcal per litro), qualità alta con dislivello. Valore del sensore reso netto togliendo l'energia a riposo (se il sensore dichiara «attive» non si toglie nulla; «non so» = qualità bassa). FC (Keytel, solo se non è forza/calisthenics, netta). MET generico netto. Si sceglie il migliore disponibile e gli altri restano visibili.
+  - **NEAT:** passi del giorno × costo netto della camminata (0,5 kcal/kg/km × falcata 0,415 × altezza). **Nei giorni con corsa o camminata i passi non vengono trasformati in NEAT** (già nell'allenamento): si usa il giorno tipico senza allenamento, con etichetta «bassa confidenza». Passi mancanti = sconosciuto, mai zero. La parte non misurata dai passi si impara dai tuoi giorni con kcal dell'orologio (mediana di orologio − passi, minimo 14 giorni, senza il giorno stesso nel backtest); prima è «non modellata» e non viene inventata.
+- **Limiti dichiarati:** (1) i METs dei vari sport restano quelli già nel modello (non ho verificato valori 2024 del Compendium); nuoto, bici e calcio a 5 quindi usano il sensore o il MET generico; (2) la potenza non è ancora usata per la bici (equazione da verificare); (3) la falcata 0,415×altezza è un'approssimazione di letteratura da confermare sui tuoi dati; (4) non so ancora cosa conti davvero il «totale» di Zepp: l'impostazione per sensore (totali/attive) lo rende esplicito.
+- **Non promesso:** nessuna cifra di accuratezza («precisissime») senza il confronto sui tuoi dati: il backtest mostra bias e scarto tipico, e il peso corporeo resta la verifica finale.
+
+## 9. Inventario delle scritture verso intervals.icu (ENG-07)
+Tutte partono da dati locali in attesa e da flag espliciti; senza di essi il sync legge soltanto (testato).
+| Chiamata | Quando |
+|---|---|
+| `DELETE /events/<id>` | una sessione pianificata sincronizzata è stata cancellata in Engine; gara cancellata |
+| `POST /events` | nuova sessione pianificata (`pushNew`) o nuova gara |
+| `PUT /events/<id>` | sessione pianificata modificata in Engine (`dirty`) |
+| `PUT /wellness/<data>` | peso, FC a riposo, HRV, sonno, body fat inseriti in Engine e assenti su intervals.icu (ultimi 15 giorni) |
+| `PUT /activity/<id>` | RPE modificato in Engine; dettagli di una sessione di forza eseguita |
+| `POST /activities/manual` | allenamento fatto in Engine (live) non ancora presente su intervals.icu |

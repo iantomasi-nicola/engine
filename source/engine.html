@@ -114,6 +114,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .fd-bar{justify-content:space-between;align-items:center;gap:8px}.fd-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fd-macros .inp,.fd-g4 .inp{padding-inline:10px}.fd-serv{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:6px;align-items:center}
 .fd-more{border-radius:16px;background:var(--md-sc-high,var(--surface-2));padding:0 12px}.fd-more>summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;list-style:none}.fd-more>summary::-webkit-details-marker{display:none}.fd-more>summary b{font-weight:600;font-size:14px}.fd-more>summary small{font-size:12.5px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fd-more>summary::after{content:"▾";color:var(--faint);flex:none}.fd-more[open]>summary::after{content:"▴"}.fd-in{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
 .top-row .s{white-space:normal!important;display:block!important;overflow:visible!important}
+.aee-shadow summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.aee-shadow .faint{font-size:12.5px}.tbl-scroll{overflow-x:auto}.aee-t{width:100%;border-collapse:collapse;font-size:12.5px}.aee-t th{text-align:left;font-weight:500;color:var(--muted);padding:4px 6px 4px 0;white-space:nowrap}.aee-t td{padding:6px 6px 6px 0;border-top:1px solid var(--line,rgba(0,0,0,.08));vertical-align:top}.aee-t td.n{font-variant-numeric:tabular-nums}.aee-t small{display:block}
 .pa-tools{display:flex;flex-direction:column;gap:8px;padding:8px 0 4px}.pa-forecast{margin:8px 0;padding:10px 12px}.pa-forecast summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.pa-forecast summary .faint{font-size:12.5px}.pa-fchips{margin:8px 0 4px}
 .lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
 .lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
@@ -9991,6 +9992,62 @@ ACT["tp-circ"] = el => { UI.tpCirc = el.dataset.k; scheduleRender(); };
 ACT["tp-dist"] = el => { UI.tpDist = el.dataset.k; scheduleRender(); };
 
 /* ================= Progress › Energy: BMR, NEAT, training, TEF, TDEE and how they're estimated ================= */
+/* ================= AEE in the shadow (M7a2 / P1) =================
+   A second, independent estimate of what training (EAT) and daily movement (NEAT) cost, shown beside the figure in use. It feeds no target.
+   EAT: candidates per session (ACSM walking/running equations, the device value made net of resting energy, heart rate, the generic MET) and the best one available is
+   picked; the others stay visible. NEAT: the net cost of the steps walked outside workouts, plus a personal non-step part learned from the days you typed your watch figure.
+   Missing steps are unknown, never zero. Everything is net of rest, so it adds to the BMR without overlap. */
+const AEE_KCAL_PER_L = 5;   // energy per litre of oxygen: 4.7-5.05 with the fuel mix, 5 is the usual round figure
+const isWalkSport = sp => /walk|hik/i.test(sp || "");
+function eatCandidates(w, date) {
+  const out = [], fit = FIT(), min = parseMinutes(w?.min) || 0; if (!w || !w.sport || w.sport === "Rest" || !(min > 0)) return out;
+  const kg = trendAt(date), rest = energyAt(date).bmr / 1440, run = w.sport === fit.runSport, walk = isWalkSport(w.sport), km = +w.km || 0, strength = isStrength(w.sport);
+  if ((run || walk) && km > 0.3) {
+    const v = km * 1000 / min, g = Math.max(0, (+w.elev || 0) / (km * 1000)), vo2 = run ? 0.2 * v + 0.9 * v * g : 0.1 * v + 1.8 * v * g, ok = run ? v >= 100 && v <= 400 : v >= 40 && v <= 130;
+    out.push({ m: "acsm", kcal: r0(vo2 * kg * min / 1000 * AEE_KCAL_PER_L), q: ok && w.elev ? "high" : ok ? "medium" : "low", note: `${run ? "running" : "walking"} equation from pace${w.elev ? " and climb" : ", flat assumed"}` });
+  }
+  const kc = +w.kcal > 0 ? +w.kcal : +w.watch > 0 ? +w.watch : 0;
+  if (kc > 0) { const basis = devById(devOf(w))?.kcal || "unknown"; out.push({ m: "device", kcal: basis === "net" ? r0(kc) : Math.max(0, r0(kc - rest * min)), q: basis === "unknown" ? "low" : "medium", note: basis === "net" ? "sensor value, already net" : `sensor value minus ${r0(rest * min)} kcal of resting energy${basis === "unknown" ? " (what it counts is not set)" : ""}` }); }
+  if (+w.hr > 0 && !strength) out.push({ m: "hr", kcal: Math.max(0, r0(keytel(+w.hr, kg, ageAt(date), fit.profile.sex) * fit.run.hrCal * min - rest * min)), q: "low", note: "from heart rate (Keytel), net of rest" });
+  const sp = fit.sports.find(x => x.name === w.sport);
+  out.push({ m: "met", kcal: Math.max(0, r0(Math.max(0, (sp?.met || 5) * (fit.intMult[w.int || "Moderate"] || 1) - 1) * kg / 60 * min)), q: "low", note: "generic MET of the sport, net of the resting MET" });
+  const order = run || walk ? ["acsm", "device", "hr", "met"] : strength ? ["device", "met"] : ["device", "hr", "met"];
+  return out.filter(c => order.includes(c.m)).sort((a, b) => order.indexOf(a.m) - order.indexOf(b.m));
+}
+const stepKcal = (date, steps) => 0.5 * trendAt(date) * steps * 0.415 * ((FIT().profile.height || 175) / 100) / 1000;   // net walking cost 0.5 kcal/kg/km (ACSM walking, 0.1 ml/kg/m x 5 kcal/l); stride 0.415 x height
+const ambulatory = date => sessionsFor(date).list.some(w => w.sport && w.sport !== "Rest" && (w.sport === FIT().runSport || isWalkSport(w.sport)));
+const medianOf = a => { if (!a.length) return null; const x = [...a].sort((p, q) => p - q), h = x.length >> 1; return x.length % 2 ? x[h] : (x[h - 1] + x[h]) / 2; };
+/* the part of NEAT that steps don't show: the median of (watch NEAT - steps NEAT) over past days with both and no run or walk. Needs 14 days. */
+function neatBase(except) {
+  const today = todayISO(), vals = [];
+  for (let i = 1; i <= 90; i++) { const d = addDays(today, -i), L = logGet(d); if (d === except || !(L?.watch > 0) || !(L?.steps > 0) || ambulatory(d)) continue; const r = energyAt(d); if (r?.neatSrc !== "watch") continue; vals.push(r.neat - stepKcal(d, L.steps)); }
+  return vals.length >= 14 ? { kcal: Math.max(0, r0(medianOf(vals))), n: vals.length } : null;
+}
+function aeeShadow(date, except) {
+  const today = todayISO(), r = energyAt(date), items = sessionsFor(date).list.filter(w => w.sport && w.sport !== "Rest").map(w => { const cands = eatCandidates(w, date); return { w, pick: cands[0] || null, cands }; });
+  const eat = items.reduce((a, x) => a + (x.pick ? x.pick.kcal : 0), 0), L = logGet(date), steps = L?.steps > 0 ? +L.steps : null, walked = ambulatory(date);
+  let observed = null, src = "none", q = null;
+  if (steps != null && !walked) { observed = stepKcal(date, steps); src = "steps"; q = "medium"; }
+  else if (steps != null) { const prev = []; for (let i = 1; i <= 14; i++) { const d = addDays(date, -i), s = logGet(d)?.steps; if (s > 0 && !ambulatory(d)) prev.push(stepKcal(d, s)); } if (prev.length >= 3) { observed = medianOf(prev); src = "borrowed"; q = "low"; } }   // a run or walk that day: its steps are already in the training figure
+  const base = neatBase(except), total = observed != null ? r0(observed + (base?.kcal || 0)) : null;
+  return { date, eat: { total: r0(eat), items }, neat: { steps, observed: observed != null ? r1(observed) : null, base: base?.kcal ?? null, total, src, q, modelled: !!base }, aee: total != null ? r0(eat) + total : null, legacy: { neat: r.neat, eat: r.eat, aee: r.neat + r.eat, neatSrc: r.neatSrc } };
+}
+/* how the shadow compares with the figure in use, on past days that have your watch figure; each day leaves its own value out of the learned part */
+function aeeBacktest(n = 60) {
+  const today = todayISO(), rows = [];
+  for (let i = 1; i <= n; i++) { const d = addDays(today, -i); if (!(logGet(d)?.watch > 0) || energyAt(d)?.neatSrc !== "watch") continue; const a = aeeShadow(d, d); if (a.aee == null) continue; rows.push({ date: d, shadow: a.aee, legacy: a.legacy.aee, diff: a.aee - a.legacy.aee }); }
+  const m = rows.length ? rows.reduce((x, y) => x + y.diff, 0) / rows.length : null;
+  return { n: rows.length, bias: m, mae: rows.length ? rows.reduce((x, y) => x + Math.abs(y.diff), 0) / rows.length : null, rows };
+}
+function aeeShadowCard() {
+  const today = todayISO(), days = [...Array(7)].map((_, i) => addDays(today, -i)), B = aeeBacktest(60);
+  const SRC = { steps: "steps", borrowed: "typical day (run or walk that day)", none: "no steps" }, Q = { high: "high", medium: "medium", low: "low" };
+  const rows = days.map(d => { const a = aeeShadow(d), it = a.eat.items.map(x => x.pick ? `${x.pick.m} ${fmtN(x.pick.kcal)}` : "—").join(" + ");
+    return `<tr><td>${fmtDM(d)}</td><td class="n">${a.neat.steps != null ? fmtN(a.neat.steps) : "—"}</td><td class="n">${fmtN(r0(a.legacy.neat))} → ${a.neat.total != null ? `<b>${fmtN(a.neat.total)}</b>` : "—"}<small class="faint"> ${esc(SRC[a.neat.src] || "")}${a.neat.q ? ` · ${Q[a.neat.q]}` : ""}</small></td><td class="n">${fmtN(r0(a.legacy.eat))} → <b>${fmtN(a.eat.total)}</b><small class="faint"> ${esc(it)}</small></td><td class="n">${fmtN(r0(a.legacy.aee))} → ${a.aee != null ? `<b>${fmtN(a.aee)}</b>` : "—"}</td></tr>`; }).join("");
+  return `<details class="aee-shadow card pad"><summary><b>AEE in the shadow</b><span class="faint">not used for your targets · an independent estimate beside the figure in use</span></summary>
+    <div class="faint" style="font-size:12.5px;margin:8px 0">Training (EAT) from the best data each session has; daily movement (NEAT) from the steps outside workouts. All net of resting energy. ${B.n ? `Against your own watch figures on ${B.n} past days (each day left out of what is learned): the shadow is ${B.bias >= 0 ? "+" : "−"}${fmtN(r0(Math.abs(B.bias)))} kcal on average, typical gap ${fmtN(r0(B.mae))} kcal. Your watch figure is itself an estimate.` : "Not enough days with both your watch figure and steps to compare yet."}</div>
+    <div class="tbl-scroll"><table class="aee-t"><thead><tr><th>Day</th><th>Steps</th><th>NEAT now → shadow</th><th>EAT now → shadow</th><th>AEE now → shadow</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+}
 const profileGaps = () => { const p = FIT().profile || {}, g = []; if (!p.dob) g.push("date of birth (age 30 is assumed)"); return g; };
 const profileNote = () => { const g = profileGaps(); return g.length ? `<div class="note warn" role="note">Energy numbers are provisional: ${esc(g.join(", "))} missing. <button class="link" data-act="tab" data-tab="settings">Add it in Settings</button></div>` : ""; };
 function energyView() {
@@ -10008,6 +10065,7 @@ function energyView() {
     <div class="stat-grid four">${kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (r.phase?.kcal ? ` · ${r.phase.kcal > 0 ? "+" : ""}${fmtN(r.phase.kcal)}` : ""))}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
   hh += `<div class="section-h"><h2>Basal metabolism (BMR)</h2><span class="faint" style="font-size:12.5px">in use: ${esc(E.bmr)}</span></div>
     <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", E.bmr === "Mifflin-St Jeor" ? "in use" : "")}${kpi(fmtN(hb), "Harris-Benedict", E.bmr === "Harris-Benedict" ? "in use" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(r.bmr), "used today", `${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}`)}</div>`;
+  hh += aeeShadowCard();
   hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
   hh += `<div class="section-h"><h2>Last 6 weeks</h2></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: pts("tdee") }, { name: "Eaten", color: "var(--carb)", pts: last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)]) }, { name: "Target", color: "var(--faint)", pts: pts("target"), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target", minPad: 50 })}</div>`;
