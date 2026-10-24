@@ -27,3 +27,22 @@ for (const [name, sport, script] of [["strength", "strength", "Pull 3x\n- 6 Pull
     }
   });
 }
+
+test("big screens: the page fills the room next to the menu (1920 px), is centred beyond 1640 px (2560), the side columns grow, the selected calendar day has no outline", async () => {
+  const out = {};
+  for (const [w, h] of [[1440, 900], [1920, 1080], [2560, 1440]]) {
+    app = await H.startApp({ dir, seed: F.seed(), viewport: { width: w, height: h } });
+    out[w] = await app.page.evaluate(() => { const m = () => document.querySelector(".main").getBoundingClientRect(), side = document.querySelector(".side").getBoundingClientRect().right, r = {};
+      for (const t of ["today", "fuel", "shop", "train", "settings"]) { UI.tab = t; if (FUEL_TABS.includes(t)) UI.fuelTab = t; render(); const b = m(); r[t] = { w: Math.round(b.width), l: Math.round(b.left - side), r: Math.round(innerWidth - b.right) }; }
+      UI.tab = "fuel"; UI.fuelTab = "fuel"; render(); const pg = document.querySelector(".plan-grid"); r.side = pg ? Math.round(pg.lastElementChild.getBoundingClientRect().width) : null;
+      UI.tab = "train"; render(); const sel = document.querySelector(".cv-d.sel"); r.outline = sel ? getComputedStyle(sel, "::after").display : "none"; return r; });
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+  for (const t of ["today", "fuel", "shop", "train", "settings"]) {
+    assert.ok(out[1920][t].r <= 24, `${t} reaches the right edge at 1920 (gap ${out[1920][t].r})`); assert.ok(out[1920][t].w >= 1580, `${t} is ${out[1920][t].w} px wide at 1920`);
+    assert.equal(out[2560][t].w, 1640); assert.ok(Math.abs(out[2560][t].l - out[2560][t].r) <= 48, `${t} is centred at 2560`);
+    assert.ok(out[1440][t].r <= 24, `${t} unchanged at 1440`);
+  }
+  assert.ok(out[1920].side > 420, `the Fuel side column grows (${out[1920].side})`);
+  for (const w of [1440, 1920]) assert.equal(out[w].outline, "none");
+});
