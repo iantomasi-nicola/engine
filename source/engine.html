@@ -852,6 +852,9 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .hab-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.4}
 .fd-price{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}.seg.fill{display:flex;width:100%}.seg.fill>button{flex:1 1 0}
 .fd-eq{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.fd-eq:empty{display:none}.fd-eq>div{background:var(--surface-2);border-radius:12px;padding:8px 10px;min-width:0}.fd-eq small{display:block;font-size:11.5px;color:var(--muted)}.fd-eq b{font-size:15px;font-variant-numeric:tabular-nums}
+.rc-sum{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px;background:var(--surface-2);border-radius:14px;padding:10px 12px}.rc-sum small{display:block;font-size:11.5px;color:var(--muted)}.rc-sum b{font-size:14.5px;font-weight:650}
+.rc-ing{align-items:center;row-gap:6px}.rc-pk{grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:6px}.rc-pk .faint{font-size:12.5px;min-width:80px}
+.rc-method{margin-top:6px}.rc-method summary{cursor:pointer;font-weight:600;font-size:14px}.rc-method ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
 .jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
 .jr-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
@@ -2847,10 +2850,25 @@ function recipeTotals(r) {
   for (const ing of r.ingredients || []) { const f = getFood(ing.food) || (S.foods[ing.food]?.hidden ? BUILTIN[ing.food] : null); if (!f) continue; addM(t, f.per, ing.g / 100); g += ing.g; }
   t.g = g; return t;
 }
+/* a recipe as a meal used it: once you have eaten it, the meal keeps the recipe as it was (it.snap), so editing or deleting the recipe later never changes your history */
+const itemRecipe = it => it.snap ? { name: it.snap.name, servings: it.snap.sv, ingredients: it.snap.ing } : recipeForItem(it.ref);
+function freezeRecipeUses(id) {
+  const r = getRecipe(id) || BUILTIN_REC[id]; if (!r) return;
+  const snap = { name: r.name, sv: r.servings || 1, ing: (r.ingredients || []).map(i => ({ food: i.food, g: i.g })) };
+  for (const [date, day] of Object.entries(S.days)) { let ch = false; const next = clone(day);
+    for (const [, it] of dayItems(next)) if (it.kind === "recipe" && it.ref === id && it.eaten && !it.snap) { it.snap = clone(snap); ch = true; }
+    if (ch) put("days", date, next); }
+}
+/* what a recipe costs from the prices you paid: ingredients with no price are left out and the figure is marked partial */
+function recipeCost(r) {
+  let total = 0, priced = 0; const n = (r.ingredients || []).length;
+  for (const i of r.ingredients || []) { const k = eurPerG(i.food); if (k != null && num(i.g) > 0) { total += k * num(i.g); priced++; } }
+  return { total, perServing: total / Math.max(0.25, num(r.servings) || 1), priced, of: n, partial: priced < n };
+}
 function recipePerServing(r) { return addM(ZERO(), recipeTotals(r), 1 / (r.servings || 1)); }
 function itemMacros(it) {
   if (it.kind === "quick") return { ...ZERO(), ...it.m };
-  if (it.kind === "recipe") { const r = recipeForItem(it.ref); return r ? addM(ZERO(), recipeTotals(r), it.qty / (r.servings || 1)) : ZERO(); }
+  if (it.kind === "recipe") { const r = itemRecipe(it); return r ? addM(ZERO(), recipeTotals(r), it.qty / (r.servings || 1)) : ZERO(); }
   const f = foodForItem(it.ref); return f ? addM(ZERO(), f.per, it.qty / 100) : ZERO();
 }
 /* meals already planned keep a deleted starter recipe or built-in food (it only leaves the library) */
@@ -2858,7 +2876,7 @@ const recipeForItem = id => getRecipe(id) || (S.recipes[id]?.hidden ? BUILTIN_RE
 const foodForItem = id => getFood(id) || (S.foods[id]?.hidden ? BUILTIN[id] : null) || null;
 function itemName(it) {
   if (it.kind === "quick") return it.name || "Quick add";
-  if (it.kind === "recipe") return recipeForItem(it.ref)?.name || "Missing recipe";
+  if (it.kind === "recipe") return itemRecipe(it)?.name || "Missing recipe";
   return foodForItem(it.ref)?.name || "Missing food";
 }
 function servingMatch(f, q) {
@@ -2944,7 +2962,7 @@ function defaultQty(f) { return f.servings?.[0]?.g || (f.role === "F" ? 10 : 100
 function itemStockLines(it) {
   if (!it) return [];
   if (it.kind === "food") return [[it.ref, +it.qty || 0]];
-  if (it.kind === "recipe") { const r = getRecipe(it.ref); return r ? r.ingredients.map(ing => [ing.food, ing.g * (+it.qty || 0) / (r.servings || 1)]) : []; }
+  if (it.kind === "recipe") { const r = it.snap ? itemRecipe(it) : getRecipe(it.ref); return r ? r.ingredients.map(ing => [ing.food, ing.g * (+it.qty || 0) / (r.servings || 1)]) : []; }
   return [];
 }
 /* eating takes what is at home off the stock, whatever the food was planned as: it takes only what the pantry really had and
@@ -4845,7 +4863,7 @@ SHEETS.qty = sh => {
       <div class="chips">${presets.map(p => `<button class="chip" data-act="qty-set" data-v="${p.v}" aria-pressed="${Math.abs(p.v - sh.qty) < 0.01}">${esc(p.l)}</button>`).join("")}</div>
       <div class="field"><span class="flabel">${editing ? "Meal" : "Add to"}</span>${mealChips(sh.meal)}</div>
       ${x.brand ? `<div class="faint" style="font-size:13px">${esc(x.brand)}</div>` : ""}
-      ${!isRec ? `<div class="faint" style="font-size:13px">${foodSub(x)}${x.per.fib ? ` · ${r1(x.per.fib)} g fibre` : ""}</div>` : `<div class="faint" style="font-size:13px">${x.ingredients.map(i => esc(getFood(i.food)?.name || "?")).join(", ")}</div>`}
+      ${!isRec ? `<div class="faint" style="font-size:13px">${foodSub(x)}${x.per.fib ? ` · ${r1(x.per.fib)} g fibre` : ""}</div>` : `<div class="faint" style="font-size:13px">${x.ingredients.map(i => esc(getFood(i.food)?.name || "?")).join(", ")}${x.time ? ` · ${x.time} min` : ""}</div>${x.note ? `<details class="rc-method"><summary>Method</summary><ol>${String(x.note).split(/\n+/).filter(l => l.trim()).map(l => `<li>${esc(l.replace(/^\s*(?:\d+[.)]|[-•])\s*/, ""))}</li>`).join("")}</ol></details>` : ""}`}
       <div class="row">${!isRec ? `<button class="btn ghost sm" data-act="edit-food" data-id="${x.id}">${ic("edit", "sm")}Edit values</button>` : `<button class="btn ghost sm" data-act="edit-recipe" data-id="${x.id}">${ic("edit", "sm")}Edit recipe</button>`}
       ${!isRec && editing ? `<button class="btn ghost sm" data-act="show-swap">${ic("swap", "sm")}Swap</button>` : ""}</div>
       ${swaps ? `<div class="field"><span class="flabel">Swap for something similar</span><div class="card">${swaps.map(s => { const m = addM(ZERO(), s.food.per, s.q / 100); return `<button class="lrow" data-act="do-swap" data-id="${s.food.id}" data-q="${s.q}"><span style="min-width:0"><span class="t">${esc(s.food.name)}</span><span class="s">${fmtQ(s.q)} ${s.food.unit || "g"} · ${fmtN(m.kcal)} kcal · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.f)}F</span></span><span class="end">${ic("swap", "sm")}</span></button>`; }).join("") || '<div class="lrow"><span class="s">No similar foods found.</span></div>'}</div></div>` : ""}`,
@@ -4905,12 +4923,14 @@ SHEETS.recipe = sh => {
     body: `${d.source === "builtin" ? `<div class="note">Starter recipe. Saving keeps your own copy.</div>` : ""}
       <div class="field"><label for="rc-name">Name</label><input id="rc-name" class="inp" value="${esc(d.name)}" data-in="rc" data-k="name" placeholder="e.g. Chicken pesto pasta"></div>
       <div class="grid2"><div class="field"><label for="rc-serv">Servings</label><input id="rc-serv" class="inp" inputmode="decimal" value="${d.servings}" data-in="rc" data-k="servings"></div>
-      <div class="field"><span class="flabel">Per serving</span><div class="num" id="rc-per" style="font-size:15px;padding-top:10px">${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F</div></div></div>
-      <div class="field"><span class="flabel">Ingredients · ${fmtN(g)} g total</span><div class="card">${d.ingredients.map((i, k) => { const f = getFood(i.food); return `<div class="lrow" style="grid-template-columns:minmax(0,1fr) 100px 36px"><span style="min-width:0"><span class="t">${esc(f?.name || "Missing food")}</span><span class="s">${f ? fmtN(f.per.kcal * num(i.g) / 100) + " kcal" : ""}</span></span><div class="unit-inp"><input id="rc-g-${k}" class="inp" inputmode="decimal" value="${i.g}" data-in="rc-g" data-i="${k}" style="min-height:38px" aria-label="Grams"><span>${f?.unit || "g"}</span></div><button class="icon-btn" data-act="rc-del" data-i="${k}" aria-label="Remove">${ic("close", "sm")}</button></div>`; }).join("") || `<div class="lrow"><span class="s">No ingredients yet. Search below to add them.</span></div>`}</div></div>
+      <div class="field"><label for="rc-time">Time</label><div class="unit-inp"><input id="rc-time" class="inp" inputmode="numeric" value="${d.time ?? ""}" placeholder="optional" data-in="rc" data-k="time"><span>min</span></div></div></div>
+      <div class="rc-sum"><div><small>Per serving</small><b id="rc-per">${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F</b></div><div><small>Cost</small><b id="rc-cost">${recipeCostHTML(d)}</b></div></div>
+      <div class="field"><span class="flabel">Scale the whole recipe</span><div class="chips">${[["0.5", "×½"], ["2", "×2"], ["3", "×3"]].map(([k, l]) => `<button class="chip sm" data-act="rc-scale" data-k="${k}">${l}</button>`).join("")}</div><small class="faint">Amounts and servings change together: one serving stays the same.</small></div>
+      <div class="field"><span class="flabel">Ingredients · ${fmtN(g)} g total</span><div class="card">${d.ingredients.map((i, k) => { const f = getFood(i.food); return `<div class="lrow rc-ing" style="grid-template-columns:minmax(0,1fr) 100px 36px"><span style="min-width:0"><span class="t">${esc(f?.name || "Missing food")}</span><span class="s">${f ? fmtN(f.per.kcal * num(i.g) / 100) + " kcal" : ""}</span></span><div class="unit-inp"><input id="rc-g-${k}" class="inp" inputmode="decimal" value="${i.g}" data-in="rc-g" data-i="${k}" style="min-height:38px" aria-label="Grams"><span>${f?.unit || "g"}</span></div><button class="icon-btn" data-act="rc-del" data-i="${k}" aria-label="Remove">${ic("close", "sm")}</button>${f?.pack > 0 ? `<div class="rc-pk"><span id="rc-pk-${k}" class="faint">${packTxt(num(i.g), f.pack)}</span><button class="chip sm" data-act="rc-pack" data-i="${k}" data-f="0.5">½ pack</button><button class="chip sm" data-act="rc-pack" data-i="${k}" data-f="1">1 pack</button></div>` : ""}</div>`; }).join("") || `<div class="lrow"><span class="s">No ingredients yet. Search below to add them.</span></div>`}</div></div>
       <div class="search">${ic("search")}<input id="rc-q" type="search" placeholder="Add an ingredient" value="${esc(iq)}" data-in="rc-q" autocomplete="off"><button class="icon-btn" data-act="rc-scan" aria-label="Scan a barcode">${ic("scan")}</button></div>
       ${res.length ? `<div class="card">${res.map(r => `<button class="lrow" data-act="rc-add" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${foodSub(r.x)}</span></span><span class="end">${ic("plus")}</span></button>`).join("")}</div>` : iq.trim() ? `<button class="btn soft block" data-act="rc-new-food">${ic("plus", "sm")}Create “${esc(iq.trim())}” as a new food</button>` : ""}
       <div class="field"><span class="flabel">Good for</span><div class="chips">${[["b", "Breakfast"], ["m", "Lunch & dinner"], ["s", "Snacks"]].map(([k, l]) => `<button class="chip" data-act="rc-meal" data-k="${k}" aria-pressed="${(d.meals || []).includes(k)}">${l}</button>`).join("")}</div></div>
-      <div class="field"><label for="rc-note">Notes</label><textarea id="rc-note" class="inp" data-in="rc" data-k="note" placeholder="Method, tips…">${esc(d.note || "")}</textarea></div>
+      <div class="field"><label for="rc-note">Method and notes</label><textarea id="rc-note" class="inp" data-in="rc" data-k="note" placeholder="One step per line…">${esc(d.note || "")}</textarea></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Favourite</span></span><button class="switch" role="switch" aria-checked="${!!d.fav}" data-act="rc-fav" aria-label="Favourite"></button></div>`,
     foot: `${!sh.isNew ? `<button class="btn danger" data-act="rc-delete" style="flex:0 0 auto" aria-label="Delete recipe">${ic("trash", "sm")}</button>` : ""}<button class="btn soft" data-act="rc-save" data-then="add">Save & add</button><button class="btn primary" data-act="rc-save">Save</button>`
   };
@@ -6129,6 +6149,16 @@ ACT["fd-restore"] = () => { const id = S_().draft.id; const prev = clone(S.foods
 /* recipes */
 ACT["new-recipe"] = () => openSheet("recipe", { draft: { id: "", name: "", servings: 1, meals: ["m"], ingredients: [], note: "", fav: false, source: "custom" }, isNew: true });
 ACT["edit-recipe"] = el => { const r = getRecipe(el.dataset.id); if (!r) return; openSheet("recipe", { draft: clone(r), isNew: false }); };
+/* «½ pack», «1 pack», «1½ packs»: how many packs a quantity is, when it is close to a simple fraction */
+function packTxt(g, pack) {
+  if (!(g > 0) || !(pack > 0)) return ""; const x = g / pack;
+  const F = [[.25, "¼"], [1 / 3, "⅓"], [.5, "½"], [2 / 3, "⅔"], [.75, "¾"]];
+  for (let w = 0; w <= 10; w++) for (const [f, t] of [[0, ""], ...F]) if (w + f > 0 && Math.abs(x - (w + f)) < .02) { const lab = (w ? w : "") + t; return `= ${lab} pack${w + f > 1 ? "s" : ""}`; }
+  return "";
+}
+const recipeCostHTML = d => { const c = recipeCost({ servings: d.servings, ingredients: d.ingredients }); return c.priced ? `≈ ${fmtEur(c.perServing)} a serving${c.partial ? ` <small class="faint">(${c.priced} of ${c.of} priced)</small>` : ""}` : `<span class="faint">no prices yet</span>`; };
+ACT["rc-pack"] = el => { const sh = S_(), i = sh.draft.ingredients[+el.dataset.i], f = getFood(i.food); if (!f?.pack) return; i.g = r0(f.pack * +el.dataset.f * 10) / 10; renderSheet(); };
+ACT["rc-scale"] = el => { const sh = S_(), k = +el.dataset.k, d = sh.draft; if (!(k > 0)) return; d.servings = Math.max(0.25, Math.round(num(d.servings) * k * 100) / 100); d.ingredients.forEach(i => { i.g = Math.round(num(i.g) * k * 10) / 10; }); renderSheet(); };
 ACT["rc-add"] = el => { const sh = S_(); const f = getFood(el.dataset.id); sh.draft.ingredients.push({ food: f.id, g: defaultQty(f) }); sh.iq = ""; renderSheet(); setTimeout(() => $("#rc-q")?.focus(), 0); };
 /* a barcode or a new food from inside the recipe: the editor waits (UI.recipeSheet) and gets the ingredient back, or just comes back if you give up */
 ACT["rc-scan"] = () => { UI.recipeSheet = S_(); openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); UI.dest = "recipe"; camOpen("barcode"); };
@@ -6143,6 +6173,8 @@ ACT["rc-save"] = el => {
   d.servings = Math.max(0.25, num(d.servings) || 1); d.ingredients = d.ingredients.map(i => ({ food: i.food, g: num(i.g) })).filter(i => i.g > 0);
   if (d.source === "builtin") { d.source = "custom"; }
   if (!d.id) d.id = "rec-" + uid();
+  d.time = num(d.time) > 0 ? Math.round(num(d.time)) : null; if (d.time == null) delete d.time;
+  if (d.id && (getRecipe(d.id) || BUILTIN_REC[d.id])) freezeRecipeUses(d.id);   // meals already eaten keep the recipe as it was
   if (!d.meals?.length) d.meals = ["m"];
   put("recipes", d.id, d);
   if (el.dataset.then === "add") openSheet("qty", { kind: "recipe", ref: d.id, qty: 1, date: UI.date, meal: suggestMeal() });
@@ -6150,8 +6182,9 @@ ACT["rc-save"] = el => {
   toast(`Saved ${d.name}`);
 };
 ACT["rc-delete"] = () => { const sh = S_(), id = sh.draft.id, name = sh.draft.name || "this recipe";
-  openSheet("confirm", { title: `Delete ${name}?`, text: BUILTIN_REC[id] ? "It disappears from your recipes and from auto-plan. Meals already planned with it stay as they are." : "It disappears from your recipes and from auto-plan. Meals already planned with it lose its values, so swap them first if you need them.", yes: "Delete", danger: true, run: () => deleteRecipe(id) }); };
+  openSheet("confirm", { title: `Delete ${name}?`, text: BUILTIN_REC[id] ? "It disappears from your recipes and from auto-plan. Meals already planned with it stay as they are." : "It disappears from your recipes and from auto-plan. Meals you already ate keep their values; meals still planned with it lose them, so swap those first.", yes: "Delete", danger: true, run: () => deleteRecipe(id) }); };
 function deleteRecipe(id) {
+  freezeRecipeUses(id);   // meals already eaten keep the recipe as it was
   const prev = clone(S.recipes[id]);
   if (BUILTIN_REC[id]) put("recipes", id, { id, hidden: true }); else del("recipes", id);
   toast("Recipe deleted", () => { if (prev) put("recipes", id, prev); else del("recipes", id); });
@@ -6333,6 +6366,8 @@ const INP = {
 function updRecipePer() {
   const d = S_().draft; const t = ZERO(); for (const i of d.ingredients) { const f = getFood(i.food); if (f) addM(t, f.per, num(i.g) / 100); }
   const ps = addM(ZERO(), t, 1 / Math.max(0.25, num(d.servings) || 1)); const el = $("#rc-per"); if (el) el.textContent = `${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F`;
+  const c = $("#rc-cost"); if (c) c.innerHTML = recipeCostHTML(d);
+  d.ingredients.forEach((i, k) => { const f = getFood(i.food), e = $("#rc-pk-" + k); if (e && f?.pack) e.textContent = packTxt(num(i.g), f.pack); });
 }
 const CHG = {
   type: (v, el) => { const t = typeById(el.dataset.id); t[el.dataset.k] = Math.max(0, num(v)); saveSettings(); },
@@ -9661,7 +9696,7 @@ function addNut(acc, f, k) { const n = foodNut(f), kc = (f.per?.kcal || 0) * k; 
   for (const key of Object.keys(NUT)) { if (n[key] == null) continue; acc.v[key] = (acc.v[key] || 0) + n[key] * k; acc.cov[key] = (acc.cov[key] || 0) + kc; } }
 function itemNut(it, acc, mul = 1) {
   if (it.kind === "quick") { const m = it.m || {}; acc.kcal += (+m.kcal || 0) * mul; return; }
-  if (it.kind === "recipe") { const r = recipeForItem(it.ref); if (!r) return; for (const ing of r.ingredients || []) addNut(acc, getFood(ing.food) || BUILTIN[ing.food], ing.g / 100 * it.qty / (r.servings || 1) * mul); return; }
+  if (it.kind === "recipe") { const r = itemRecipe(it); if (!r) return; for (const ing of r.ingredients || []) addNut(acc, getFood(ing.food) || BUILTIN[ing.food], ing.g / 100 * it.qty / (r.servings || 1) * mul); return; }
   const f = foodForItem(it.ref); if (f) addNut(acc, f, it.qty / 100 * mul);
 }
 /* a day's nutrients: eaten food, or the plan if nothing is ticked yet */
