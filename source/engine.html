@@ -294,6 +294,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .plan-grid .item,.pan-row{touch-action:pan-y}
 .sw-on{position:relative;z-index:2;background:color-mix(in srgb,var(--bad) calc(var(--sw,0)*28%),var(--v-card,var(--card)))!important;border-radius:12px;box-shadow:0 2px 10px rgb(0 0 0/.12)}
 .sw-on::after{content:"Remove";position:absolute;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:700;color:var(--bad);opacity:var(--sw,0);pointer-events:none}
+.shop-row.sw-on::after{content:"Replace";color:var(--accent)}.shop-row.sw-on{background:color-mix(in srgb,var(--accent) calc(var(--sw,0)*14%),var(--v-card,var(--card)))!important}
 .sw-on[data-dir="l"]::after{right:14px}.sw-on[data-dir="r"]::after{left:14px}
 .sw-go::after{content:"Release to remove"}
 .wx-loc{font-size:12.5px;flex:0 0 auto}
@@ -317,10 +318,10 @@ svg.chart{cursor:zoom-in;touch-action:pan-y}
 .chfs-b svg.chart path,.chfs-b svg.chart line,.chfs-b svg.chart rect,.chfs-b svg.chart polyline,.chfs-b svg.chart circle{vector-effect:non-scaling-stroke}
 
 /* shopping list: a period switch, a one-line summary, quieter group headers, roomier rows, a slim add-extra row */
-.sq-top{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:2px 4px 6px}
+html body .sq-top{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:8px;padding:2px 4px 6px}
 html body .sq-top .seg[role]:not(.many)>button{flex:1 1 0!important;min-width:0!important;padding:0 2px!important;font-size:12.5px!important;white-space:nowrap;overflow:visible!important;text-overflow:clip!important}
 .ci-notice{display:flex;flex-direction:column;gap:10px;border:1px solid color-mix(in srgb,var(--warn) 45%,transparent)}.ci-n-t{display:flex;gap:10px;align-items:flex-start}.ci-n-t small{display:block;color:var(--muted);font-size:12.5px}
-.sq-sum{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);padding:0 4px}.sq-sum b{color:var(--ink);font-variant-numeric:tabular-nums}
+.sq-sum{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:0 4px}.sq-sum>span:first-child{min-width:0}.sq-sum b{color:var(--ink);font-variant-numeric:tabular-nums}
 .shop-list .sq-add{display:flex;align-items:center;gap:8px;padding:6px 4px 10px;border:0}.shop-list .sq-add .inp{min-height:42px;border-radius:12px}.shop-list .sq-add .btn{min-height:42px;border-radius:12px;padding:0 14px}
 .shop-list .sq-h{padding:14px 6px 4px!important;font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;border-bottom:0!important}.shop-list .sq-h span{background:var(--surface-2);color:var(--muted);border-radius:999px;padding:1px 8px;font-size:11.5px;letter-spacing:0}
 .shop-list .shop-row{min-height:58px;padding:2px 6px 2px 2px;border-top:1px solid var(--line)}.shop-list .sq-h + .shop-row{border-top:0}
@@ -864,7 +865,7 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .pw-it{display:flex;align-items:flex-start;gap:2px;background:var(--surface);border-radius:10px;padding:5px 4px 5px 8px;min-width:0;cursor:grab}.pw-it.eaten{opacity:.65}.pw-it.eaten .pw-n span{text-decoration:line-through}
 .pw-n{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1;min-width:0;background:none;padding:0;color:var(--ink)}.pw-n span{font-size:12.5px;font-weight:600;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}.pw-n small{font-size:11px;color:var(--muted)}
 .pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
-.st-bar{padding:0 4px 4px}.st-first{align-self:flex-start;margin:0 4px 6px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
+.st-pill{display:inline-flex;align-items:center;gap:2px;flex:none;max-width:46%;height:30px;padding:0 6px 0 12px;border-radius:15px;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap}.st-pill .ic{width:18px;height:18px;flex:none}.st-add{gap:8px;flex-wrap:nowrap}.st-edit{margin-top:4px}.st-edit>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
 .so-r{border-top:1px solid var(--line)}.so-a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px 8px 8px}.so-a .faint{font-size:12.5px}.st-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:6px 8px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
 .jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
@@ -2372,9 +2373,8 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
   .td-nudges{display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px!important;margin:0 0 12px!important;padding:0!important;overflow:visible!important}
   .td-nudges>button{flex-direction:column;justify-content:center;height:60px!important;min-height:60px!important;padding:6px 2px!important;gap:4px!important;font-size:12px!important;border-radius:16px!important;white-space:nowrap;min-width:0}
   .td-nudges>button .ic{width:20px;height:20px}
-  .td-nudges [data-act="shopq-open"],.q-long{display:none}
+  .q-long{display:none}
 }
-@media (min-width:600px) and (max-width:1023px){.td-nudges [data-act="shopq-open"]{display:none}}
 @media (max-width:599px){
   .td-cta{justify-content:flex-start}
   .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center;padding:0 10px!important}.plan-side .toolbar .btn:not(:first-child) .ic{display:none}
@@ -8732,7 +8732,7 @@ VIEWS.today = function () {
   const kcalTrain = trainAdded(er), ready = L.ready, rTone = ready === "green" ? "good" : ready === "yellow" ? "warn" : ready === "red" ? "bad" : "faint";
 
   let h = `<header class="top td-top"><div class="top-row"><div><div class="top-sub">${fmtLong(today)}${SMART() ? ` · ${esc(phaseFor(today).phase)}` : ""}</div><div class="top-title">${greeting()}</div></div>
-    <div class="row">${shopBtn()}${settingsBtn()}</div></div></header>`;
+    <div class="row">${settingsBtn()}</div></div></header>`;
   h += liveBanner();
   /* the Check-in is always one tap away, first in the row; the dot says something is still missing today */
   const nudges = [`<button class="td-nudge" data-act="open-checkin" data-date="${today}">${ic("pulse", "sm")}Check-in${!(Lg.weight > 0) || (!(Lg.sleep > 0) && !(Lg.hrv > 0) && !(Lg.rhr > 0)) ? `<i class="td-pend" aria-label="to do"></i>` : ""}</button>`];
@@ -8805,7 +8805,7 @@ VIEWS.today = function () {
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
-  const quick = `${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button>`;
+  const quick = `<button class="td-q has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart", "sm")}Shopping${shopBadge()}</button>${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
     // phone: one column in the order you use it: yesterday's gaps and today's ticks, training, food, body, then the rest
     ? `<div class="today-grid one">${glanceHTML()}${todayCards("a")}${yesterdayCard()}${suppCard()}${todayCards("c")}${tr}${fuel}${body}${todayCards("b")}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
@@ -10020,13 +10020,12 @@ SHEETS.buy = sh => {
       <div class="chips">${chips.map(([v, l]) => `<button class="chip" data-act="by-set" data-v="${v}">${l}</button>`).join("")}</div>
       ${storeList().length ? `<div class="field"><span class="flabel">Bought at</span><div class="chips">${[["", "Any store"], ...storeList().map(x => [x.id, x.name])].map(([k, l]) => `<button class="chip sm" data-act="by-store" data-k="${esc(k)}" aria-pressed="${(sh.sid ?? S.shop.checked?.[sh.id]?.sid ?? curStore() ?? "") === k}">${esc(l)}</button>`).join("")}</div></div>` : ""}
       <div class="field"><span class="flabel">Price</span><div class="chips">${[["0", "Usual price"], ["1", "On offer"]].map(([k, l]) => `<button class="chip sm" data-act="by-offer" data-k="${k}" aria-pressed="${!!(sh.offer ?? S.shop.checked?.[sh.id]?.offer) === (k === "1")}">${l}</button>`).join("")}</div><small class="faint">${(sh.offer ?? S.shop.checked?.[sh.id]?.offer) ? "An offer counts as spent, but your usual price is left as it is." : "What you pay now becomes the usual price (at this store)."}</small></div>
-      <button class="btn ghost sm" data-act="by-swap" style="align-self:flex-start">${ic("swap", "sm")}Replace this product…</button>
       <div class="field by-pack"><label for="by-pack">Pack size in the shop</label><div class="unit-inp"><input id="by-pack" class="inp" inputmode="decimal" value="${f.pack || ""}" placeholder="not set" data-chg="by-pack"><span>${u}</span></div>
         <div class="chips">${(f.pack > 0 ? [f.pack / 2, f.pack * 2] : [250, 500, 1000]).map(v => `<button class="chip sm" data-act="by-pack-set" data-v="${v}">${fmtN(v)} ${u}</button>`).join("")}</div>
         <small class="faint">The list counts whole packs of this size. Changing it here changes the food everywhere.</small></div>
       ${g && r && g > r.buy ? `<div class="note">${fmtN(g - r.buy)} ${u} more than the plan needs: it goes to the pantry and the planner will use it.</div>` : ""}
       <div class="faint" style="font-size:12.5px">${p ? `Last price: ${fmtEur(p.eur)} for ${fmtN(p.g)} ${u} (${fmtEur(p.eur / p.g * 1000)}/${u === "ml" ? "l" : "kg"})${p.at ? `, ${fmtDM(p.at)}` : ""}.` : "No price yet: what you enter is remembered for next time and for the estimates."}</div>`,
-    foot: `${S.shop.checked?.[sh.id] ? `<button class="btn soft" data-act="by-out" style="flex:0 0 auto">Take out</button>` : ""}<button class="btn primary" data-act="by-ok">${ic("cart", "sm")}In the cart</button>` };
+    foot: `${S.shop.checked?.[sh.id] ? `<button class="btn soft" data-act="by-out" style="flex:0 0 auto">Take out</button>` : ""}<button class="btn tonal" data-act="by-swap" style="flex:0 0 auto" aria-label="Replace this product">${ic("swap", "sm")}Replace</button><button class="btn primary" data-act="by-ok">${ic("cart", "sm")}In the cart</button>` };
 };
 ACT["shop-buy"] = el => { const id = el.dataset.id, c = S.shop.checked?.[id], r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === id);
   openSheet("buy", { id, g: c?.g ?? (r ? buyG(r) : ""), eur: c?.eur ?? "" }); };
@@ -10039,7 +10038,7 @@ const packChanged = sh => { const r = shoppingRows(UI.shopStart, S.shop.range ||
 CHG["by-pack"] = v => { const sh = S_(); if (sh?.type === "buy" && setFoodPack(sh.id, v)) packChanged(sh); };
 ACT["by-pack-set"] = el => { const sh = S_(); if (sh?.type === "buy" && setFoodPack(sh.id, +el.dataset.v)) packChanged(sh); };
 ACT["stores-open"] = () => openSheet("stores", { live: true });
-ACT["store-pick"] = el => { S.shop.store = el.dataset.k || null; put("shop", "", S.shop); };
+ACT["store-pick"] = el => { S.shop.store = el.dataset.k || null; put("shop", "", S.shop); if (UI.sheet?.type === "stores") closeSheet(); };
 ACT["store-new"] = () => { const i = $("#st-new"), id = storeAdd(i?.value); if (i) i.value = ""; if (id && !curStore() && storeList().length === 1) { S.shop.store = null; } renderSheet(); setTimeout(() => $("#st-new")?.focus(), 30); };
 CHG["store-name"] = (v, el) => { storeRename(el.dataset.id, v); renderSheet(); };
 ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); toast(`${nm} removed`, () => { S.shop = snap; put("shop", "", S.shop); if (UI.sheet?.type === "stores") renderSheet(); }); };
@@ -10297,7 +10296,7 @@ SHEETS.swapfood = sh => {
   if (!sh.to) { const q = sh.q || "", res = q ? foodSearch(q, "all").filter(r => r.t === "food" && r.x.id !== sh.from).slice(0, 8) : [];
     return { title: `Replace ${A.name}`, focus: "sf-q", body: `<div class="search">${ic("search")}<input id="sf-q" type="search" placeholder="Search the new product" value="${esc(q)}" data-in="sf-q" autocomplete="off"><button class="btn ink sm" data-act="sf-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
       ${res.length ? `<div class="card">${res.map(r => `<button class="lrow" data-act="sf-pick" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span><span class="s">${foodSub(r.x)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : q ? `<div class="note">Not in your foods yet.</div>` : `<div class="faint" style="font-size:13px">Scan the new product's barcode or search for it. If it isn't in Foods, it is added.</div>`}
-      <div class="row"><button class="btn soft" data-act="sf-new" data-name="${esc(q)}">${ic("plus", "sm")}New food${q ? ` “${esc(q)}”` : ""}</button></div>`, foot: `<button class="btn soft" data-act="close-sheet">Cancel</button>` }; }
+      `, foot: `<button class="btn soft" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="sf-new" data-name="${esc(q)}">${ic("plus", "sm")}New food</button>` }; }
   const B = getFood(sh.to) || BUILTIN[sh.to], P = swapPreview(sh.from), u = A.unit || "g";
   return { title: "Replace a product", body: `<div class="card"><div class="lrow"><span><span class="t">${esc(A.name)}</span><span class="s">${fmtN(A.per.kcal)} kcal per 100 ${u}${A.brand ? " · " + esc(A.brand) : ""}</span></span></div><div class="lrow"><span><span class="t">${esc(B.name)}</span><span class="s">${fmtN(B.per.kcal)} kcal per 100 ${u}${B.brand ? " · " + esc(B.brand) : ""}</span></span></div></div>
     <div class="note">${P.meals ? `<b>${P.meals} planned meal${P.meals === 1 ? "" : "s"}</b> from today use it` : "No planned meal uses it"}${P.recipes ? `; <b>${P.recipes} recipe${P.recipes === 1 ? "" : "s"}</b> too` : ""}. Meals you already ate and past days keep the old one.</div>
@@ -12329,7 +12328,7 @@ for (const [act, key] of [["train-seg", "trainSeg"], ["prog-seg", "progSeg"]]) {
   ACT[act] = el => { const S2 = secList(), a = S2 ? S2.list.indexOf(UI[key]) : -1, b = S2 ? S2.list.indexOf(el.dataset.k) : -1; VT_NEXT = dirOf(a, b); return f(el); }; }
 { const f = ACT["fuel-tab"]; if (f) ACT["fuel-tab"] = el => { const L = ["plan", "foods", "shop"], n = k => L.indexOf(k === "pantry" ? "shop" : k); VT_NEXT = dirOf(n(UI.tab), n(el.dataset.k)); return f(el); }; }
 /* swipe between sections */
-{ let T0 = null; const NO = ".seg,.subseg,.chips,.td-nudges,.toolbar,.tbl-wrap,.tbl-box,.cv,.cv-split,.week,.ph-strip,.plan-grid,input,textarea,select,canvas,.sheet,.lv-wrap,[data-noswipe],.add-acts,.gear-l,.minis,.rir,.stp,.item,.pan-row";
+{ let T0 = null; const NO = ".seg,.subseg,.chips,.td-nudges,.shop-row,.toolbar,.tbl-wrap,.tbl-box,.cv,.cv-split,.week,.ph-strip,.plan-grid,input,textarea,select,canvas,.sheet,.lv-wrap,[data-noswipe],.add-acts,.gear-l,.minis,.rir,.stp,.item,.pan-row";
   addEventListener("touchstart", e => { const t = e.touches[0]; T0 = e.touches.length === 1 && !UI.sheet && !e.target.closest(NO) && e.target.closest("#main") ? { x: t.clientX, y: t.clientY, t: Date.now() } : null; }, { passive: true });
   addEventListener("touchend", e => { if (!T0) return; const t = e.changedTouches[0], dx = t.clientX - T0.x, dy = t.clientY - T0.y, dt = Date.now() - T0.t; T0 = null;
     if (dt > 650 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .45 || getSelection()?.toString()) return;
@@ -13057,7 +13056,7 @@ function shopRowHTML(r) {
   if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack), dn = got ? n - r.packs : 0;
     q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${r.id}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
   else q = `<button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
-  return `<div class="shop-row ${done ? "done" : ""}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
+  return `<div class="shop-row ${done ? "done" : ""}" data-id="${r.id}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
     <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</button>${q}</div>`;
 }
 ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id); if (!r?.f.pack) return; S.shop.checked = S.shop.checked || {};
@@ -13082,16 +13081,17 @@ function shopCoveredHTML(covered) {
   return `<details class="shop-covered"><summary>${covered.length} covered by what's at home</summary>${covered.map(r => `<div class="lrow"><span><span class="t">${esc(r.f.name)}${r.partial ? ` <small class="faint">partly</small>` : ""}</span><span class="s">${esc(line(r))}</span></span></div>`).join("")}</details>`;
 }
 /* the store you are in: «All stores» or one; with none added there is just a way to add the first */
-function storeBarHTML() {
-  if (!storeList().length) return `<button class="link st-first" data-act="stores-open">${ic("plus", "sm")} Add a store</button>`;
-  const cur = curStore() || "";
-  return `<div class="chips st-bar scroll" role="group" aria-label="Store">${[["", "All stores"], ...storeList().map(x => [x.id, x.name])].map(([k, l]) => `<button class="chip sm" data-act="store-pick" data-k="${esc(k)}" aria-pressed="${cur === k}">${esc(l)}</button>`).join("")}<button class="icon-btn sm" data-act="stores-open" aria-label="Edit stores">${ic("edit", "sm")}</button></div>`;
+function storePillHTML() {
+  const cur = curStore(), n = storeList().length, label = cur ? storeName(cur) : n ? "All stores" : "Stores";
+  return `<button class="st-pill" data-act="stores-open" aria-label="Store: ${esc(label)}">${esc(label)}${ic("chevD", "sm")}</button>`;
 }
-SHEETS.stores = sh => ({ title: "Stores", focus: "st-new",
-  body: `<div class="card">${storeList().map(x => `<div class="lrow st-row"><input class="inp" value="${esc(x.name)}" data-chg="store-name" data-id="${x.id}" aria-label="Store name" maxlength="30"><button class="icon-btn" data-act="store-del" data-id="${x.id}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("") || `<div class="lrow"><span class="s">No stores yet: add the supermarkets you use. Each keeps its own prices.</span></div>`}</div>
-    <div class="row" style="gap:8px;flex-wrap:nowrap"><input id="st-new" class="inp" placeholder="New store" maxlength="30" autocomplete="off"><button class="btn soft" data-act="store-new">${ic("plus", "sm")}Add</button></div>
-    <small class="faint">You choose the store in the list. A product keeps a price for each store; if a store has none, the usual price is used. Where you pay for something becomes its usual store.</small>`,
-  foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
+SHEETS.stores = sh => { const cur = curStore() || "", L = storeList();
+  return { title: "Store", focus: L.length ? "" : "st-new",
+  body: `${L.length ? `<div class="card">${[["", "All stores"], ...L.map(x => [x.id, x.name])].map(([k, l]) => `<button class="lrow" data-act="store-pick" data-k="${esc(k)}" aria-pressed="${cur === k}"><span class="t">${esc(l)}</span><span class="end">${cur === k ? ic("check", "sm") : ""}</span></button>`).join("")}</div>` : `<div class="note">Add the supermarkets you use: each keeps its own prices.</div>`}
+    <div class="row st-add"><input id="st-new" class="inp" placeholder="New store" maxlength="30" autocomplete="off" aria-label="New store"><button class="btn soft" data-act="store-new">${ic("plus", "sm")}Add</button></div>
+    ${L.length ? `<details class="st-edit"${sh.edit ? " open" : ""}><summary>Rename or remove</summary><div class="card">${L.map(x => `<div class="lrow st-row"><input class="inp" value="${esc(x.name)}" data-chg="store-name" data-id="${x.id}" aria-label="Store name" maxlength="30"><button class="icon-btn" data-act="store-del" data-id="${x.id}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}</div></details>
+    <small class="faint">A store without a price for a product uses the usual price.</small>` : ""}`,
+  foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
 function shopPanel(inSheet) {
   const n = S.shop.range || 7, start = UI.shopStart, rows = shoppingRows(start, n), toBuy = rows.filter(r => r.buy > 0), ck = S.shop.checked || {}, mode = S.shop.mode || "days";
   const sid = curStore(), elsewhere = sid ? toBuy.filter(r => S.shop.pref?.[r.id] && S.shop.pref[r.id] !== sid) : [], here = elsewhere.length ? toBuy.filter(r => !elsewhere.includes(r)) : toBuy, T = shopTotals(here);
@@ -13099,7 +13099,7 @@ function shopPanel(inSheet) {
   const extraIds = Object.keys(ck).filter(id => ck[id] && !toBuy.some(r => r.id === id) && (getFood(id) || BUILTIN[id]));
   const inCart = T.inCart ? ` · ${fmtEur(T.inCart)} in the cart` : "";
   let h = `<div class="sq-top"><div class="seg fill" role="group" aria-label="Shopping period">${[["week", "This week"], ["next", "Next week"]].map(([k, l]) => `<button data-act="shop-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}<button data-act="shop-range" data-n="7" aria-pressed="${mode === "days"}">7 days</button><button data-act="shop-mode" data-k="custom" aria-pressed="${mode === "custom"}">Custom</button></div>
-    <div class="sq-sum"><span><b>${here.filter(r => !ck[r.id]).length + visibleExtras().filter(x => !x.done).length}</b> to buy${elsewhere.length ? ` here · ${elsewhere.filter(r => !ck[r.id]).length} elsewhere` : ""}</span>${T.est ? `<span>≈ <b>${fmtEur(T.est)}</b>${inCart}</span>` : ""}</div>${storeBarHTML()}</div>`;
+    <div class="sq-sum"><span><b>${here.filter(r => !ck[r.id]).length + visibleExtras().filter(x => !x.done).length}</b> to buy${elsewhere.length ? ` here (${elsewhere.filter(r => !ck[r.id]).length} elsewhere)` : ""}${T.est ? ` · ≈ <b>${fmtEur(T.est)}</b>${inCart}` : ""}</span>${storePillHTML()}</div></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(here, true)}</div>` : `<div class="shop-list">${extraFormHTML()}</div><div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
   if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">to the pantry</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
@@ -13109,8 +13109,8 @@ function shopPanel(inSheet) {
 }
 VIEWS.shop = function () {
   const P = shopPanel(false), n = S.shop.range || 7, start = UI.shopStart;
-  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))} · ${P.left} to buy</div></div>
-    <div class="row"><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
+  let h = `<header class="top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">Shopping</div><div class="top-sub">${fmtDM(start)} – ${fmtDM(addDays(start, n - 1))}</div></div>
+    <div class="row"><button class="btn ink sm" data-act="shop-prod">${ic("plus", "sm")}Bought</button><button class="icon-btn" data-act="shop-scan" aria-label="Scan a product to tick it off" title="Scan to tick off">${ic("scan")}</button><button class="icon-btn" data-act="copy-list" aria-label="Copy the list">${ic("copy")}</button></div></div></header>`;
   h += `<div class="card pad shop-card">${P.h}</div>`;
   if (P.anyCk) h += `<div class="shop-done-bar"><button class="btn primary block" data-act="shop-done">${ic("check", "sm")}Finish shopping${P.T.inCart ? ` · ${fmtEur(P.T.inCart)}` : ""}</button></div>`;
   return h + spendCard();
@@ -13374,22 +13374,23 @@ CHG["km-goal"] = v => { kmGoalSet(num(v)); scheduleRender(); };
 CHG["fd-role"] = v => { const d = S_().draft; d.role = v; d._roleSet = true; d.meals = mealsForRole(v, d.name); renderSheet(); };
 ACT["price-unit"] = el => { S_().draft._pu = el.dataset.k; renderSheet(); };
 { const _c = ACT["cam-close"], _t = ACT["cam-type"]; ACT["cam-close"] = el => { CAM.onCode = null; return _c(el); }; ACT["cam-type"] = el => { if (CAM.onCode) { CAM.onCode = null; camClose(); setTimeout(() => $("#fd-barcode")?.focus(), 60); return; } return _t(el); }; }
-/* ================= swipe a row away: planned foods and pantry items. A deliberate swipe (40% of the row), then Undo ================= */
+/* ================= swipe a row: planned foods and pantry items go away (Undo); a shopping row asks for a replacement. A deliberate swipe (40% of the row) ================= */
 (function () {
   let st = null, eat = false;
-  const ROW = ".plan-grid .item, .pan-row";
+  const ROW = ".plan-grid .item, .pan-row, .shop-row[data-id]";
   addEventListener("touchstart", e => { const r = e.touches.length === 1 && !UI.sheet && e.target.closest?.(ROW); st = r && !e.target.closest("input,select,textarea,.chk,.grip") ? { r, x: e.touches[0].clientX, y: e.touches[0].clientY, dx: 0, on: false, w: r.getBoundingClientRect().width } : null; }, { passive: true, capture: true });
   addEventListener("touchmove", e => { if (!st) return; const t = e.touches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
     if (!st.on) { if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { st = null; return; } if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.6) return; st.on = true; st.r.classList.add("sw-on"); }
     st.dx = dx; const lim = st.w * .4, k = Math.min(1, Math.abs(dx) / lim); st.r.style.transform = `translateX(${dx}px)`; st.r.style.setProperty("--sw", k.toFixed(2)); st.r.classList.toggle("sw-go", k >= 1); st.r.dataset.dir = dx < 0 ? "l" : "r"; }, { passive: true, capture: true });
   addEventListener("touchend", () => { if (!st) return; const s = st; st = null; if (!s.on) return; eat = true; setTimeout(() => { eat = false; }, 350);
     const go = Math.abs(s.dx) >= s.w * .4;
-    s.r.style.transition = "transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s"; s.r.style.transform = go ? `translateX(${s.dx < 0 ? -s.w : s.w}px)` : ""; if (go) s.r.style.opacity = "0";
+    s.r.style.transition = "transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s"; const swp = s.r.matches(".shop-row"); s.r.style.transform = go && !swp ? `translateX(${s.dx < 0 ? -s.w : s.w}px)` : ""; if (go && !swp) s.r.style.opacity = "0";
     setTimeout(() => { s.r.style.transition = ""; s.r.classList.remove("sw-on", "sw-go"); if (go) rowGone(s.r); else s.r.style.transform = ""; }, 230); }, { capture: true });
   // the swipe ends on a button: don't open it
   addEventListener("click", e => { if (eat && e.target.closest?.(ROW)) { e.stopPropagation(); e.preventDefault(); } }, true);
 })();
 function rowGone(r) { haptic(15);
+  if (r.matches(".shop-row")) { if (S.shop.checked?.[r.dataset.id]) { toast("Untick it first to replace it"); return; } openSheet("swapfood", { from: r.dataset.id }); return; }
   if (r.matches(".item")) { const meal = r.dataset.meal, id = r.dataset.item, date = UI.date, it = (getDay(date).meals?.[meal] || []).find(x => x.id === id);
     mutateDay(date, d => { const L = d.meals[meal] || []; const x = L.find(y => y.id === id); if (x?.eaten) pantryAdjust({ ...x }, -1); d.meals[meal] = L.filter(y => y.id !== id); }, { undo: `${it ? itemName(it) : "Item"} removed` }); return; }
   const id = r.querySelector("[data-act='pantry-edit']")?.dataset.id; if (!id || !S.shop.pantry[id]) { scheduleRender(); return; } const prev = clone(S.shop.pantry[id]), n = (getFood(id) || BUILTIN[id])?.name || "Item";

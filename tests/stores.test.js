@@ -46,11 +46,13 @@ test("the list for the store you are in: what you usually buy elsewhere moves to
   assert.ok(r.hereAfter.includes("Test chicken") && r.hereAfter.includes("Test rice")); assert.equal(r.otherAfter, 0);
 });
 
-test("with no store chosen everything is on one list; the store bar only appears once there is a store, plus a way to add the first", async () => {
+test("with no store chosen everything is on one list; one compact pill (a line, not a bar) names the store and opens the chooser", async () => {
   const page = await start(); await win(page);
-  const r = await page.evaluate(() => { const d0 = document.createElement("div"); d0.innerHTML = shopPanel(false).h; const first = { chips: d0.querySelectorAll('[data-act="store-pick"]').length, add: d0.querySelectorAll('[data-act="stores-open"]').length };
-    storeAdd("A"); storeAdd("B"); const d1 = document.createElement("div"); d1.innerHTML = shopPanel(false).h; return { first, labels: [...d1.querySelectorAll('[data-act="store-pick"]')].map(b => b.innerText.trim()), other: d1.querySelectorAll(".shop-other").length }; });
-  assert.deepEqual(r.first, { chips: 0, add: 1 }); assert.deepEqual(r.labels, ["All stores", "A", "B"]); assert.equal(r.other, 0);
+  const r = await page.evaluate(() => { const d0 = document.createElement("div"); d0.innerHTML = shopPanel(false).h; const first = { chips: d0.querySelectorAll('[data-act="store-pick"]').length, pill: d0.querySelector(".st-pill")?.innerText.trim() };
+    storeAdd("A"); storeAdd("B"); const d1 = document.createElement("div"); d1.innerHTML = shopPanel(false).h; const pill1 = d1.querySelector(".st-pill").innerText.trim(), other = d1.querySelectorAll(".shop-other").length;
+    openSheet("stores", { live: true }); const labels = [...document.querySelectorAll('.sheet [data-act="store-pick"]')].map(b => b.innerText.trim()); ACT["store-pick"]({ dataset: { k: storeList()[0].id } });
+    const d2 = document.createElement("div"); d2.innerHTML = shopPanel(false).h; return { first, pill1, other, labels, pill2: d2.querySelector(".st-pill").innerText.trim(), closed: !UI.sheet }; });
+  assert.deepEqual(r, { first: { chips: 0, pill: "Stores" }, pill1: "All stores", other: 0, labels: ["All stores", "A", "B"], pill2: "A", closed: true });
 });
 
 test("spending by store: the totals per store add up to the total", async () => {
@@ -66,7 +68,7 @@ test("the Buy sheet asks where and whether it is an offer, and the store chips a
     const labels = [...s.querySelectorAll('[data-act="by-store"], [data-act="by-offer"]')].map(b => b.innerText.trim()); return { labels, over: s.scrollWidth > s.clientWidth + 1 }; });
   assert.deepEqual(r.labels, ["Any store", "Esselunga", "Lidl", "Usual price", "On offer"]); assert.equal(r.over, false);
   await page.evaluate(() => closeSheet()); await page.waitForTimeout(100);
-  const bar = await page.evaluate(() => { const b = document.querySelector(".st-bar"); return b ? { cut: [...b.querySelectorAll("button")].some(x => x.scrollWidth > x.clientWidth + 1), over: document.documentElement.scrollWidth > innerWidth } : null; });
+  const bar = await page.evaluate(() => { const b = document.querySelector(".st-pill"); return b ? { cut: b.scrollWidth > b.clientWidth + 1, over: document.documentElement.scrollWidth > innerWidth } : null; });
   assert.deepEqual(bar, { cut: false, over: false });
 });
 

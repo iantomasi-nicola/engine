@@ -138,3 +138,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** `S.shop.stores/store/pref`, `prices[id].st`, `buys[].sid/offer` opzionali; senza negozi l'app si comporta come prima.
 
 **Aperto:** la sostituzione tocca i pasti non mangiati da oggi in poi (non i giorni passati, per scelta); «Replace» non cambia i prezzi del vecchio prodotto (restano nello storico acquisti).
+
+## M3b ritocchi (24/10/2026): swipe, Today, sezione negozi compatta
+**Verificato:** `shop-quick` (3: pulsante Shopping nella riga rapida di Today su 3 viewport, ordine Bought → scanner → copia, swipe sulla riga), `stores` aggiornato, `stores-swap`; screenshot su 390 px di Today, lista, foglio Store, foglio Buy e foglio Replace.
+
+**Eliminato / unificato:** la barra di chip dei negozi (`storeBarHTML`, `.st-bar`, `.st-first`) sostituita da una pillola sulla riga del riepilogo (`storePillHTML`, `.st-pill`); la scelta e la gestione stanno nel foglio «Store» (prima solo gestione); il conteggio «N to buy» non è più duplicato nell'intestazione; il carrello nell'intestazione di Today è sostituito dal pulsante nella riga rapida; tolte due regole CSS morte `.td-nudges [data-act="shopq-open"]`.
+
+**Bug trovato dai test:** lo swipe orizzontale su una riga della lista cambiava anche scheda (gesto globale di cambio tab): `.shop-row` aggiunto alle zone escluse. Una regola CSS tardiva (`.sq-top`) annullava il layout a colonna del riepilogo: resa più specifica.
+
+**Aperto:** lo swipe esiste solo su touch (su desktop resta il pulsante Replace nel foglio Buy).

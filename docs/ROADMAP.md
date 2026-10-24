@@ -24,10 +24,10 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M7d Nutrizione: BMR e target flessibili | D10, D13 | L | Medio | In attesa |
 | M7e Nutrizione: nutrienti, idratazione, EA | D12, D14, D15, **L16** | L | Medio | In attesa |
 | M8 AI: stime, categorie, import ricette | A6, A7, C3, H10, **L21** | L | Medio | – |
-| M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara) | XL | Alto | – |
-| M10 Meteo e preparazione workout | F2, F3, F4 | M | Basso | – |
-| M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20** | XL | Medio | – |
-| M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4 | M | Basso | – |
+| M9 Pianificazione AI e Food Coach | E1–E5, C7, **L19** (consigli pre/post gara), **L28** (auto-plan su intervallo, senza sovrascrivere) | XL | Alto | – |
+| M10 Meteo e preparazione workout | F2, F3, F4, **L26** (pagina pre-avvio, suggerimenti e tasto «applica») | M | Basso | – |
+| M11 Forza/running: statistiche, score, recovery | H1–H9, G1, G3, G4, **L15, L18, L19** (strategia di gara), **L20**, **L26** (logica di progressione) | XL | Medio | – |
+| M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4, **L27** (contaflessioni nel live, disattivabile) | M | Basso | – |
 | **M13 Redesign totale** — ultima milestone prima dei controlli finali: design system, **nuovo logo e grafiche**, animazioni minimal, valutazione gesti | J2–J6, **L12** | XL | Medio | – |
 | **M14 Audit finale e sistemazione repository** | Audit funzionale/sicurezza/performance/codice morto/dipendenze/UI su 3 viewport; ENG-09 (struttura repo, README, documentazione, script, artefatti di build, pulizia) | M | Basso | – |
 

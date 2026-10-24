@@ -191,4 +191,9 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L21 | Modificare i macro scansionando l'etichetta | M8 | Aggregata |
 | L22 | Avviso se il check-in giornaliero non è fatto, con «Skip today»; promemoria opzionale (spento di default) | M4f | **Fatto (24/10)**: card su Today finché c'è una pesata/% grasso/kcal digitate o un salto; il salto vale solo per quel giorno |
 | L23 | «Left on» chiuso di default; selettore del periodo della spesa che non si sovrappone | M4f | **Fatto (24/10)** |
+| L24 | Spesa: «Replace» anche con uno swipe sulla riga; «Bought» prima dello scanner; pulsante Shopping veloce nella riga rapida di Today | M3b (ritocco) | **Fatto (24/10)** |
+| L25 | Sezione supermercati compatta (una sola riga con la pillola del negozio, scelta e gestione nel foglio «Store») e funzioni aggiunte coerenti col design | M3b (ritocco) | **Fatto (24/10)**; regola permanente in AGENTS.md |
+| L26 | Pagina prima di avviare un allenamento rifatta (più smart, bella, usabile); allenamento del giorno con suggerimenti: progressione, meno ripetizioni/serie, cambio esercizio (anche con IA) e un tasto che applica le modifiche scelte tra quelle consigliate | M10 (pagina e applicazione) + M11 (logica di progressione dai dati) | Aggregata |
+| L27 | Contaflessioni con sensore negli allenamenti live, disattivabile | M12 (con lo spike push-up I4) | Aggregata |
+| L28 | Auto-plan: intervallo di date personalizzato (da X a Y) e nessuna sovrascrittura se un pasto ha già qualcosa | M9 | Aggregata |
 
