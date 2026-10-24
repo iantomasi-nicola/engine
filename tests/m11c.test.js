@@ -123,3 +123,20 @@ test("time fields are not cut (the AM/PM shows whole)", async () => {
   assert.ok(r.length >= 3); for (const x of r) assert.ok(x.w >= 140, `${x.id} is ${x.w} px`);
   assert.deepEqual(app.errors, []);
 });
+
+test("L15 story: no text is squeezed on the picture (long names end with «…», big numbers get smaller), and on the phone the preview stays in view while the options scroll", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { const calls = [], P = CanvasRenderingContext2D.prototype, _f = P.fillText;
+    P.fillText = function (t, x, y, mw) { calls.push({ t: String(t), mw, w: this.measureText(String(t)).width, xr: x + this.measureText(String(t)).width, W: this.canvas.width }); return _f.apply(this, arguments); };
+    const d = todayISO();
+    storyOpen(d, { sport: strengthSport(), min: 64, note: "Supercalifragilisticexpialidociouslylongworkoutname session" }, { min: 64, name: "Supercalifragilisticexpialidociouslylongworkoutname session", sets: [{ ex: "Archer push-up with a very long exercise name that never ends", reps: [8, 8, 8, 8, 8, 8], load: 22.5 }, { ex: "Ring dips", reps: [10, 9], load: 0 }] });
+    const sh = UI.sheet; await storyCanvas(sh.data, null, "bg", { ...storyOpt(sh), size: "l" }); P.fillText = _f;
+    const squeezed = calls.filter(c => c.mw != null && c.w > c.mw + 0.5).map(c => c.t), outside = calls.filter(c => c.xr > c.W + 1).map(c => c.t), cut = calls.filter(c => /…$/.test(c.t)).map(c => c.t);
+    await new Promise(r => setTimeout(r, 900)); const pv = document.querySelector(".sheet .story-pv"), b = document.querySelector(".sheet-b"); b.scrollTop = b.scrollHeight; await new Promise(r => setTimeout(r, 100));
+    const pr = pv.getBoundingClientRect(), br = b.getBoundingClientRect();
+    return { squeezed, outside, cut, pvTop: Math.round(pr.top - br.top), pvH: Math.round(pr.height), vh: innerHeight }; });
+  assert.deepEqual(r.squeezed, [], "no text drawn narrower than it is"); assert.deepEqual(r.outside, [], "nothing runs off the picture");
+  assert.ok(r.cut.some(t => /^Archer push-up/.test(t)), "the long exercise name is shortened with «…»");
+  assert.ok(r.pvTop >= -2 && r.pvTop <= 12, `the preview stays at the top while scrolling (${r.pvTop})`); assert.ok(r.pvH <= r.vh * 0.45, `the preview leaves room for the options (${r.pvH} of ${r.vh})`);
+  assert.deepEqual(app.errors, []);
+});

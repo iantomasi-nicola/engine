@@ -175,6 +175,10 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 
 .story-pv{display:grid;place-items:center;background:var(--surface-2);border-radius:16px;padding:10px;min-height:min(52vh,460px)}
 .story-pv img{max-height:52vh;width:auto;border-radius:12px;box-shadow:var(--md-elev2,0 2px 8px rgba(0,0,0,.2))}
+/* L15: the preview stays at the top of the sheet while the options scroll under it; on the phone it is shorter so the options show */
+.sheet .story-pv{position:sticky;top:0;z-index:2;min-height:0}.sheet .story-pv img{max-height:44vh}.sheet-b:has(.story-pv){scroll-padding-top:calc(44vh + 28px)}
+@media (max-width:640px){.sheet-b:has(.story-pv){scroll-padding-top:calc(38vh + 12px)}}
+@media (max-width:640px){.sheet .story-pv{min-height:0;height:38vh;padding:8px}.sheet .story-pv img{max-height:calc(38vh - 16px)}}
 /* secondary tabs: a tonal track, the picked one fills (M3 connected button group) */
 .subseg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--md-sc-high);width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .subseg::-webkit-scrollbar{display:none}
@@ -11268,6 +11272,9 @@ async function drawMap(x, T, W, H, area, style, provs = tileProviders()) { const
 async function storyCanvas(D, photo, layout, O) {
   const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   const font = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif", F = (w, s) => `${w} ${Math.round(s)}px ${font}`;
+  /* text never squeezed: a name too long ends with «…», a number gets a smaller size (L15) */
+  const cut = (t, mw) => { t = String(t); if (x.measureText(t).width <= mw) return t; while (t.length > 1 && x.measureText(t + "…").width > mw) t = t.slice(0, -1); return t.trimEnd() + "…"; };
+  const fitSize = (t, mw, w, s) => { x.font = F(w, s); while (s > 12 && x.measureText(t).width > mw) { s -= 2; x.font = F(w, s); } };
   const k = { s: .82, m: 1, l: 1.2 }[O.size] || 1, dark = O.ink === "black", accent = (dark ? STORY_ACC_D : STORY_ACC)[O.acc] || STORY_ACC.lime, ink = dark ? "#111" : "#fff";
   let img = null; if (photo) { try { img = await createImageBitmap(photo); } catch (e) { img = null; } }
   const cover = (X, Y, w, h) => { const q = Math.max(w / img.width, h / img.height), iw = img.width * q, ih = img.height * q; x.save(); x.beginPath(); x.rect(X, Y, w, h); x.clip(); x.drawImage(img, X + (w - iw) / 2, Y + (h - ih) / 2, iw, ih); x.restore(); };
@@ -11305,16 +11312,16 @@ async function storyCanvas(D, photo, layout, O) {
   x.textBaseline = "top";
   if (O.date) { x.fillStyle = ink; x.globalAlpha = .85; x.font = F(600, 34); x.fillText(fmtLong(D.date), M, y); x.globalAlpha = 1; y += hDate; }
   if (showSport) { x.fillStyle = accent; x.font = F(700, 34 * k); x.fillText(String(D.sport).toUpperCase(), M, y); y += hSport; }
-  x.fillStyle = ink; x.font = F(800, 92 * k); for (const t of tl) { x.fillText(t, M, y); y += 100 * k; } if (tl.length) y += 24;
-  x.font = F(500, 42 * k); x.globalAlpha = .92; for (const t of cl) { x.fillText(t, M, y); y += 54 * k; } x.globalAlpha = 1; if (cl.length) y += 24;
+  x.fillStyle = ink; x.font = F(800, 92 * k); for (const t of tl) { x.fillText(cut(t, W - 2 * M), M, y); y += 100 * k; } if (tl.length) y += 24;
+  x.font = F(500, 42 * k); x.globalAlpha = .92; for (const t of cl) { x.fillText(cut(t, W - 2 * M), M, y); y += 54 * k; } x.globalAlpha = 1; if (cl.length) y += 24;
   stats.forEach(([l, v], i) => { const cx = M + (i % cols) * cw, cy = y + Math.floor(i / cols) * 150 * k;
-    x.globalAlpha = .75; x.font = F(500, 30 * k); x.fillStyle = ink; x.fillText(l, cx, cy); x.globalAlpha = 1; x.font = F(800, 58 * k); x.fillText(v, cx, cy + 40 * k, cw - 20); });
+    x.globalAlpha = .75; x.font = F(500, 30 * k); x.fillStyle = ink; x.fillText(l, cx, cy); x.globalAlpha = 1; fitSize(v, cw - 20, 800, 58 * k); x.fillText(v, cx, cy + 40 * k); });
   y += hStats;
   if (hRoute) { const T = D.track, la = T.map(p => p[0]), lo = T.map(p => p[1]), a0 = Math.min(...la), a1 = Math.max(...la), o0 = Math.min(...lo), o1 = Math.max(...lo), kx = Math.cos((a0 + a1) / 2 * Math.PI / 180);
     const bw = W - 2 * M, sc = Math.min(bw / ((o1 - o0) * kx || 1e-9), hRoute / ((a1 - a0) || 1e-9)) * .92, ox = M + (bw - (o1 - o0) * kx * sc) / 2, oy = y + 10 + (hRoute - (a1 - a0) * sc) / 2;
     x.strokeStyle = accent; x.lineWidth = 12; x.lineJoin = x.lineCap = "round"; x.beginPath(); T.forEach((p, i) => { const X = ox + (p[1] - o0) * kx * sc, Y = oy + (a1 - p[0]) * sc; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.stroke();
     y += hRoute + 30; }
-  if (nLines) { y += 10; lines.slice(0, nLines).forEach(([a, b], i) => { const yy = y + i * lh; x.fillStyle = ink; x.globalAlpha = .85; x.font = F(500, 38 * k); x.fillText(a, M, yy, W * .55); x.globalAlpha = 1; x.font = F(700, 38 * k); const bw = Math.min(x.measureText(b).width, W * .38); x.fillText(b, W - M - bw, yy, W * .38); }); }
+  if (nLines) { y += 10; lines.slice(0, nLines).forEach(([a, b], i) => { const yy = y + i * lh; x.fillStyle = ink; fitSize(b, W * .45, 700, 38 * k); const bw = x.measureText(b).width; x.fillText(b, W - M - bw, yy); x.globalAlpha = .85; x.font = F(500, 38 * k); x.fillText(cut(a, W - 2 * M - bw - 28), M, yy); x.globalAlpha = 1; }); }
   return c;
 }
 SHEETS.story = sh => { const O = storyOpt(sh), D = sh.data;
