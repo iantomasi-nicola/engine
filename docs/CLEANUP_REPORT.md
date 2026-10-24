@@ -241,3 +241,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `settings.fit.phases[].pct` opzionale (solo Maintenance con kcal 0); `train.progs[].deloadMode` e `deloadOver` opzionali; `planned[].at` già introdotto in M10b; la nota `(planned with rings · was …)` resta nello script (letta anche da intervals.icu come testo).
 
 **Aperto:** «live buggato»: ho sistemato ciò che ho riprodotto (superserie lunghe, tally tagliato, placeholder troncato, campo carico fuori dalla scheda); se vedi ancora testi coperti mandami uno screenshot della schermata. La riga meteo compare solo con una sessione outdoor pianificata e un luogo impostato (altrimenti «Set location»).
+
+## M10d Notifica unica, orari legati ai pasti, toast, suoni, profilo, scarico Season, meteo (24/10/2026)
+**Verificato:** nuovo `m10d.test.js` (9 test): orari «after lunch» che seguono gli orari dei pasti, una sola notifica locale / push / file calendario per più integratori allo stesso orario (e «Taken» li segna tutti), funzione server che scarta il gruppo solo se tutto preso, toast fermo a tutte le altezze di scroll sopra il dock, suoni (note ≤ 1 kHz con decadimento, passa-basso), messaggio profilo (≤ 14 righe, campi richiesti), scarico Season saltato/mantenuto, grafico meteo sempre presente e GPS una volta al giorno; screenshot a 390 px.
+
+**Eliminato / unificato:** i tre punti dove si componeva la notifica di un integratore (locale, push, calendario) ora passano da `suppMessage` / `suppSlots`; l'inviluppo piatto dei suoni (sostegno fisso) sostituito da attacco e decadimento; il calcolo della costanza per lo scarico (`adherenceBefore`) è uno solo per programmi e Season.
+
+**Compatibilità:** `settings.mealTimes`, `settings.supps[].times` può contenere `~b`, `~l+`… (i vecchi orari «HH:MM» restano validi); `settings.fit.profile.name/surname`; `train.period.deloadMode`; `settings.wx.gps/gpsDay`. La funzione `engine-push` va ridistribuita per i promemoria raggruppati (con quella vecchia funzionano ma vengono inviati anche se hai già segnato l'integratore).
+
+**Aperto:** vista unica della settimana (L73) in M13; la posizione GPS resta «Current location (lat, lon)» perché un nome di città richiederebbe un servizio di geocoding inverso esterno.

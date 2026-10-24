@@ -12,7 +12,7 @@ async function stillNeeded(user: string, cond: Record<string, unknown> | null): 
   if (!cond || !cond.date) return true;
   const date = String(cond.date), { data } = await db.from("engine_docs").select("data").eq("user_id", user).eq("path", `lib/logm/${date.slice(0, 7)}`).maybeSingle();
   const day = (data?.data as any)?.days?.[date] ?? {};
-  if (cond.supp && day.supp?.[String(cond.supp)]) return false;
+  if (cond.supp) { const ks = Array.isArray(cond.supp) ? cond.supp.map(String) : [String(cond.supp)]; if (ks.every((k) => day.supp?.[k])) return false; }   // a grouped reminder is dropped only when all of it was taken
   if (cond.water_lt != null && (+day.water || 0) >= +cond.water_lt) return false;
   return true;
 }

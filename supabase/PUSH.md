@@ -9,6 +9,7 @@ Monday report), set this up once in your Supabase project. It's free on the Supa
    Then run it.
 3. **Function.** Supabase → Edge Functions → Deploy a new function → name it `engine-push` and paste
    `supabase/functions/engine-push/index.ts`. Turn **off** "Verify JWT" for it (the cron secret protects it).
+   After an update that groups supplement reminders (24/10/2026), paste the new `index.ts` again: the old one still works but would not skip a grouped reminder you already ticked.
 4. **Secrets.** Edge Functions → Secrets: add `VAPID_PUBLIC`, `VAPID_PRIVATE` (from step 1),
    `VAPID_SUBJECT` = `mailto:` + your email, `CRON_SECRET` = the password of step 2.
 5. **App.** In `config.js` add the public key: `vapidPublicKey: "B..."`. Commit, then in the app:

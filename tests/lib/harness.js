@@ -27,7 +27,10 @@ function build(out, { min = false, root = ROOT } = {}) {
 function exportRef(ref) {
   const dir = tmp("ref"); execSync(`git archive ${JSON.stringify(ref)} | tar -x -C ${JSON.stringify(dir)}`, { cwd: ROOT, shell: "/bin/bash" }); return dir;
 }
-const tmp = name => fs.mkdtempSync(path.join(os.tmpdir(), "engine-" + name + "-"));
+const TMPS = [];
+/* every build goes to its own temp folder (about 13 MB): they are removed when the test file ends, otherwise a few hundred runs fill the disk */
+const tmp = name => { const d = fs.mkdtempSync(path.join(os.tmpdir(), "engine-" + name + "-")); TMPS.push(d); return d; };
+process.on("exit", () => { for (const d of TMPS) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (e) {} } });
 function serve(dir) {
   return new Promise(ok => {
     const srv = http.createServer((q, r) => {
