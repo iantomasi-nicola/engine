@@ -203,7 +203,10 @@
       for (let k = 0; k < models.length && k < 4; k++) {
         const c = { ...cfg, model: models[k] };
         for (let attempt = 0; attempt < 2; attempt++) {
-          try { const text = await call(c, msgs, imgs, json, opts.signal); tried.push(`${c.provider}/${c.model}: ok`);
+          try { const text = await call(c, msgs, imgs, json, opts.signal);
+            if (!String(text).trim()) throw Object.assign(new Error("empty answer"), { status: 0 });
+            if (json) { const mm = text.match(/[\[{][\s\S]*[\]}]/); JSON.parse(mm ? mm[0] : text); }   // an answer that is not the JSON asked for counts as a failure: the next model, then the next service
+            tried.push(`${c.provider}/${c.model}: ok`);
             if (k > 0 || cfg !== chain[0]) { try { opts.onModel?.(c.model, c.provider); } catch (x) {} if (!over && k > 0) remember(cfg.id, c.model); }
             E.lastRun = { provider: c.provider, model: c.model, tried };
             if (opts.onText) try { opts.onText({ text, delta: text }); } catch (x) {}

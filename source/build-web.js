@@ -10,10 +10,7 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
 (async () => {
   let s = fs.readFileSync(path.join(SRC, "engine.html"), "utf8");
   const R = (a, b) => { if (!s.includes(a)) throw new Error("missing: " + a.slice(0, 60)); s = s.split(a).join(b); };
-  R("Saved to your Claude account and synced on every device where you open this page.", "Saved to your Engine account and synced on every device where you sign in.");
-  R("Saved in this browser only. Open the page inside Claude while signed in to sync.", "Saved on this device only. Sign in (Settings → Account) to sync phone and computer.");
   R('"https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"', 'new URL("vendor/tesseract.min.js", location.href).href');
-  s = s.replace(/\bClaude's\b/g, "the AI's").replace(/\bClaude\b(?! Code Remote)/g, "AI").replace(/Ask AI/g, "Ask the AI").replace(/Amounts are AI/g, "Amounts are the AI");
   // main script + css (minified)
   const a = s.indexOf("<style>", 200), b = s.indexOf("</style>", a);
   if (MIN) { const cm = css.transform({ filename: "a.css", code: Buffer.from(s.slice(a + 7, b)), minify: true, errorRecovery: true }); s = s.slice(0, a + 7) + cm.code.toString() + s.slice(b); }

@@ -176,3 +176,14 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità dati:** nessun campo nuovo obbligatorio (`recipe.ai` opzionale sulla bozza, non salvato come requisito).
 
 **Aperto:** la corrispondenza degli ingredienti importati usa la ricerca esistente (soglia `RI_GOOD`), da tarare con ricette reali; l'AI nell'interfaccia viene mostrata come «AI» (sostituzione di testo esistente) mentre i tag dei Food dicono «Claude»: incoerenza di terminologia da sistemare nel redesign (M13).
+
+## Ritocchi 24/10 (pack, AI, spunte, ritorno, categorie)
+**Verificato:** `ai-chain` (4: ordine dei servizi, quota/chiave/prosa/vuoto → successivo, servizio spento, tutti falliti, nessun «Claude» nel sorgente), `nav-return` (7: ritorno alla lista da scheda prodotto/editor/negozi/sostituzione/«In the cart», scorrimento, nessun ritorno dal tab Shop, annulla di «Finish», spunta riprendibile, categorie, pack diversi), `scan-clarity` aggiornato (Drinks); suite completa.
+
+**Bug riprodotti prima del fix:** (1) una risposta non JSON o vuota del primo servizio AI non passava al successivo (test rosso senza la modifica a `shim.js`); (2) la spunta nella lista (`shop-check`, baseline) mette subito in dispensa e la riga spariva, restava solo un Undo di 5 s; (3) il filtro Drinks includeva ogni alimento in ml (passata, olio).
+
+**Eliminato / unificato:** i testi «Claude» nel sorgente (`engine.html`) e la riscrittura a build-time in `build-web.js` (ora inutile: restano solo le sostituzioni di Tesseract); `storesBack`/`back` degli Store sostituiti dal ritorno generico; funzioni `claudeLabel/Digits/Picks`, `handleLabelClaude`, azioni `lb-claude`/`ch-claude` rinominate in `ai*`.
+
+**Compatibilità dati:** nuovo campo `buys[].tick` (opzionale); `catV: 2` sugli alimenti riparati; l'interfaccia di runtime `window.claude` resta (è il contratto con lo shim).
+
+**Aperto:** il ritorno `keep`/`_ret` copre solo la lista da Today: gli altri percorsi (Add → qty, check-in → giornale, ecc.) hanno ritorni propri e vanno censiti in M14; «Ticked today» e l'annulla di «Finish» vivono solo nella sessione corrente per lo snapshot dell'annulla (la spunta, invece, si può sempre riprendere).

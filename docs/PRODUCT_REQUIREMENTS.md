@@ -206,4 +206,9 @@ Regola dell'utente: ciò che riguarda milestone già fatte si fa subito (**M4f**
 | L36 | «Bought at» nell'editor: solo scelta tra i negozi esistenti (niente aggiunta da lì), scelti evidenziati con spunta e riepilogo «On the list of: …» | M8b | **Fatto (24/10)** |
 | L37 | Avviso «stessi valori» solo se anche la marca è la stessa | M8b | **Fatto (24/10)** |
 | L38 | Milestone di revisione critica (usabilità, sicurezza, difetti di progettazione, limiti) dopo il redesign | M14 (nuova) | Aggregata |
+| L39 | Lo stesso alimento (stessa marca e macro) in confezioni diverse non è un duplicato | M8 (ritocco) | **Fatto (24/10)** |
+| L40 | L'AI è sempre quella dei servizi impostati in Settings, nell'ordine scelto; se un servizio fallisce, rifiuta la chiave, risponde fuori formato o a vuoto si passa al successivo; nessun riferimento a un'app ospite nell'interfaccia né nel codice | M8 (ritocco) | **Fatto (24/10)**; regola per tutta l'app in AGENTS.md |
+| L41 | Spunta per sbaglio nella lista: l'alimento resta in «Ticked today · in the pantry» e un tocco sulla spunta lo riporta com'era (dispensa e storico); «Finish shopping» annullabile (toast e riga per 30 min) | M3 (ritocco) | **Fatto (24/10)**; bug riprodotto (la riga spariva e restava solo un Undo di 5 s) |
+| L42 | Tornare dove ero: la lista da Today è un punto di ritorno (`keep`/`_ret`): scheda prodotto, editor, negozi, sostituzione, «In the cart» tornano alla lista nello stesso punto di scorrimento | trasversale | **Fatto per la lista (24/10)**; altri percorsi nel censimento di M14 |
+| L43 | Categorie: il filtro Drinks guarda solo la corsia (passata e olio in ml non sono bevande); gli alimenti in Drinks che non sono bevande (ceci, pane…) vanno dove dice il nome | M8 (ritocco) | **Fatto (24/10)** |
 

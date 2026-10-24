@@ -40,7 +40,7 @@ test("when the account really has the food in the wrong aisle, it is fixed once,
     applyCollection("foods", { docs: Object.values(remote).map(f => ({ id: f.id, data: () => f })), metadata: { fromCache: false } }); await new Promise(r => setTimeout(r, 700));
     return { toasts: [...__toasts], fixed: S.foods["t-banana"].cat, v: S.foods["t-banana"].catV, written: __writes.some(p => p.endsWith("foods/t-banana")) };
   });
-  assert.deepEqual(r.toasts, ["1 food moved to the right aisle"]); assert.deepEqual([r.fixed, r.v, r.written], ["produce", 1, true]);
+  assert.deepEqual(r.toasts, ["1 food moved to the right aisle"]); assert.deepEqual([r.fixed, r.v, r.written], ["produce", 2, true]);
 });
 
 test("a full device is not silent: one message when the local copy cannot be saved", async () => {

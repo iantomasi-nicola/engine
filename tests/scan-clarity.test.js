@@ -52,12 +52,13 @@ test("+ Food: a new food has Scan barcode and Scan label on top, and offers Save
   assert.deepEqual(sv, { foot: ["Save only", "Save and add to plan"], sheet: null, saved: true });
 });
 
-test("Drinks filter: foods in the Drinks aisle or measured in ml, never recipes, and it combines with the others", async () => {
+test("Drinks filter: only foods in the Drinks aisle (a passata or an oil measured in ml is not a drink, nor are chickpeas or bread), never recipes, and it combines with the others", async () => {
   const page = await start(H.VIEWPORTS.phone);
   const r = await page.evaluate(() => { S.foods["x-cola"] = { id: "x-cola", name: "Zero cola", unit: "ml", per: { kcal: 1, p: 0, c: 0, f: 0 }, servings: [], pack: 330, cat: "drinks", role: "C", meals: ["s"], source: "custom" };
+    S.foods["x-passata"] = { id: "x-passata", name: "Passata", unit: "ml", per: { kcal: 30, p: 1.5, c: 5, f: .2 }, servings: [], pack: 700, cat: "pantry", role: "V", meals: ["m"], source: "custom" };
     S.foods["x-milk"] = { id: "x-milk", name: "Test milk", unit: "g", per: { kcal: 45, p: 3.3, c: 4.8, f: 1.5 }, servings: [], pack: 1000, cat: "drinks", role: "C", meals: ["m"], source: "custom" }; DATA_V++;
-    const names = f => foodSearch("", "all", f).map(o => o.x.name); return { chip: !!FOOD_FILTERS.find(x => x[0] === "d"), d: names({ d: true }), dp: names({ d: true, p: true }), rec: foodSearch("", "all", { d: true }).some(o => o.t === "recipe") }; });
-  assert.equal(r.chip, true); assert.ok(r.d.includes("Zero cola") && r.d.includes("Test milk") && !r.d.includes("Test rice")); assert.equal(r.rec, false); assert.ok(!r.dp.includes("Zero cola"));
+    const names = f => foodSearch("", "all", f).map(o => o.x.name); return { guess: ["Ceci in scatola", "Pane integrale", "Pasta di semola", "Passata di pomodoro", "Olio extravergine"].map(n => catGuess(n, ["en:plant-based-foods-and-beverages", "en:beverages"]).cat), chip: !!FOOD_FILTERS.find(x => x[0] === "d"), d: names({ d: true }), dp: names({ d: true, p: true }), rec: foodSearch("", "all", { d: true }).some(o => o.t === "recipe") }; });
+  assert.deepEqual(r.guess, ["pantry", "bakery", "pantry", "pantry", "pantry"], "the name decides before broad Open Food Facts tags"); assert.equal(r.chip, true); assert.ok(r.d.includes("Zero cola") && r.d.includes("Test milk") && !r.d.includes("Test rice")); assert.equal(r.rec, false); assert.ok(!r.d.includes("Passata")); assert.ok(!r.dp.includes("Zero cola"));
 });
 
 test("a food with the same values under another name is flagged only when the brand is the same", async () => {
