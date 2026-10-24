@@ -2,12 +2,12 @@
 
 Regola: una milestone alla volta, approvata dall'utente prima di iniziare, branch dedicato, commit atomici, test, rollback descritto. Un commit non è un deploy; il rebuild dei file di root e la pubblicazione richiedono autorizzazione.
 
-Stato: **M0 approvata (24/10), in corso.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
+Stato: **M0 completata (24/10), in attesa del tuo ok sul report; B4 (rimozione nota Pantry) in lavorazione.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
 
 ## Ordine (dipendenze → impatto → rischio)
 | Milestone | Contenuto (ID) | C | Rischio | Stato |
 |---|---|---|---|---|
-| **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Approvata, in corso** |
+| **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |
 | M1 Dominio unico scorte↔spesa↔piano | A4 (motore), B1, B2, B3, ENG-03 | L | Alto | Da approvare |
 | M2 Storage ovunque, prezzi e confezioni | A1, A2, A3 | M | Medio | – |
 | M3 Spesa: extra, costi, liste lunghe | B4, B5, B6 | M | Basso | – |
@@ -56,3 +56,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 |---|---|---|
 | 2026-10-24 | Baseline `cae350d` ripristinata con revert di `02f43a9`; documentazione iniziale (AGENTS, audit, backlog, roadmap, architettura, bozza nutrizione) | vedi `git log` |
 | 2026-10-24 | Approvato dall'utente: baseline, M0, rimozione della nota "Not in the plan yet" del Pantry (B4) | – |
+| 2026-10-24 | M0: `tests/` con smoke 3 viewport, controllo build, 12 test di dominio, 4 di persistenza/backup (16 verdi); smoke fallisce su `02f43a9`; correzione dell'audit sul dominio spesa/dispensa (logica a strati, B1/B3 riprodotti) | vedi `git log` |

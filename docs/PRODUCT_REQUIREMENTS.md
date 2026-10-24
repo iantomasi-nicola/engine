@@ -7,14 +7,14 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 ## ENG — Requisiti ingegneristici (nuovi, dall'audit)
 | ID | Requisito | Pri | C | Dip | Stato | Criteri di accettazione |
 |---|---|---|---|---|---|---|
-| ENG-01 | Smoke test di avvio su 3 viewport (zero `pageerror`/errori console, UI visibile), eseguibile con un comando | Must | S | – | Mancante | Fallisce sul build di `02f43a9`, passa su `cae350d` |
-| ENG-02 | Unit test delle funzioni pure (energia, VDOT, e1RM, shopping, pantry) su fixture sintetiche | Must | M | ENG-01 | Mancante | Funzioni estratte con `vm`/loader senza modificare il comportamento; test verdi |
+| ENG-01 | Smoke test di avvio su 3 viewport (zero `pageerror`/errori console, UI visibile), eseguibile con un comando | Must | S | – | **Fatto** (`tests/smoke.js`; fallisce su `02f43a9`, passa su `cae350d`) | Fallisce sul build di `02f43a9`, passa su `cae350d` |
+| ENG-02 | Test delle funzioni di dominio (energia, VDOT, e1RM, ricette, spesa, dispensa) su fixture sintetiche | Must | M | ENG-01 | **Base fatta** (12 test in `tests/domain.test.js`, eseguiti nell'app reale); da estendere per ogni milestone | Test verdi; i comportamenti da cambiare sono marcati `KNOWN (<id>)` |
 | ENG-03 | Test e2e dello scenario 7 giorni (piano → modifica → scorte → consumo → acquisto → inventario/spesa/nutrienti), poi reload, offline, sync simulata | Must | L | ENG-01, M1 | Mancante | Scenario descritto in `ROADMAP.md §Scenario`, Supabase simulato in memoria |
-| ENG-04 | Build riproducibile: verificare che `index.html`/`sw.js` di root derivino dal sorgente | Must | S | – | Mancante | Script che ricostruisce e confronta (ignorando il timestamp di build) |
-| ENG-05 | Backup/restore verificato su dati sintetici, migrazioni con versione dati | Must | M | ENG-02 | Non verificato | Export→reset→import restituisce stato identico; migrazione con rollback |
+| ENG-04 | Build riproducibile: verificare che `index.html`/`sw.js` di root derivino dal sorgente | Must | S | – | **Fatto** (`tests/check-build.js`; baseline identica byte per byte) | Script che ricostruisce e confronta (ignorando il timestamp di build) |
+| ENG-05 | Backup/restore verificato su dati sintetici, migrazioni con versione dati | Must | M | ENG-02 | **Backup/restore verificato** (`tests/persistence.test.js`: reload, offline, export→wipe→restore, chiavi escluse); migrazioni con versione ancora da fare | Export→reset→import restituisce stato identico; migrazione con rollback |
 | ENG-06 | Audit sicurezza: isolamento RLS, segreti (chiavi AI/intervals in `settings`/export), CSP, input esterni (OFF, GPX/FIT, AI) | Must | M | – | Non verificato | Report con finding e fix; nessun segreto negli export di default |
 | ENG-07 | Audit scritture verso intervals.icu (nessuna modifica remota non voluta) | Must | M | – | Non verificato | Elenco di tutte le chiamate di scrittura; modalità di prova senza rete reale |
-| ENG-08 | Guardia di ordinamento delle dichiarazioni (TDZ) / lint per `no-use-before-define` sugli handler | Should | S | ENG-01 | Mancante | Lint che fallisce sulla causa di `02f43a9` |
+| ENG-08 | Guardia di ordinamento delle dichiarazioni (TDZ) | Should | S | ENG-01 | **Coperto dallo smoke test** (ogni TDZ all'avvio azzera l'app e fa fallire `smoke.js`); nessun lint statico | Lint che fallisce sulla causa di `02f43a9` |
 | ENG-09 | Sistemazione finale della repository (richiesta dell'utente): struttura, documentazione, codice morto, dipendenze, script, artefatti di build, README | Should | M | tutte | Mancante | Checklist in `ROADMAP.md` M13 approvata dall'utente |
 
 ## A. Foods, Pantry e Storage

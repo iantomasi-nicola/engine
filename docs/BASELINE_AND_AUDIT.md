@@ -39,7 +39,7 @@ L'utente ha dichiarato il rollback fatto, ma `origin/main` è ancora `02f43a9`. 
 | R1 | Nessun test automatico, nessuna CI: la regressione di `02f43a9` è stata pubblicata come commit senza che nessuno avviasse l'app | Alto | M0: test di avvio + unit + e2e |
 | R2 | Sorgente e artefatto di build in due file separati e committati a mano: possono divergere | Alto | M0: controllo di riproducibilità del build |
 | R3 | Monolite di 12.6k righe in un solo `<script>` con TDZ, 37 wrapper di sheet, ~960 `!important` | Alto (ogni modifica può avere effetti lontani) | Test e2e per area prima di toccarla; niente refactoring ampio |
-| R4 | Dominio frammentato: scorta (`S.shop.pantry[id].g`), lista spesa, piano, consumo (`it.eaten`) hanno logiche separate e il confronto scorta↔fabbisogno non è temporale | Alto (causa di B1/B3/A4) | M1: modello unico con proiezione |
+| R4 | Dominio frammentato: scorta (`S.shop.pantry[id].g`), lista spesa, piano, consumo (`it.eaten`) hanno logiche separate; `shoppingNeeds/shoppingRows` sono ridefinite tre volte nel file (righe ~9469, ~11681, ~11690, ~12474) e la scorta riduce la lista solo per i cibi del piano "collegati" (`pan`), mai per gli ingredienti delle ricette | Alto (causa di B1/B3/A4) | M1: modello unico con proiezione |
 | R5 | Chiavi API (AI, intervals.icu, mappe) salvate nel documento `settings` su Supabase e incluse negli export (`o.keys`) | Medio-alto | Verificare cifratura/escludere dagli export; documentare; decisione utente |
 | R6 | Scritture verso intervals.icu dal browser (sync bidirezionale automatica): rischio di modifiche remote indesiderate | Alto | Audit dedicato prima di toccare G5/F3; modalità dry-run |
 | R7 | `OFF_UNREACHABLE` latch: un errore di rete disattiva OFF fino al reload | Medio | A5 |
@@ -64,10 +64,10 @@ Legenda: **Parziale** = esiste ma non soddisfa il requisito; **Mancante**; **Bug
 ### B. Shopping List e costi
 | ID | Stato | Evidenza |
 |---|---|---|
-| B1 | Non verificato (sospetto) | `shoppingRows` confronta l'intera giacenza con il fabbisogno del range, senza ordine temporale né consumo effettivo; ultimo commit ha cambiato il flusso "spunta → dispensa". Da riprodurre con scenario di test |
+| B1 | **Buggato (riprodotto con test)** | La giacenza riduce la lista solo per i cibi del piano collegati alla dispensa (`pan`, assegnati ai giorni più vicini); non copre mai gli ingredienti delle ricette: con 150 g di riso a casa e una ricetta che ne usa 200 g, l'intera quantità resta "da comprare" (acquisto inutile). Test `KNOWN (B1)` in `tests/domain.test.js` |
 | B2 | Parziale | Chip 1/3/7/14 giorni da `shopStart`; manca "questa settimana da oggi", "prossima settimana", intervallo personalizzato |
-| B3 | Mancante | Righe con `buy = 0` semplicemente scompaiono; nessun elenco richiudibile "coperti da scorta" con data di fine e pasti |
-| B4 | Non verificato | In Pantry la nota "Not in the plan yet" è limitata a 6 voci; l'elenco interminabile segnalato va individuato a schermo |
+| B3 | Mancante (riprodotto) | Un cibo interamente coperto dalla dispensa non ha nemmeno una riga; nessun elenco richiudibile "coperti da scorta" con data di fine e pasti. Test `KNOWN (B3)` |
+| B4 | Da fare (approvato) | Utente: la nota "Not in the plan yet" del Pantry va rimossa |
 | B5 | Parziale | Extra a testo libero con prezzo opzionale, separati dai Foods (non toccano i nutrienti); nessuna cronologia/autocompletamento/ricorrenti |
 | B6 | Parziale | Stima totale, budget settimanale, storico acquisti (`S.shop.buys`), report settimanale con spesa; manca costo medio settimanale per intervallo, dettaglio per prodotto, previsto vs effettuato, alimentare vs extra |
 
