@@ -2702,11 +2702,13 @@ function normalizeSettings(s) {
 const LS_KEY = "fuelplanner.v1";
 const S = { settings: null, foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: { checked: {}, extras: [], pantry: {}, range: 7 }, body: { w: {}, m: {} }, train: { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [] } };
 const UI = { trainSeg: "cal", progSeg: "overview", dashSeg: "all", tab: "today", date: todayISO(), sheet: null, foodsSeg: "all", foodsQ: "", shopStart: todayISO(), statsRange: 7, statsBasis: null, addMeal: null };
-const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), inflight: new Set(), timers: new Map(), retry: new Set(), known: {}, sample: null, downloads: null, ready: false };
+const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), inflight: new Set(), timers: new Map(), retry: new Set(), known: {}, fresh: {}, sample: null, downloads: null, ready: false };
 
+let SAVE_WARNED = false;
 function saveLocal() {
   DATA_V++;
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); } catch (e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
+  catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
 }
 function loadLocal() {
   try {
@@ -2770,6 +2772,8 @@ async function flush(key) {
     if (!failed && !Sync.pending.size && !Sync.inflight.size) setSync("synced");
   }
 }
+/* one-time clean-ups run on the account's own data: signed in, that means the first answer from the server, not the copy kept on this device */
+const dataReady = (...kinds) => !Sync.db || (Sync.ready && kinds.every(k => Sync.fresh[k]));
 const isPending = key => Sync.pending.has(key) || Sync.inflight.has(key);
 
 /* ================= domain ================= */
@@ -8631,7 +8635,7 @@ function applyDoc(kind, snap) {
     const hasLocal = kind === "settings" ? local?.onboarded : kind === "shop" ? Object.keys(local?.pantry || {}).length || (local?.extras || []).length : kind === "train" ? (local?.tests || []).length : Object.keys(local?.w || {}).length;
     if (hasLocal && !Sync.known[kind]) put(kind, "", local);
   }
-  Sync.known[kind] = true;
+  Sync.known[kind] = true; if (!snap.metadata?.fromCache) Sync.fresh[kind] = true;
   saveLocal(); scheduleRender();
   if (kind === "settings") maybeOnboard();
 }
@@ -8649,7 +8653,7 @@ function applyCollection(kind, qs) {
     // migrate this browser's local data into the account once
     for (const [id, v] of Object.entries(S[kind] || {})) { next[id] = v; put(kind, id, v); }
   }
-  Sync.known[kind] = true;
+  Sync.known[kind] = true; if (!qs.metadata?.fromCache) Sync.fresh[kind] = true;
   if (kind === "days") { const since = addDays(todayISO(), -180); for (const [id, v] of Object.entries(S.days)) if (id < since && !next[id]) next[id] = v; }
   S[kind] = next; saveLocal(); scheduleRender();
 }
@@ -11872,7 +11876,7 @@ function pantryAddRows(sh) { const L = panLinked(), mk = S.settings.meals.find(m
 ACT["qty-pan"] = () => { const sh = S_(); mutateDay(sh.date, d => { const it = (d.meals[sh.origMeal] || []).find(x => x.id === sh.itemId); if (!it) return; if (it.eaten && it.pan) pantryAdjust(it, -1); it.pan = !it.pan; if (it.eaten && it.pan) pantryAdjust(it, 1); }); renderSheet(); };
 /* the list: what's free at home for food you'd otherwise buy */
 ACT["pan-use"] = () => { const k = linkFromPantry(UI.shopStart, S.shop.range || 7); toast(k ? `${k} planned food${k > 1 ? "s" : ""} now come from the pantry` : "Nothing at home covers a whole portion"); if (UI.sheet) renderSheet(); scheduleRender(); };
-{ const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && (!Sync.db || Sync.ready)) panMigrate(); }; }
+{ const _af = afterRender; afterRender = function () { _af(); if (S.shop && !S.shop.panV && dataReady("shop", "days")) panMigrate(); }; }
 /* ================= learning without AI: real pace on the scale, measured TDEE, own burn rates, watch left running ================= */
 const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 /* kg per week from the real weigh-ins of the last N days (least squares), with its standard error */
@@ -12437,7 +12441,7 @@ function binPurge() { const lim = addDays(todayISO(), -BIN_DAYS); let n = 0;
     if (!x.delAt) { put("foods", x.id, { ...x, delAt: todayISO() }); continue; }
     if (x.delAt <= lim) { if (BUILTIN[x.id]) put("foods", x.id, { id: x.id, hidden: true, gone: true }); else del("foods", x.id); n++; } }
   return n; }
-{ const _af = afterRender; afterRender = function () { _af(); if (!BIN_DONE && S.foods && (!Sync.db || Sync.ready)) { BIN_DONE = true; try { binPurge(); } catch (e) { console.warn(e); } } }; }
+{ const _af = afterRender; afterRender = function () { _af(); if (!BIN_DONE && S.foods && dataReady("foods")) { BIN_DONE = true; try { binPurge(); } catch (e) { console.warn(e); } } }; }
 /* ================= a recipe, changed just for this meal: amounts per serving, ingredients out — saved as a private copy ================= */
 { const _ar = allRecipes; allRecipes = function () { return _ar().filter(r => !r.variant); }; }
 const custMacros = cust => cust.reduce((m, i) => { const f = getFood(i.food); return f ? addM(m, f.per, i.g / 100) : m; }, ZERO());
@@ -12636,7 +12640,7 @@ function catFix() { let n = 0;
   for (const f of Object.values(S.foods || {})) { if (!f || f.hidden || f.catUser || f.catV >= 1 || !f.name || BUILTIN[f.id] && !f.source) continue;
     const g = catGuess(f.name, []); if (g && g.cat !== f.cat && ["off", "ocr", "label", "ai", "homemade", "custom", "estimate"].includes(f.source || "custom")) { put("foods", f.id, { ...f, cat: g.cat, catV: 1 }); n++; } }
   return n; }
-{ const _af = afterRender; afterRender = function () { _af(); if (!CATFIX_DONE && S.foods && (!Sync.db || Sync.ready)) { CATFIX_DONE = true; try { const n = catFix(); if (n) toast(`${n} food${n > 1 ? "s" : ""} moved to the right aisle`); } catch (e) { console.warn(e); } } }; }
+{ const _af = afterRender; afterRender = function () { _af(); if (!CATFIX_DONE && S.foods && dataReady("foods")) { CATFIX_DONE = true; try { const n = catFix(); if (n) toast(`${n} food${n > 1 ? "s" : ""} moved to the right aisle`); } catch (e) { console.warn(e); } } }; }
 /* ================= loose food (apples, courgettes…): no fixed pack, you take what you need and the price is per kg ================= */
 const varPack = f => !!f && (f.varPack ?? (f.cat === "produce" && !(f.countable && f.pack > 0 && f.pack <= 30)));
 { const _sr = shoppingRows; shoppingRows = function (start, n) { return _sr(start, n).map(r => varPack(r.f) ? { ...r, packs: 0, left: 0, vary: true } : r); }; }
