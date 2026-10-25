@@ -16,7 +16,7 @@
 ## Domini e funzioni chiave
 | Dominio | Funzioni | Note |
 |---|---|---|
-| Energia | `energySeries`, `sessionKcal`, `learnedRates`, `phaseFor` | BMR (Mifflin/HB/MET) + NEAT + EAT (MET netti, kcal/min apprese) + TEF, calibrato sul trend peso 14 gg |
+| Energia | `energySeries`, `sessionKcal`, `learnedRates`, `phaseFor` | BMR (Mifflin/HB/MET) + NEAT + EAT (MET netti, kcal/min apprese) + TEF, calibrato sul peso reale: calibrazione v2 (`calibV2`, M7b-1: finestra 28 gg, pendenza ai minimi quadrati con errore standard, soglie di qualità, restringimento verso 1, clamp 1±0,20, max 100 kcal/settimana, dal `energy.calV2From`) oppure legacy (trend a 14 gg, `energy.calMode`); `energyWarnings` avvisa su macro incoerenti (solo avviso) |
 | Running | `VDOT`, `racePredictions`, zone Friel, carico/fitness/fatica/forma | |
 | Forza | `e1rm`, `calisTable`, `topSetTable`, script parser (sintassi tipo intervals.icu) | |
 | Pasti | `dayTotals`, `balanceDay`, auto-planner, `recipePerServing` | `balanceDay` altera quantità per colpire i macro |

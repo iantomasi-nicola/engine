@@ -128,7 +128,7 @@ Controllo di tutti i messaggi dell'utente dall'inizio della sessione (gli ID son
 | Massa magra in kg precisa; avviso se cala troppo nel cut | Fatto | L136, `BODY_COMPOSITION.md` |
 | Records: modifica/elimina, come registrare il best del Fire Set, importa ranking, dove sono i consigli, sezioni compatte | Fatto | L137, L138 |
 | Calorie in base al dispositivo (polso contro fascia) | **Milestone** M7b (D20/D20b): nessun moltiplicatore da letteratura, va appreso dai dati | D20b |
-| Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **Milestone** M7b (Opus 5.5 high) | `NUTRITION_AUDIT.md` |
+| Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **M7b-1 fatta il 26/10** (D8 calibrazione v2, D11 avvisi, D17 data di attivazione; non ancora pubblicata); **Milestone** M7b per il resto (Opus 5.5 high) | `NUTRITION_AUDIT.md`, L154, L155 |
 | Migliorare tutti i report con i dati nuovi | Fatto per settimana/mese/testo copiato, riepilogo «All-time» e PDF del workout (M11m); un PDF del report settimanale/mensile non esiste | L148, L152 |
 | Micronutrienti con AI | **Milestone** M7e | L16 |
 | Scambio pranzo↔cena | Fatto (Fuel › Meals › ⋯ in alto a destra › «Swap lunch and dinner», visibile se il giorno ha cibi) | C5 |

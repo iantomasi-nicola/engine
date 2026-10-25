@@ -86,8 +86,8 @@ test("the shadow card opens in Progress > Energy and fits a phone", async () => 
   const page = await start(), t = new Date().toISOString().slice(0, 10);
   const r = await page.evaluate(async ([setup, d]) => { eval(setup);
     for (let i = 0; i <= 8; i++) eval(`(() => { const d = addDays("${d}", -${i}), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { steps: 7000 + ${i} * 300, watch: 480 + ${i} * 4, weight: 80, workouts: ${i % 3 === 0 ? `[{ sport: "Running", min: 40, km: 6, kcal: 450, src: "intervals", ext: "icu-a-${"${i}"}", int: "Moderate" }]` : "[]"} }; DATA_V++; })()`);
-    UI.tab = "progress"; UI.progSeg = "energy"; scheduleRender(); await new Promise(r => setTimeout(r, 500));
-    const el = document.querySelector("details.aee-shadow"); return { has: !!el, sw: document.documentElement.scrollWidth <= innerWidth, rows: el ? el.querySelectorAll("tbody tr").length : 0 }; }, [setup, t]);
+    UI.tab = "progress"; UI.progSeg = "energy"; UI.fold = { energy: { "AEE in the shadow": true } }; scheduleRender(); await new Promise(r => setTimeout(r, 500));
+    const el = document.querySelector(".aee-shadow"); return { has: !!el, sw: document.documentElement.scrollWidth <= innerWidth, rows: el ? el.querySelectorAll("tbody tr").length : 0 }; }, [setup, t]);
   assert.ok(r.has && r.sw && r.rows >= 5, JSON.stringify(r)); assert.deepEqual(app.errors, []);
   await page.screenshot({ path: require("path").join(process.env.ENGINE_SHOTS || require("os").tmpdir(), "aee-shadow.png") });
 });

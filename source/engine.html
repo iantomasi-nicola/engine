@@ -114,7 +114,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .fd-bar{justify-content:space-between;align-items:center;gap:8px}.fd-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fd-macros .inp,.fd-g4 .inp{padding-inline:10px}.fd-serv{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:6px;align-items:center}
 .fd-more{border-radius:16px;background:var(--md-sc-high,var(--surface-2));padding:0 12px}.fd-more>summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;list-style:none}.fd-more>summary::-webkit-details-marker{display:none}.fd-more>summary b{font-weight:600;font-size:14px}.fd-more>summary small{font-size:12.5px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fd-more>summary::after{content:"▾";color:var(--faint);flex:none}.fd-more[open]>summary::after{content:"▴"}.fd-in{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
 .top-row .s{white-space:normal!important;display:block!important;overflow:visible!important}
-.aee-shadow .faint{font-size:12.5px}.tbl-scroll{overflow-x:auto}.aee-t{width:100%;border-collapse:collapse;font-size:12.5px}.aee-t th{text-align:left;font-weight:500;color:var(--muted);padding:4px 6px 4px 0;white-space:nowrap}.aee-t td{padding:6px 6px 6px 0;border-top:1px solid var(--line,rgba(0,0,0,.08));vertical-align:top}.aee-t td.n{font-variant-numeric:tabular-nums}.aee-t small{display:block}
+.aee-shadow .faint{font-size:12.5px}.tbl-scroll{overflow-x:auto}.aee-t{width:100%;border-collapse:collapse;font-size:12.5px}.aee-t td:first-child{white-space:nowrap}details.card.rk-more>:not(summary){margin-left:16px;margin-right:16px}details.card.rk-more[open]{padding-bottom:14px}.aee-t th{text-align:left;font-weight:500;color:var(--muted);padding:4px 6px 4px 0;white-space:nowrap}.aee-t td{padding:6px 6px 6px 0;border-top:1px solid var(--line,rgba(0,0,0,.08));vertical-align:top}.aee-t td.n{font-variant-numeric:tabular-nums}.aee-t small{display:block}
 .pa-tools{display:flex;flex-direction:column;gap:8px;padding:8px 0 4px}.pa-forecast{margin:8px 0;padding:10px 12px}.pa-forecast summary{display:flex;flex-direction:column;gap:2px;cursor:pointer}.pa-forecast summary .faint{font-size:12.5px}.pa-fchips{margin:8px 0 4px}
 .lrow.sub-h{padding-top:10px;padding-bottom:2px;border-top:0;min-height:0}
 .lrow.sub-h .s{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--muted)}
@@ -146,8 +146,8 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .en-card{display:flex;flex-direction:column;gap:12px}
 .en-big{display:flex;flex-direction:column;gap:2px}.en-big b{font-size:34px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.en-big span{font-size:13px;color:var(--muted)}
 .en-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}.en-bar i{display:block;height:100%}
-.en-leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px;font-size:13px;color:var(--muted)}
-.en-leg span{display:flex;align-items:center;gap:6px}.en-leg i{width:10px;height:10px;border-radius:3px;flex:none}.en-leg b{margin-left:auto;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.en-leg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;font-size:13px;color:var(--muted)}@media(min-width:900px){.en-leg{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.en-leg span{display:flex;align-items:center;gap:6px}.en-leg i{width:10px;height:10px;border-radius:3px;flex:none}.en-leg b{margin-left:2px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
 .xp-row{display:flex!important;flex-wrap:wrap;align-items:center;gap:2px 10px}
 .xp-t{flex:1 1 150px}
@@ -512,8 +512,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .day-pill .ring{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ink) calc(var(--p)*1%),var(--surface-3) 0)}
 .day-pill .ring.r0{background:none!important}.day-pill .ring b{width:24px;height:24px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12.5px}
 .day-pill[aria-current="date"]{background:var(--ink);color:var(--bg)}
-.day-pill[aria-current="date"] .ring{background:conic-gradient(var(--bg) calc(var(--p)*1%),color-mix(in srgb,var(--bg) 25%,transparent) 0)}
-.day-pill[aria-current="date"] .ring b{background:var(--ink);color:var(--bg)}
+.day-pill[aria-current="date"] .ring{background:conic-gradient(var(--md-on-primary) calc(var(--p)*1%),color-mix(in srgb,var(--md-on-primary) 25%,transparent) 0)}
+.day-pill[aria-current="date"] .ring b{background:var(--md-primary);color:var(--md-on-primary)}
 .day-pill.today small{color:var(--accent)}
 .day-pill[aria-current="date"].today small{color:var(--bg)}
 .day-pill .tdot{position:absolute;top:5px;right:calc(50% - 17px);width:6px;height:6px;border-radius:50%}
@@ -698,7 +698,8 @@ textarea.inp{padding:10px 12px;min-height:80px;resize:vertical}
 .chart{width:100%;height:auto;display:block;max-width:1100px}.chfs-b svg.chart{max-width:none}
 .chart text{fill:var(--muted);font-size:10.5px;font-family:var(--body)}
 .chart .gl{stroke:var(--line);stroke-width:1}
-.adh{display:grid;grid-template-columns:76px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:13px;padding:7px 0}
+.adh{display:grid;grid-template-columns:96px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:13px;padding:7px 0}
+@media(min-width:600px){.adh{grid-template-columns:180px minmax(0,1fr) 60px}}
 .adh .bar{height:10px;border-radius:99px;background:var(--surface-2);position:relative}
 .adh .bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--c)}
 .adh .bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);left:100%;margin-left:-1px;text-decoration:none}
@@ -894,6 +895,7 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
   .tbl td .s{min-width:0;max-width:none}
   .tbl td.s{grid-column:1/-1;min-width:0}
   .tbl tr.tot{background:var(--surface-2)}
+  .card .tbl tr,.rec-b .tbl tr{background:var(--surface-2);box-shadow:none}
   .tbl .sm-inp{width:100%}
   .tbl td[colspan]{grid-column:1/-1}
   .tbl td.s{display:block}
@@ -2929,6 +2931,7 @@ function defaultSettings(w = 75, goal = "maintain") {
     avoid: [], cuisines: ["Italian", "Mediterranean"], variety: 2, step: 5, onboarded: false
   };
 }
+const CAL_V2_START = "2026-10-25";   // first day of calibration v2 for profiles that existed before it (M7b-1)
 function normalizeSettings(s) {
   const d = defaultSettings();
   const o = { ...d, ...(s || {}) };
@@ -2940,6 +2943,8 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.avoid)) o.avoid = [];
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
+  // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
+  if (s?.fit && s.fit.energy?.calV2From === undefined) o.fit.energy.calV2From = CAL_V2_START;
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
   for (const k of DOWK) if (!Array.isArray(o.fit.pattern[k])) o.fit.pattern[k] = [];
   return o;
@@ -3512,7 +3517,8 @@ function defaultFit() {
       Maintenance: { p: 1.8, f: 0.8, cmin: 4.0, wmin: -0.002, wmax: 0.002 }
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, hbBonus: 27.5, hbThr: 16, minWatchNeat: 150,
-      calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
+      warn: "on", calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3770,6 +3776,29 @@ const isWalkSport = sp => /walk|hik/i.test(sp || "");
 /* NEAT from steps (formula approved 24/10): a day with steps and no walk or run = what the steps cost (0.5 kcal per kg per km, stride 0.415 x height; ACSM walking)
    + the part steps don't show, the median over the previous 90 days of (typed watch NEAT - steps cost) on days with both and no walk or run; it needs 14 such days. */
 const STEP_KCAL = (kg, steps, heightCm) => 0.5 * kg * (steps * 0.415 * (heightCm || 175) / 100 / 1000);
+/* Calibration v2 (M7b, F-06/D8, formula approved by the owner on 26/10; method and assumptions in docs/NUTRITION_AUDIT.md F-06: 7000 kcal/kg is an assumption, the prior 0.08 is a design choice, no coefficient from a primary source): the factor that scales the modelled TDEE to what your weight really did.
+   Window of up to 28 days; weight slope by least squares (with its standard error) instead of the difference of two 7-day means;
+   quality gates (>= 21 days of log, intake typed or from food on >= 70 % of them, >= 8 weigh-ins); shrunk toward 1 by how uncertain the slope is
+   (Gaussian prior: the factor is usually within calPrior = 0.08 of 1); symmetric clamp 1 +/- calBand; the factor moves at most calWeekKcal per week.
+   rows: the series so far (day -> {real, intake, tdeeW}); returns null when the data do not pass the gates. Pure: no state, no clock. */
+function calibV2(rows, d, E) {
+  const W = E.calWin || 28; let nDays = 0, nI = 0, sI = 0, sT = 0; const pts = [];
+  for (let k = 1; k <= W; k++) {
+    const r = rows[addDays(d, -k)]; if (!r) continue; nDays++;
+    if (r.intake && !r.intake.est) { nI++; sI += r.intake.kcal; sT += r.tdeeW; }
+    if (r.real) pts.push([-k, r.real]);
+  }
+  const n = pts.length;
+  if (nDays < (E.calWinMin || 21) || n < (E.calMinWeigh2 || 8) || nI < (E.calMinCov || 0.7) * nDays) return null;
+  const mx = pts.reduce((a, p) => a + p[0], 0) / n, my = pts.reduce((a, p) => a + p[1], 0) / n;
+  const sxx = pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0), sxy = pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0);
+  if (!(sxx > 0)) return null;
+  const b = sxy / sxx, sse = pts.reduce((a, p) => a + (p[1] - my - b * (p[0] - mx)) ** 2, 0), se = Math.sqrt(Math.max(0, sse) / Math.max(1, n - 2) / sxx);
+  const T = sT / nI, dataTdee = sI / nI - b * E.kcalPerKg, raw = dataTdee / T;
+  const u = se * E.kcalPerKg / T, tau = E.calPrior || 0.08, w = tau * tau / (tau * tau + u * u);
+  const band = E.calBand || 0.2, target = clamp(1 + w * (raw - 1), 1 - band, 1 + band);
+  return { raw, target, u, w, n, nI, nDays, dataTdee, rel: u <= 0.03 && n >= 14 ? "high" : u <= 0.06 ? "medium" : "low" };
+}
 function energySeries() {
   return memo("energy", () => {
     const fit = FIT(), E = fit.energy, prof = fit.profile, today = todayISO();
@@ -3807,12 +3836,19 @@ function energySeries() {
       const tdeeW = bmr + neat + eat + tef;
       const intake = d <= today ? intakeFor(d) : null;
       // calibration on the previous 14 days
-      let dataTdee = null, f = 1;
+      let dataTdee = null, f = 1, calRel = null;
       if (d <= today) {
-        let nI = 0, sI = 0, sT = 0, nW = 0;
-        for (let k = 1; k <= 14; k++) { const r = rows[addDays(d, -k)]; if (!r) continue; if (r.intake && !r.intake.est) { nI++; sI += r.intake.kcal; sT += r.tdeeW; } if (r.real) nW++; }
-        const a = rows[addDays(d, -1)], b = rows[addDays(d, -15)] || rows[start];
-        if (nI >= E.calMinIntake && nW >= E.calMinWeigh && a && b) { dataTdee = sI / nI - (a.trend - b.trend) * E.kcalPerKg / 14; f = clamp(dataTdee / (sT / nI), E.calLo, E.calHi); }
+        if (E.calMode === "v2" && (!E.calV2From || d >= E.calV2From)) {
+          // v2: no data that passes the gates = the factor stays where it was; otherwise it moves toward the target by at most calWeekKcal a week
+          const c = calibV2(rows, d, E), step = (E.calWeekKcal > 0 ? E.calWeekKcal : 100) / 7 / tdeeW;
+          f = c ? clamp(c.target, factor - step, factor + step) : factor;
+          if (c) { dataTdee = c.dataTdee; calRel = c.rel; }
+        } else {
+          let nI = 0, sI = 0, sT = 0, nW = 0;
+          for (let k = 1; k <= 14; k++) { const r = rows[addDays(d, -k)]; if (!r) continue; if (r.intake && !r.intake.est) { nI++; sI += r.intake.kcal; sT += r.tdeeW; } if (r.real) nW++; }
+          const a = rows[addDays(d, -1)], b = rows[addDays(d, -15)] || rows[start];
+          if (nI >= E.calMinIntake && nW >= E.calMinWeigh && a && b) { dataTdee = sI / nI - (a.trend - b.trend) * E.kcalPerKg / 14; f = clamp(dataTdee / (sT / nI), E.calLo, E.calHi); }
+        }
         factor = f;
       } else f = factor;
       const tdee = tdeeW * f;
@@ -3820,13 +3856,21 @@ function energySeries() {
       const target = tdee + phaseKcal(ph, tdee);
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
-      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
       order.push(d);
     }
     return { rows, order, start, end };
   });
 }
 function energyAt(date) { const s = energySeries(); return s.rows[date] || (date < s.start ? s.rows[s.start] : s.rows[s.end]); }
+/* F-07 (D11): what does not add up in a day's target. Warnings only: the target is never corrected silently (protein + fat beyond the target, target under the resting energy, carbs under the phase minimum). */
+function energyWarnings(r, c = r.c) {
+  const out = []; if (FIT().energy.warn === "off") return out;
+  if (4 * r.p + 9 * r.f > r.target) out.push({ id: "conflict", text: "Protein and fat alone use more than the target" });
+  if (r.target < r.bmr) out.push({ id: "floor", text: `Target is under your resting energy (${fmtN(r.bmr)} kcal)` });
+  if (!out.some(w => w.id === "conflict") && c < r.cmin) out.push({ id: "carbs", text: `Carbs below ${r1(FIT().phaseParams[r.phase.phase]?.cmin)} g/kg` });
+  return out;
+}
 function trendAt(date) { return energyAt(date)?.trend || trendSimple(date); }
 function trendSimple(date) {
   const all = weightsSeries(true).filter(([d]) => d <= date); if (!all.length) return FIT().profile.startWeight || S.settings.weight || 75;
@@ -4512,7 +4556,7 @@ function topFoods(dates, basis) {
   for (const d of dates) { const day = S.days[d]; if (!day) continue; for (const [, it] of dayItems(day)) { if (basis === "eaten" && !it.eaten) continue; if (it.kind === "quick") continue; const k = it.kind + ":" + it.ref; c[k] = c[k] || { it, n: 0, kcal: 0 }; c[k].n++; c[k].kcal += itemMacros(it).kcal; } }
   const top = Object.values(c).sort((a, b) => b.kcal - a.kcal).slice(0, 6); if (!top.length) return "";
   const mx = top[0].kcal || 1;
-  return `<div class="section-h"><h2>Biggest calorie sources</h2></div><div class="card pad">${top.map(t => `<div class="adh" style="--c:var(--ink);grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 70px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(itemName(t.it))}</span><span class="bar"><i style="width:${t.kcal / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtN(t.kcal)}<br><small class="faint">${t.n}×</small></span></div>`).join("")}</div>`;
+  return `<div class="section-h"><h2>Biggest calorie sources</h2></div><div class="card pad">${top.map(t => `<div class="adh" style="--c:var(--ink)"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(itemName(t.it))}">${esc(itemName(t.it))}</span><span class="bar"><i style="width:${t.kcal / mx * 100}%;opacity:.8"></i></span><span class="v">${fmtN(t.kcal)}<br><small class="faint">${t.n}×</small></span></div>`).join("")}</div>`;
 }
 /* ================= charts (SVG, drawn to scale) ================= */
 function chartW(half) { /* the width the chart really has (page next to the menu, minus padding), at most 1040 so the drawing is never stretched: text keeps its size */ const full = clamp(innerWidth - (innerWidth >= 1024 ? 288 : innerWidth >= 600 ? 96 : 0) - 64, 280, 1040); return half && innerWidth >= 560 ? Math.floor((full - 14) / 2) : full; }
@@ -4712,11 +4756,11 @@ function sessionChip(date) {
     <span class="session-t"><b>${esc(lab)}</b><small>${src}${added > 0 ? ` · adds ${fmtN(added)} kcal` : ""}${T.custom ? " · custom targets" : ""}</small></span>${ic("chevR", "sm")}</button>`;
 }
 function smartStrip(date) {
-  const r = energyAt(date); const ph = r.phase; const today = todayISO();
+  const r = energyAt(date); const today = todayISO();
   const inWeek = date >= weekStartOf(today) && date <= addDays(weekStartOf(today), 6) && date >= today;
   const wb = inWeek ? weekBudget() : null;
   const T = targetsFor(date);
-  return `<div class="estrip">${r.factor !== 1 ? `<span>Calibration <b>×${r.factor.toFixed(2)}</b></span>` : ""}${wb ? `<span>Left per day this week <b>${fmtN(wb.leftPerDay)}</b></span>` : ""}${T.c < r.cmin ? `<span style="color:var(--warn)">Carbs below ${r1(FIT().phaseParams[ph.phase]?.cmin)} g/kg</span>` : ""}</div>`;
+  return `<div class="estrip">${r.factor !== 1 ? `<span>Calibration <b>×${r.factor.toFixed(2)}</b>${r.calRel ? ` · ${r.calRel}` : ""}</span>` : ""}${wb ? `<span>Left per day this week <b>${fmtN(wb.leftPerDay)}</b></span>` : ""}${energyWarnings(r, T.c).map(w => `<span style="color:var(--warn)">${w.text}</span>`).join("")}</div>`;
 }
 function readinessDot() {
   const L = loadState(); if (!L.ready) return "";
@@ -5431,7 +5475,7 @@ SHEETS.checkin = sh => {
   body += past && !sh.energy ? `<button class="ci-more" data-act="ci-energy" aria-expanded="false"><span><b>Energy for this day</b><small>TDEE ${fmtN(r.tdee)} · target ${fmtN(r.target)}${r.intake ? ` · balance ${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : ""}</small></span>${ic("chevD", "sm")}</button>` : `${profileNote()}<div class="field"><span class="flabel">Energy for this day</span>${deficitHTML(d)}<div class="card">
     ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), NEAT_SRC[r.neatSrc] || "average of the last 7 days")}
     ${row("Training", fmtN(r.eat), r.sess.list.length ? `${(SESS_SRC[r.sess.src] || "").toLowerCase()} · ${esc(r.sess.list.map(w => `${w.note || w.sport} ${fmtN(sessionKcal(w, d).kcal)}`).join(" + "))}` : "rest")}${row("Digestion (TEF)", fmtN(r.tef), `${r0(E.tef * 100)}% of the above`)}
-    ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
+    ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : FIT().energy.calMode === "v2" ? "calibration 1.00 (v2 needs 3 weeks of log, 8 weigh-ins and food on 70% of the days)" : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
     ${row(esc(r.phase.phase), (v => (v > 0 ? "+" : "") + fmtN(v))(phaseKcal(r.phase, r.tdee)), `kcal/day vs TDEE${r.phase.phase === "Maintenance" && +r.phase.pct > 0 && !(+r.phase.kcal) ? ` (${r.phase.pct}% deficit)` : ""}`)}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
     ${r.intake ? row("Balance", (r.balance > 0 ? "+" : "") + fmtN(r.balance), `≈ ${sgn(r.estKg * 1000, 0)} g of body weight`) : ""}</div></div>`;
   return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, titleHTML: dayNavHTML(d, "ci-go"), body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
@@ -5573,9 +5617,11 @@ function fitSettings() {
   h += grp("Phase rules · grams per kg", tbl(["Phase", "Protein g/kg", "Fat g/kg", "Min carbs g/kg", "Weekly change min %", "max %"], ["Cut", "Bulk", "Maintenance"].map(p => `<tr><td><b>${p}</b></td>${["p", "f", "cmin"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${f.phaseParams[p][k]}" data-fit="phaseParams.${p}.${k}" data-t="num"></td>`).join("")}${["wmin", "wmax"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${r1(f.phaseParams[p][k] * 100 * 10) / 10}" data-fit="phaseParams.${p}.${k}" data-t="pct"></td>`).join("")}</tr>`)) + `<div class="faint" style="font-size:12.5px">Protein and fat = g/kg × trend weight; carbs fill the rest. Cut: protein 1.7–2.5, fat 0.7–0.8, lose 0.5–1% per week. Bulk: +10–15% calories, carbs ≥ 4 g/kg. Maintenance: protein 1.4–2, carbs 4–5+.</div>`);
   h += grp("Energy model", `<div class="grid2">${fitSel("energy.bmr", "BMR formula", [["Mifflin-St Jeor", "Mifflin-St Jeor"], ["Harris-Benedict", "Harris-Benedict"], ["MET", "MET (kg × 24)"]])}${fitSel("energy.watchMode", "Your watch's daily number", [["active", "Active kcal (incl. workouts)"], ["neat", "NEAT only (excl. workouts)"], ["total", "Total kcal (BMR + activity)"]])}
     ${fitIn("energy.neat", "Default NEAT", "kcal")}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitIn("energy.kcalPerKg", "kcal per kg of weight", "kcal")}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitIn("energy.hbBonus", "Harris-Benedict lean bonus", "kcal/pt")}${fitIn("energy.hbThr", "…below body fat", "%")}</div>
-    <div class="flabel" style="margin-top:6px">Calibration on your real weight trend (14 days)</div><div class="grid4">${fitIn("energy.calMinIntake", "Min days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>
-    <div class="flabel" style="margin-top:6px">Coaching</div><div class="grid4">${fitIn("energy.kcalStep", "Suggested step", "kcal")}${fitIn("energy.dietBreakWeeks", "Cut weeks before a break")}${fitIn("energy.minWeighWeek", "Min weigh-ins / week")}</div>
-    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. Data-driven TDEE = average intake − trend change × kcal/kg ÷ 14.</div>`);
+    <div class="flabel" style="margin-top:6px">Calibration on your real weight trend</div><div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"]])}${fitSel("energy.warn", "Target warnings", [["on", "On"], ["off", "Off"]])}</div>
+    <div class="grid4">${fitIn("energy.calV2From", "v2 starts on", "", "date")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}</div>
+    <div class="grid4">${fitIn("energy.calMinIntake", "Legacy: days with intake")}${fitIn("energy.calMinWeigh", "Legacy: weigh-ins")}${fitIn("energy.calLo", "Legacy: factor min")}${fitIn("energy.calHi", "Legacy: factor max")}</div>
+    <div class="flabel" style="margin-top:6px">Coaching</div><div class="grid4">${fitIn("energy.kcalStep", "Suggested step", "kcal")}${fitIn("energy.dietBreakWeeks", "Weeks before a break")}${fitIn("energy.minWeighWeek", "Min weigh-ins / week")}</div>
+    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. Data-driven TDEE = average intake − weight slope × kcal/kg. v2 fits a line through 28 days of weigh-ins (it needs food typed on 70% of them; an empty start date means from the first day), pulls the factor toward 1 when the slope is uncertain and moves it by at most the weekly limit; days before the start date keep their legacy factor.</div>`);
   h += grp("Sports and workout calories", `<div class="card">${f.sports.map((s, i) => `<div class="lrow" style="grid-template-columns:minmax(0,1fr) 100px 36px;gap:8px"><input id="sp-n-${i}" class="inp" value="${esc(s.name)}" data-sp="name" data-i="${i}" aria-label="Sport name"><div class="unit-inp"><input id="sp-m-${i}" class="inp" inputmode="decimal" value="${s.met}" data-sp="met" data-i="${i}" aria-label="MET"><span>MET</span></div><button class="icon-btn" data-act="sp-del" data-i="${i}" aria-label="Remove sport">${ic("close", "sm")}</button></div>`).join("")}</div>
     <button class="btn soft sm" data-act="sp-add" style="align-self:flex-start">${ic("plus", "sm")}Add sport</button>
     <div class="grid4">${fitIn("intMult.Light", "Light × MET")}${fitIn("intMult.Moderate", "Moderate × MET")}${fitIn("intMult.Hard", "Hard × MET")}${fitIn("runKcalKgKm", "Run kcal/kg/km")}</div>
@@ -11261,9 +11307,8 @@ function aeeShadowCard() {
   const SRC = { steps: "steps", borrowed: "typical day (run or walk that day)", none: "no steps" }, Q = { high: "high", medium: "medium", low: "low" };
   const rows = days.map(d => { const a = aeeShadow(d), it = a.eat.items.map(x => x.pick ? `${x.pick.m} ${fmtN(x.pick.kcal)}` : "—").join(" + ");
     return `<tr><td>${fmtDM(d)}</td><td class="n">${a.neat.steps != null ? fmtN(a.neat.steps) : "—"}</td><td class="n">${fmtN(r0(a.legacy.neat))} → ${a.neat.total != null ? `<b>${fmtN(a.neat.total)}</b>` : "—"}<small class="faint"> ${esc(SRC[a.neat.src] || "")}${a.neat.q ? ` · ${Q[a.neat.q]}` : ""}</small></td><td class="n">${fmtN(r0(a.legacy.eat))} → <b>${fmtN(a.eat.total)}</b><small class="faint"> ${esc(it)}</small></td><td class="n">${fmtN(r0(a.legacy.aee))} → ${a.aee != null ? `<b>${fmtN(a.aee)}</b>` : "—"}</td></tr>`; }).join("");
-  return `<details class="aee-shadow card"><summary class="lrow"><span style="min-width:0"><span class="t">AEE in the shadow</span><span class="s">not used for your targets · an independent estimate beside the figure in use</span></span></summary>
-    <div class="pad"><div class="faint" style="font-size:12.5px;margin:0 0 8px">Training (EAT) from the best data each session has; daily movement (NEAT) from the steps outside workouts. All net of resting energy. ${B.n ? `Against your own watch figures on ${B.n} past days (each day left out of what is learned): the shadow is ${B.bias >= 0 ? "+" : "−"}${fmtN(r0(Math.abs(B.bias)))} kcal on average, typical gap ${fmtN(r0(B.mae))} kcal. Your watch figure is itself an estimate.` : "Not enough days with both your watch figure and steps to compare yet."}</div>
-    <div class="tbl-scroll"><table class="aee-t"><thead><tr><th>Day</th><th>Steps</th><th>NEAT now → shadow</th><th>EAT now → shadow</th><th>AEE now → shadow</th></tr></thead><tbody>${rows}</tbody></table></div></div></details>`;
+  return foldOne("energy", "AEE in the shadow", "not used for your targets", "", () => `<div class="aee-shadow"><div class="faint" style="font-size:12.5px;margin:0 0 8px">Each cell reads: figure in use → shadow. Training (EAT) from the best data each session has; daily movement (NEAT) from the steps outside workouts. All net of resting energy. ${B.n ? `Against your own watch figures on ${B.n} past days (each day left out of what is learned): the shadow is ${B.bias >= 0 ? "+" : "−"}${fmtN(r0(Math.abs(B.bias)))} kcal on average, typical gap ${fmtN(r0(B.mae))} kcal. Your watch figure is itself an estimate.` : "Not enough days with both your watch figure and steps to compare yet."}</div>
+    <div class="tbl-scroll"><table class="aee-t"><thead><tr><th>Day</th><th>Steps</th><th>NEAT</th><th>EAT</th><th>AEE</th></tr></thead><tbody>${rows}</tbody></table></div></div>`);
 }
 const profileGaps = () => { const p = FIT().profile || {}, g = []; if (!p.dob) g.push("date of birth (age 30 is assumed)"); return g; };
 const profileNote = () => { const g = profileGaps(); return g.length ? `<div class="note warn" role="note">Energy numbers are provisional: ${esc(g.join(", "))} missing. <button class="link" data-act="tab" data-tab="settings">Add it in Settings</button></div>` : ""; };
@@ -11274,7 +11319,7 @@ function energyView() {
   const mif = 10 * w + 6.25 * h - 5 * age + (F ? -161 : 5), hb = F ? 655.1 + 9.563 * w + 1.85 * h - 4.676 * age : 66.5 + 13.75 * w + 5.003 * h - 6.775 * age, km = bf != null ? 370 + 21.6 * w * (1 - bf / 100) : null;
   const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
   const L7 = last(7);
-  const parts = [["BMR", r.bmr, "var(--accent)"], ["Daily activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
+  const parts = [["BMR", r.bmr, "var(--accent)"], ["Activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
   let hh = `${profileNote()}<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
     <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
@@ -13697,11 +13742,11 @@ function modelCheck(days = 28) {
 function accuracyHTML() {
   const M = modelCheck(), R = learnedRates(), fit = FIT(), today = todayISO(), r = energyAt(today), st = ovStats();
   let h = `<div class="section-h"><h2>Is the model right? · 28 days</h2></div>`;
-  if (M.measured == null) h += `<div class="note">Needs 10 days of logged food and 8 weigh-ins in the last 4 weeks (now ${M.nI} and ${M.nW}). Until then Engine uses the formulas as they are.</div>`;
+  if (M.measured == null) h += `<div class="note">Needs 10 days of logged food and 8 weigh-ins in the last 4 weeks (now ${M.nI} and ${M.nW}). Until then Engine uses the formulas as they are${FIT().energy.calMode === "v2" ? "; the correction needs 3 weeks of log and food on 70% of the days" : ""}.</div>`;
   else {
     const pct = M.gap / M.formula * 100, sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
     h += `<div class="stat-grid four">${kpi(fmtN(M.formula), "TDEE, formulas")}${kpi(fmtN(M.measured), "TDEE, measured", `intake − scale · ${M.nI} days · ${M.nW} weigh-ins`)}${kpi(sg(M.real), "real balance / day", `planned ${sg(M.plan)}`)}${kpi(`×${r.factor.toFixed(2)}`, "correction in use", Math.abs(pct) < 4 ? "formulas match you" : `formulas ${pct < 0 ? "too high" : "too low"} by ${r0(Math.abs(pct))}%`)}</div>
-    <div class="faint" style="font-size:12.5px">Intake vs formulas predicted ${sgn(M.expKg)} kg, the scale shows ${sgn(M.actKg)} kg. ${Math.abs(M.gap) < 80 ? "Your log and the formulas agree." : `That's about ${fmtN(Math.abs(M.gap))} kcal/day ${M.gap < 0 ? "fewer burned (or eaten but not logged)" : "more burned than the formulas say"}: the correction already accounts for it.`}</div>`;
+    <div class="faint" style="font-size:12.5px">Intake vs formulas predicted ${sgn(M.expKg)} kg, the scale shows ${sgn(M.actKg)} kg. ${Math.abs(M.gap) < 80 ? "Your log and the formulas agree." : `That's about ${fmtN(Math.abs(M.gap))} kcal/day ${M.gap < 0 ? "fewer burned (or eaten but not logged)" : "more burned than the formulas say"}: ${FIT().energy.calMode === "v2" ? `the correction closes it step by step (at most ${fmtN(FIT().energy.calWeekKcal || 100)} kcal a week, pulled toward 1 while the slope is uncertain)` : "the correction already accounts for it"}.`}</div>`;
   }
   const rows = fit.sports.filter(sp => R[sp.name] && (R[sp.name].n > 0 || sp.name === fit.runSport)).map(sp => { const x = R[sp.name], own = x.source === "own";
     const km = sp.name === fit.runSport ? ` · ${fmtN(x.kmRate)} kcal/km${x.kmSource === "own" ? "" : " (formula)"}` : "";
@@ -14149,7 +14194,7 @@ function raceSection() {
   const mu = Math.max(0, ...(S.train.calis || []).filter(c => lvEx(c.ex || "") === "mu" && c.test === "Max reps (BW)").map(c => +c.val || 0)), stg = raceStageToday();
   let h = `<div class="section-h"><h2>Race circuits</h2></div><div class="card"><button class="lrow" data-act="race-stage"><span><span class="t">Stage: Fire Set + Cut</span><span class="s">${esc(fire.name)}, ${R.rest} min rest, then ${esc(cutC.name)}${stg ? ` · today ${fmtClock(stg.a)} + ${fmtClock(stg.b)} = ${fmtClock(stg.sum)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>${L.map((c, i) => { const b = raceBest(c.name); return `<button class="lrow" data-act="circ-start" data-i="${i}"><span><span class="t">${esc(c.name)}</span><span class="s">${c.steps.map(s => `${s.reps} ${esc(s.name)}`).join(" · ")}${c.cap ? ` · limit ${fmtClock(c.cap)}` : ""}${b != null ? ` · best ${fmtClock(b)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>`; }).join("")}</div>
     <div class="field"><span class="flabel">Your category</span><div class="chips">${SEL.fires.map(c => `<button class="chip sm" data-act="race-fire" data-n="${esc(c.name)}" aria-pressed="${c.name === fire.name}">${esc(c.name.replace(/^Fire Set \(|\)$/g, "") || c.name)}</button>`).join("")}</div>${SEL.cuts.length > 1 ? `<div class="chips" style="margin-top:6px">${SEL.cuts.map(c => `<button class="chip sm" data-act="race-cut" data-n="${esc(c.name)}" aria-pressed="${c.name === cutC.name}">${esc(c.name)}</button>`).join("")}</div>` : ""}</div>
-    <div class="grid2"><div class="field"><label for="rk-rest">Rest between circuits</label><div class="unit-inp"><input id="rk-rest" class="inp" inputmode="decimal" value="${esc(R.rest)}" data-chg="race-rest"><span>min</span></div></div><div class="field"><span class="flabel">Save as a workout</span><div class="chips"><button class="chip sm" data-act="circ-save" data-i="stage">Stage</button><button class="chip sm" data-act="circ-save" data-i="${L.indexOf(fire)}">Fire Set</button><button class="chip sm" data-act="circ-save" data-i="${L.indexOf(cutC)}">Cut</button></div></div></div>
+    <div class="grid2" style="align-items:start"><div class="field"><label for="rk-rest">Rest between circuits</label><div class="unit-inp"><input id="rk-rest" class="inp" inputmode="decimal" value="${esc(R.rest)}" data-chg="race-rest"><span>min</span></div></div><div class="field"><label>Save as a workout</label><div class="chips"><button class="chip sm" data-act="circ-save" data-i="stage">Stage</button><button class="chip sm" data-act="circ-save" data-i="${L.indexOf(fire)}">Fire Set</button><button class="chip sm" data-act="circ-save" data-i="${L.indexOf(cutC)}">Cut</button></div></div></div>
     <div class="faint" style="font-size:12.5px">Live: a count-in, then the voice calls each station and its reps the moment you tap Done; the whole circuit stays on screen with the splits. The Fire Set has one 6′ limit for the whole set; the cut has its own. In Train › Workouts a saved circuit can be planned like any workout, or written by hand: a block titled “… race 6 min” followed by “- 5 Pull-up” lines. Name a circuit and write its stations in Settings › Training (“5 Pull-up · 10 Dip · …”) to get it here.</div>`;
   h += `<div class="section-h"><h2>Endurance Cup ranking</h2><button class="link" data-act="race-stage-add">${ic("plus", "sm")} Stage</button></div>
     <div class="chips scroll">${raceSeasons().map(x => `<button class="chip sm" data-act="race-season" data-id="${x.id}" aria-pressed="${x.id === q.id}">${esc(x.name)}</button>`).join("")}<button class="chip sm" data-act="race-season-new">${ic("plus", "sm")} New season</button></div>
@@ -14194,10 +14239,10 @@ function raceAdvice(fb, cb, tgt, sp, mu, R, SS) {
   if (sp) a.push(`Slowest on your last Fire Set: ${sp.ex.slice(0, 2).map(x => `${esc(x.name)} ${r1(x.per)} s/rep`).join(", ")}. Train it in clusters (2 to 3 reps, 10 s rest).`);
   if (!mu && !nx) a.push("Blocks 2 and 3 start with a muscle-up: log your max strict muscle-ups under Calisthenics tests to track it.");
   a.push("Two Fire Set sessions a week at race effort with 4 to 5′ rest, and test your max reps every 4 to 6 weeks.");
-  return `<div class="card pad rk"><span class="flabel">Advice</span><ul class="wk-tips">${a.map(x => `<li>${x}</li>`).join("")}</ul>
-    <details class="rk-paste"><summary class="lrow"><span class="t">Season settings</span></summary><div class="grid2" style="margin-top:8px"><div class="field"><label for="rk-sn">Name</label><input id="rk-sn" class="inp" value="${esc(q.name)}" data-chg="race-season-name"></div><div class="field"><label for="rk-ss">My times count from</label><input id="rk-ss" type="date" class="inp" value="${esc(q.start || "")}" data-chg="race-season-start"></div></div>
+  return `<div class="card pad rk"><span class="flabel">Advice</span><ul class="wk-tips">${a.map(x => `<li>${x}</li>`).join("")}</ul></div>
+    <details class="card rk-more"><summary class="lrow"><span class="t">Season settings</span></summary><div class="grid2" style="margin-top:8px"><div class="field"><label for="rk-sn">Name</label><input id="rk-sn" class="inp" value="${esc(q.name)}" data-chg="race-season-name"></div><div class="field"><label for="rk-ss">My times count from</label><input id="rk-ss" type="date" class="inp" value="${esc(q.start || "")}" data-chg="race-season-start"></div></div>
       <div class="row" style="gap:8px;margin-top:8px"><button class="btn ghost sm" data-act="race-season-reset">${ic("trash", "sm")} Reset ranking (${SS.length} stage${SS.length === 1 ? "" : "s"})</button>${raceSeasons().length > 1 ? `<button class="btn ghost sm" data-act="race-season-del">Delete season</button>` : ""}</div>
-      <div class="faint" style="font-size:12.5px;margin-top:6px">The rules change every year: start a new season and the ranking, the stage tables and your best times start again, the old season stays under its name. Your results are never deleted.</div></details></div>`;
+      <div class="faint" style="font-size:12.5px;margin-top:6px">The rules change every year: start a new season and the ranking, the stage tables and your best times start again, the old season stays under its name. Your results are never deleted.</div></details>`;
 }
 ACT["race-season"] = el => { raceSeasons(); RACE().season = el.dataset.id; saveWK(); scheduleRender(); };
 ACT["race-season-new"] = () => { const R = RACE(), L = raceSeasons(); const q = { id: puid("ss"), name: `Season ${new Date().getFullYear() + (L.some(x => x.name === `Season ${new Date().getFullYear()}`) ? 1 : 0)}`, start: todayISO() }; L.push(q); R.season = q.id; saveWK(); scheduleRender(); toast(`${q.name} started: its ranking is empty`); };

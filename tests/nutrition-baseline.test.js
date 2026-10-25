@@ -61,10 +61,10 @@ test("EAT: a device kcal value is used as it is (no gross→net conversion), a p
   near(r.metKcal, r.expectedNet, 1);            // net of the resting MET already counted in BMR
 });
 
-test("KNOWN (D8): calibration swings with ordinary weight noise: same person, same intake: the factor ranges over more than 0.15 and the daily target over more than 300 kcal", async () => {
+test("KNOWN (D8, legacy calibration only; v2 is steady: see m7b.test.js): calibration swings with ordinary weight noise: same person, same intake: the factor ranges over more than 0.15 and the daily target over more than 300 kcal", async () => {
   const run = sd => ev(sd => {
     let seed = 12345; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296, gauss = () => { let s = 0; for (let i = 0; i < 12; i++) s += rnd(); return s - 6; };
-    const t = todayISO(), start = addDays(t, -60); S.logm = {};
+    const t = todayISO(), start = addDays(t, -60); S.logm = {}; FIT().energy.calMode = "legacy";
     for (let i = 0; i <= 60; i++) { const d = addDays(start, i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { weight: +(80 + gauss() * sd).toFixed(1), kcal: 2343, p: 150, c: 250, f: 80 }; }
     FIT().trackStart = start; DATA_V++;
     const s = energySeries(), fs = [], tg = []; for (let i = 20; i <= 60; i++) { const r = s.rows[addDays(start, i)]; fs.push(r.factor); tg.push(r.target); }
