@@ -87,8 +87,11 @@ test("Settings: the BMR select offers the three formulas plus MET, the bonus has
     const grids = [...d.querySelectorAll(".grid2")].filter(g => g.querySelector("#fit-energy-bmr") || g.querySelector("#fit-energy-hbBonusOn")).map(g => g.children.length);
     return { sel, on: lab("hbBonusOn"), grids, text: d.textContent }; });
   assert.deepEqual(r.sel, ["Mifflin-St Jeor", "Harris-Benedict", "Ten Haaf (weight)", "MET"]);
-  assert.equal(r.on, "Lean bonus (not part of the published equation)");
+  assert.equal(r.on, undefined, "the lean bonus switch shows only with Harris-Benedict");
   assert.ok(r.grids.every(n => n % 2 === 0), "odd grid " + r.grids);
+  const hb = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; FIT().energy.hbBonusOn = "off"; DATA_V++; const d = document.createElement("div"); d.innerHTML = fitSettings(); const off = d.querySelector('label[for="fit-energy-hbBonusOn"]')?.textContent, offFields = !!d.querySelector("#fit-energy-hbBonus");
+    FIT().energy.hbBonusOn = "on"; DATA_V++; d.innerHTML = fitSettings(); const onFields = !!d.querySelector("#fit-energy-hbBonus") && !!d.querySelector("#fit-energy-hbThr"); FIT().energy.bmr = "Mifflin-St Jeor"; return { off, offFields, onFields, note: /not part of the published equation/.test(d.textContent) }; });
+  assert.deepEqual(hb, { off: "Lean bonus", offFields: false, onFields: true, note: true });
   assert.match(r.text, /90 recreational athletes aged 18–35/);
 });
 

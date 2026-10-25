@@ -48,7 +48,7 @@ test("Season › Races: a closed «Race plan» section per upcoming race, PRE / 
     S.train.races = [{ id: "r1", name: "Test 10k", date: addDays(t, 10), sport: FIT().runSport, km: 10, pri: "A" }, { id: "r2", name: "Old half", date: addDays(t, -3), sport: FIT().runSport, km: 21.0975, pri: "B" }, { id: "r3", name: "Ancient", date: addDays(t, -30), sport: FIT().runSport, km: 10, pri: "B" }];
     UI.tab = "train"; UI.trainSeg = "season"; UI.fold = {}; render();
     const closed = [...document.querySelectorAll(".rec-h")].map(e => e.textContent).filter(x => /Race plan/.test(x));
-    UI.fold = { raceplan: { [`Race plan · Test 10k · ${fmtDM(addDays(t, 10))}`]: true, [`Race plan · Old half · ${fmtDM(addDays(t, -3))}`]: true } }; render();
+    UI.fold = { raceplan: { ["Race plan · Test 10k"]: true, ["Race plan · Old half"]: true } }; render();
     const txt = [...document.querySelectorAll(".rec-b")].map(e => e.textContent).join("|");
     return { closed, txt }; });
   assert.equal(r.closed.length, 2, "two sections (the 30-days-old race has none)");
