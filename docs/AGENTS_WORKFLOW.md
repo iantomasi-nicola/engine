@@ -9,6 +9,7 @@ Gli agenti stanno in `.claude/agents/` (sono file della repo: ogni sessione li t
 | `test-runner` | Haiku | basso | Dopo ogni gruppo di modifiche: lancia `npm run verify` e `layout-audit` in background, legge i log, restituisce il verdetto compatto con i test falliti | No |
 | `code-guard` | Sonnet 5.5 | high | Su ogni diff non banale **prima** dei test: TDZ, nomi duplicati, wrapper, codice morto, formule vietate, test-prima, documenti | No |
 | `design-reviewer` | Opus 5.5 | high | Prima di ogni commit che cambia ciò che si vede, e dopo le correzioni: guarda gli screenshot reali su 390/820/1440, chiaro e scuro | No |
+| `area-auditor` | Sonnet 5.5 (Opus per le aree critiche) | high | Revisione integrale (M14b): una istanza per area, in parallelo, sola lettura, difetti confermati con riproduzione, formato fisso | No |
 | `milestone-builder` | Sonnet 5.5 (Opus per lavori ambigui) | high | Una milestone media e delimitata, in un worktree isolato, su un proprio ramo | Sì (suo ramo) |
 | `docs-keeper` | Sonnet 5.5 | medium | Fine milestone e passaggi di consegne: allinea backlog, roadmap, cleanup, handoff, prompt; mappa le richieste dell'utente (fatto / milestone / lacuna) | Solo `docs/` |
 | `release-manager` | Sonnet 5.5 | medium | Fine gruppo: unisce i rami degli agenti, controlla verde, esegue `scripts/ship.sh`, scrive il riepilogo in italiano con SHA di rollback | Sì (pubblica) |
