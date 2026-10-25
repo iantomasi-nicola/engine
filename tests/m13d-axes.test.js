@@ -58,3 +58,22 @@ test("Energy and the other charts: y labels are unique, equally spaced and round
     await app.close(); app = null;
   }
 });
+
+/* every calculator (on a phone the plate list is a text field and takes a row of its own): the fields of a card sit on one grid (same width, same top in a row), every unit label on the same axis inside its field, and no field is cut */
+test("Tools calculators: fields on one grid, unit labels on one axis, 1RM output on one right axis", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop, wide]) {
+    const page = await start(vp);
+    const r = await page.evaluate(async () => { const out = [], ids = CALCS.map(c => c.id); UI.tc = { rm: { w: "100.5", r: "12", b: "80.5", f: "Epley" } };
+      for (const id of ids) { Object.assign(UI, { tab: "timer", toolSeg: "calc", toolOpen: id }); TMR.phase = "setup"; render(); await new Promise(x => setTimeout(x, 60));
+        const g = document.querySelector(".tc-f"), f = [...g.children].map(e => e.getBoundingClientRect()), inp = [...g.querySelectorAll(".field:not(.tc-w) .unit-inp")].map(u => { const e = u.querySelector(".inp"), i = e.getBoundingClientRect(), s = u.querySelector("span"); return { w: Math.round(i.width), over: e.scrollWidth > e.clientWidth, gap: s ? Math.round((i.right - s.getBoundingClientRect().right) * 10) / 10 : null }; });
+        const rows = [...new Set(f.map(q => Math.round(q.top)))].length; out.push({ id, n: f.length, rows, widths: [...new Set(inp.map(i => i.w))], gaps: [...new Set(inp.map(i => i.gap).filter(x => x != null))], over: inp.some(i => i.over), right: Math.round(g.getBoundingClientRect().right) - Math.round(Math.max(...f.map(q => q.right))) }); }
+      Object.assign(UI, { toolOpen: "rm" }); render(); await new Promise(x => setTimeout(x, 60));
+      const edge = el => Math.round(el.getBoundingClientRect().right), one = [...document.querySelectorAll(".tc-one .end")].map(edge), reps = [...document.querySelectorAll(".tc-reps > div > b")].map(edge), top = document.querySelector(".tc-top .an-k:last-child b");
+      return { out, one: [...new Set(one)], reps: [...new Set(reps)], topH: Math.round(top.getBoundingClientRect().height), topLine: parseFloat(getComputedStyle(top).lineHeight) }; });
+    for (const c of r.out) { const want = vp.width >= 560 ? 1 : c.id === "plates" ? 2 : c.n > 3 ? Math.ceil(c.n / 2) : 1; assert.equal(c.rows, want, `${vp.width}px ${c.id}: ${c.rows} rows`); assert.equal(c.widths.length, 1, `${vp.width}px ${c.id} widths ${c.widths}`); assert.ok(c.gaps.length <= 1, `${vp.width}px ${c.id} unit axis ${c.gaps}`); assert.ok(!c.over, `${vp.width}px ${c.id} input cut`); assert.ok(c.right >= 0 && c.right < 2, `${vp.width}px ${c.id} grid not filled: ${c.right}`); }
+    assert.equal(r.one.length, 1, "formula list on one right edge"); assert.equal(r.reps.length, 1, "reps table on one right edge"); assert.equal(r.one[0], r.reps[0], "list and table share the right axis");
+    assert.ok(r.topH < r.topLine * 1.6, "range stays on one line: " + r.topH);
+    assert.deepEqual(app.errors, []);
+    await app.close(); app = null;
+  }
+});
