@@ -9259,6 +9259,38 @@ function raceInsight(r) {
   out.phase = d < 0 ? "past" : d === 0 ? "race day" : d <= 7 ? "race week" : d <= 14 ? "taper" : d <= 56 ? "build" : "base";
   return out;
 }
+/* Race plan (L19). Pure: km, sec (expected time), kg (weight trend), weekKm (running km in the last 7 days). Prudent, non-medical ranges, each with its assumption:
+   during-race carbs by duration (NUTRITION_SPEC §4: under 60 min none, up to 2.5 h 30-60 g/h, beyond 60-90 g/h, never 120 as a default); carbs 2 days before 5-7 g/kg (7-10 from 90 min);
+   breakfast 2-3 h before 1-2 g/kg; after the race protein 0.25-0.4 g/kg and carbs 0.5-1.0 g/kg (1.0-1.2 from 90 min); taper -20-30% km (-40-50% from half marathon);
+   fluids 400-800 ml/h from 60 min, otherwise to thirst; start 3-5 s/km slower than the average pace. Without time/weight/km: no number. */
+function racePlan({ km, sec, kg, weekKm } = {}) {
+  const dur = sec > 0 ? sec / 60 : null, long = dur != null && dur >= 90, big = km >= 21, rg = (a, b) => kg > 0 ? [Math.round(kg * a), Math.round(kg * b)] : null;
+  const fuel = dur == null ? null : dur < 60 ? { need: false, lo: 0, hi: 0 } : dur <= 150 ? { need: true, lo: 30, hi: 60 } : { need: true, lo: 60, hi: 90 };
+  const cut = big ? [.4, .5] : [.2, .3], avg = km > 0 && sec > 0 ? sec / km : null;
+  return {
+    long, fuel,
+    pre: { taper: weekKm > 0 ? { pct: cut.map(x => x * 100), km: [Math.round(weekKm * (1 - cut[1])), Math.round(weekKm * (1 - cut[0]))] } : null,
+      carbs: { gkg: long ? [7, 10] : [5, 7], g: rg(long ? 7 : 5, long ? 10 : 7) }, sleepH: [7, 9] },
+    day: { breakfast: { gkg: [1, 2], g: rg(1, 2) }, fluidMl: dur != null && dur >= 60 ? [400, 800] : null, start: avg ? { secKm: [Math.round(avg + 3), Math.round(avg + 5)] } : null },
+    post: { protein: { gkg: [.25, .4], g: rg(.25, .4) }, carbs: { gkg: long ? [1, 1.2] : [.5, 1], g: long ? rg(1, 1.2) : rg(.5, 1) }, easyDays: big ? 3 : 2 }
+  };
+}
+function raceWeekKm() { let km = 0; for (let i = 0; i < 7; i++) for (const w of logGet(addDays(todayISO(), -i))?.workouts || []) if (sportFam(w.sport) === "run") km += +w.km || 0; return km; }
+function racePlanHTML(r) {
+  const I = raceInsight(r), days = I.days, sec = I.pred || I.goalSec || null, kg = trendNow(), P = racePlan({ km: isRunRace(r) ? r.km : 0, sec, kg, weekKm: raceWeekKm() });
+  const rr = (a, u = "", d = 0) => a ? `${+a[0].toFixed(d)}–${+a[1].toFixed(d)}${u}` : "", row = (t, s, e) => `<div class="lrow"><span style="min-width:0"><span class="t">${t}</span><span class="s">${s}</span></span>${e ? `<span class="end"><b class="num">${e}</b></span>` : ""}</div>`;
+  const gk = c => c.g ? rr(c.g, " g") : rr(c.gkg, " g/kg", 2), lab = t => `<div class="flabel" style="margin:12px 0 4px">${t}</div>`;
+  let h = `<div class="faint" style="font-size:12.5px">General indications, not medical advice. The ranges use your weight trend, the predicted (or goal) time and your running of the last 7 days; with something missing the number is left out.</div>`;
+  if (days >= 0) {
+    h += lab("Before · last 7 days") + `<div class="card">${row("Taper", "Cut the volume, keep a few short quicker efforts.", P.pre.taper ? rr(P.pre.taper.km, " km") : "")}${row("Carbohydrates, the 2 days before", `Per day, usual foods. ${P.long ? "Raised range because the effort should last 90 minutes or more." : "Normal range for an effort under 90 minutes."}`, gk(P.pre.carbs))}${row("Sleep", "Your usual hours; the two nights before count more than the last.", rr(P.pre.sleepH, " h"))}${row("Nothing new", "No new food, shoes or kit in the last week.", "")}</div>`;
+    h += lab("Race day") + `<div class="card">${row("Breakfast, 2–3 hours before", "Familiar, easy to digest, low in fibre and fat.", gk(P.day.breakfast) + " carbs")}${row("Fuelling during", !P.fuel ? "Needs a distance and a goal time (or a PB) to estimate the duration." : P.fuel.need ? "From the expected duration; start early, use what you trained with. 120 g/h is not a default." : "Under about an hour water is enough.", P.fuel ? (P.fuel.need ? `${P.fuel.lo}–${P.fuel.hi} g/h` : "Not needed") : "")}${row("Fluids", "Drink to thirst, don't force it. For sodium test your sweat in training (weigh before and after); no fixed number here.", P.day.fluidMl ? rr(P.day.fluidMl, " ml/h") : "To thirst")}${P.day.start ? row("Start pace", "First kilometre a little slower than the average of the predicted time.", `${fmtPace(P.day.start.secKm[0] / 60)}–${fmtPace(P.day.start.secKm[1] / 60)} /km`) : ""}</div>`;
+  }
+  h += lab("After") + `<div class="card">${row("Within the first hour", "Protein and carbohydrates with a meal or a drink you tolerate.", `${gk(P.post.protein)} protein`)}${row("Carbohydrates", "Together with the protein, then normal meals.", gk(P.post.carbs))}${row("Easy only", "Short and easy sessions, then build back gradually over the next week. If something keeps hurting, see a professional.", `${P.post.easyDays} days`)}</div>`;
+  return h;
+}
+const racePlanSum = r => daysBetween(todayISO(), r.date) < 0 ? "Recovery" : "Before · race day · after";
+function racePlans(list) { const t = todayISO();
+  return list.filter(r => r.date >= t || daysBetween(r.date, t) <= 7).map(r => foldOne("raceplan", `Race plan · ${r.name} · ${fmtDM(r.date)}`, racePlanSum(r), "", () => racePlanHTML(r))).join(""); }
 function raceCard(r, big = false) {
   const I = raceInsight(r), res = r.result || {};
   return `<button class="rc ${big ? "big" : ""}" data-act="rc-edit" data-id="${r.id}">
@@ -9270,6 +9302,7 @@ function trainRaces() {
   const t = todayISO(), dsc = UI.trainSeg === "season" ? UI.seasonD || "all" : "all", up = upcomingRaces().filter(r => raceDisc(r, dsc)), past = races().filter(r => (r.date < t || r.result?.done) && raceDisc(r, dsc)).sort((a, b) => b.date.localeCompare(a.date));
   let h = `<div class="section-h"><h2>Upcoming</h2><button class="link" data-act="rc-new">${ic("plus", "sm")} Race</button></div>`;
   h += up.length ? `<div class="rc-list">${up.map((r, i) => raceCard(r, i === 0)).join("")}</div>` : `<div class="empty slim"><p>Add your next competition: running races, calisthenics comps, Hyrox, anything. You get a countdown, predicted time, form on race day and taper tips.</p><button class="btn tonal" data-act="rc-new">${ic("plus", "sm")}Add a race</button></div>`;
+  h += racePlans([...up, ...past.filter(r => r.date < t && !up.includes(r))]);
   if (past.length) h += `<div class="section-h"><h2>Results</h2></div><div class="rc-list">${past.map(r => raceCard(r)).join("")}</div>`;
   return h;
 }
