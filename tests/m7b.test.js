@@ -8,14 +8,14 @@ const ev = (f, a) => app.page.evaluate(f, a);
 const profile = () => ev(() => { const t = todayISO(); Object.assign(FIT().profile, { sex: "Male", height: 180, startWeight: 80, bf: null, dob: addDays(t, -Math.round(30.4 * 365.25)) }); S.logm = {}; DATA_V++; });
 /* a log of N days ending today: weight(i) and a constant intake; mode picks the calibration, from = activation date of v2 ("" = from the first day) */
 const run = (o) => ev(o => {
-  const t = todayISO(), start = addDays(t, -o.days); S.logm = {}; FIT().energy.calMode = o.mode; FIT().energy.calV2From = o.from == null ? "" : o.from === "future" ? addDays(t, 10) : o.from;
+  const t = todayISO(), start = addDays(t, -o.days); S.logm = {}; FIT().energy.calMode = o.mode; FIT().energy.calManual = o.manual ?? null; FIT().energy.calV2From = o.from == null ? "" : o.from === "future" ? addDays(t, 10) : o.from;
   let seed = 12345; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296, gauss = () => { let s = 0; for (let i = 0; i < 12; i++) s += rnd(); return s - 6; };
   FIT().trackStart = start; FIT().phases = [{ start, phase: "Maintenance", kcal: 0 }]; DATA_V++;
   const I = o.intake || Math.round(energyAt(addDays(start, 1)).tdeeW);
   for (let i = 0; i <= o.days; i++) { const d = addDays(start, i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} };
     const w = 80 + (o.slope || 0) * i + gauss() * (o.sd || 0), L = { kcal: o.noIntake && i % 2 ? 0 : I, p: 150, c: 250, f: 80 }; if (!(o.weighEvery && i % o.weighEvery)) L.weight = +w.toFixed(2); S.logm[m].days[d] = L; }
   DATA_V++; const s = energySeries(), rows = []; for (let i = 0; i <= o.days; i++) rows.push(s.rows[addDays(start, i)]);
-  return { f: rows.map(r => r.factor), tg: rows.map(r => r.target), tdeeW: rows.map(r => r.tdeeW), rel: rows.map(r => r.calRel || null), I };
+  return { se: rows.map(r => r.tdeeSE), f: rows.map(r => r.factor), tg: rows.map(r => r.target), tdeeW: rows.map(r => r.tdeeW), rel: rows.map(r => r.calRel || null), I };
 }, o);
 const range = (a, from) => { const x = a.slice(from); return Math.max(...x) - Math.min(...x); };
 
@@ -23,7 +23,7 @@ test("v2 keeps the factor and the target steady under ordinary weight noise, whe
   await profile();
   const legacy = await run({ days: 60, sd: 0.4, mode: "legacy" }), v2 = await run({ days: 60, sd: 0.4, mode: "v2" });
   assert.ok(range(legacy.f, 20) > 0.15, "legacy swing " + range(legacy.f, 20));
-  assert.ok(range(v2.f, 20) < 0.08, "v2 factor range " + range(v2.f, 20));
+  assert.ok(range(v2.f, 20) < 0.1 && range(v2.f, 20) < range(legacy.f, 20) * 0.6, "v2 factor range " + range(v2.f, 20));
   assert.ok(range(v2.tg, 20) < 200 && range(v2.tg, 20) < range(legacy.tg, 20) / 2, `v2 target range ${range(v2.tg, 20)} vs legacy ${range(legacy.tg, 20)}`);
 });
 
@@ -36,12 +36,12 @@ test("v2 converges on the true factor: eating the modelled TDEE while the weight
   assert.ok(Math.abs(last - 0.9) < 0.02, "factor " + last);   // the modelled TDEE rises about 0.4 % with the 3 kg gained, hence the tolerance
 });
 
-test("v2 moves the factor by at most calWeekKcal / 7 kcal a day (a step of 100 / 7 / TDEE, about 0.006)", async () => {
+test("v2 moves the factor by at most calWeekKcal / 7 kcal a day, up to twice that with clean data (a step of 100 * (1 + w) / 7 / TDEE)", async () => {
   await profile();
   const base = await run({ days: 10, mode: "v2" }), r = await run({ days: 90, mode: "v2", slope: 0.1 * base.I / 7000, intake: base.I });
   let worst = 0; for (let i = 1; i < r.f.length; i++) worst = Math.max(worst, Math.abs(r.f[i] - r.f[i - 1]) * r.tdeeW[i] * 7);
-  assert.ok(worst <= 100 + 1e-6, "weekly kcal step " + worst);
-  assert.ok(worst > 50, "the factor does move (" + worst + ")");
+  assert.ok(worst <= 200 + 1e-6, "weekly kcal step " + worst);
+  assert.ok(worst > 150, "clean data: faster than the plain 100 (" + worst + ")");
 });
 
 test("v2 does nothing without enough data: under 21 days of log, under 8 weigh-ins, or intake typed on under 70 % of the days, the factor stays 1", async () => {
@@ -99,7 +99,7 @@ test("switching from legacy to v2 in the middle of a series moves the factor by 
   const base = await run({ days: 10, mode: "v2" }), r = await run({ days: 60, mode: "v2", from: d0, sd: 0.4, slope: 0.1 * base.I / 7000, intake: base.I });
   const i = 30;   // the day v2 starts: index 60 - 30
   let worst = 0; for (let k = i; k < i + 5; k++) worst = Math.max(worst, Math.abs(r.f[k] - r.f[k - 1]) * r.tdeeW[k] * 7);
-  assert.ok(worst <= 100 + 1e-6, "weekly kcal step at the boundary " + worst);
+  assert.ok(worst <= 200 + 1e-6, "weekly kcal step at the boundary " + worst);
 });
 
 test("warnings can be switched off, and an empty weekly limit falls back to 100 kcal instead of freezing the factor", async () => {
@@ -202,6 +202,22 @@ test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the
   assert.equal((await watchDay({ watch: 1000, dev: "net" })).neat, 400);
   assert.equal((await watchDay({ watch: 1000, net: "off" })).neat, 400);
   assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 600);   // total mode: the watch total holds the BMR and the gross session
+});
+
+test("calibration controls: a manual factor holds every day (0.9) and nothing is learned; Off keeps 1 whatever the data say", async () => {
+  await profile();
+  const base = await run({ days: 10, mode: "v2" }), drift = { days: 60, slope: 0.1 * base.I / 7000, intake: base.I };
+  const man = await run({ ...drift, mode: "v2", manual: 0.9 }); assert.ok(man.f.every(x => x === 0.9)); assert.ok(man.se.every(x => x == null));
+  const off = await run({ ...drift, mode: "off" }); assert.ok(off.f.every(x => x === 1));
+  const auto = await run({ ...drift, mode: "v2" }); assert.ok(Math.abs(auto.f[auto.f.length - 1] - 0.9) < 0.02, "it learns by itself: " + auto.f[auto.f.length - 1]);
+});
+test("the TDEE comes with its statistical uncertainty (posterior sd = tau u / sqrt(tau^2 + u^2) of the factor, times the TDEE): about 62 kcal with 0.4 kg of daily weight noise, none without enough data", async () => {
+  await profile();
+  // 28 days, slope error = 0.4 / sqrt(1827) = 0.0094 kg/day, u = 0.0094 * 7000 / 2343 = 0.028; tau = 0.08: sd = 0.0022 / 0.0848 = 0.0264; * 2343 = 62
+  const n = await run({ days: 60, sd: 0.4, mode: "v2" }); const se = n.se[n.se.length - 1]; assert.ok(se > 35 && se < 100, "se " + se);
+  const few = await run({ days: 15, mode: "v2" }); assert.ok(few.se.every(x => x == null));
+  const b = await ev(() => ({ a: tdeeBasis({ sess: { src: "logged", list: [{ sport: "Running" }] }, neatSrc: "stepsRef" }), b: tdeeBasis({ sess: { src: "dated", list: [{ sport: "Running" }] }, neatSrc: "stepsRefProj" }), c: tdeeBasis({ sess: { src: "none", list: [] }, neatSrc: "default" }) }));
+  assert.deepEqual(b, { a: "training logged · full-day steps", b: "planned training · steps so far plus a typical rest of the day", c: "no training · the default NEAT" });
 });
 
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });

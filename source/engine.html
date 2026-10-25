@@ -3520,7 +3520,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 7000, calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 7000, calMode: "v2", calManual: null, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3830,7 +3830,7 @@ function calibV2(rows, d, E) {
   const T = sT / nI, dataTdee = sI / nI - b * kpk, raw = dataTdee / T;
   const u = se * kpk / T, tau = E.calPrior || 0.08, w = tau * tau / (tau * tau + u * u);
   const band = E.calBand || 0.2, target = clamp(1 + w * (raw - 1), 1 - band, 1 + band);
-  return { raw, target, u, w, n, nI, nDays, dataTdee, rel: u <= 0.03 && n >= 14 ? "high" : u <= 0.06 ? "medium" : "low" };
+  return { raw, target, u, w, sd: tau * u / Math.sqrt(tau * tau + u * u), n, nI, nDays, dataTdee, rel: u <= 0.03 && n >= 14 ? "high" : u <= 0.06 ? "medium" : "low" };
 }
 /* resting energy by the formula chosen in Settings (kg, body fat %, years) */
 /* Harris-Benedict as published in 1918/1919 (kg, cm, years); coefficients in docs/NUTRITION_SPEC.md §5 */
@@ -3865,7 +3865,7 @@ function energySeries() {
     const end = addDays(today, 42);
     const rows = {}, order = [];
     let trend = prof.startWeight || S.settings.weight || 75, bf = prof.bf || null, factor = 1;
-    const wins = [], neats = [], baseVals = [], stepHist = [];
+    const wins = [], neats = [], baseVals = [], stepHist = []; let seKeep = null;
     for (let d = start; d <= end; d = addDays(d, 1)) {
       const L = logGet(d) || {};
       const wv = L.weight > 0 ? +L.weight : null; const real = L.estW ? null : wv;
@@ -3899,11 +3899,13 @@ function energySeries() {
       // calibration on the previous 14 days
       let dataTdee = null, f = 1, calRel = null;
       if (d <= today) {
-        if (E.calMode === "v2" && (!E.calV2From || d >= E.calV2From)) {
-          // v2: no data that passes the gates = the factor stays where it was; otherwise it moves toward the target by at most calWeekKcal a week
-          const c = calibV2(rows, d, E), step = (E.calWeekKcal > 0 ? E.calWeekKcal : 100) / 7 / tdeeW;
+        if (E.calManual > 0) f = clamp(+E.calManual, 0.5, 1.5);   // a factor you set yourself: nothing is learned
+        else if (E.calMode === "off") f = 1;
+        else if (E.calMode === "v2" && (!E.calV2From || d >= E.calV2From)) {
+          // v2: no data that passes the gates = the factor stays where it was; otherwise it moves toward the target by at most calWeekKcal a week, up to twice that when the data are clean (shrink weight w near 1)
+          const c = calibV2(rows, d, E), step = (E.calWeekKcal > 0 ? E.calWeekKcal : 100) * (c ? 1 + c.w : 1) / 7 / tdeeW;
           f = c ? clamp(c.target, factor - step, factor + step) : factor;
-          if (c) { dataTdee = c.dataTdee; calRel = c.rel; }
+          if (c) { dataTdee = c.dataTdee; calRel = c.rel; seKeep = tdeeW * c.sd; }
         } else {
           let nI = 0, sI = 0, sT = 0, nW = 0;
           for (let k = 1; k <= 14; k++) { const r = rows[addDays(d, -k)]; if (!r) continue; if (r.intake && !r.intake.est) { nI++; sI += r.intake.kcal; sT += r.tdeeW; } if (r.real) nW++; }
@@ -3917,11 +3919,16 @@ function energySeries() {
       const target = tdee + phaseKcal(ph, tdee);
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
-      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, tdeeSE: E.calManual > 0 || E.calMode === "off" ? null : seKeep, dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
       order.push(d);
     }
     return { rows, order, start, end };
   });
+}
+/* what today's number rests on: the morning estimate has planned training and a projection of the steps, the evening one the logged training and the whole day's steps */
+function tdeeBasis(r) {
+  const sess = r.sess.src === "logged" ? "training logged" : r.sess.src === "mixed" ? "training logged plus what is still planned" : r.sess.list.some(w => w.sport && w.sport !== "Rest") ? "planned training" : "no training";
+  return sess + " · " + ({ watch: "your daily watch figure", steps: "steps and your usual extra movement", stepsRef: "full-day steps", stepsRefProj: "steps so far plus a typical rest of the day", avg: "the average NEAT of recent days", default: "the default NEAT" }[r.neatSrc] || "NEAT");
 }
 function energyAt(date) { const s = energySeries(); return s.rows[date] || (date < s.start ? s.rows[s.start] : s.rows[s.end]); }
 /* F-07 (D11): what does not add up in a day's target. Warnings only: the target is never corrected silently (protein + fat beyond the target, target under the resting energy, carbs under the phase minimum). */
@@ -5683,8 +5690,9 @@ function fitSettings() {
     ${En.bmr === "Harris-Benedict" ? `<div class="faint" style="font-size:12.5px">Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation.</div>` : /Ten Haaf|Auto/.test(En.bmr) ? `<div class="faint" style="font-size:12.5px">Ten Haaf was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows (Auto then uses Mifflin). The lean-mass version needs your body fat.</div>` : ""}
     <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : "<div></div>"}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}</div>
     <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (an assumption); today's steps are projected to the end of the day.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
-  h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"]])}${fitSel("energy.warn", "Target warnings", onOff)}</div>
-    ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}</div>`}
+  h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"], ["off", "Off (factor 1)"]])}${fitSel("energy.warn", "Target warnings", onOff)}${fitIn("energy.calManual", "Manual factor (empty = learns)")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}</div>
+    ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}${fitIn("energy.calMinCov", "Min intake share", "%", "pct")}</div>`}
+    ${(r => `<div class="faint" style="font-size:12.5px">Now ×${r.factor.toFixed(2)}${r.calRel ? ` · ${r.calRel} reliability` : ""} · formulas ${fmtN(r.tdeeW)} → TDEE ${fmtN(r.tdee)}${r.tdeeSE ? ` ± ${fmtN(r0(r.tdeeSE))}` : ""}${(M => M.measured != null ? ` · measured over 4 weeks ${fmtN(M.measured)}` : "")(modelCheck())}. A manual factor stops the learning; Off uses the formulas as they are.</div>`)(energyAt(todayISO()))}
     <div class="flabel" style="margin-top:6px">Coaching</div><div class="grid4">${fitIn("energy.kcalStep", "Suggested step", "kcal")}${fitIn("energy.dietBreakWeeks", "Weeks before a break")}${fitIn("energy.minWeighWeek", "Min weigh-ins / week")}</div>
     <div class="faint" style="font-size:12.5px">Data-driven TDEE = average intake − weight slope × kcal/kg. v2 fits a line through 28 days of weigh-ins (it needs food typed on 70% of them; an empty start date means from the first day), pulls the factor toward 1 when the slope is uncertain and moves it by at most the weekly limit; days before the start date keep their legacy factor.</div>`, false, `${En.calMode === "v2" ? "v2 · 28 days" : "Legacy · 14 days"} · warnings ${En.warn === "off" ? "off" : "on"}`);
   h += grp("Sports and workout calories", `<div class="card">${f.sports.map((s, i) => `<div class="lrow" style="grid-template-columns:minmax(0,1fr) 100px 36px;gap:8px"><input id="sp-n-${i}" class="inp" value="${esc(s.name)}" data-sp="name" data-i="${i}" aria-label="Sport name"><div class="unit-inp"><input id="sp-m-${i}" class="inp" inputmode="decimal" value="${s.met}" data-sp="met" data-i="${i}" aria-label="MET"><span>MET</span></div><button class="icon-btn" data-act="sp-del" data-i="${i}" aria-label="Remove sport">${ic("close", "sm")}</button></div>`).join("")}</div>
@@ -11429,7 +11437,8 @@ function energyView() {
   const L7 = last(7);
   const parts = [["BMR", r.bmr, "var(--accent)"], ["Activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
   let hh = `${profileNote()}<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
-    <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
+    <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.tdeeSE ? ` ± ${fmtN(r0(r.tdeeSE))}` : ""}${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
+    <div class="faint" style="font-size:12.5px">Based on ${tdeeBasis(r)}${r.calRel ? ` · calibration ${r.calRel}` : ""}</div>
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
     <div class="stat-grid${r.target !== r.tdee ? " four" : ""}">${r.target !== r.tdee ? kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (phaseKcal(r.phase, r.tdee) ? ` · ${phaseKcal(r.phase, r.tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(r.phase, r.tdee))}` : "")) : ""}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
