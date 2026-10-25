@@ -297,6 +297,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rce-l .blk{grid-column:1/-1;margin:2px 0 0;font-size:11.5px;color:var(--muted)}.rce-l small{opacity:.7;font-size:11.5px}.rce-sx{display:flex;gap:6px}.rce-sx span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:10px;background:var(--surface-2);font-size:13px}.rce-sx span b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rce-sx span small{color:var(--muted);font-variant-numeric:tabular-nums}.rce-sx span.now{background:var(--accent);color:var(--accent-ink)}.rce-sx span.now small{color:inherit;opacity:.8}.rce-sx span.ok small{color:var(--good)}
 .rk-t>div{grid-template-columns:minmax(0,1.5fr) 1fr 1fr 1fr!important;gap:6px!important;font-size:12.5px!important}.rk-t .you{background:var(--accent-soft);border-radius:8px;font-weight:600}.rk-nm{max-width:220px}.rk-paste summary{padding:6px 0}
 
+.tools{width:100%;max-width:880px;margin-inline:auto;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.tc-out{display:flex;flex-direction:column;gap:8px}
 .rec-sec{display:flex;flex-direction:column;border-radius:var(--r-card,20px);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .rec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;text-align:left;color:var(--ink)}.rec-h>span{display:flex;flex-direction:column;gap:2px;min-width:0}.rec-h b{font-family:var(--display);font-size:17px;font-weight:600}.rec-h small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec-b{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}.rec-b .section-h{margin:0}.rec-b>.card,.rec-b>.card.pad{box-shadow:none;background:var(--surface-2)}
@@ -2073,7 +2074,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .ph-big{font-size:26px;font-weight:750;line-height:1.15}
 .ph-txt{margin:0;font-size:14px;color:var(--muted)}
 .ph-bars{display:flex;flex-direction:column;gap:6px}
-.ph-bars>div{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.ph-bars>div{display:grid;grid-template-columns:68px minmax(0,1fr) 98px;gap:10px;align-items:center;font-size:13px}.ph-bars>div>b{text-align:right;white-space:nowrap}
 .ph-bars .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
 .ph-bars .bar i{display:block;height:100%;background:var(--c);border-radius:99px}
 .ph-bars b{font-variant-numeric:tabular-nums;font-size:13px}
@@ -4156,7 +4157,7 @@ const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
 const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const E = k === "pantry" ? expiryList() : null, xp = E ? E.expired.length + E.soon.length : 0, why = E ? [E.expired.length ? `${E.expired.length} expired` : "", E.soon.length ? `${E.soon.length} to use soon` : ""].filter(Boolean).join(" · ") : ""; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}${xp ? ` title="${why}"` : ""}><span class="tab-l">${l}${xp ? `<span class="tab-dot${E.expired.length ? "" : " soon"}" role="img" aria-label="${why}">${xp}</span>` : ""}</span></button>`; }).join("")}</nav>`;
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
-  return (side ? [...TABS, ["week", "Week", "calendar"], ["timer", "Timer", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
+  return (side ? [...TABS, ["week", "Week", "calendar"], ["timer", "Tools", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
     return `<button class="${side ? "side-btn" : ""}" data-act="tab" data-tab="${tab}" ${on ? 'aria-current="page"' : ""}>${side ? i : `<span class="nav-ic">${i}</span>`}<span>${label}</span></button>`; }).join("");
 }
 
@@ -4164,6 +4165,10 @@ function navHTML(side) {
 let rq = 0;
 /* the same markup twice is a no-op: no layout, no paint, scroll and open <details> stay as they are */
 function setHTML(el, html) { if (el._h === html) return false; el._h = html; el.innerHTML = html; return true; }
+/* a redraw replaces the field you are typing in: on a phone that closes the keyboard and drops characters. While a field that saves when you leave it (data-chg) has the focus the redraw waits, and runs when you leave */
+let DEFER = false;
+const typingBusy = () => { const a = document.activeElement; return !!(a && a.id && a.dataset && a.dataset.chg !== undefined && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && a.type !== "checkbox" && a.type !== "file"))); };
+document.addEventListener("focusout", () => { if (!DEFER) return; setTimeout(() => { if (typingBusy()) return; DEFER = false; render(); if (UI.sheet) renderSheet(); }, 0); });
 function scheduleRender() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; render(); }); }
 function captureFocus() {
   REDRAW = true; queueMicrotask(() => { REDRAW = false; });  // a redraw that removes a focused field makes the browser fire "change" first: that is not you leaving the field
@@ -4189,13 +4194,14 @@ function render() {
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
   applyShopMode(); applySide();
   if (DRAG.active) return;
+  if (typingBusy()) { DEFER = true; return; }
   const f = captureFocus();
   setHTML($("#side"), `<div class="brand"><span class="brand-mark">${ic("pulse")}</span><span>ENGINE<small>Hybrid athlete</small></span></div>${navHTML(true)}${syncPill()}<button class="side-toggle" data-act="side-toggle" aria-label="${sideMode() === "rail" ? "Expand the menu" : "Collapse the menu"}" title="${sideMode() === "rail" ? "Expand the menu" : "Collapse the menu"}">${ic(sideMode() === "rail" ? "chevR" : "chevL")}<span>Collapse</span></button>`);
   setHTML($("#bnav"), navHTML(false));
-  document.body.classList.toggle("live-mode", UI.tab === "live" || UI.tab === "timer");
+  document.body.classList.toggle("live-mode", UI.tab === "live" || (UI.tab === "timer" && TMR.phase !== "setup"));
   const v = VIEWS[UI.tab] || VIEWS.plan;
   $("#main").className = "main" + (UI.tab === "plan" || UI.tab === "today" ? " wide" : "");
-  const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && UI.tab !== "timer";
+  const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && !(UI.tab === "timer" && TMR.phase !== "setup");
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
   if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
   setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + v());
@@ -4694,7 +4700,7 @@ function readinessDot() {
 VIEWS.train = function () {
   const seg = UI.trainSeg;
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Training</div><div class="top-sub hide-sm">${seg === "races" ? "Races, countdowns and results" : seg === "wk" ? "Programs, workouts and history" : seg === "cal" ? "Your training calendar" : seg === "season" ? "Blocks, deloads and the plan to your races" : seg === "fitness" ? "Fitness, fatigue and form" : seg === "week" ? (icuPlanMode() ? "Your intervals.icu plan, week by week" : "Plan, pattern and calories of your sessions") : seg === "running" ? "Zones, paces and predictions from your tests" : "Personal bests and tests"}</div></div>
-    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Timer">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
+    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
     <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ...(FEAT("period") ? [["season", "Season"]] : []), ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
   return h + (seg === "season" && FEAT("period") ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
 };
@@ -4849,19 +4855,6 @@ function trainRecords() {
 }
 
 /* ================= Progress tab ================= */
-VIEWS.progress = function () {
-  const seg = UI.progSeg;
-  let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${seg === "overview" ? (SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching") : seg === "nutrition" ? "What you ate and planned" : seg === "days" ? "Every logged day, newest first" : seg === "body" ? "Weight and measurements" : seg === "training" ? "Maxes, circuits and running over time" : seg === "goals" ? "Targets, milestones and when you'll get there" : seg === "energy" ? "BMR, TDEE and how they're estimated" : "One row per week"}</div></div>${settingsBtn()}</div>
-    <div style="padding:10px 0 12px">${segBar("prog-seg", seg, [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["energy", "Energy"], ["training", "Training"], ["days", "Days"], ["nutrition", "Nutrition"], ["body", "Body"], ["weeks", "Weeks"]])}</div></header>`;
-  if (seg === "goals" && FEAT("goals")) return h + goalsView();
-  if (seg === "nutrition") return h + VIEWS.stats(true);
-  if (seg === "training") return h + trainingProgressView();
-  if (seg === "energy") return h + energyView();
-  if (seg === "days") return h + daysView();
-  if (seg === "body") return h + bodyView();
-  if (seg === "weeks") return h + weeksView();
-  return h + overviewView();
-};
 function overviewView() {
   const today = todayISO(), s = energySeries(), r = s.rows[today], G = goalState(), C = coaching(), E = FIT().energy;
   const W = weeklyTable(); const cw = W[W.length - 1];
@@ -4996,6 +4989,7 @@ const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r 
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; return; }
+  if (!sh._new && typingBusy()) { DEFER = true; return; }
   const f = captureFocus(); const sc = sh._sc ?? ($(".sheet-b")?.scrollTop || 0); sh._sc = null;
   const def = SHEETS[sh.type](sh), enter = sh._new ? " enter" : "";
   root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${def.full ? " full" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
@@ -6874,6 +6868,7 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("submit", e => { const f = e.target.closest("[data-form]"); if (!f) return; e.preventDefault(); FORMS[f.dataset.form]?.(f); });
 document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.dataset && e.target.dataset.chg !== undefined) { e.target.blur(); return; }
   if (e.key === "Escape" && UI.sheet) { if (UI.sheet.type === "qty" && UI.sheet.back === "add") backToAdd(UI.sheet); else closeSheet(); return; }
   if (e.key === "Enter" && e.target.id === "add-q") { e.preventDefault(); const sh = S_(); const l = $("#add-list"); if (l && sh) l.innerHTML = addRowsFor(sh);
     if (sh?._multi) { ACT["add-all"](); return; }
@@ -9125,7 +9120,7 @@ function raceCard(r, big = false) {
       <span class="rc-tags">${r.ext ? `<i>intervals.icu</i>` : ""}${res.done ? `<i class="ok">${res.time ? "Result " + esc(res.time) : "Done"}${res.place ? " · " + esc(res.place) : ""}</i>` : ""}${!res.done && r.goal ? `<i>Goal ${esc(r.goal)}</i>` : ""}${!res.done && I.pred ? `<i>Predicted ${fmtClock(I.pred)}</i>` : ""}${!res.done && I.zone ? `<i>Form ${I.form > 0 ? "+" : ""}${r0(I.form)} · ${I.zone[1]}</i>` : ""}${!res.done && I.days >= 0 ? `<i>${I.phase}</i>` : ""}</span></span></button>`;
 }
 function trainRaces() {
-  const t = todayISO(), up = upcomingRaces(), past = races().filter(r => r.date < t || r.result?.done).sort((a, b) => b.date.localeCompare(a.date));
+  const t = todayISO(), dsc = UI.trainSeg === "season" ? UI.seasonD || "all" : "all", up = upcomingRaces().filter(r => raceDisc(r, dsc)), past = races().filter(r => (r.date < t || r.result?.done) && raceDisc(r, dsc)).sort((a, b) => b.date.localeCompare(a.date));
   let h = `<div class="section-h"><h2>Upcoming</h2><button class="link" data-act="rc-new">${ic("plus", "sm")} Race</button></div>`;
   h += up.length ? `<div class="rc-list">${up.map((r, i) => raceCard(r, i === 0)).join("")}</div>` : `<div class="empty slim"><p>Add your next competition: running races, calisthenics comps, Hyrox, anything. You get a countdown, predicted time, form on race day and taper tips.</p><button class="btn tonal" data-act="rc-new">${ic("plus", "sm")}Add a race</button></div>`;
   if (past.length) h += `<div class="section-h"><h2>Results</h2></div><div class="rc-list">${past.map(r => raceCard(r)).join("")}</div>`;
@@ -9444,7 +9439,7 @@ VIEWS.today = function () {
     ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
-  const quick = `<button class="td-q has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart", "sm")}Shopping${shopBadge()}</button>${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Timer</button>`;
+  const quick = `<button class="td-q has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart", "sm")}Shopping${shopBadge()}</button>${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Tools</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
     // phone: one column in the order you use it: yesterday's gaps and today's ticks, training, food, body, then the rest
     ? `<div class="today-grid one">${glanceHTML()}${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${fuel}${body}${todayCards("b")}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
@@ -10031,7 +10026,6 @@ function timerTick() {
     else if (k === "emrest" && m === "emom") { const kk = Math.floor(el / c.every), w = TMR.emWork[kk]; n.textContent = w != null ? `Work ${Math.round(w)}s · rest ${Math.max(0, Math.ceil(c.every - w - (el - kk * c.every - w)))}s` : "Tap Done when the work is finished"; } });
 }
 VIEWS.timer = function () {
-  if (TMR.phase === "setup") return tmrSetup();
   if (TMR.phase === "done") return tmrDone();
   const m = TMR.mode, c = tmrC(), el = clkEl(TMR.clk), prep = el < 0, D = tmrTotal(), paused = TMR.clk.paused;
   const name = TMR_MODES.find(x => x[0] === m)[1];
@@ -10055,17 +10049,6 @@ VIEWS.timer = function () {
   return h;
 };
 function tmrSubtitle() { const m = TMR.mode, c = tmrC(); return m === "fortime" ? [c.rounds ? `${c.rounds} rounds` : "open", c.cap ? `cap ${c.cap}′` : ""].filter(Boolean).join(" · ") : m === "amrap" ? `${c.min} min` : m === "emom" ? `${c.rounds} × ${fmtDurShort(c.every)}` : m === "tabata" ? `${c.rounds} × ${c.work}/${c.rest}s${c.sets > 1 ? ` · ${c.sets} sets` : ""}` : m === "countdown" ? fmtDurShort(tmrTotal()) : ""; }
-function tmrSetup() {
-  const m = TMR.mode, c = tmrC(), st = (key, label, unit, step = 1, min = 0) => `<div class="field"><span class="flabel">${label}</span><span class="stp"><button data-act="tm-cfg" data-f="${key}" data-d="${-step}" data-min="${min}" aria-label="Less">${ic("minus", "sm")}</button><b>${c[key] === 0 && (key === "cap" || key === "rounds") ? "—" : c[key]}${unit ? `<small>${unit}</small>` : ""}</b><button data-act="tm-cfg" data-f="${key}" data-d="${step}" data-min="${min}" aria-label="More">${ic("plus", "sm")}</button></span></div>`;
-  let h = topBar(`<button class="icon-btn" data-act="tm-exit" aria-label="Close">${ic("close")}</button>`, "Timer", "Nothing is recorded", `<button class="icon-btn" data-act="lv-snd" aria-label="Sounds">${ic(PLAYER().mute ? "bellOff" : "bell")}</button>`);
-  h += `<div class="tm-wrap"><div class="tm-modes">${TMR_MODES.map(([k, l, i, s]) => `<button class="tm-mode" data-act="tm-mode" data-k="${k}" aria-pressed="${m === k}">${ic(i)}<b>${l}</b><small>${s}</small></button>`).join("")}</div>
-    <section class="lv-card"><div class="fa-grid">${m === "fortime" ? st("rounds", "Target rounds", "", 1, 0) + st("cap", "Time cap", "min", 1, 0) : m === "amrap" ? st("min", "Time", "min", 1, 1) : m === "emom" ? st("every", "Every", "s", 15, 15) + st("rounds", "Rounds", "", 1, 1) : m === "tabata" ? st("work", "Work", "s", 5, 5) + st("rest", "Rest", "s", 5, 0) + st("rounds", "Rounds", "", 1, 1) + st("sets", "Sets", "", 1, 1) + (c.sets > 1 ? st("setRest", "Rest between sets", "s", 15, 0) : "") : m === "countdown" ? st("min", "Minutes", "", 1, 0) + st("sec", "Seconds", "", 15, 0) : ""}</div>
-      ${m === "tabata" ? `<div class="chips">${[[20, 10, 8, "Tabata 20/10"], [40, 20, 10, "40/20"], [30, 30, 10, "30/30"], [45, 15, 8, "45/15"], [60, 60, 6, "1′/1′"]].map(([w, r, n, l]) => `<button class="chip" data-act="tm-preset" data-w="${w}" data-r="${r}" data-n="${n}">${l}</button>`).join("")}</div>` : ""}
-      ${prepChips()}
-      <div class="faint" style="font-size:12.5px">${tmrTotal() ? `Total ${fmtDur(tmrTotal())} · ` : ""}${PLAYER().prep} s countdown, 3-2-1 beeps${PLAYER().voice ? ", voice call-outs" : ""}${m === "amrap" ? ", minute call-outs, last 30 s and a spoken 10-second countdown" : m === "fortime" ? ", minute call-outs" : ""}.</div></section>
-    <div class="lv-dock"><button class="btn primary grow xl" data-act="tm-start">${ic("play", "sm")}Start ${esc(TMR_MODES.find(x => x[0] === m)[1])}</button></div></div>`;
-  return h;
-}
 function tmrDone() {
   const m = TMR.mode, c = tmrC(), L = TMR.laps, tot = TMR.final || 0;
   let h = topBar(`<button class="icon-btn" data-act="tm-exit" aria-label="Close">${ic("close")}</button>`, "Finished", esc(TMR_MODES.find(x => x[0] === m)[1]) + " · " + tmrSubtitle(), `<span></span>`);
@@ -10083,7 +10066,7 @@ function tmrDone() {
     <div class="lv-dock"><button class="btn tonal" data-act="tm-setup">Change</button><button class="btn primary grow" data-act="tm-start">${ic("undo", "sm")}Again</button></div></div>`;
   return h;
 }
-ACT["timer-open"] = () => { if (UI.tab !== "timer") UI.timerFrom = UI.tab; closeSheet(); UI.tab = "timer"; if (TMR.phase === "done") TMR.phase = "setup"; scheduleRender(); window.scrollTo(0, 0); };
+ACT["timer-open"] = () => { if (UI.tab !== "timer") UI.timerFrom = UI.tab; UI.toolSeg = "timers"; UI.toolRet = null; closeSheet(); UI.tab = "timer"; if (TMR.phase === "done") TMR.phase = "setup"; scheduleRender(); window.scrollTo(0, 0); };
 ACT["tm-exit"] = () => { TMR.phase = TMR.phase === "run" ? "run" : "setup"; UI.tab = UI.timerFrom && UI.timerFrom !== "timer" ? UI.timerFrom : "today"; wakeOff(); scheduleRender(); };
 ACT["tm-mode"] = el => { TMR.mode = el.dataset.k; tmrSaveCfg(); scheduleRender(); };
 ACT["tm-cfg"] = el => { const c = tmrC(), f = el.dataset.f; c[f] = Math.max(+el.dataset.min, (+c[f] || 0) + +el.dataset.d); haptic(8); tmrSaveCfg(); scheduleRender(); };
@@ -11241,7 +11224,9 @@ function energyView() {
   hh += aeeShadowCard();
   hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
-  hh += `<div class="section-h"><h2>Last 6 weeks</h2></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: pts("tdee") }, { name: "Eaten", color: "var(--carb)", pts: last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)]) }, { name: "Target", color: "var(--faint)", pts: pts("target"), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target", minPad: 50 })}</div>`;
+  /* seven-day averages: the day-to-day swings of intake and training make a daily line a saw; the average shows where you are going */
+  const roll7 = P => P.map(([d], i) => { const w = P.filter(([e]) => e <= d && e >= addDays(d, -6)); return [d, r0(w.reduce((a, q) => a + q[1], 0) / w.length)]; });
+  hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: roll7(pts("tdee")) }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, { name: "Target", color: "var(--faint)", pts: roll7(pts("target")), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
   hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">BMR ${fmtN(x.bmr)} · NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
   return hh;
 }
@@ -11650,8 +11635,9 @@ const PH = {
 const PER = () => { const p = S.train.period = S.train.period || {}; p.weeks = p.weeks || {}; return p; };
 const perCycle = () => clamp(+PER().cycle || 3, 2, 5);
 const savePer = () => saveWK();
-function raceFor(ws) { // the next A/B race on or after this week
-  const rs = races().filter(r => !r.result?.done && (r.pri || "B") !== "C" && r.date >= ws).sort((a, b) => a.date.localeCompare(b.date));
+const raceDisc = (r, d) => d === "run" ? isRunRace(r) : d === "cal" ? !isRunRace(r) : true;   // Season › Running shows running races, Season › Calisthenics the others
+function raceFor(ws, disc = "all") { // the next A/B race on or after this week
+  const rs = races().filter(r => !r.result?.done && (r.pri || "B") !== "C" && r.date >= ws && raceDisc(r, disc)).sort((a, b) => a.date.localeCompare(b.date));
   return rs[0] || null;
 }
 function taperWeeks(r) { const km = +r.km || 0; return km >= 40 ? 3 : km >= 20 ? 2 : km >= 8 ? 1 : 1; }
@@ -12798,36 +12784,36 @@ function navFix() {
   const T = UI.trainSeg; if (T === "week") { UI.trainSeg = "cal"; UI.calView = "week"; } else if (T === "races") UI.trainSeg = "season"; else if (["fitness", "running", "records"].includes(T)) { UI.perfSeg = T; UI.trainSeg = "perf"; }
   const P = UI.progSeg; if (P === "energy" || P === "nutrition") { UI.foodSeg = P === "energy" ? "energy" : "intake"; UI.progSeg = "food"; } else if (P === "days" || P === "weeks") { UI.repSeg = "hist"; UI.histSeg = P; UI.progSeg = "reports"; }
   if (P === "journal" && !FEAT("journal")) UI.progSeg = "overview";
+  if (P === "goals") { UI.progSeg = "overview"; (UI.fold = UI.fold || {}).overview = { ...(UI.fold.overview || {}), "Goals and milestones": true }; }
+  if (P === "lab") { UI.progSeg = "food"; UI.foodSeg = "energy"; (UI.fold = UI.fold || {}).energy = { ...(UI.fold.energy || {}), "Lab · the numbers behind the numbers": true }; }
+  if (P === "level") { UI.progSeg = "overview"; if (UI.tab === "progress") { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "fitness"; (UI.fold = UI.fold || {}).fitness = { ...(UI.fold.fitness || {}), Level: true }; scheduleRender(); } }
   if (P === "training") { UI.progSeg = "overview"; if (UI.tab === "progress") { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "strength"; } }
   if (UI.repSeg === "days" || UI.repSeg === "weeks") { UI.histSeg = UI.repSeg; UI.repSeg = "hist"; }
   if (UI.tab === "dash") { UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = UI.dashSeg === "month" ? "month" : UI.dashSeg === "all" ? "all" : "week"; }
   if (UI.trainSeg === "season" && !FEAT("period")) UI.trainSeg = "season"; // the tab then shows the races only
 }
 const trainHead = (sub) => `<header class="top"><div class="top-row"><div><div class="top-title">Training</div>${sub ? `<div class="top-sub hide-sm">${sub}</div>` : ""}</div>
-    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Timer">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
+    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
     <div style="padding:10px 0 12px">${segBar("train-seg", UI.trainSeg, [["cal", "Calendar"], ["wk", "Workouts"], ["season", FEAT("period") ? "Season" : "Races"], ["perf", "Stats"]])}</div></header>`;
 VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
   if (seg === "wk") return trainHead("Programs, workouts and history") + trainWorkouts();
   if (seg === "season") return trainHead(FEAT("period") ? "Blocks, deloads, races and the plan to them" : "Races, countdowns and results") + (FEAT("period") ? trainSeason() : "") + trainRaces();
-  if (seg === "perf") { const p = UI.perfSeg || "fitness"; return trainHead("Fitness, running, strength and records") + subBar("perf-seg", p, [["fitness", "Fitness"], ["running", "Running"], ["strength", "Strength"], ["records", "Records"], ["gear", "Gear"]]) + (p === "running" ? trainRunning() : p === "strength" ? trainingProgressView() : p === "records" ? trainRecords() : p === "gear" && typeof gearView === "function" ? gearView() : trainFitness()); }
+  if (seg === "perf") { const p = UI.perfSeg || "fitness"; return trainHead("Fitness, running, strength and records") + subBar("perf-seg", p, [["fitness", "Fitness"], ["running", "Running"], ["strength", "Strength"], ["records", "Records"], ["gear", "Gear"]]) + (p === "running" ? foldView("running", trainRunning()) : p === "strength" ? foldView("strength", trainingProgressView()) : p === "records" ? trainRecords() : p === "gear" && typeof gearView === "function" ? foldView("gear", gearView()) : foldView("fitness", trainFitness()) + foldOne("fitness", "Level", (() => { try { const R = lvRunner(), C = lvCalis(); return [R ? "Runner " + LV_NAMES[Math.min(5, Math.floor(R.p))] : "", C && C.p != null ? "Calisthenics " + LV_NAMES[Math.min(5, Math.floor(C.p))] : ""].filter(Boolean).join(" · ") || "Needs a race or a test"; } catch (e) { return ""; } })(), "", levelView)); }
   const v = UI.calView || "month";
   return trainHead("Your training calendar") + (v === "week" ? `<div class="cv-top">${subBar("cal-view", "week", [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>` + trainWeek() : trainCalendar());
 };
 ACT["perf-seg"] = el => { UI.perfSeg = el.dataset.k; scheduleRender(); };
 VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
-  const segs = [["overview", "Overview"], ...(FEAT("goals") ? [["goals", "Goals"]] : []), ["body", "Body"], ["lab", "Lab"], ["level", "Level"], ["food", "Nutrition"], ["reports", "Reports"], ...(FEAT("journal") ? [["journal", "Journal"]] : [])];
+  const segs = [["overview", "Overview"], ["body", "Body"], ["food", "Nutrition"], ["reports", "Reports"], ...(FEAT("journal") ? [["journal", "Journal"]] : [])];
   const sub = { journal: "Mood, energy, productivity and stress", overview: SMART() ? `${esc(phaseFor(todayISO()).phase)} · goal ${esc(goalState().text)}` : "Weight, goal and coaching", goals: "Targets, milestones and when you'll get there", body: "Weight, measurements and photos", lab: "The numbers behind the numbers", level: "Your level as runner and calisthenics athlete", food: "What you ate, the energy behind it and your habits", reports: "Week, month, all-time and every day" }[seg] || "";
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Progress</div><div class="top-sub">${sub}</div></div>${settingsBtn()}</div><div style="padding:10px 0 12px">${segBar("prog-seg", seg, segs)}</div></header>`;
-  if (seg === "goals" && FEAT("goals")) return h + goalsView();
   if (seg === "journal" && FEAT("journal")) return h + journalView();
   if (seg === "body") return h + bodyView();
-  if (seg === "lab") return h + labView();
-  if (seg === "level") return h + levelView();
-  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"], ["habits", "Habits"]]) + (f === "energy" ? energyView() : f === "habits" ? habitsView() : VIEWS.stats(true) + macroGkg()); }
+  if (seg === "food") { const f = UI.foodSeg || "intake"; return h + subBar("food-seg", f, [["intake", "Intake"], ["energy", "Energy"], ["habits", "Habits"]]) + (f === "energy" ? energyView() + foldOne("energy", "Lab · the numbers behind the numbers", "", "", labView) : f === "habits" ? habitsView() : VIEWS.stats(true) + macroGkg()); }
   if (seg === "reports") { const r = UI.repSeg || "week"; UI.dashSeg = r === "month" ? "month" : "week";
     if (r === "hist") { const hs = UI.histSeg || "days"; return h + subBar("rep-seg", r, REP_SEGS) + `<div class="hist-sub chips">${[["days", "Days"], ["weeks", "Weeks"]].map(([k, l]) => `<button class="chip" data-act="hist-seg" data-k="${k}" aria-pressed="${hs === k}">${l}</button>`).join("")}</div>` + (hs === "weeks" ? weeksView() : daysView()); }
     return h + subBar("rep-seg", r, REP_SEGS) + (r === "all" ? recapView() : reportsView()); }
-  return h + overviewView();
+  return h + overviewView() + (FEAT("goals") ? foldOne("overview", "Goals and milestones", goalState().text, "", goalsView) : "");
 };
 ACT["food-seg"] = el => { UI.foodSeg = el.dataset.k; scheduleRender(); };
 const REP_SEGS = [["week", "Week"], ["month", "Month"], ["all", "All-time"], ["hist", "History"]];
@@ -13212,7 +13198,7 @@ scheduleRender = function () { if (rq) return; rq = requestAnimationFrame(() => 
 /* the sections a swipe walks through, for the screen that's open */
 function secList() {
   if (UI.tab === "train") return { k: "trainSeg", act: "train-seg", list: ["cal", "wk", "season", "perf"] };
-  if (UI.tab === "progress") return { k: "progSeg", act: "prog-seg", list: ["overview", ...(FEAT("goals") ? ["goals"] : []), "body", "food", "reports"] };
+  if (UI.tab === "progress") return { k: "progSeg", act: "prog-seg", list: ["overview", "body", "food", "reports", ...(FEAT("journal") ? ["journal"] : [])] };
   if (["foods", "shop", "pantry"].includes(UI.tab)) return { k: "tab", act: "fuel-tab", list: ["plan", "foods", "shop", "pantry"], cur: UI.tab };
   return null; }
 const TAB_ORDER = () => TABS.map(t => t[0]);
@@ -13361,7 +13347,8 @@ function recAllHTML() {
 }
 ACT["rec-all"] = el => { UI.recAll = el.dataset.k; scheduleRender(); };
 ACT["rec-more"] = () => { UI.recMore = true; scheduleRender(); };
-const REC_SUM = {
+/* Folded sections (Training › Stats: Fitness, Running, Strength, Records, Gear): every section is one line with its headline figure, closed until you open it. State in UI.fold[id][title] */
+const FOLD_SUM = {
   "Running personal bests": () => RACE_DIST.map(([k, km]) => { const pb = pbFor(km); return pb ? `${k} ${fmtClock(pb.sec)}` : ""; }).filter(Boolean).slice(0, 3).join(" · ") || "No PB yet",
   "Calisthenics tests": () => { const L = S.train.calis || []; return L.length ? `${L.length} test${L.length > 1 ? "s" : ""} · last ${fmtDM(L.map(x => x.date).sort().pop())}` : "No tests yet"; },
   "Strength · top sets": () => { const n = topSetTable().filter(t => t.last).length; return n ? `${n} exercise${n > 1 ? "s" : ""} tracked` : "No top set yet"; },
@@ -13369,16 +13356,27 @@ const REC_SUM = {
   "AMRAP tests": () => `${[...new Set(amrapLog().map(x => x.key))].length} tests`,
   "Race circuits": () => raceSel().fire.name,
   "Endurance Cup ranking": () => { const q = raceSeason(), b = raceBestIn(raceSel().fire.name, q); return `${q.name} · ${b != null ? "Fire Set " + fmtClock(b) : "no Fire Set yet"}`; },
-  "All results": () => `${recRows().length} entries · edit or delete`
+  "All results": () => `${recRows().length} entries · edit or delete`,
+  "Fitness curve": () => { const F = fitnessNow(); return F ? `Form ${F.pct > 0 ? "+" : ""}${r0(F.pct)}%` : "Needs a few sessions"; },
+  "Training minutes · last 8 weeks": () => { let m = 0; for (let i = 0; i < 56; i++) for (const w of logGet(addDays(todayISO(), -i))?.workouts || []) m += +w.min || 0; return m ? `${minTxt(m)} in 8 weeks` : "No sessions yet"; },
+  "Weekly running goal": () => { const k = runWeek(weekStartOf(todayISO())).km; return `${r1(k)} km this week`; },
+  "Race predictions": () => { const p = runState().preds.find(x => x.km === 5); return p?.sec ? `5k ${fmtClock(p.sec)} · from VDOT` : "Log a race or a test"; },
+  "Running km per week": () => `${r1(runWeek(weekStartOf(todayISO())).km)} km this week`,
+  "Tests and races": () => { const n = (S.train.tests || []).length; return n ? `${n} logged` : "None yet"; },
+  "Sets and reps by exercise": () => { const L = exVolume(28), n = L.reduce((a, x) => a + x.sets, 0); return n ? `${n} sets in 4 weeks` : "No sets logged"; },
+  "Shoes": () => { const n = (FIT().shoes || []).length; return n ? `${n} pair${n > 1 ? "s" : ""}` : "None yet"; }
 };
-function recFold(h) {
-  const parts = (h + `<div class="section-h"><h2>All results</h2></div>${UI.recOpen?.["All results"] ? recAllHTML() : ""}`).split(/(?=<div class="section-h">)/).filter(x => x.trim());
-  UI.recOpen = UI.recOpen || { "Running personal bests": true };
-  return parts.map(part => { const m = part.match(/^<div class="section-h"><h2>([^<]*)<\/h2>(.*?)<\/div>/s); if (!m) return part;
-    const title = m[1], acts = m[2], rest = part.slice(m[0].length), open = !!UI.recOpen[title]; let sum = ""; try { sum = REC_SUM[title]?.() || ""; } catch (e) {}
-    return `<section class="rec-sec${open ? " open" : ""}"><button class="rec-h" data-act="rec-tog" data-k="${esc(title)}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sum ? `<small>${esc(sum)}</small>` : ""}</span>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<div class="rec-b">${acts.trim() ? `<div class="section-h">${acts}</div>` : ""}${rest}</div>` : ""}</section>`; }).join("");
+function foldOne(id, title, sum, acts, rest) {
+  const st = (UI.fold = UI.fold || {})[id] = (UI.fold || {})[id] || {}, open = !!st[title];
+  return `<section class="rec-sec${open ? " open" : ""}"><button class="rec-h" data-act="fold-tog" data-id="${id}" data-k="${esc(title)}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sum ? `<small>${esc(sum)}</small>` : ""}</span>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<div class="rec-b">${acts && acts.trim() ? `<div class="section-h">${acts}</div>` : ""}${typeof rest === "function" ? rest() : rest}</div>` : ""}</section>`;
 }
-ACT["rec-tog"] = el => { UI.recOpen = UI.recOpen || {}; UI.recOpen[el.dataset.k] = !UI.recOpen[el.dataset.k]; scheduleRender(); };
+function foldView(id, h) {
+  return h.split(/(?=<div class="section-h">)/).filter(x => x.trim()).map(part => { const m = part.match(/^<div class="section-h"><h2>([^<]*)<\/h2>(.*?)<\/div>/s); if (!m) return part;
+    let sum = ""; try { sum = FOLD_SUM[m[1]]?.() || ""; } catch (e) {}
+    return foldOne(id, m[1], sum, m[2], part.slice(m[0].length)); }).join("");
+}
+ACT["fold-tog"] = el => { const st = (UI.fold = UI.fold || {})[el.dataset.id] = (UI.fold || {})[el.dataset.id] || {}; st[el.dataset.k] = !st[el.dataset.k]; scheduleRender(); };
+const recFold = h => foldView("rec", h + `<div class="section-h"><h2>All results</h2></div>${UI.fold?.rec?.["All results"] ? recAllHTML() : ""}`);
 { const _rec = trainRecords; trainRecords = function () { return recFold(amrapRecords() + _rec()); }; }
 /* the recaps over time: Train › Stats › Strength, newest first; tap one for the whole session */
 function recapList(n = 8) { const out = [];
@@ -13853,10 +13851,6 @@ const calcLoads = (oneRM, name, bw = 0) => { const F = RM_FORMULAS.find(f => f[0
 const calcRiegel = (sec, km, to) => sec * Math.pow(to / km, 1.06);
 function calcPace(km, sec) { if (!(km > 0) || !(sec > 0)) return null; const v = vdotOf(km, sec / 60);
   return { perKm: sec / km, perMile: sec / km * 1.609344, kmh: km / (sec / 3600), preds: [[5, "5K"], [10, "10K"], [21.0975, "Half marathon"], [42.195, "Marathon"]].map(([d, l]) => ({ l, d, riegel: calcRiegel(sec, km, d), vdot: v ? predictMin(d, v) * 60 : null })) }; }
-SHEETS.calc = sh => ({ title: "Calculators", body: `${segBar("calc-tab", sh.tab, [["rm", "1RM"], ["pace", "Pace"]])}
-  ${sh.tab === "rm" ? `<div class="grid3"><div class="field"><label for="cl-w">Load</label><div class="unit-inp"><input id="cl-w" class="inp" inputmode="decimal" value="${esc(sh.w)}" data-in="calc" data-k="w"><span>kg</span></div></div><div class="field"><label for="cl-r">Reps</label><input id="cl-r" class="inp" inputmode="numeric" value="${esc(sh.r)}" data-in="calc" data-k="r"></div><div class="field"><label for="cl-b">Body weight</label><div class="unit-inp"><input id="cl-b" class="inp" inputmode="decimal" value="${esc(sh.b)}" placeholder="optional" data-in="calc" data-k="b"><span>kg</span></div></div></div>`
-  : `<div class="grid2"><div class="field"><label for="cl-d">Distance</label><div class="unit-inp"><input id="cl-d" class="inp" inputmode="decimal" value="${esc(sh.d)}" data-in="calc" data-k="d"><span>km</span></div></div><div class="field"><label for="cl-t">Time</label><input id="cl-t" class="inp" value="${esc(sh.t)}" placeholder="41:30" data-in="calc" data-k="t"></div></div><div class="chips">${[["5", 5], ["10", 10], ["Half", 21.0975], ["Marathon", 42.195]].map(([l, k]) => `<button class="chip sm" data-act="calc-km" data-k="${k}" aria-pressed="${num(sh.d) === k}">${l}</button>`).join("")}</div>`}
-  <div id="calc-out">${calcOut(sh)}</div>`, foot: `<button class="btn tonal" data-act="close-sheet">Done</button>` });
 function calcOut(sh) {
   if (sh.tab === "rm") { const w = num(sh.w), r = Math.round(num(sh.r)), bw = num(sh.b) || 0, R = calcRM(w, r, bw); if (!R) return `<div class="faint" style="font-size:12.5px">Type the load and the reps of a hard set (1 to 30).</div>`;
     const F = sh.f || "Epley", L = calcLoads(R.mean, F, bw);
@@ -13870,11 +13864,110 @@ function calcOut(sh) {
     <span class="flabel">The same effort over other distances</span><div class="lab-t lvl-t r3"><div class="hd"><span>Distance</span><b>Riegel</b><span>VDOT</span></div>${P.preds.map(p => `<div><span>${p.l}</span><b>${fmtClock(p.riegel)}</b><span>${p.vdot ? fmtClock(p.vdot) : "—"}</span></div>`).join("")}</div>
     <div class="faint" style="font-size:12.5px;line-height:1.5">Riegel (1977) multiplies the time by (distance ratio)^1.06: simple, and optimistic past the half marathon. VDOT (Daniels) is the one used in Running and for your zones: it allows for the share of VO2max you can hold at each duration.</div>`;
 }
-ACT["calc-open"] = el => openSheet("calc", { tab: el.dataset.k || "rm", w: "", r: "", b: "", f: "Epley", d: "10", t: "" });
-ACT["calc-tab"] = el => { S_().tab = el.dataset.k; renderSheet(); };
-ACT["calc-km"] = el => { S_().d = el.dataset.k; renderSheet(); };
-ACT["calc-f"] = el => { S_().f = el.dataset.k; const o = $("#calc-out"); if (o) o.innerHTML = calcOut(S_()); $$("[data-act=calc-f]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === S_().f)); };
-INP.calc = (v, el) => { const sh = S_(); sh[el.dataset.k] = v; const o = $("#calc-out"); if (o) o.innerHTML = calcOut(sh); };
+/* ================= Tools: the timers and the calculators in one place =================
+   Each calculator has its own fields, a «Use my data» button that fills them from what the app knows (body weight, last top sets, best races, VDOT, LTHR) and a
+   «Copy as text» button for the result. State in UI.tc[id]. Sources are on each card. */
+const tcs = id => ((UI.tc = UI.tc || {})[id] = UI.tc[id] || {});
+const tcFmt = x => Math.round(x * 100) / 100;
+const roundTo = (x, st) => Math.round(x / st) * st;
+const fmtKg2 = x => String(tcFmt(x));
+const tcRow = (l, v, s = "") => `<div class="lrow" style="padding:8px 14px"><span><span class="t" style="font-weight:550">${l}</span>${s ? `<span class="s">${s}</span>` : ""}</span><span class="end num">${v}</span></div>`;
+const tcOut = (rows, note = "") => `<div class="card">${rows.map(r => tcRow(...r)).join("")}</div>${note ? `<div class="faint" style="font-size:12.5px;line-height:1.5">${note}</div>` : ""}`;
+const tcHint = t => `<div class="faint" style="font-size:12.5px">${t}</div>`;
+const bwKg = () => r1(trendNow());
+const isBwEx = n => /pull|chin|dip|muscle|push|row|l-sit|handstand|ring/i.test(n || "");
+const tcLast = () => topSetTable().filter(t => t.last).map(t => ({ n: t.name, kg: +t.last.kg || 0, r: +t.last.reps || 0 }));
+const CALCS = [
+  { id: "rm", name: "1RM and loads", sub: "Six formulas side by side, loads for 1 to 12 reps", f: [["w", "Load", "kg"], ["r", "Reps", ""], ["b", "Body weight", "kg"]], def: { f: "Epley" },
+    fill: () => { const L = tcLast()[0]; return L ? { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" } : null; },
+    chips: () => tcLast().slice(0, 4).map(L => [`${L.n} ${L.kg ? "+" + L.kg : "BW"}×${L.r}`, { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" }]),
+    out: s => { const R = calcRM(num(s.w), Math.round(num(s.r)), num(s.b) || 0); if (!R) return null; const F = s.f || "Epley", L = calcLoads(R.mean, F, num(s.b) || 0), r = Math.round(num(s.r));
+      return { html: calcOut({ tab: "rm", ...s }), text: [`1RM (mean of six formulas): ${R.mean.toFixed(1)} kg (range ${r1(R.lo)}–${r1(R.hi)}), from ${num(s.w)} kg × ${r}${num(s.b) ? ` at body weight ${num(s.b)} kg` : ""}`, ...L.map(x => `${x.r} rep${x.r > 1 ? "s" : ""}: ${x.kg.toFixed(1)} kg (${r0(x.pct)}%)`)].join("\n") }; } },
+  { id: "pace", name: "Pace and race times", sub: "Pace, speed and the same effort over other distances", f: [["d", "Distance", "km"], ["t", "Time", ""]], def: { d: "10" },
+    fill: () => { const t = (S.train.tests || []).filter(x => x.kind === "Race" && x.km > 0 && x.sec > 0).sort((a, b) => b.date.localeCompare(a.date))[0]; return t ? { d: String(t.km), t: fmtClock(t.sec) } : null; },
+    chips: () => [[5, "5K"], [10, "10K"], [21.0975, "Half"], [42.195, "Marathon"]].map(([k, l]) => { const pb = pbFor(k); return [l + (pb ? " PB " + fmtClock(pb.sec) : ""), { d: String(k), ...(pb ? { t: fmtClock(pb.sec) } : {}) }]; }),
+    out: s => { const P = calcPace(num(s.d), parseClock(s.t)); if (!P) return null; return { html: calcOut({ tab: "pace", ...s }),
+      text: [`${num(s.d)} km in ${s.t}: ${fmtClock(P.perKm)} /km, ${fmtClock(P.perMile)} /mile, ${r1(P.kmh)} km/h`, ...P.preds.map(p => `${p.l}: ${fmtClock(p.riegel)} (Riegel)${p.vdot ? `, ${fmtClock(p.vdot)} (VDOT)` : ""}`)].join("\n") }; } },
+  { id: "paces", name: "Training paces", sub: "Easy, marathon, threshold, interval and repetition paces from VDOT", f: [["v", "VDOT", ""]], def: {},
+    fill: () => { const v = runState().vdot; return v ? { v: String(r1(v)) } : null; },
+    out: s => { const v = num(s.v); if (!(v >= 20 && v <= 90)) return null; const R = FIT().run, tP = paceAt(v, .88), i = paceAt(v, R.iPct), rp = i - R.rFaster / 60, m = predictMin(42.195, v) / 42.195;
+      const rows = [["Easy", `${fmtPace(tP * 1.29)} – ${fmtPace(tP * 1.14)}`, "conversational, most of your km"], ["Marathon", fmtPace(m), "steady inside a long run"], ["Threshold", fmtPace(tP), "cruise intervals or 20′ continuous"], ["Interval", fmtPace(i), "VO2max reps of 3 to 5′"], ["Repetition", fmtPace(rp), "200 to 400 m, full recovery"]];
+      return { html: tcOut(rows.map(r => [r[0], r[1] + " /km", r[2]]), "Daniels' VDOT: threshold at 88% of VO2max velocity, intervals at the % set in Settings; easy is 14–29% slower than threshold pace, as in your Running tab."), text: [`Training paces for VDOT ${r1(v)}`, ...rows.map(r => `${r[0]}: ${r[1]} /km`)].join("\n") }; } },
+  { id: "hrz", name: "Heart-rate zones", sub: "Friel zones from your lactate-threshold heart rate", f: [["l", "Threshold HR", "bpm"], ["m", "Max HR", "bpm"]], def: {},
+    fill: () => { const R = runState(); return R.lthr ? { l: String(R.lthr), m: String(R.maxHr || "") } : null; },
+    out: s => { const l = num(s.l), mx = num(s.m) || 220 - 30; if (!(l >= 100 && l <= 220)) return null; const Z = FIT().run.zones || DEF_ZONES;
+      const rows = Z.map((z, k) => { const nx = Z[k + 1]; let from = k === 0 ? null : Math.round(z.hr * l), to = nx ? Math.round(nx.hr * l) - 1 : null; if (z.z === "Z5b") to = Math.min(to, mx); if (z.z === "Z5c") { to = mx; if (from > mx) from = null; }
+        return [`${z.z} · ${z.name}`, from == null ? `below ${to + 1}` : to == null ? `${from}+` : `${from}–${to}`, z.use]; });
+      return { html: tcOut(rows.map(r => [r[0], r[1] + " bpm", r[2]]), "Zones as fractions of the threshold heart rate (Friel). The threshold comes from your lactate test."), text: [`Heart-rate zones, threshold ${l} bpm, max ${mx} bpm`, ...rows.map(r => `${r[0]}: ${r[1]} bpm`)].join("\n") }; } },
+  { id: "plates", name: "Plates", sub: "What to load on each side of the bar, or on a dip belt", f: [["t", "Total weight", "kg"], ["bar", "Bar", "kg"], ["p", "Plates", "kg"]], def: { bar: "20", p: "25, 20, 15, 10, 5, 2.5, 1.25" },
+    fill: () => { const L = tcLast()[0]; return L ? { t: String(isBwEx(L.n) ? L.kg : L.kg + 20), bar: isBwEx(L.n) ? "0" : "20" } : null; },
+    chips: () => [["Barbell 20 kg", { bar: "20" }], ["Belt, no bar", { bar: "0" }]],
+    out: s => { const t = num(s.t), bar = num(s.bar) || 0, pl = String(s.p || "").split(/[ ,;]+/).map(Number).filter(x => x > 0).sort((a, b) => b - a); if (!(t > 0) || !pl.length || t < bar) return null;
+      let rem = bar ? (t - bar) / 2 : t; const used = []; for (const x of pl) { const n = Math.floor(rem / x + 1e-9); if (n > 0) { used.push([x, n]); rem -= n * x; } }
+      const got = (bar ? 2 : 1) * used.reduce((a, [x, n]) => a + x * n, 0) + bar, line = used.map(([x, n]) => `${n} × ${fmtKg2(x)}`).join(" + ") || "no plates";
+      const note = rem > 1e-6 ? `<b>${fmtKg2(got)} kg</b> is the closest you can load with these plates (${fmtKg2(rem * (bar ? 2 : 1))} kg short).` : "";
+      return { html: tcOut([[bar ? "Each side" : "On the belt", line], ["Total", `${fmtKg2(got)} kg`, bar ? `bar ${fmtKg2(bar)} kg + 2 × ${fmtKg2((got - bar) / 2)} kg` : ""]], note), text: `${fmtKg2(t)} kg${bar ? ` on a ${fmtKg2(bar)} kg bar` : " on a belt"}: ${bar ? "each side " : ""}${line}${rem > 1e-6 ? ` (closest loadable: ${fmtKg2(got)} kg)` : ""}` }; } },
+  { id: "warm", name: "Warm-up sets", sub: "A ramp of 4 sets up to your working weight", f: [["w", "Working weight", "kg"], ["bar", "Empty bar", "kg"]], def: { bar: "20" },
+    fill: () => { const L = tcLast().find(x => !isBwEx(x.n)); return L ? { w: String(L.kg) } : null; },
+    out: s => { const w = num(s.w), bar = num(s.bar) || 0; if (!(w > 0)) return null; const steps = [[.4, 6], [.6, 4], [.75, 3], [.9, 1]], rows = [...(bar && w > bar * 1.5 ? [[`Empty bar`, `${fmtKg2(bar)} kg × 10`]] : []), ...steps.map(([f, r]) => [`${r0(f * 100)}%`, `${fmtKg2(Math.max(bar, roundTo(w * f, 2.5)))} kg × ${r}`])];
+      return { html: tcOut(rows, "A common ramp: fewer reps as the weight rises, so the warm-up does not tire you. Rounded to 2.5 kg. It is a rule of thumb, not a result of a study."), text: [`Warm-up for ${fmtKg2(w)} kg`, ...rows.map(r => `${r[0]}: ${r[1]}`)].join("\n") }; } },
+  { id: "rel", name: "Relative strength", sub: "Calisthenics: added weight as a share of body weight, and your level", f: [["b", "Body weight", "kg"], ["k", "Added weight", "kg"], ["r", "Reps", ""]], def: { x: "pull" },
+    fill: () => { const L = tcLast().find(x => isBwEx(x.n)); return { b: String(bwKg()), ...(L ? { k: String(L.kg), r: String(L.r), x: /dip/i.test(L.n) ? "dip" : "pull" } : {}) }; },
+    chips: () => [["Pull-up", { x: "pull" }], ["Dip", { x: "dip" }]],
+    out: s => { const b = num(s.b), k = num(s.k) || 0, r = Math.round(num(s.r)); if (!(b > 20) || !(r >= 1)) return null; const e = (b + k) * (1 + r / 30) - b, pct = e / b * 100, X = s.x || "pull", pos = lvPos(pct, LV_STR[X]), lvl = LV_NAMES[Math.min(5, Math.floor(pos))];
+      const at = n => (b + e) / (1 + n / 30) - b, rows = [["Estimated 1RM, added", `${e >= 0 ? "+" : ""}${r1(e)} kg`, `${r0(pct)}% of body weight`], ["Level on the Strength scale", lvl, `${X === "dip" ? "Dip" : "Pull-up"}, position ${pos.toFixed(1)} on the Level lines`], ...[3, 5, 8].map(n => [`For ${n} reps`, `${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`])];
+      return { html: tcOut(rows, "e1RM = (body weight + added) × (1 + reps/30) − body weight, the one the Records use."), text: [`${X === "dip" ? "Dip" : "Pull-up"}: +${k} kg × ${r} at ${b} kg → 1RM ${e >= 0 ? "+" : ""}${r1(e)} kg (${r0(pct)}% of body weight, ${lvl})`, ...[3, 5, 8].map(n => `${n} reps: ${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`)].join("\n") }; } },
+  { id: "fuel", name: "Fuel for a long session", sub: "Carbs, fluid and sodium by duration", f: [["m", "Duration", "min"], ["g", "Gel size", "g carbs"]], def: { g: "25" },
+    fill: () => { const w = daySessions(todayISO()).filter(x => x.st === "planned").map(x => x.w).sort((a, b) => (+b.min || 0) - (+a.min || 0))[0]; return w?.min ? { m: String(r0(w.min)) } : null; },
+    chips: () => [["1 h", { m: "60" }], ["90 min", { m: "90" }], ["2 h", { m: "120" }], ["3 h", { m: "180" }], ["4 h", { m: "240" }]],
+    out: s => { const m = num(s.m), g = num(s.g) || 25; if (!(m > 0)) return null; const [lo, hi] = m < 45 ? [0, 0] : m < 75 ? [0, 30] : m <= 150 ? [30, 60] : [60, 90], h = m / 60, mid = (lo + hi) / 2, gels = mid ? Math.ceil(mid * h / g) : 0;
+      const rows = [["Carbs per hour", lo || hi ? `${lo}–${hi} g` : "none needed", m >= 150 ? "a glucose + fructose mix, practised in training" : ""], ["Carbs in all", mid ? `≈ ${r0(mid * h)} g` : "—", gels ? `${gels} gel${gels > 1 ? "s" : ""} of ${g} g` : ""], ["Fluid per hour", "400–800 ml", "drink to thirst; less than 2% of body weight lost"], ["Sodium per hour", m >= 60 ? "300–600 mg" : "—", "more if you sweat a lot"]];
+      return { html: tcOut(rows, "From the sports-nutrition consensus (Jeukendrup 2014; Thomas, Erdman, Burke 2016, ACSM/AND/DC). Start low and test it in training."), text: [`Fuel for ${r0(m)} min`, ...rows.map(r => `${r[0]}: ${r[1]}${r[2] ? ` (${r[2]})` : ""}`)].join("\n") }; } },
+  { id: "sweat", name: "Sweat rate", sub: "Weigh yourself before and after, in dry clothes", f: [["a", "Weight before", "kg"], ["z", "Weight after", "kg"], ["d", "Drank", "ml"], ["m", "Time", "min"]], def: { d: "0" },
+    fill: () => ({ a: String(bwKg()) }),
+    out: s => { const a = num(s.a), z = num(s.z), d = num(s.d) || 0, m = num(s.m); if (!(a > 20 && z > 20 && m > 0)) return null; const loss = a - z + d / 1000, rate = loss / (m / 60), pct = (a - z) / a * 100;
+      const rows = [["Sweat rate", `${tcFmt(rate)} L/h`, "weight lost + fluid drunk"], ["Body mass lost", `${tcFmt(pct)}%`, pct > 2 ? "over 2%: drink more next time" : "under 2%: fine"], ["To drink per hour", `${r0(rate * 1000 * .6)}–${r0(rate * 1000 * .8)} ml`, "60–80% of the sweat, a starting point"]];
+      return { html: tcOut(rows, "Same method as the ACSM position stand on exercise and fluid replacement (Sawka 2007). One session in similar weather only: repeat it in heat."), text: [`Sweat rate: ${tcFmt(rate)} L/h over ${r0(m)} min (${tcFmt(pct)}% of body mass lost)`].join("\n") }; } }
+];
+const calcState = c => { const s = tcs(c.id); for (const [k, v] of Object.entries(c.def || {})) if (s[k] === undefined) s[k] = v; return s; };
+function calcCard(c) {
+  const open = UI.toolOpen === c.id, s = calcState(c), R = open ? c.out(s) : null, chips = open && c.chips ? c.chips() : [];
+  return `<section class="rec-sec${open ? " open" : ""}"><button class="rec-h" data-act="calc-tog" data-k="${c.id}" aria-expanded="${open}"><span><b>${c.name}</b><small>${c.sub}</small></span>${ic(open ? "chevU" : "chevD", "sm")}</button>
+    ${open ? `<div class="rec-b"><div class="tc-f">${c.f.map(([k, l, u]) => `<div class="field"><label for="tc-${c.id}-${k}">${l}</label><div class="unit-inp"><input id="tc-${c.id}-${k}" class="inp" inputmode="${k === "t" && c.id === "pace" || k === "p" ? "text" : "decimal"}" value="${esc(s[k] ?? "")}" data-in="tc" data-c="${c.id}" data-k="${k}">${u ? `<span>${u}</span>` : ""}</div></div>`).join("")}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="tc-fill" data-c="${c.id}">${ic("spark", "sm")}Use my data</button>${chips.map(([l, v], i) => `<button class="chip sm" data-act="tc-chip" data-c="${c.id}" data-i="${i}">${esc(l)}</button>`).join("")}</div>
+      <div id="tc-out-${c.id}" class="tc-out">${R ? R.html : tcHint("Fill the fields, or tap «Use my data».")}</div>
+      <div class="row" style="gap:8px"><button class="btn soft sm" data-act="tc-copy" data-c="${c.id}">${ic("copy", "sm")}Copy as text</button>${navigator.share ? `<button class="btn text sm" data-act="tc-share" data-c="${c.id}">Share</button>` : ""}</div></div>` : ""}</section>`;
+}
+ACT["calc-tog"] = el => { UI.toolOpen = UI.toolOpen === el.dataset.k ? null : el.dataset.k; scheduleRender(); };
+ACT["calc-open"] = el => { UI.toolSeg = "calc"; UI.toolOpen = ({ rm: "rm", pace: "pace" })[el.dataset.k] || el.dataset.k || "rm"; UI.toolRet = { tab: UI.tab, trainSeg: UI.trainSeg, perfSeg: UI.perfSeg }; if (UI.tab !== "timer") UI.timerFrom = UI.tab; closeSheet(); UI.tab = "timer"; if (TMR.phase === "done") TMR.phase = "setup"; scheduleRender(); window.scrollTo(0, 0); };
+ACT["tool-back"] = () => { const r = UI.toolRet; UI.toolRet = null; if (r) { UI.tab = r.tab; if (r.trainSeg) UI.trainSeg = r.trainSeg; if (r.perfSeg) UI.perfSeg = r.perfSeg; } else UI.tab = "today"; scheduleRender(); window.scrollTo(0, 0); };
+ACT["tool-seg"] = el => { UI.toolSeg = el.dataset.k; scheduleRender(); };
+ACT["tc-fill"] = el => { const c = CALCS.find(x => x.id === el.dataset.c), v = c.fill && c.fill(); if (!v) { toast("Nothing to fill from yet: log a result first."); return; } Object.assign(tcs(c.id), v); scheduleRender(); };
+ACT["tc-chip"] = el => { const c = CALCS.find(x => x.id === el.dataset.c), ch = c.chips()[+el.dataset.i]; if (ch) { Object.assign(tcs(c.id), ch[1]); scheduleRender(); } };
+ACT["calc-f"] = el => { tcs("rm").f = el.dataset.k; scheduleRender(); };
+INP.tc = (v, el) => { const c = CALCS.find(x => x.id === el.dataset.c); calcState(c)[el.dataset.k] = v; const o = $(`#tc-out-${c.id}`); if (o) { const R = c.out(calcState(c)); o.innerHTML = R ? R.html : tcHint("Fill the fields, or tap «Use my data»."); } };
+const tcText = c => { const R = c.out(calcState(c)); return R ? `${c.name}\n${R.text}\n— Engine` : ""; };
+ACT["tc-copy"] = async el => { const c = CALCS.find(x => x.id === el.dataset.c), t = tcText(c); if (!t) { toast("Nothing to copy yet."); return; }
+  try { await navigator.clipboard.writeText(t); toast("Copied as text"); } catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Copied as text"); } catch (e2) { toast("Could not copy."); } ta.remove(); } };
+ACT["tc-share"] = async el => { const c = CALCS.find(x => x.id === el.dataset.c), t = tcText(c); if (!t) return; try { await navigator.share({ text: t }); } catch (e) {} };
+function tmrBody() {
+  const m = TMR.mode, c = tmrC(), st = (key, label, unit, step = 1, min = 0) => `<div class="field"><span class="flabel">${label}</span><span class="stp"><button data-act="tm-cfg" data-f="${key}" data-d="${-step}" data-min="${min}" aria-label="Less">${ic("minus", "sm")}</button><b>${c[key] === 0 && (key === "cap" || key === "rounds") ? "—" : c[key]}${unit ? `<small>${unit}</small>` : ""}</b><button data-act="tm-cfg" data-f="${key}" data-d="${step}" data-min="${min}" aria-label="More">${ic("plus", "sm")}</button></span></div>`;
+  return `<div class="tm-modes">${TMR_MODES.map(([k, l, i, s]) => `<button class="tm-mode" data-act="tm-mode" data-k="${k}" aria-pressed="${m === k}">${ic(i)}<b>${l}</b><small>${s}</small></button>`).join("")}</div>
+    <section class="card pad"><div class="fa-grid">${m === "fortime" ? st("rounds", "Target rounds", "", 1, 0) + st("cap", "Time cap", "min", 1, 0) : m === "amrap" ? st("min", "Time", "min", 1, 1) : m === "emom" ? st("every", "Every", "s", 15, 15) + st("rounds", "Rounds", "", 1, 1) : m === "tabata" ? st("work", "Work", "s", 5, 5) + st("rest", "Rest", "s", 5, 0) + st("rounds", "Rounds", "", 1, 1) + st("sets", "Sets", "", 1, 1) + (c.sets > 1 ? st("setRest", "Rest between sets", "s", 15, 0) : "") : m === "countdown" ? st("min", "Minutes", "", 1, 0) + st("sec", "Seconds", "", 15, 0) : ""}</div>
+      ${m === "tabata" ? `<div class="chips">${[[20, 10, 8, "Tabata 20/10"], [40, 20, 10, "40/20"], [30, 30, 10, "30/30"], [45, 15, 8, "45/15"], [60, 60, 6, "1′/1′"]].map(([w, r, n, l]) => `<button class="chip" data-act="tm-preset" data-w="${w}" data-r="${r}" data-n="${n}">${l}</button>`).join("")}</div>` : ""}
+      ${prepChips()}
+      <div class="faint" style="font-size:12.5px">${tmrTotal() ? `Total ${fmtDur(tmrTotal())} · ` : ""}${PLAYER().prep} s countdown, 3-2-1 beeps${PLAYER().voice ? ", voice call-outs" : ""}${m === "amrap" ? ", minute call-outs, last 30 s and a spoken 10-second countdown" : m === "fortime" ? ", minute call-outs" : ""}. Nothing is recorded.</div>
+      <button class="btn primary xl" data-act="tm-start">${ic("play", "sm")}Start ${esc(TMR_MODES.find(x => x[0] === m)[1])}</button></section>`;
+}
+function toolsView() {
+  const seg = UI.toolSeg || "timers";
+  return `<div class="tools"><header class="top"><div class="top-row"><div><div class="top-title">Tools</div><div class="top-sub">${seg === "timers" ? "Timers for workouts, nothing is recorded" : "Calculators with your own numbers"}</div></div><div class="row"><button class="icon-btn" data-act="lv-snd" aria-label="Sounds">${ic(PLAYER().mute ? "bellOff" : "bell")}</button>${settingsBtn()}</div></div></header>
+    ${UI.toolRet ? `<button class="btn text sm" data-act="tool-back" style="align-self:flex-start">${ic("chevL", "sm")}Back</button>` : ""}
+    <div style="padding:6px 0 12px">${segBar("tool-seg", seg, [["timers", "Timers"], ["calc", "Calculators"]])}</div>
+    ${seg === "timers" ? tmrBody() : `<div class="tc-list">${CALCS.map(calcCard).join("")}</div>`}</div>`;
+}
+{ const _vt = VIEWS.timer; VIEWS.timer = function () { return TMR.phase === "setup" ? toolsView() : _vt(); }; }
+
 /* ================= Race circuits: a fixed list of stations, tap when each is done, the voice calls the next one =================
    For the Vulcano Fitness Endurance Cup (Fire Set, cut circuits) and any circuit of your own. A script block whose title has the word "race" becomes one task: the clock runs,
    the voice says the station and its reps ("Pull-up 5") the moment you tap, the splits are kept, a finished time goes to Records › Endurance circuits by itself.
@@ -14959,7 +15052,7 @@ function seasonBars(get, tgt, unit) { const cur = weekStartOf(todayISO()); let m
     return `<button class="ph-w ${x.k === 0 ? "now" : ""} ${x.k < 0 ? "past" : ""}" data-act="ph-edit" data-w="${x.ws}" style="--c:var(--${PH[x.p.ph][1]})" aria-label="Week of ${fmtDM(x.ws)}: ${PH[x.p.ph][0]}, ${r1(val || 0)} ${unit}">${x.k === 0 && x.tg ? `<u style="bottom:${clamp(x.tg / mx * 100, 0, 100)}%"></u>` : ""}<i style="height:${clamp((val || 0) / mx * 100, 6, 100)}%"></i><small>${+x.ws.slice(8)}<br>${+x.ws.slice(5, 7)}</small>${r ? `<em>${ic("flag", "sm")}</em>` : ""}</button>`; }).join("")}</div>
     <div class="faint" style="font-size:12px;margin-top:6px">${unit} per week · past = done, ahead = target from the phase · tap a week to change its phase</div>`; }
 function runSeason() {
-  const cur = weekStartOf(todayISO()), ph = weekPhase(cur), r = raceFor(cur), base = discBase(ws => runWeek(ws).km), D = runWeek(cur);
+  const cur = weekStartOf(todayISO()), ph = weekPhase(cur), r = raceFor(cur, "run"), base = discBase(ws => runWeek(ws).km), D = runWeek(cur);
   const tKm = ws => { const t = weekTarget(ws); return t.baseKm ? t.km : base * PH[weekPhase(ws).ph][2]; };
   const n = r ? Math.round(daysBetween(cur, weekStartOf(r.date)) / 7) : null, lr = r ? longRunFor(r, n) : null, tq = { base: 1, build: 2, peak: 2, taper: 1, race: 0, recovery: 0, deload: 1 }[ph.ph];
   const bar = (l, d, t, u) => `<div><span>${l}</span><span class="bar"><i style="width:${clamp(t ? d / t * 100 : 0, 0, 100)}%"></i></span><b>${r1(d)}${t ? ` / ${r1(t)}` : ""}${u}</b></div>`;

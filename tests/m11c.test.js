@@ -509,8 +509,8 @@ test("M11g Lab numbers: Foster monotony and strain, intensity distribution, weig
 test("M11g Lab on screen: Progress › Lab has the sections, each says what it needs when data is missing, and nothing overflows on phone, tablet and PC", async () => {
   for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop]) {
     app = await H.startApp({ dir, seed: SC_SEED(), viewport: vp });
-    const r = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "lab"; render(); const heads = [...document.querySelectorAll("main .section-h h2")].map(h => h.textContent), txt = document.querySelector("main").innerText;
-      return { heads, needs: /needs|Needs/.test(txt), over: document.documentElement.scrollWidth > innerWidth + 1, tab: !!document.querySelector('[data-act="prog-seg"][data-k="lab"]') }; });
+    const r = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "lab"; render(); const fold = document.querySelector('[data-act="fold-tog"][data-k^="Lab"]'), heads = [...document.querySelectorAll("main .rec-b .section-h h2")].map(h => h.textContent), txt = document.querySelector("main").innerText;
+      return { heads, needs: /needs|Needs/.test(txt), over: document.documentElement.scrollWidth > innerWidth + 1, tab: !!fold && fold.getAttribute("aria-expanded") === "true" }; });
     assert.ok(r.tab); assert.deepEqual(r.heads.slice(0, 5), ["Training load", "Running", "Strength", "Body", "Food and recovery"]); assert.ok(r.needs, "empty sections say what they need"); assert.equal(r.over, false); assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
 });
@@ -614,7 +614,7 @@ test("M11h Level screen: Progress › Level shows runner and the three calisthen
       S.train.tests = [{ id: "a", date: L(300), kind: "Race", km: 10, sec: 46 * 60 }, { id: "b", date: L(150), kind: "Race", km: 10, sec: 44 * 60 }, { id: "c", date: L(20), kind: "Race", km: 10, sec: 41 * 60 + 30 }];
       S.train.topSets = [{ date: L(20), ex: "Weighted pull-up", kg: 30, reps: 5, rir: 0, bw }];
       S.train.calis = [{ id: "c1", date: L(15), ex: "Pull-up", test: "Max reps (BW)", val: 13, bw }, { id: "c3", date: L(10), ex: "Handstand", test: "Hold (s)", val: 30, bw }];
-      UI.tab = "progress"; UI.progSeg = "level"; render(); const el = document.querySelector(".lab-wrap"); return { txt: el ? el.textContent : "", sw: document.documentElement.scrollWidth, vw: innerWidth }; });
+      UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "fitness"; UI.fold = { fitness: { Level: true } }; render(); const el = document.querySelector(".lab-wrap"); return { txt: el ? el.textContent : "", sw: document.documentElement.scrollWidth, vw: innerWidth }; });
     assert.ok(/Runner/.test(r.txt) && /Calisthenics/.test(r.txt) && /Strength/.test(r.txt) && /Endurance/.test(r.txt) && /Skills/.test(r.txt), r.txt.slice(0, 200));
     assert.ok(/5K equivalent/.test(r.txt) && /Intermediate is a 5K equivalent of/.test(r.txt), "runner: the next line is named with the time to reach it");
     assert.ok(/Weighted pull-up/.test(r.txt) && /Handstand/.test(r.txt) && /Pull-up/.test(r.txt)); assert.ok(r.sw <= r.vw + 1, `no sideways scroll (${r.sw} > ${r.vw})`);
@@ -622,7 +622,7 @@ test("M11h Level screen: Progress › Level shows runner and the three calisthen
     assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
   app = await H.startApp({ dir, seed: { settings: { onboarded: true } }, viewport: H.VIEWPORTS.phone });
-  const e = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "level"; render(); return document.querySelector(".lab-wrap").textContent; });
+  const e = await app.page.evaluate(() => { UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "fitness"; UI.fold = { fitness: { Level: true } }; render(); return document.querySelector(".lab-wrap").textContent; });
   assert.ok(/Needs a race/.test(e) && /Needs a max-reps test/.test(e), e.slice(0, 200)); assert.deepEqual(app.errors, []);
 });
 
@@ -733,7 +733,7 @@ test("M11i race ranking: the stage table pasted from the ranking page is read, y
     mutateLog(addDays(t, -1), day => { day.wsess = [{ name: "Fire", other: [{ title: fn, kind: "fortime", race: true, sec: 125, rounds: 6, of: 6, cap: null, splits: [12, 29, 11, 48, 12, 13], stations: [[5, "Pull-up"], [10, "Dip"], [5, "Pull-up"], [20, "Push-up"], [5, "Dip"], [5, "Pull-up"]].map(([reps, n]) => ({ reps, name: n })) }] }]; });
     const T = raceTable(paste), C = raceCompare(T, 58, 90), at = raceAt(T, 2), single = raceTable("1  Ana  2:00.5\n2  Bo  2:10\nnoise\n3 Cy 2:30"), one = raceTable("1° #4 Alberto Bivona 0:52.51 1:19.64 2:12.15\n2° #14 Luigi Puccio 0:52.07 1:23.92 2:15.99");
     const sp = raceSplits(fn, at.fire); S.train.race = { stages: [{ id: "s1", name: "Stage 1", text: paste }], places: "2", rest: 5 }; DATA_V++;
-    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.recOpen = { "Race circuits": true, "Endurance Cup ranking": true }; render(); const txt1 = document.body.textContent;
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.fold = { rec: { "Race circuits": true, "Endurance Cup ranking": true } }; render(); const txt1 = document.body.textContent;
     S.train.race.stages.push({ id: "s2", name: "Stage 2", text: paste }); DATA_V++; render(); const txt2 = document.body.textContent, sw = document.documentElement.scrollWidth;
     return { n: T.length, first: T[0], second: T[1], last: T[8], C, at: [at.name, at.total], single: single.map(e => [e.name, e.fire, e.cut, e.total]), one: one.map(e => e.name), plan: sp.plan.map(x => Math.round(x.goal * 100) / 100), txt1, txt2, sw, vw: innerWidth }; }, RK_PASTE);
   assert.equal(r.n, 9); assert.deepEqual(r.first, { name: "Alberto Bivona", fire: 52.51, cut: 79.64, total: 132.15 }); assert.equal(r.second.name, "Luigi Puccio", "the city under the name is ignored"); assert.deepEqual(r.last, { name: "Giuseppe Ricotta", fire: 308.04, cut: 360, total: 668.04 }, "a cut of 6:00.00 is the time limit");
@@ -747,7 +747,7 @@ test("M11i race stage: the Fire Set, a skippable rest and the cut circuit run as
   app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
   const r = await app.page.evaluate(() => { const L = raceList(), CUT = raceSel().cut; const ts = buildTasks(raceStageScript()).map(t => [t.t, t.title, t.dur || t.cap || null]);
     S.train.circuitLog = [{ id: "a", date: todayISO(), circuit: L[0].name, sec: 125 }, { id: "b", date: todayISO(), circuit: CUT.name, sec: 98 }, { id: "c", date: todayISO(), circuit: CUT.name, sec: 104 }]; DATA_V++;
-    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.recOpen = { "Race circuits": true, "Endurance Cup ranking": true }; render(); const txt = document.body.textContent; return { ts, stg: raceStageToday(), txt }; });
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.fold = { rec: { "Race circuits": true, "Endurance Cup ranking": true } }; render(); const txt = document.body.textContent; return { ts, stg: raceStageToday(), txt }; });
   assert.deepEqual(r.ts, [["race", "Fire Set (Open)", 360], ["rest", "Rest", 300], ["race", "Cut · Mix C.L.", 360]], "the rest between the two circuits is yours (5 min unless you set it)"); assert.deepEqual(r.stg, { a: 125, b: 98, sum: 223 }, "the better cut time of the day: 98 s");
   assert.ok(/Stage: Fire Set \+ Cut/.test(r.txt) && /today 2:05 \+ 1:38 = 3:43/.test(r.txt), r.txt.slice(0, 200)); assert.deepEqual(app.errors, []);
 });
@@ -779,7 +779,7 @@ test("M11i race circuits as workouts: the editor adds Fire Set, Cut or a Stage w
   const r = await app.page.evaluate(() => { ACT["we-new"](); const d = S_().draft; ACT["we-race"]({ dataset: { i: "0" } }); const one = d.script, nm = d.name; ACT["we-race"]({ dataset: { i: "3" } }); const two = parseScript(d.script).blocks.map(b => [b.kind, b.title]); closeSheet();
     S.train.race = { stages: [], places: "", rest: 8 }; DATA_V++; const st = buildTasks(raceStageScript()).map(t => [t.t, t.dur || t.cap]);
     ACT["circ-save"]({ dataset: { i: "stage" } }); ACT["circ-save"]({ dataset: { i: "0" } }); ACT["circ-save"]({ dataset: { i: "0" } }); const tp = WK().tpls.filter(t => /Fire Set|Stage/.test(t.name)).map(t => [t.name, t.sport === strengthSport(), parseScript(t.script).blocks.map(b => b.kind).join("+")]);
-    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.recOpen = { "Race circuits": true, "Endurance Cup ranking": true }; render(); const txt = document.body.textContent; return { one, nm, two, st, tp, txt }; });
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; UI.fold = { rec: { "Race circuits": true, "Endurance Cup ranking": true } }; render(); const txt = document.body.textContent; return { one, nm, two, st, tp, txt }; });
   assert.match(r.one, /^Fire Set \(Open\) race 6 min\n- 5 Pull-up\n- 10 Dip/); assert.equal(r.nm, "Fire Set (Open)"); assert.deepEqual(r.two, [["race", "Fire Set (Open) race 6 min"], ["race", "Cut · Mix C.L. race 6 min"]]);
   assert.deepEqual(r.st, [["race", 360], ["rest", 480], ["race", 360]], "8 minutes of rest as set"); assert.deepEqual(r.tp, [["Stage: Fire Set + Cut", true, "race+rest+race"], ["Fire Set (Open)", true, "race"]], "saving twice updates the same workout");
   assert.ok(/8 min rest, then Cut/.test(r.txt) && /Rest between circuits/.test(r.txt) && /Save as a workout/.test(r.txt)); assert.deepEqual(app.errors, []);

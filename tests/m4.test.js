@@ -72,7 +72,7 @@ test("G2: weekly running goal — progress, history judged by the goal of each w
     CHG["km-goal"]("0"); const off = { thisWeek: kmGoalFor(ws), lastWeek: kmGoalFor(oldWeek) };
     CHG["km-goal"]("25");
     const card = kmGoalCard(), chart = kmChart();
-    UI.tab = "train"; UI.trainSeg = "running"; scheduleRender(); await new Promise(r => setTimeout(r, 500));
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "running"; UI.fold = { running: { "Weekly running goal": true } }; scheduleRender(); await new Promise(r => setTimeout(r, 500));
     return { none, a, hist, changed, off, card: { km: /12\.?\d* <\/b>|<b[^>]*>12</.test(card), goal: /\/ 25 km this week/.test(card), togo: /13 km to go/.test(card), reached: /Reached in/.test(card) }, chartGoal: (chart.match(/stroke-dasharray/g) || []).length, greenBars: (chart.match(/var\(--good\)/g) || []).length, sw: document.documentElement.scrollWidth <= innerWidth, shown: !!document.querySelector("#km-goal") };
   });
   assert.deepEqual(r.none, { goal: 0, card: true });

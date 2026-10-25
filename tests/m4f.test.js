@@ -74,8 +74,8 @@ test("going to another section on a phone doesn't use a whole-screen View Transi
 
 test("the timer and the live workout use the whole width on a computer (the page was squeezed into the menu column)", async () => {
   const page = await start(F.seed(), H.VIEWPORTS.desktop);
-  await page.evaluate(() => ACT["timer-open"]()); await page.waitForSelector(".tm-wrap");
-  const w = await page.evaluate(() => ({ wrap: Math.round(document.querySelector(".tm-wrap").getBoundingClientRect().width), main: Math.round(document.getElementById("main").getBoundingClientRect().width) }));
+  await page.evaluate(() => ACT["timer-open"]()); await page.waitForSelector(".tm-modes");
+  const w = await page.evaluate(() => ({ wrap: Math.round(document.querySelector(".tm-modes").getBoundingClientRect().width), main: Math.round(document.getElementById("main").getBoundingClientRect().width) }));
   assert.ok(w.wrap >= 600 && w.main >= 900, JSON.stringify(w));
 });
 
