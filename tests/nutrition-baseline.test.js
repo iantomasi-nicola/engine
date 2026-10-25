@@ -86,7 +86,7 @@ test("KNOWN (D11): the minimum-carbohydrate setting is never applied and the tar
   assert.ok(r.absurd.target < 200, "a 2200 kcal deficit is accepted: target " + r.absurd.target);
 });
 
-test("KNOWN (D12): a food with no salt value is stored as 0 g, indistinguishable from a real zero", async () => {
-  const r = await ev(() => ({ blank: blankFood("x").per.salt }));
-  assert.equal(r.blank, 0);
+test("D12 (F-09, done in f09.test.js): a food with no salt value is unknown (null), no longer a 0 g that looks real", async () => {
+  const r = await ev(() => ({ blank: blankFood("x").per.salt, fib: blankFood("x").per.fib }));
+  assert.deepEqual(r, { blank: null, fib: null });
 });
