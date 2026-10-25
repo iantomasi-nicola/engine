@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; media-src 'self' blob: mediastream:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'"><meta name="referrer" content="strict-origin-when-cross-origin"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; media-src 'self' blob: mediastream:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'"><meta name="referrer" content="strict-origin-when-cross-origin"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 /* sheet footers: buttons share the row and wrap instead of spilling out */
 .sheet-f{flex-wrap:wrap}
 .sheet-f .btn{flex:1 1 auto;min-width:0;padding:0 14px;gap:6px}
@@ -412,12 +412,13 @@ html body .sq-top .seg[role]:not(.many)>button{flex:1 1 0!important;min-width:0!
 .shop-list .shop-row{min-height:58px;padding:2px 6px 2px 2px;border-top:1px solid var(--line)}.shop-list .sq-h + .shop-row{border-top:0}
 .shop-list .shop-main .t{font-size:15.5px}.shop-list .shop-main .s{font-size:12.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .shop-row .pk-st{display:inline-flex;align-items:center;gap:2px;background:var(--surface-2);border-radius:999px;padding:2px}.shop-row .pk-st .pk-n{display:flex;flex-direction:column;align-items:center;min-width:54px;background:none;padding:0 4px}.shop-row .pk-st .pk-n b{font-size:14.5px}.shop-row .pk-st .pk-n small{font-size:11px;color:var(--muted)}
-</style></head><body>
-<title>Engine</title>
+</style><title>Engine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,300..900&family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,300..900&family=Roboto:wght@400;500;700&display=swap" media="print" onload="this.media='all'" crossorigin>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,300..900&family=Roboto:wght@400;500;700&display=swap"></noscript>
+</head><body>
 <script id="look-boot">/* the saved palette before the first paint: no flash of the default colours */try{var l=JSON.parse(localStorage.getItem("engine.look")||"null");if(l&&l.css){var st=document.createElement("style");st.id="md-dyn";st.textContent=l.css;document.head.appendChild(st);if(l.theme&&l.theme!=="system")document.documentElement.setAttribute("data-theme",l.theme)}}catch(e){}</script>
 <style>
 /* Layout: mobile app shell — sticky week strip, day hero, meal cards, bottom tab bar; desktop gets a side rail and a wider column. */
@@ -981,7 +982,7 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
 .pw-lay{display:flex;flex-direction:column;gap:12px}.pw-lib{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:10px;padding:14px 16px max(14px,env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:var(--pw-lib,var(--surface));box-shadow:0 -6px 24px rgba(0,0,0,.12)}body:has(.pw) .fab{display:none}.pw-lt{display:grid;grid-template-columns:auto minmax(160px,300px) 1fr auto;align-items:center;gap:10px}.pw-lt .icon-btn{grid-column:4;grid-row:1}@media(max-width:1180px){.pw-lt .chips{grid-column:1/-1;grid-row:2}}.pw-lt b{font-size:14.5px}.pw-lt .inp{min-height:40px}
 .pw-ll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.pw-lr{flex:none;width:188px;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--pw-lr,var(--surface-2));cursor:grab}.pw-lr b{display:flex;align-items:center;gap:4px;font-size:13.5px;font-weight:620;line-height:1.3}.pw-lr small{font-size:12px;color:var(--muted)}
 @media(min-width:820px){.pw-libbtn{display:inline-flex}}
-.st-pill{display:inline-flex;align-items:center;gap:2px;flex:none;max-width:46%;height:30px;padding:0 6px 0 12px;border-radius:15px;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap}.st-pill .ic{width:18px;height:18px;flex:none}.st-add{gap:8px;flex-wrap:nowrap}html body .fd-st .chip[aria-pressed=true]{background:var(--ink)!important;color:var(--surface)!important;border-color:transparent!important;font-weight:650}.fd-st .chip .ic{width:16px;height:16px;margin-right:3px}.fd-st-s{font-size:12.5px;color:var(--muted)}.fd-st-s b{color:var(--ink)}.st-edit{margin-top:4px}.st-edit>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
+.st-pill{display:inline-flex;align-items:center;gap:2px;flex:none;max-width:46%;height:32px;padding:0 6px 0 12px;border-radius:16px;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap}.st-pill .ic{width:18px;height:18px;flex:none}.st-add{gap:8px;flex-wrap:nowrap}html body .fd-st .chip[aria-pressed=true]{background:var(--ink)!important;color:var(--surface)!important;border-color:transparent!important;font-weight:650}.fd-st .chip .ic{width:16px;height:16px;margin-right:3px}.fd-st-s{font-size:12.5px;color:var(--muted)}.fd-st-s b{color:var(--ink)}.st-edit{margin-top:4px}.st-edit>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
 .so-r{border-top:1px solid var(--line)}.so-a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px 8px 8px}.so-a .faint{font-size:12.5px}.st-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:6px 8px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
 .jr-q{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.jr-qh{display:flex;justify-content:space-between;align-items:baseline}
@@ -2345,7 +2346,7 @@ button.lrow:active{background:var(--v-fill-2)!important}
 
 /* ---------- chips: tonal fills, no outlines; picked = primary tint ---------- */
 .chip{min-height:34px!important;border-radius:var(--r-pill)!important;border:0!important;background:var(--v-fill)!important;color:var(--md-on-surface)!important;font-weight:500!important;font-size:14px!important;padding:0 14px!important;letter-spacing:-.005em;transition:transform var(--t3) var(--spring),background-color var(--t1),color var(--t1)}
-.chip.sm{min-height:30px!important;font-size:13px!important;padding:0 12px!important}
+.chip.sm{min-height:32px!important;font-size:13px!important;padding:0 12px!important}
 .chip[aria-pressed="true"]{background:color-mix(in srgb,var(--md-primary) 16%,var(--v-card))!important;color:var(--md-on-primary-container)!important;font-weight:600!important}
 .chip:hover{background:var(--v-fill-2)!important}
 .chip[aria-pressed="true"]:hover{background:color-mix(in srgb,var(--md-primary) 22%,var(--v-card))!important}
@@ -2380,10 +2381,10 @@ select.inp{background-color:var(--v-fill)!important}
 .ci-main .inp{font-family:var(--head)}
 
 /* ---------- switch (iOS): 51 × 31, white thumb that springs across ---------- */
-.switch{width:51px!important;height:31px!important;border-radius:16px!important;border:0!important;background:var(--v-fill-2)!important;position:relative;flex:none;transition:background-color var(--t2) var(--settle)!important}
-.switch::after{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:27px!important;height:27px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 8px rgb(0 0 0/.15),0 1px 1px rgb(0 0 0/.16)!important;transform:none;transition:transform var(--t3) var(--spring)!important}
+.switch{width:52px!important;height:32px!important;border-radius:16px!important;border:0!important;background:var(--v-fill-2)!important;position:relative;flex:none;transition:background-color var(--t2) var(--settle)!important}
+.switch::after{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:28px!important;height:28px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 8px rgb(0 0 0/.15),0 1px 1px rgb(0 0 0/.16)!important;transform:none;transition:transform var(--t3) var(--spring)!important}
 .switch[aria-checked="true"]{background:var(--md-primary)!important}
-.switch[aria-checked="true"]::after{top:2px!important;left:2px!important;width:27px!important;height:27px!important;background:#fff!important;transform:translateX(20px)!important}
+.switch[aria-checked="true"]::after{top:2px!important;left:2px!important;width:28px!important;height:28px!important;background:#fff!important;transform:translateX(20px)!important}
 .switch:active::after{transform:scaleX(1.12);transform-origin:left}.switch[aria-checked="true"]:active::after{transform:translateX(17px) scaleX(1.12)!important}
 
 /* ---------- pills and tags ---------- */
@@ -2628,6 +2629,13 @@ details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px
 .gl-t .gl-h{justify-content:flex-start;font-size:12.5px;font-weight:500;letter-spacing:.02em;text-transform:none}
 .td-say.big{font-size:14.5px}
 .td-vs{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+/* M14b-C: small controls keep their look and reach at least 32 px (an invisible hit area), the selected tab has a text colour that reads on its tint, and the header gives way at a 200% zoom */
+.link,.pk-n,.add-tag button,[data-act=pantry-sort],.chk,.icon-btn.sm{position:relative}
+.link::after,.pk-n::after,.add-tag button::after,[data-act=pantry-sort]::after,.chk::after,.icon-btn.sm::after{content:"";position:absolute;inset:-6px}
+.link::after{inset:-8px -6px}
+.week{grid-template-columns:32px repeat(7,minmax(0,1fr)) 32px}
+html .subseg button[aria-selected="true"]{color:var(--md-on-primary-container)!important}
+@media (max-width:359px){.sync{position:relative}.sync>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.top-row>.sync{flex:none;margin-top:6px}}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -2879,6 +2887,11 @@ const isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0
 const parseISO = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return isoOf(d); };
 const todayISO = () => isoOf(new Date());
+/* a real calendar day written YYYY-MM-DD: what may be used as a key of the daily log */
+/* smooth scrolling unless the person asked the system for less motion */
+const scrollMode = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+const isObj = o => !!o && typeof o === "object" && !Array.isArray(o);
+const isDay = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && isoOf(parseISO(s)) === s;
 const dow = s => (parseISO(s).getDay() + 6) % 7;
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DOWK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -3010,15 +3023,27 @@ function saveLocal() {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
   catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
 }
+/* the daily log keeps only real months and days (a stray key from a bad link, file or sync cannot reach the charts) */
+function cleanLogm(m) {
+  const out = {};
+  for (const [mk, doc] of Object.entries(isObj(m) ? m : {})) {
+    if (!/^\d{4}-\d{2}$/.test(mk) || !isObj(doc)) continue;
+    const days = {}; for (const [d, v] of Object.entries(isObj(doc.days) ? doc.days : {})) if (isDay(d) && isObj(v)) days[d] = v;
+    out[mk] = { ...doc, days };
+  }
+  return out;
+}
+/* the fields every shop, body and training document must have */
+const DOC_DEFAULT = { shop: () => ({ checked: {}, extras: [], pantry: {}, range: 7, stores: [] }), body: () => ({ w: {}, m: {} }), train: () => ({ tests: [], pbs: [], calis: [], circuitLog: [], topSets: [] }) };
+const cleanColl = o => Object.fromEntries(Object.entries(isObj(o) ? o : {}).filter(([, v]) => isObj(v)));
 function loadLocal() {
   try {
     const j = JSON.parse(localStorage.getItem(LS_KEY) || "null");
-    if (j) for (const k of Object.keys(S)) if (j[k] != null) S[k] = j[k];
+    if (j) for (const k of Object.keys(S)) if (isObj(j[k])) S[k] = j[k];   // a part of the wrong type (a damaged copy) keeps its empty default
   } catch (e) {}
+  S.logm = cleanLogm(S.logm); for (const k of ["foods", "recipes", "days"]) S[k] = cleanColl(S[k]);
   if (S.settings) S.settings = normalizeSettings(S.settings);
-  S.shop = { checked: {}, extras: [], pantry: {}, range: 7, stores: [], ...(S.shop || {}) };
-  S.body = { w: {}, m: {}, ...(S.body || {}) };
-  S.train = { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...(S.train || {}) };
+  for (const k of Object.keys(DOC_DEFAULT)) S[k] = { ...DOC_DEFAULT[k](), ...(S[k] || {}) };
   DATA_V++;
 }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
@@ -3608,6 +3633,7 @@ const SMART = () => S.settings.fit?.targetMode === "smart";
 /* ================= daily records (one document per month) ================= */
 function logGet(date) { return S.logm[date.slice(0, 7)]?.days?.[date] || null; }
 function mutateLog(date, fn) {
+  if (!isDay(date)) return;
   const mk = date.slice(0, 7);
   const doc = clone(S.logm[mk] || { month: mk, days: {} });
   const day = doc.days[date] || {};
@@ -3616,11 +3642,11 @@ function mutateLog(date, fn) {
   if (Object.keys(day).length) doc.days[date] = day; else delete doc.days[date];
   put("logm", mk, doc);
 }
-function allLogDates() { const out = []; for (const m of Object.values(S.logm)) for (const d of Object.keys(m.days || {})) out.push(d); return out.sort(); }
+function allLogDates() { const out = []; for (const m of Object.values(S.logm)) for (const d of Object.keys(m.days || {})) if (isDay(d)) out.push(d); return out.sort(); }
 function weightsSeries(withEst = false) {
   const w = {};
   for (const [d, v] of Object.entries(S.body.w || {})) w[d] = +v;
-  for (const m of Object.values(S.logm)) for (const [d, v] of Object.entries(m.days || {})) if (v.weight > 0 && (withEst || !v.estW)) w[d] = +v.weight;
+  for (const m of Object.values(S.logm)) for (const [d, v] of Object.entries(m.days || {})) if (isDay(d) && v.weight > 0 && (withEst || !v.estW)) w[d] = +v.weight;
   return Object.entries(w).sort((a, b) => a[0].localeCompare(b[0]));
 }
 
@@ -5213,22 +5239,44 @@ function openSheet(type, params = {}) {
   const cur = UI.sheet; let ret = null;
   if (cur && (cur.keep || cur._ret) && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
   UI.sheet = { type, ...params }; if (ret) UI.sheet._ret = ret; UI.sheet._new = true; renderSheet(); }
-function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; }
+/* a sheet is a dialog: the page behind it is inert while it is open, Tab stays inside, focus starts in it and goes back to the control that opened it */
+const SHEET_FROM = { el: null, act: null };
+const SHEET_BEHIND = ["main", "side", "bnav", "fab"];
+function sheetBehind(on) { for (const id of SHEET_BEHIND) { const el = document.getElementById(id); if (el) el.inert = on; } }
+function sheetClosed() {
+  sheetBehind(false);
+  const { el, act } = SHEET_FROM; SHEET_FROM.el = SHEET_FROM.act = null;
+  const back = el?.isConnected ? el : act && document.querySelectorAll(`[data-act="${act}"]`).length === 1 ? document.querySelector(`[data-act="${act}"]`) : null;
+  back?.focus({ preventScroll: true });
+}
+function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
 const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
-  if (!sh) { root.innerHTML = ""; return; }
+  if (!sh) { root.innerHTML = ""; sheetClosed(); return; }
   if (!sh._new && typingBusy()) { DEFER = true; return; }
+  if (sh._new && !SHEET_FROM.el) { const a = document.activeElement; if (a && a !== document.body && !a.closest?.("#sheet-root")) { SHEET_FROM.el = a; SHEET_FROM.act = a.dataset?.act || null; } }
   const f = captureFocus(); const sc = sh._sc ?? ($(".sheet-b")?.scrollTop || 0); sh._sc = null;
   const def = SHEETS[sh.type](sh), enter = sh._new ? " enter" : "";
-  root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${def.full ? " full" : ""}${enter}" role="dialog" aria-modal="true" aria-label="${esc(def.title)}">
+  root.innerHTML = `<div class="scrim${enter}" data-act="close-sheet"></div><div class="sheet${def.wide ? " wide" : ""}${def.full ? " full" : ""}${enter}" role="dialog" aria-modal="true" tabindex="-1" aria-label="${esc(def.title)}">
     <div class="sheet-h"><h3>${def.titleHTML || esc(def.title)}</h3>${def.head || ""}<button class="icon-btn" data-act="close-sheet" aria-label="Close">${ic("close")}</button></div>
     <div class="sheet-b">${def.body}</div>${def.foot ? `<div class="sheet-f">${def.foot}</div>` : ""}</div>`;
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = "hidden"; sheetBehind(true);
   const b = $(".sheet-b"); if (b && !sh._new) b.scrollTop = sc;
   if (sh._new) { sh._new = false; if (def.focus && matchMedia("(pointer:fine)").matches) $("#" + def.focus)?.focus(); }
   else restoreFocus(f);
+  if (!root.contains(document.activeElement)) $(".sheet", root)?.focus({ preventScroll: true });
 }
+document.addEventListener("keydown", e => {
+  if (e.key !== "Tab" || !UI.sheet) return;
+  const box = $("#sheet-root .sheet"); if (!box) return;
+  const items = [...box.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')].filter(x => !x.disabled && x.type !== "hidden" && x.tabIndex >= 0 && x.getClientRects().length), a = document.activeElement;
+  if (!items.length || a?.closest?.("#toast")) return;
+  const first = items[0], last = items[items.length - 1];
+  if (!box.contains(a)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+  else if (e.shiftKey && (a === first || a === box)) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+});
 const mealChips = (sel, act = "sheet-meal") => `<div class="chips scroll">${activeMeals().map(m => `<button class="chip" data-act="${act}" data-meal="${m.id}" aria-pressed="${sel === m.id}">${esc(m.name)}</button>`).join("")}</div>`;
 const macroStrip = m => `<div class="macro-strip"><div><b>${fmtN(m.kcal)}</b><small>kcal</small></div><div class="c"><b>${r1(m.c)}</b><small>Carbs</small></div><div class="p"><b>${r1(m.p)}</b><small>Protein</small></div><div class="f"><b>${r1(m.f)}</b><small>Fat</small></div></div>`;
 
@@ -5813,8 +5861,14 @@ function toast(msg, undo) {
   const el = $("#toast");
   el.innerHTML = `<div class="toast" role="status"><span>${esc(msg)}</span>${undo ? `<button data-act="undo">Undo</button>` : ""}</div>`;
   toast.undo = undo || null;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.innerHTML = ""; toast.undo = null; }, undo ? 5000 : 3200);
+  toast.ms = undo ? 10000 : 3200; toastArm();
 }
+/* the message stays while the pointer or the keyboard focus is on it (Undo must be reachable without a race) */
+function toastArm() { clearTimeout(toastTimer); toastTimer = setTimeout(() => { const el = $("#toast"); el.innerHTML = ""; toast.undo = null; }, toast.ms); }
+document.addEventListener("pointerover", e => { if (e.target.closest?.("#toast .toast")) clearTimeout(toastTimer); });
+document.addEventListener("pointerout", e => { if (e.target.closest?.("#toast .toast") && !e.relatedTarget?.closest?.("#toast .toast")) toastArm(); });
+document.addEventListener("focusin", e => { if (e.target.closest?.("#toast .toast")) clearTimeout(toastTimer); });
+document.addEventListener("focusout", e => { if (e.target.closest?.("#toast .toast") && !e.relatedTarget?.closest?.("#toast .toast")) toastArm(); });
 
 /* ================= barcode scanning ================= */
 const ZXING_SRC = new URL("vendor/zxing.min.js", location.href).href;
@@ -7664,13 +7718,8 @@ async function saveFile(filename, data, okMsg) {
   }
   return false;
 }
-ACT.export = async () => {
-  const data = JSON.stringify({ app: "Fuel", version: 2, exported: new Date().toISOString(), settings: S.settings, logm: S.logm, train: S.train, body: S.body, foods: S.foods, recipes: S.recipes, days: S.days, shop: S.shop }, null, 1);
-  if (await saveFile(`fuel-backup-${todayISO()}.json`, data, "Backup saved")) return;
-  try { await navigator.clipboard.writeText(data); toast("Backup copied to the clipboard as JSON"); } catch (e) { toast("Export isn't available in this view."); }
-};
 let xlsxReady = null;
-function loadXlsx() { if (window.XLSX) return Promise.resolve(); if (!xlsxReady) xlsxReady = loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js").catch(e => { xlsxReady = null; throw e; }); return xlsxReady; }
+function loadXlsx() { if (window.XLSX) return Promise.resolve(); if (!xlsxReady) xlsxReady = loadScript(new URL("vendor/xlsx.full.min.js", location.href).href).catch(e => { xlsxReady = null; throw e; }); return xlsxReady; }
 const xd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const rd = (v, k = 1) => v == null || v === "" || !isFinite(v) ? null : Math.round(v * k) / k;
 function exportSheets() {
@@ -11902,7 +11951,7 @@ setInterval(reminderTick, 30000); setTimeout(reminderTick, 4000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(reminderTick, 800); });
 /* "Taken" pressed on a notification: the service worker tells the open app, or opens it with ?supp= */
 navigator.serviceWorker?.addEventListener?.("message", e => { const m = e.data || {}; if (m.type === "supp-taken" && m.k) { suppMark(m.date || todayISO(), m.k); } if (m.type === "open-tab" && m.tab) { UI.tab = m.tab; if (FUEL_TABS.includes(m.tab)) UI.fuelTab = m.tab; scheduleRender(); } });
-function suppMark(date, k) { if (String(k).includes(",")) { String(k).split(",").forEach(x => suppMark(date, x)); return; } if (suppTaken(date, k)) return; mutateLog(date, day => { day.supp = { ...(day.supp || {}), [k]: nowHM() }; }); const x = SUPPS().find(s => s.id === k.split("@")[0]); if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock - 1); saveSettings(); } toast(`${x?.name || "Supplement"} ticked`); scheduleRender(); }
+function suppMark(date, k) { if (!isDay(date)) return; if (String(k).includes(",")) { String(k).split(",").forEach(x => suppMark(date, x)); return; } if (!SUPPS().some(s => s.id === String(k).split("@")[0]) || suppTaken(date, k)) return; mutateLog(date, day => { day.supp = { ...(day.supp || {}), [k]: nowHM() }; }); const x = SUPPS().find(s => s.id === k.split("@")[0]); if (x && x.stock != null && x.stock !== "") { x.stock = Math.max(0, +x.stock - 1); saveSettings(); } toast(`${x?.name || "Supplement"} ticked`); scheduleRender(); }
 /* ================= check-ups: measurements, progress photos and the tests come back on a schedule (L18) =================
    Each one has its interval (measurements and photos here; the two tests follow «Retest every» in Training) and a switch.
    When one is due it shows on Today with what to do and a button; a notification comes on the day it falls due and once
@@ -12949,6 +12998,7 @@ SHEETS.race = sh => { const o = _raceSheet(sh), d = sh.draft; if (!sh.isNew && d
    Restore points: a copy of everything, kept on this device once a day (the last 14) and before every restore.
    Backup file: every N days. Where the browser allows it (Chrome on a computer) it's written by itself into a folder
    you pick once; elsewhere Today reminds you and one tap saves it. Restore shows what's inside and lets you pick parts. */
+const BK_VERSION = 3;   // the format of the backup file; a file with a higher number comes from a newer Engine and is not read
 const BK_PARTS = [["settings", "Settings and targets"], ["foods", "Foods and recipes"], ["days", "Meal plans"], ["logm", "Daily logs (weight, workouts, sleep, water)"], ["train", "Training, races, goals and programs"], ["body", "Body: weight, measurements, photo list"], ["shop", "Shopping, pantry and prices"], ["photos", "Progress photos"]];
 const BKP = () => ({ every: 7, keys: false, photos: false, ...(S.settings.backup || {}) });
 const BKDB = (() => { let p = null; const open = () => p || (p = new Promise((ok, no) => { const r = indexedDB.open("engine-backup", 1); r.onupgradeneeded = () => { r.result.createObjectStore("pts"); r.result.createObjectStore("kv"); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
@@ -12957,7 +13007,7 @@ const BKDB = (() => { let p = null; const open = () => p || (p = new Promise((ok
 function backupData(o = {}) {
   const st = clone(S.settings || {});
   if (!o.keys) { delete st.mapKey; if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) delete x.key; delete st.ai.key; } }
-  return { app: "Engine", version: 3, exported: new Date().toISOString(), settings: st, foods: S.foods, recipes: S.recipes, days: S.days, logm: S.logm, train: S.train, body: S.body, shop: S.shop };
+  return { app: "Engine", version: BK_VERSION, exported: new Date().toISOString(), settings: st, foods: S.foods, recipes: S.recipes, days: S.days, logm: S.logm, train: S.train, body: S.body, shop: S.shop };
 }
 async function photosData() { const out = {}; for (const x of S.body.photos || []) { const b = await photoBlob(x); if (b) out[x.id] = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); } return out; }
 async function backupJSON(o = BKP()) { const j = backupData(o); if (o.photos) j.photos = await photosData(); return JSON.stringify(j); }
@@ -13000,26 +13050,55 @@ SETTINGS_CARDS.push({ o: 0, fn: backupSettings });
 /* guided restore */
 function bkSummary(j) { const n = o => Object.keys(o || {}).length; let logs = 0, wos = 0; for (const m of Object.values(j.logm || {})) for (const d of Object.values(m.days || {})) { logs++; wos += (d.workouts || []).length; }
   return { settings: j.settings ? "yes" : "—", foods: `${n(j.foods)} foods · ${n(j.recipes)} recipes`, days: `${n(j.days)} days`, logm: `${logs} days · ${wos} workouts`, train: `${(j.train?.races || []).length} races · ${(j.train?.goals || []).length} goals · ${(j.train?.wk?.tpls || []).length} workouts`, body: `${n(j.body?.w)} weigh-ins · ${n(j.body?.m)} measurements`, shop: `${n(j.shop?.pantry)} in the pantry · ${(j.shop?.buys || []).length} purchases`, photos: j.photos ? `${n(j.photos)} photos` : "not in this file" }; }
-function restoreOpen(j, from) { if (!j || (j.app !== "Fuel" && j.app !== "Engine" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
-  const parts = {}; for (const [k] of BK_PARTS) parts[k] = k === "photos" ? !!j.photos : !!(k === "foods" ? j.foods || j.recipes : j[k]);
-  openSheet("restore", { j, parts, mode: "replace", from: from || "file" }); }
+/* each part of a file must have the right shape; one that has not is left out and named in the sheet */
+const BK_NAMES = { settings: "settings", foods: "foods", recipes: "recipes", days: "meal plans", logm: "daily logs", train: "training", body: "body", shop: "shopping", photos: "photos" };
+function bkClean(j) {
+  const c = { ...j }, bad = [];
+  for (const k of Object.keys(BK_NAMES)) if (j[k] != null && !isObj(j[k])) { delete c[k]; bad.push(BK_NAMES[k]); }
+  for (const k of ["foods", "recipes", "days"]) if (c[k]) c[k] = cleanColl(c[k]);
+  if (c.logm) c.logm = cleanLogm(c.logm);
+  return { j: c, bad };
+}
+function restoreOpen(j, from) { if (!isObj(j) || (j.app !== "Fuel" && j.app !== "Engine" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
+  if (+j.version > BK_VERSION) { toast(`This backup comes from a newer version of Engine (${String(j.version).slice(0, 8)}): update the app first.`); return; }
+  const c = bkClean(j), has = k => k === "photos" ? !!c.j.photos : k === "foods" ? !!(c.j.foods || c.j.recipes) : !!c.j[k];
+  if (!BK_PARTS.some(([k]) => has(k))) { toast("That file has nothing Engine can restore."); return; }
+  const parts = {}; for (const [k] of BK_PARTS) parts[k] = has(k);
+  openSheet("restore", { j: c.j, bad: c.bad, parts, mode: "replace", from: from || "file" }); }
 SHEETS.restore = sh => { const Sm = bkSummary(sh.j);
-  return { title: "Restore", body: `<div class="note">${sh.from === "point" ? "Restore point" : "Backup file"} from <b>${esc(new Date(sh.j.exported || Date.now()).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }))}</b>. Pick what to bring back.</div>
+  return { title: "Restore", body: `<div class="note">${sh.from === "point" ? "Restore point" : "Backup file"} from <b>${esc(new Date(sh.j.exported || Date.now()).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }))}</b>. Pick what to bring back.</div>${sh.bad?.length ? `<div class="note warn">Left out, not in a readable format: ${esc(sh.bad.join(", "))}.</div>` : ""}
     <div class="card">${BK_PARTS.map(([k, l]) => { const has = k === "photos" ? !!sh.j.photos : k === "foods" ? !!(sh.j.foods || sh.j.recipes) : !!sh.j[k]; return `<label class="lrow bk-r" style="${has ? "" : "opacity:.5"}"><span><span class="t">${l}</span><span class="s">${esc(Sm[k])}</span></span><span class="end"><button type="button" class="switch" role="switch" aria-checked="${!!sh.parts[k]}" data-act="rs-part" data-k="${k}" ${has ? "" : "disabled"} aria-label="${esc(l)}"></button></span></label>`; }).join("")}</div>
-    <div class="field"><span class="flabel">How</span><div class="strats">${[["replace", "Replace", "What you pick replaces what's here"], ["merge", "Only add what's missing", "Days, foods and recipes that aren't here come back; nothing here changes"]].map(([k, l, t]) => `<button class="strat" data-act="rs-mode" data-k="${k}" aria-pressed="${sh.mode === k}"><b>${l}</b><small>${t}</small></button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">How</span><div class="strats">${[["replace", "Replace", "What the file has overwrites what's here; anything it lacks stays"], ["merge", "Only add what's missing", "What isn't here comes back (foods, days, weigh-ins, races…); nothing here changes"]].map(([k, l, t]) => `<button class="strat" data-act="rs-mode" data-k="${k}" aria-pressed="${sh.mode === k}"><b>${l}</b><small>${t}</small></button>`).join("")}</div></div>
     <div class="faint" style="font-size:12.5px">A restore point of what's here now is kept first, so you can undo this from Settings → Backups → Restore points.</div>`,
     foot: `<button class="btn tonal" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="rs-go">Restore</button>` }; };
 ACT["rs-part"] = el => { const sh = S_(); sh.parts[el.dataset.k] = !sh.parts[el.dataset.k]; renderSheet(); };
 ACT["rs-mode"] = el => { S_().mode = el.dataset.k; renderSheet(); };
-ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0;
-  if (P.settings && j.settings && !merge) { const keepKey = S.settings?.intervals?.key, keepAi = S.settings?.ai, s = normalizeSettings(j.settings);
-    if (keepKey && !s.intervals?.key) s.intervals = { ...(s.intervals || {}), key: keepKey }; if (keepAi && !(s.ai?.services || []).some(x => x.key)) s.ai = keepAi; put("settings", "", s); n++; }
-  const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
-  if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
-  if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
-  for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { if (merge) { const cur = clone(S[k]); for (const [x, v] of Object.entries(j[k])) if (cur[x] == null || (Array.isArray(cur[x]) && !cur[x].length)) cur[x] = v; put(k, "", cur); } else put(k, "", j[k]); n++; }
-  if (P.photos && j.photos) { let p = 0; for (const [id, url] of Object.entries(j.photos)) { try { const b = await (await fetch(url)).blob(); await IDB.put(id, b); p++; } catch (e) {} } n += p; }
-  toast(`Restored · ${n} items`); scheduleRender(); };
+/* a photo of a backup is a data:image URL: decoded here, never fetched, so a file cannot make the app call an address */
+function dataBlob(u) {
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+=*)$/.exec(String(u));
+  if (!m) return null;
+  try { const bin = atob(m[2]), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new Blob([a], { type: m[1] }); } catch (e) { return null; }
+}
+/* «Only add what's missing»: what the file has and the current copy has not (by date, id or value); nothing present changes */
+function fillIn(cur, add, d = 0) {
+  if (Array.isArray(cur) && Array.isArray(add)) { const key = x => isObj(x) && x.id != null ? "#" + x.id : JSON.stringify(x), have = new Set(cur.map(key)); return cur.concat(add.filter(x => !have.has(key(x)))); }
+  if (isObj(cur) && isObj(add) && d < 4) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = cur[k] != null ? fillIn(cur[k], v, d + 1) : v; return o; }
+  return cur;
+}
+ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0;
+  try {
+    if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
+      if (cur.intervals?.key && !s.intervals?.key) s.intervals = { ...(s.intervals || {}), key: cur.intervals.key };
+      if (cur.mapKey && !s.mapKey) s.mapKey = cur.mapKey;
+      if (cur.ai && !(s.ai?.services || []).some(x => x.key)) s.ai = cur.ai;
+      put("settings", "", s); n++; }
+    const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
+    if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
+    if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
+    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : { ...DOC_DEFAULT[k](), ...j[k] }); n++; }
+    if (P.photos && j.photos) for (const [id, url] of Object.entries(j.photos)) { const b = dataBlob(url); if (!b) { skipped++; continue; } try { await IDB.put(id, b); n++; } catch (e) { skipped++; } }
+  } catch (e) { toast("The restore stopped halfway: " + String(e?.message || e).slice(0, 80) + ". The copy kept just before is under Settings → Backups → Restore points."); scheduleRender(); return; }
+  toast(`Restored · ${n} items${skipped ? ` · ${skipped} photo${skipped > 1 ? "s" : ""} skipped` : ""}`); scheduleRender(); };
 CHG["bk-file"] = (v, el) => { const f = el.files?.[0]; if (!f) return; el.value = ""; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; } restoreOpen(j, "file"); }; rd.readAsText(f); };
 SHEETS.bkpoints = sh => ({ title: "Restore points", body: sh.list ? (sh.list.length ? `<div class="card">${[...sh.list].reverse().map(k => `<button class="lrow" data-act="bk-point" data-k="${k}"><span><span class="t">${esc(new Date(k).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</span><span class="s">${esc(sh.why[k] || "")}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : `<div class="note">No restore points yet: the first one is made a few seconds after opening the app.</div>`) : `<div class="result"><span class="spinner"></span></div>`,
   foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
@@ -13105,7 +13184,7 @@ exportSheets = function () {
   vv.addEventListener("resize", q); vv.addEventListener("scroll", q); addEventListener("resize", q); upd(); })();
 /* the field you tap scrolls to the middle of what's visible, once the keyboard is up */
 document.addEventListener("focusin", e => { const el = e.target; if (!el.matches?.("input:not([type=checkbox]):not([type=file]),textarea,select") || !matchMedia("(pointer:coarse)").matches) return;
-  setTimeout(() => { if (document.activeElement !== el) return; const r = el.getBoundingClientRect(), vh = window.visualViewport?.height || innerHeight; if (r.top < 60 || r.bottom > vh - 20) el.scrollIntoView({ block: el.id === "add-q" ? "start" : "center", behavior: "smooth" }); }, 320); });
+  setTimeout(() => { if (document.activeElement !== el) return; const r = el.getBoundingClientRect(), vh = window.visualViewport?.height || innerHeight; if (r.top < 60 || r.bottom > vh - 20) el.scrollIntoView({ block: el.id === "add-q" ? "start" : "center", behavior: scrollMode() }); }, 320); });
 /* the food just added flashes in the meal strip at the top of the add sheet */
 const _refreshAddKb = refreshAdd;
 refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[data-id]").map(b => b.dataset.id)); _refreshAddKb(); for (const b of $$("#add-ctx .add-tag button[data-id]")) if (!before.has(b.dataset.id)) b.closest(".add-tag").classList.add("new"); const w = $("#add-ctx .add-in"); if (w) w.scrollLeft = w.scrollWidth; };
@@ -13745,7 +13824,7 @@ SHEETS.gear = sh => { const date = sh.date || todayISO(), ws = sh.live ? [] : pl
     foot: `<button class="btn primary" data-act="close-sheet">Done</button>` }; };
 ACT["gear-open"] = el => openSheet("gear", { date: el.dataset.date });
 ACT["gear-tick"] = el => { gearTick(el.dataset.date, el.dataset.id); haptic(8); if (UI.sheet) renderSheet(); scheduleRender(); };
-ACT["gear-set"] = () => { closeSheet(); UI.tab = "settings"; UI.setOpen = { ...(UI.setOpen || {}), live: true }; scheduleRender(); setTimeout(() => $("#gear-set")?.scrollIntoView({ block: "start", behavior: "smooth" }), 200); };
+ACT["gear-set"] = () => { closeSheet(); UI.tab = "settings"; UI.setOpen = { ...(UI.setOpen || {}), live: true }; scheduleRender(); setTimeout(() => $("#gear-set")?.scrollIntoView({ block: "start", behavior: scrollMode() }), 200); };
 /* settings, in Live workouts & timer */
 function gearSettings() { const G = GEARS();
   return `<div class="field"><label for="map-key">Story maps · MapTiler key <span class="faint">(optional, free)</span></label><div class="row" style="gap:8px;flex-wrap:nowrap"><input id="map-key" class="inp key-in" type="text" name="maptiler-key" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore value="${esc(S.settings.mapKey || "")}" placeholder="Not needed: free maps without a key are used" data-chg="map-key">${S.settings.mapKey ? `<button class="btn soft sm" data-act="map-test" style="flex:0 0 auto">Test</button>` : ""}</div>${S.settings.mapKeyErr ? `<span class="note warn" style="font-size:12.5px">${esc(S.settings.mapKeyErr)}</span>` : ""}<span class="faint" style="font-size:12.5px">Without a key the story map uses CARTO, then OpenStreetMap, then Esri, whichever answers. A free key from maptiler.com (Account › Keys) gives sharper maps.</span></div>` + `<div class="field" id="gear-set"><span class="flabel">What to bring</span>
@@ -13794,7 +13873,7 @@ const TAB_ORDER = () => TABS.map(t => t[0]);
 const tabIdx = t => { const o = TAB_ORDER(), x = ["foods", "shop", "pantry"].includes(t) ? "plan" : t; return o.indexOf(x); };
 const dirOf = (a, b) => a < 0 || b < 0 || a === b ? "fade" : b > a ? "l" : "r";
 { const _tab = ACT.tab; ACT.tab = el => { const to = el.dataset.tab, same = to === UI.tab || (to === (UI.fuelTab || "plan") && ["plan", "foods", "shop", "pantry"].includes(UI.tab));
-    if (same && scrollY > 4 && !UI.sheet) { scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
+    if (same && scrollY > 4 && !UI.sheet) { scrollTo({ top: 0, behavior: scrollMode() }); return; }
     VT_NEXT = dirOf(tabIdx(UI.tab), tabIdx(to)); return _tab(el); }; }
 for (const [act, key] of [["train-seg", "trainSeg"], ["prog-seg", "progSeg"]]) { const f = ACT[act]; if (!f) continue;
   ACT[act] = el => { const S2 = secList(), a = S2 ? S2.list.indexOf(UI[key]) : -1, b = S2 ? S2.list.indexOf(el.dataset.k) : -1; VT_NEXT = dirOf(a, b); return f(el); }; }

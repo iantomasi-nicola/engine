@@ -113,7 +113,7 @@
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(() => navigator.serviceWorker.ready).then(reg => {
     // once the app is idle, keep the barcode and label readers on the device too
     const warm = () => { if (navigator.onLine && !(navigator.connection?.saveData)) reg.active?.postMessage("warm"); };
-    (window.requestIdleCallback || setTimeout)(warm, 8000);
+    if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 8000 }); else setTimeout(warm, 8000);
   }).catch(() => {}));
   addEventListener("online", () => scheduleRender()); addEventListener("offline", () => scheduleRender());
 })();
