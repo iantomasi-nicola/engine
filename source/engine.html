@@ -2511,6 +2511,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 html .subseg{background:transparent!important;padding:0!important;gap:6px!important;border-radius:0!important}
 html .subseg button{background:transparent!important;color:var(--md-on-surface-variant)!important;min-height:32px!important;box-shadow:none!important;font-weight:500!important}
 html .subseg button[aria-selected="true"]{background:color-mix(in srgb,var(--md-primary) 14%,transparent)!important;color:var(--md-primary)!important;font-weight:600!important;box-shadow:none!important}
+@media(max-width:430px){html .subseg{gap:2px!important}html .subseg button{padding:0 10px!important;font-size:13.5px!important}}
 html .ov-x .btn.tonal{background:var(--md-primary)!important;color:var(--md-on-primary)!important}
 /* session rows are cards now: room on both sides */
 .td-s{padding:12px 14px!important}.td-s.done .td-s-a{right:14px!important}
@@ -13757,7 +13758,8 @@ function raceLog(t, r, date) {
 function raceSection() {
   const R = RACE(), L = raceList(), fire = L[0], best = raceBest(fire.name), times = raceTimes(R.rank), K = best != null && times.length ? raceRank(best, times, R.places) : null, sp = raceSplits(fire.name, K?.cut);
   const mu = Math.max(0, ...(S.train.calis || []).filter(c => lvEx(c.ex || "") === "mu" && c.test === "Max reps (BW)").map(c => +c.val || 0));
-  let h = `<div class="section-h"><h2>Race circuits</h2></div><div class="card">${L.map((c, i) => { const b = raceBest(c.name); return `<button class="lrow" data-act="race-start" data-i="${i}"><span><span class="t">${esc(c.name)}</span><span class="s">${c.steps.map(s => `${s.reps} ${esc(s.name)}`).join(" · ")}${c.cap ? ` · limit ${fmtClock(c.cap)}` : ""}${b != null ? ` · best ${fmtClock(b)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>`; }).join("")}</div>
+  const stg = raceStageToday();
+  let h = `<div class="section-h"><h2>Race circuits</h2></div><div class="card"><button class="lrow" data-act="race-stage"><span><span class="t">Stage: Fire Set + Cut</span><span class="s">${esc(L[0].name)}, a 3′ rest you can skip, then ${esc(L[1].name)}${stg ? ` · today ${fmtClock(stg.a)} + ${fmtClock(stg.b)} = ${fmtClock(stg.sum)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>${L.map((c, i) => { const b = raceBest(c.name); return `<button class="lrow" data-act="race-start" data-i="${i}"><span><span class="t">${esc(c.name)}</span><span class="s">${c.steps.map(s => `${s.reps} ${esc(s.name)}`).join(" · ")}${c.cap ? ` · limit ${fmtClock(c.cap)}` : ""}${b != null ? ` · best ${fmtClock(b)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>`; }).join("")}</div>
     <div class="faint" style="font-size:12.5px">Starts the live player in race mode: a count-in, then the voice calls each station and its reps the moment you tap Done; splits and the final time are kept. Name a circuit and write its stations in Settings › Training (“5 Pull-up · 10 Dip · …”) to get it here.</div>`;
   h += `<div class="section-h"><h2>Endurance Cup ranking</h2></div><div class="card pad rk">
     <div class="field"><label for="rk-paste">Ranking times, one per line</label><textarea id="rk-paste" class="inp" rows="4" placeholder="1  Name  2:41.3&#10;2  Name  2:48.0&#10;…" data-chg="race-rank">${esc(R.rank)}</textarea></div>
@@ -13771,6 +13773,9 @@ function raceSection() {
     <li>Train the circuit twice a week at race effort with 4 to 5′ rest, add one session on your slowest station in clusters (2 to 3 reps, 10 s rest), and test your max reps every 4 to 6 weeks. The Level tab shows which exercise lags.</li></ul></details>`;
   return h;
 }
+/* a stage = the Fire Set, a short rest you can skip, then the cut circuit: the stage ranking adds the two times */
+ACT["race-stage"] = () => { const L = raceList(); startWorkout({ script: `${raceScript(L[0])}\n\n- 3m Rest\n\n${raceScript(L[1])}`, name: "Stage: Fire Set + Cut", sport: strengthSport(), date: todayISO() }); };
+const raceStageToday = () => { const L = raceList(), d = todayISO(), t = n => Math.min(...(S.train.circuitLog || []).filter(c => c.date === d && c.circuit === n && c.sec > 0).map(c => c.sec)); const a = t(L[0].name), b = t(L[1].name); return isFinite(a) && isFinite(b) ? { a, b, sum: a + b } : null; };
 ACT["race-start"] = el => { const c = raceList()[+el.dataset.i]; if (!c) return; startWorkout({ script: raceScript(c), name: raceTitle(c.name), sport: strengthSport(), date: todayISO() }); };
 CHG["race-rank"] = v => { RACE().rank = String(v || "").slice(0, 20000); saveWK(); scheduleRender(); };
 CHG["race-places"] = v => { RACE().places = String(v || "").replace(/\D/g, "").slice(0, 3); saveWK(); scheduleRender(); };

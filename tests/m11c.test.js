@@ -753,3 +753,19 @@ test("M11i calculators: 100 kg × 5 gives the six formulas computed by hand, mea
   assert.deepEqual(r.P.slice(0, 3), [249, 401, 14.46]); assert.deepEqual(r.P[3], [["5K", 1194], ["10K", 2490], ["Half marathon", 5494], ["Marathon", 11454]]);
   assert.ok(/115\.8 kg/.test(r.out1) && /Epley/.test(r.out1) && /Wathan/.test(r.out1), r.out1.slice(0, 200)); assert.ok(/4:09/.test(r.out2) && /Riegel/.test(r.out2) && /VDOT/.test(r.out2), r.out2.slice(0, 200)); assert.deepEqual(app.errors, []);
 });
+test("M11i race stage: the Fire Set, a skippable rest and the cut circuit run as one workout; today's two times add up to the stage time", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const L = raceList(); const ts = buildTasks(`${raceScript(L[0])}\n\n- 3m Rest\n\n${raceScript(L[1])}`).map(t => [t.t, t.title, t.dur || t.cap || null]);
+    S.train.circuitLog = [{ id: "a", date: todayISO(), circuit: L[0].name, sec: 125 }, { id: "b", date: todayISO(), circuit: L[1].name, sec: 98 }, { id: "c", date: todayISO(), circuit: L[1].name, sec: 104 }]; DATA_V++;
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt = document.body.textContent; return { ts, stg: raceStageToday(), txt }; });
+  assert.deepEqual(r.ts, [["race", "Fire Set (Open)", 360], ["rest", "Rest", 180], ["race", "Cut · Mix C.L.", null]]); assert.deepEqual(r.stg, { a: 125, b: 98, sum: 223 }, "the better cut time of the day: 98 s");
+  assert.ok(/Stage: Fire Set \+ Cut/.test(r.txt) && /today 2:05 \+ 1:38 = 3:43/.test(r.txt), r.txt.slice(0, 200)); assert.deepEqual(app.errors, []);
+});
+test("M11i race time limit: at the 6 minute limit the clock stops, the stations done are saved without a circuit time", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { speechSynthesis.speak = () => {}; const c = raceList()[0]; startWorkout({ script: raceScript(c), name: "Fire Set", sport: strengthSport(), date: todayISO() }); ACT["lv-begin"](); const L = LV();
+    L.clk = { start: nowMs() - 100000, acc: 0, paused: false }; ACT["lv-step"](); ACT["lv-step"](); L.clk.start = nowMs() - 361000; liveTick(); const r0 = L.res[0], timeUp = [r0.timeUp, r0.capped, L.clk.paused];
+    UI.tab = "live"; render(); const txt = document.body.textContent; ACT["lv-done"](); const R = liveResults(L).other[0];
+    return { timeUp, txt, R: [R.kind, R.race, R.rounds, R.of, R.cap], logged: (S.train.circuitLog || []).filter(x => x.circuit === "Fire Set (Open)").length }; });
+  assert.deepEqual(r.timeUp, [true, true, true]); assert.ok(/Save 2\/6 stations/.test(r.txt), r.txt.slice(0, 200)); assert.deepEqual(r.R, ["fortime", true, 2, 6, 360]); assert.equal(r.logged, 0, "an unfinished circuit has no time"); assert.deepEqual(app.errors, []);
+});
