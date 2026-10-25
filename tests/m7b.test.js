@@ -148,6 +148,11 @@ test("D20: a sensor with 6+ sessions of its own gets its learned heart-rate fact
   assert.deepEqual(await hrKcal("zepp"), { kcal: 276, how: "hr" });
   assert.deepEqual(await hrKcal("polar"), { kcal: 350, how: "hr" });
 });
+test("D20: strength sessions do not teach the factor (6 cycling at 0.499 and 6 strength at 0.34 give (6 * 0.49898 + 6 * 0.794) / 12 = 0.6465 -> 285 kcal, not the 0.42 of a mixed median)", async () => {
+  await profile(); await hrSetup(6);
+  await ev(() => { const t = todayISO(); for (let i = 1; i <= 6; i++) { const d = addDays(t, -i - 10), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Strength training", min: 60, hr: 150, kcal: 300, src: "intervals", ext: "icu-s-" + i, dev: "zepp" }] }; } DATA_V++; });
+  assert.equal((await hrKcal("zepp")).kcal, 285);
+});
 test("D20: fewer than 6 sessions, the switch off, and days before hrFrom leave the global factor in use", async () => {
   await profile(); await hrSetup(5);
   assert.equal((await hrKcal("zepp")).kcal, 350);

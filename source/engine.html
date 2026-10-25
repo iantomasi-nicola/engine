@@ -3696,12 +3696,12 @@ function learnedRates() {
 }
 /* D20 (approved 26/10): the heart-rate-to-kcal factor of each sensor, learned from your own sessions (last 90 days) that have both a heart rate and a real, net kcal figure:
    the median of real / Keytel per session, at least 6 sessions, pulled toward the global factor with the weight of 6 sessions, kept between 0.5 and 1.5.
-   No wrist-versus-strap multiplier is taken from the literature (it gives no sign); a sensor without history keeps the global factor. Off: energy.hrLearn "off"; days before energy.hrFrom keep the global factor. */
+   Strength sessions are left out; ratios outside 0.2-3 are treated as errors of the data (a filter, not a coefficient). The window is the 90 days up to today, so the estimate of an old session without kcal can move a little as new sessions come in. No wrist-versus-strap multiplier is taken from the literature (it gives no sign); a sensor without history keeps the global factor. Off: energy.hrLearn "off"; days before energy.hrFrom keep the global factor. */
 function hrCalLearned(devId) {
   return memo("hrcal|" + devId, () => {
     const fit = FIT(), g = fit.run.hrCal, today = todayISO(), from = addDays(today, -89), kg = trendNow(), R = [];
     for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) for (const w of d < from || d > today ? [] : day.workouts || []) {
-      if (!(w.hr > 0) || !(w.min > 0) || devOf(w) !== devId) continue; const rk = realKcal(w, d), kt = keytel(+w.hr, kg, ageAt(d), fit.profile.sex) * w.min;
+      if (!(w.hr > 0) || !(w.min > 0) || devOf(w) !== devId || (typeof isStrength === "function" && isStrength(w.sport))) continue; const rk = realKcal(w, d), kt = keytel(+w.hr, kg, ageAt(d), fit.profile.sex) * w.min;
       if (rk > 0 && kt > 0 && rk / kt > 0.2 && rk / kt < 3) R.push(rk / kt);
     }
     if (R.length < 6) return { f: g, n: R.length, own: false };
@@ -5658,7 +5658,7 @@ function fitSettings() {
     ${fitIn("run.powF", "Power factor")}${fitIn("run.tSlow", "Threshold slowest", "×")}${fitIn("run.iPct", "I pace % VDOT", "%", "pct")}${fitIn("run.rFaster", "R faster than I", "s/km")}
     ${fitIn("run.testMin", "Lactate test", "min")}${fitIn("run.retest", "Retest every", "days")}${fitIn("run.band", "Pace band ±", "s/km")}${fitIn("run.vdotWindow", "VDOT window", "days")}
     ${fitIn("run.hardMax", "Hard days / week max")}${fitIn("run.loadCaution", "Load ratio caution", "×")}${fitIn("run.deloadShare", "Deload below", "%", "pct")}${fitIn("run.deloadAfter", "Deload after", "weeks")}
-    ${fitIn("run.rhrAlert", "Resting HR alert +", "bpm")}${fitIn("run.hrCal", "HR→kcal calibration")}${fitIn("run.rpeL", "sRPE Light")}${fitIn("run.rpeM", "sRPE Moderate")}${fitIn("run.rpeH", "sRPE Hard")}</div>
+    ${fitIn("run.rhrAlert", "Resting HR alert +", "bpm")}${fitIn("run.hrCal", "HR→kcal (global, start of each sensor)")}${fitIn("run.rpeL", "sRPE Light")}${fitIn("run.rpeM", "sRPE Moderate")}${fitIn("run.rpeH", "sRPE Hard")}</div>
     <div class="flabel" style="margin-top:8px">Zone percentages (Friel)</div>${tbl(["Zone", "% LTHR from", "Pace % slow end", "Pace % fast end"], R.zones.map((z, i) => `<tr><td><b>${z.z}</b></td>${["hr", "pSlow", "pFast"].map(k => `<td><input id="z-${i}-${k}" class="inp sm-inp" inputmode="decimal" value="${z[k] == null ? "" : r1(z[k] * 1000) / 10}" data-fit="run.zones.${i}.${k}" data-t="pct"></td>`).join("")}</tr>`))}`);
   h += grp("Strength, exercises and circuits", `<div class="grid4">${fitIn("top.repMin", "Rep range min")}${fitIn("top.repMax", "Rep range max")}${fitIn("top.inc", "Increment", "kg")}${fitIn("top.rirEasy", "RIR = too easy")}</div>
     <div class="field"><span class="flabel">Exercises</span><div class="chips">${f.exercises.map((e, i) => `<button class="chip" data-act="ex-del" data-i="${i}">${esc(e)} ${ic("close", "sm")}</button>`).join("")}</div><form data-form="ex" class="row" style="flex-wrap:nowrap"><input id="ex-in" class="inp" placeholder="e.g. Weighted Pull-up"><button class="btn soft" type="submit">Add</button></form></div>
@@ -15684,7 +15684,7 @@ ACT["ss-dev"] = el => { const w = S_().draft, id = el.dataset.id; w.dev = devOf(
 function devSettings() {
   const fit = FIT(), D = devList(), opt = (v, cur, l) => `<option value="${esc(v)}" ${cur === v ? "selected" : ""}>${esc(l)}</option>`;
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Heart-rate sensors</span>
-    <span class="faint" style="font-size:12.5px">Which sensor gives the heart rate of each sport. It is saved with every workout (you can change it per workout). «Total» calories are counted net of resting energy; once a sensor has 6 sessions with heart rate and calories, its own heart-rate factor is learned from them.${D.some(x => hrCalLearned(x.id).own) ? ` Learned: ${D.filter(x => hrCalLearned(x.id).own).map(x => `${esc(x.name)} ×${hrCalLearned(x.id).f.toFixed(2)} (${hrCalLearned(x.id).n} sessions)`).join(" · ")}.` : ""}</span>
+    <span class="faint" style="font-size:12.5px">Which sensor gives the heart rate of each sport. It is saved with every workout (you can change it per workout). «Total» calories are counted net of resting energy; once a sensor has 6 sessions with heart rate and calories, its own heart-rate factor is learned from them.${(L => L.length ? ` Learned: ${L.map(([x, h]) => `${esc(x.name)} ×${h.f.toFixed(2)} (${h.n} sessions)`).join(" · ")}.` : "")(D.map(x => [x, hrCalLearned(x.id)]).filter(([, h]) => h.own))}</span>
     ${D.map(x => `<div class="grid2" style="grid-template-columns:minmax(0,1fr) 120px 40px;align-items:end"><div class="field"><label for="dv-n-${esc(x.id)}">Name</label><input id="dv-n-${esc(x.id)}" class="inp" value="${esc(x.name)}" data-chg="dev-name" data-id="${esc(x.id)}"></div>
       <div class="field"><label for="dv-k-${esc(x.id)}">Calories shown</label><select id="dv-k-${esc(x.id)}" class="inp" data-chg="dev-kcal" data-id="${esc(x.id)}">${opt("gross", x.kcal, "Total")}${opt("net", x.kcal, "Active only")}${opt("unknown", x.kcal, "Not sure")}</select></div>
       <button class="icon-btn" data-act="dev-del" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}
