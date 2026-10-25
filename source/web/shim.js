@@ -61,7 +61,7 @@
   const st = { online: null, storageFull: false, lastError: "" };
   E.status = () => { let blocked = 0; for (const q of queue) if (q.bad) blocked++; return { online: st.online, pending: queue.length - blocked, blocked, storageFull: st.storageFull, lastError: st.lastError, loadedAt }; };
   const emit = () => { try { E.onStatus?.(E.status()); } catch (e) {} };
-  const sent = p => { try { E.onSent?.(p); } catch (e) {} };
+  const sent = (p, data, merged) => { try { E.onSent?.(p, data, merged); } catch (e) {} };
   const errText = e => String(e?.message || e || "").slice(0, 160);
   /* deep equality that ignores key order (the server's jsonb does not keep it) */
   const same = (a, b) => { if (a === b) return true; if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
@@ -145,7 +145,7 @@
         if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
         st.online = true;
         const i = queue.indexOf(q);   // -1: a newer edit of the same document replaced it meanwhile, and goes next
-        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path); }
+        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path, data, data !== q.data); }
         saveQ(); emit();
       }
     } catch (e) { st.online = false; st.lastError = errText(e); emit(); clearTimeout(retryT); retryT = setTimeout(flushQ, 8000); }
@@ -157,7 +157,7 @@
   document.addEventListener("visibilitychange", () => { if (document.hidden) persistQ(); else { flushQ(); refresh(); } });
   function write(p, op, data, opts) {
     const has = qPaths.has(p);
-    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p); return Promise.resolve(); }   // the account already has exactly this
+    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p, data, false); return Promise.resolve(); }   // the account already has exactly this
     const old = has ? queue.find(q => q.path === p) : null, q = { op, path: p, data: op === "del" ? null : data };
     if (op !== "del" && opts && "base" in opts) { q.mb = true; q.base = old?.mb ? old.base : opts.base; }   // the oldest copy this edit started from
     if (op === "del") cache.delete(p); else cache.set(p, data);
