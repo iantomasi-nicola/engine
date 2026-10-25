@@ -122,3 +122,19 @@ test("the foods and recipes library: closed by default, opens beside (or above) 
   assert.ok(r.home.includes("t-rice"), "At home: " + r.home.join("|")); assert.deepEqual(r.added, ["food", "t-chicken", 120, false]); assert.deepEqual(r.n, [1, 2, 1]);
   assert.deepEqual(app.errors, []);
 });
+
+test("each filled day has its own copy and clear buttons and the week has «Clear week» (with a confirmation and an undo); an empty day has no tools", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.mclip = null; render(); await new Promise(x => setTimeout(x, 100));
+    const ws = weekStartOf(todayISO()), q = a => document.querySelectorAll(a).length, cnt = d => dayItems(getDay(d)).length;
+    const tools = q('[data-act="day-copy"]'), clears = q('[data-act="clear-day"]'), weekBtn = q('[data-act="pw-clear-week"]');
+    ACT["day-copy"]({ dataset: { date: ws } }); const clip = UI.mclip?.scope;
+    ACT["clear-day"]({ dataset: { date: addDays(ws, 1) } }); const afterDay = cnt(addDays(ws, 1)), others = cnt(ws);
+    render(); await new Promise(x => setTimeout(x, 100)); const toolsAfter = q('[data-act="day-copy"]');
+    ACT["pw-clear-week"](); const sheet = UI.sheet?.type; ACT["confirm-yes"](); await new Promise(x => setTimeout(x, 100));
+    const weekLeft = [...Array(7)].reduce((a, _, i) => a + cnt(addDays(ws, i)), 0);
+    return { tools, clears, weekBtn, clip, afterDay, others, toolsAfter, sheet, weekLeft }; });
+  assert.equal(r.tools, 7); assert.equal(r.clears, 7); assert.equal(r.weekBtn, 1); assert.equal(r.clip, "day"); assert.equal(r.afterDay, 0); assert.equal(r.others, 3); assert.equal(r.toolsAfter, 6, "the emptied day loses its tools");
+  assert.equal(r.sheet, "confirm"); assert.equal(r.weekLeft, 0);
+  assert.deepEqual(app.errors, []);
+});
