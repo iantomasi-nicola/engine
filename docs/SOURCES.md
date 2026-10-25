@@ -12,7 +12,12 @@ Regola: nessun coefficiente senza fonte primaria **letta** o test indipendente. 
 | Le kcal di un orologio non sono affidabili | Shcherbina 2017, J Pers Med, **PMID 28538708**: nessun polso sotto il 20% di errore, peggio camminando e con BMI alto | **Confermato**: per questo la taratura sul peso reale (v2) resta l'ultima parola |
 | Modello dinamico peso–energia | Hall 2011, Lancet, **PMID 21872751** | Letto l'abstract (tempi di risposta lenti, adiposità): nessun coefficiente usato |
 
+| NEAT: definizione e calcolo | Levine, Proc Nutr Soc 2003, **PMID 14692603** (e Nutr Rev 2004, **PMID 15387473**): NEAT = dispendio totale − metabolismo basale − effetto termico del cibo («approccio totale»), oppure somma dei componenti («fattoriale»); varia molto da persona a persona (lavoro, ambiente) | **Confermato**: l'AEE dell'orologio meno l'allenamento è l'approccio «totale»; il NEAT va **imparato per persona**, non assunto |
+| Passi e dispendio totale | Tudor-Locke et al. 2012, Appl Physiol Nutr Metab, **PMID 22963352** (DLW, 54 adulti 20–36 anni): peso + passi/die + tempo per fasce di cadenza spiegano il **79% (uomini) e il 65% (donne)** della varianza del dispendio totale | **Conferma che i passi sono un buon predittore, ma l'abstract non dà i coefficienti**: nessun valore in kcal per «una giornata da 7.000 passi» si può ricavare da qui |
+| Passi e dispendio da attività (DLW) | PMID **28419028** (2017, 1295 adulti 43–83 anni): i passi correlano con il PAEE misurato con DLW | Conferma qualitativa |
+
 ## Non verificato (dichiarato)
+- **«NEAT predefinito = 7.000 passi» — double check del 26/10**: cercato su PubMed (PMID sopra): **nessuna fonte primaria letta dà questo numero**. Resta una **ipotesi di partenza neutra** (il predefinito di 350 kcal ancorato a una giornata media), corretta dall'apprendimento: base appresa dall'orologio (≥ 14 giorni) e fattore di calibrazione sul peso.
 - **Falcata = 0,415 × altezza**: approssimazione comune, nessuna fonte primaria letta.
 - **«NEAT predefinito = giornata da 7.000 passi»**: ipotesi mia, nessuna fonte.
 - **Costo della corsa 1,0 kcal/kg/km** e MET dei vari sport: non riverificati in questa sessione.

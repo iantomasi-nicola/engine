@@ -220,4 +220,13 @@ test("the TDEE comes with its statistical uncertainty (posterior sd = tau u / sq
   assert.deepEqual(b, { a: "training logged · full-day steps", b: "planned training · steps so far plus a typical rest of the day", c: "no training · the default NEAT" });
 });
 
+test("calibration status: reliable when the 95% interval (1.96 SE) is inside +/-5% of the TDEE: 0.05 kg of noise -> SE 8 kcal = 0.7 % (calibrated); 0.4 kg -> about 5 % and 1.5 kg -> about 19 % are not; none without data", async () => {
+  await profile();
+  const a = await ev(async () => { return null; });
+  const run2 = sd => run({ days: 60, sd, mode: "v2" }).then(async r => ev(() => { const x = energyAt(addDays(todayISO(), -1)); return { ok: x.calOk, pct: x.calPct, txt: calStatus(x) }; }));
+  const clean = await run2(0.05); assert.equal(clean.ok, true); assert.ok(clean.pct < 1.5, "pct " + clean.pct); assert.match(clean.txt, /^✓ Calibrated/);
+  const noisy = await run2(1.5); assert.equal(noisy.ok, false); assert.ok(noisy.pct > 8, "pct " + noisy.pct); assert.match(noisy.txt, /^Calibrating: the 95% interval is ±/);
+  const few = await run({ days: 15, mode: "v2" }); const x = await ev(() => calStatus(energyAt(addDays(todayISO(), -1)))); assert.match(x, /needs 3 weeks/);
+});
+
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });
