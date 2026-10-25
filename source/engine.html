@@ -6575,7 +6575,6 @@ ACT["fd-save"] = () => {
   else if (sh.backBuy) { openSheet("buy", sh.backBuy); toast("Saved"); }
   else { closeSheet(); toast(`Saved ${d.name}`); }
 };
-ACT["fd-del"] = () => { const id = S_().draft.id; const prev = clone(S.foods[id]); closeSheet(); if (BUILTIN[id]) put("foods", id, { id, hidden: true }); else del("foods", id); toast("Food deleted", () => { if (prev) put("foods", id, prev); else del("foods", id); }); };
 ACT["fd-restore"] = () => { const id = S_().draft.id; const prev = clone(S.foods[id]); closeSheet(); del("foods", id); toast("Restored the default values", () => put("foods", id, prev)); };
 
 /* recipes */
@@ -7665,7 +7664,6 @@ function trainCalendar() {
     <div class="faint" style="font-size:12.5px">Tap a day to see it below. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
 ACT["cal-sel"] = el => { UI.calSel = el.dataset.date; if (UI.calView === "agenda") { UI.calView = "month"; } scheduleRender(); };
-ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
 ACT["cal-today"] = () => { UI.calOff = 0; UI.calSel = todayISO(); scheduleRender(); };
 /* swipe the month sideways */
 (() => { let sx = 0, sy = 0, on = false;
@@ -10052,8 +10050,6 @@ function playerSettings() {
 ACT["snd-mute"] = () => { const w = WK(); w.mute = !w.mute; saveWK(); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["snd-test"] = () => { audioOn(); [0, 1, 2].forEach(i => playCue("tick", .3 + i)); playCue("go", 3.3); setTimeout(() => say(VT("Via! Minuto 2 di 6", "Go! Minute 2 of 6")), 3300); };
 
-ACT["fd-unhide"] = el => { del("foods", el.dataset.id); toast(`${BUILTIN[el.dataset.id]?.name || "Food"} restored`); if (!hiddenFoods().filter(f => f.id !== el.dataset.id).length) UI.foodsSeg = "all"; };
-ACT["fd-unhide-all"] = () => { const ids = hiddenFoods().map(f => f.id); openSheet("confirm", { title: `Restore ${ids.length} foods?`, text: "All the built-in foods you deleted come back.", yes: "Restore all", run: () => { ids.forEach(id => del("foods", id)); UI.foodsSeg = "all"; toast(`${ids.length} foods restored`); } }); };
 /* ================= visible countdown before live exercises and timers (5 / 10 / 15 s) ================= */
 const prepChips = () => `<div class="prep-ch"><span>Setup before timed work</span>${[0, 3, 5, 10, 15].map(v => `<button class="chip sm" data-act="prep-set" data-v="${v}" aria-pressed="${PLAYER().prep === v}">${v ? v + " s" : "Off"}</button>`).join("")}</div>`;
 /* the same setup time, adjustable on the live screen before a hold or a timed block starts */
@@ -11758,7 +11754,6 @@ function weeklyCard() {
 }
 TODAY_CARDS.push({ col: "a", o: 0, fn: weeklyCard });
 ACT["rep-seen"] = () => { S.settings.report = { ...(S.settings.report || {}), seen: addDays(weekStartOf(todayISO()), -7) }; saveSettings(); };
-ACT["rep-open"] = () => { UI.tab = "dash"; UI.dashSeg = "week"; UI.repOff = -1; scheduleRender(); window.scrollTo(0, 0); };
 /* the notification on Monday */
 const _reminderTick = reminderTick;
 reminderTick = function () { _reminderTick();
@@ -13832,8 +13827,8 @@ function raceSection() {
   const R = RACE(), L = raceList(), fire = L[0], cutC = L[1], fb = raceBest(fire.name), cb = raceBest(cutC.name), you = { fire: fb, cut: cb, total: fb != null && cb != null ? fb + cb : null };
   const tables = R.stages.map(s => raceTable(s.text)), first = tables.find(T => T.some(e => e.total != null)), tgt = first ? raceAt(first, R.places) : null, sp = raceSplits(fire.name, tgt?.fire);
   const mu = Math.max(0, ...(S.train.calis || []).filter(c => lvEx(c.ex || "") === "mu" && c.test === "Max reps (BW)").map(c => +c.val || 0)), stg = raceStageToday();
-  let h = `<div class="section-h"><h2>Race circuits</h2></div><div class="card"><button class="lrow" data-act="race-stage"><span><span class="t">Stage: Fire Set + Cut</span><span class="s">${esc(fire.name)}, ${R.rest} min rest, then ${esc(cutC.name)}${stg ? ` · today ${fmtClock(stg.a)} + ${fmtClock(stg.b)} = ${fmtClock(stg.sum)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>${L.map((c, i) => { const b = raceBest(c.name); return `<button class="lrow" data-act="race-start" data-i="${i}"><span><span class="t">${esc(c.name)}</span><span class="s">${c.steps.map(s => `${s.reps} ${esc(s.name)}`).join(" · ")}${c.cap ? ` · limit ${fmtClock(c.cap)}` : ""}${b != null ? ` · best ${fmtClock(b)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>`; }).join("")}</div>
-    <div class="grid2"><div class="field"><label for="rk-rest">Rest between circuits</label><div class="unit-inp"><input id="rk-rest" class="inp" inputmode="decimal" value="${esc(R.rest)}" data-chg="race-rest"><span>min</span></div></div><div class="field"><span class="flabel">Save as a workout</span><div class="chips"><button class="chip sm" data-act="race-save" data-i="stage">Stage</button>${L.slice(0, 2).map((c, i) => `<button class="chip sm" data-act="race-save" data-i="${i}">${i ? "Cut" : "Fire Set"}</button>`).join("")}</div></div></div>
+  let h = `<div class="section-h"><h2>Race circuits</h2></div><div class="card"><button class="lrow" data-act="race-stage"><span><span class="t">Stage: Fire Set + Cut</span><span class="s">${esc(fire.name)}, ${R.rest} min rest, then ${esc(cutC.name)}${stg ? ` · today ${fmtClock(stg.a)} + ${fmtClock(stg.b)} = ${fmtClock(stg.sum)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>${L.map((c, i) => { const b = raceBest(c.name); return `<button class="lrow" data-act="circ-start" data-i="${i}"><span><span class="t">${esc(c.name)}</span><span class="s">${c.steps.map(s => `${s.reps} ${esc(s.name)}`).join(" · ")}${c.cap ? ` · limit ${fmtClock(c.cap)}` : ""}${b != null ? ` · best ${fmtClock(b)}` : ""}</span></span><span class="end">${ic("play", "sm")}</span></button>`; }).join("")}</div>
+    <div class="grid2"><div class="field"><label for="rk-rest">Rest between circuits</label><div class="unit-inp"><input id="rk-rest" class="inp" inputmode="decimal" value="${esc(R.rest)}" data-chg="race-rest"><span>min</span></div></div><div class="field"><span class="flabel">Save as a workout</span><div class="chips"><button class="chip sm" data-act="circ-save" data-i="stage">Stage</button>${L.slice(0, 2).map((c, i) => `<button class="chip sm" data-act="circ-save" data-i="${i}">${i ? "Cut" : "Fire Set"}</button>`).join("")}</div></div></div>
     <div class="faint" style="font-size:12.5px">Live: a count-in, then the voice calls each station and its reps the moment you tap Done; the whole circuit stays on screen with the splits. Each circuit has its own limit (6′ for the Fire Set and the cut). In Train › Workouts a saved circuit can be planned like any workout, or written by hand: a block titled “… race 6 min” followed by “- 5 Pull-up” lines. Name a circuit and write its stations in Settings › Training (“5 Pull-up · 10 Dip · …”) to get it here.</div>`;
   h += `<div class="section-h"><h2>Endurance Cup ranking</h2><button class="link" data-act="race-stage-add">${ic("plus", "sm")} Stage</button></div>
     <div class="card pad rk"><div class="grid2"><div class="field"><label>Your best Fire Set</label><div class="rk-best">${fb != null ? fmtClock(fb) : "no time yet"}</div></div><div class="field"><label>Your best cut</label><div class="rk-best">${cb != null ? fmtClock(cb) : "no time yet"}</div></div></div>
@@ -13852,10 +13847,10 @@ function raceSection() {
 /* a stage = the Fire Set, the rest you chose (skippable), then the cut circuit: the stage ranking adds the two times */
 const raceStageScript = () => { const L = raceList(), R = RACE(); return `${raceScript(L[0])}\n\n- ${Math.max(1, Math.round(num(R.rest) || 5))}m Rest\n\n${raceScript(L[1])}`; };
 ACT["race-stage"] = () => startWorkout({ script: raceStageScript(), name: "Stage: Fire Set + Cut", sport: strengthSport(), date: todayISO() });
-ACT["race-save"] = el => { const L = raceList(), i = el.dataset.i, script = i === "stage" ? raceStageScript() : raceScript(L[+i]), name = i === "stage" ? "Stage: Fire Set + Cut" : raceTitle(L[+i].name), w = WK(), t = w.tpls.find(x => x.name === name);
+ACT["circ-save"] = el => { const L = raceList(), i = el.dataset.i, script = i === "stage" ? raceStageScript() : raceScript(L[+i]), name = i === "stage" ? "Stage: Fire Set + Cut" : raceTitle(L[+i].name), w = WK(), t = w.tpls.find(x => x.name === name);
   if (t) { t.script = script; t.updated = todayISO(); } else w.tpls.push({ id: puid("tpl"), name, sport: strengthSport(), script, updated: todayISO() }); saveWK(); toast(`${name} saved in Train › Workouts`); scheduleRender(); };
 const raceStageToday = () => { const L = raceList(), d = todayISO(), t = n => Math.min(...(S.train.circuitLog || []).filter(c => c.date === d && c.circuit === n && c.sec > 0).map(c => c.sec)); const a = t(L[0].name), b = t(L[1].name); return isFinite(a) && isFinite(b) ? { a, b, sum: a + b } : null; };
-ACT["race-start"] = el => { const c = raceList()[+el.dataset.i]; if (!c) return; startWorkout({ script: raceScript(c), name: raceTitle(c.name), sport: strengthSport(), date: todayISO() }); };
+ACT["circ-start"] = el => { const c = raceList()[+el.dataset.i]; if (!c) return; startWorkout({ script: raceScript(c), name: raceTitle(c.name), sport: strengthSport(), date: todayISO() }); };
 CHG["race-places"] = v => { RACE().places = String(v || "").replace(/\D/g, "").slice(0, 3); saveWK(); scheduleRender(); };
 CHG["race-rest"] = v => { RACE().rest = clamp(num(v) || 5, 0.5, 60); saveWK(); scheduleRender(); };
 ACT["race-stage-add"] = () => { const R = RACE(); R.stages.push({ id: puid("rs"), name: `Stage ${R.stages.length + 1}`, text: "" }); saveWK(); scheduleRender(); };
@@ -15132,10 +15127,10 @@ ACT["rc-load"] = () => { const sh = S_(), R = sh.res; if (!R) return; const befo
 /* what the receipt could not load stays on the shopping page until you create the food or dismiss the line */
 function rcTodoCard() { const L = S.shop.rcTodo || []; if (!L.length) return "";
   return `<section class="card pad rc-todo"><div class="nut-h"><span class="flabel">From the receipt · ${L.length} to add by hand</span><span class="row" style="gap:6px"><button class="link" data-act="rc-copy">Copy</button><button class="link" data-act="rc-clear">Clear</button></span></div>
-    ${L.map(t => `<div class="rc-t"><span style="min-width:0"><b>${esc(t.name)}</b><small>${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : ""].filter(Boolean).map(esc).join(" · ")}</small></span><button class="btn tonal sm" data-act="rc-new" data-id="${t.id}">New food</button><button class="icon-btn sm" data-act="rc-del" data-id="${t.id}" aria-label="Dismiss ${esc(t.name)}">${ic("close", "sm")}</button></div>`).join("")}</section>`; }
-ACT["rc-new"] = el => { const t = (S.shop.rcTodo || []).find(x => x.id === el.dataset.id); if (!t) return; S.shop.rcTodo = S.shop.rcTodo.filter(x => x.id !== t.id); put("shop", "", S.shop); UI.rcLearn = { key: rcKey(t), eur: t.eur, g: t.w ? rcGrams({ pack: 0 }, t) : 0, sid: t.sid || null };
+    ${L.map(t => `<div class="rc-t"><span style="min-width:0"><b>${esc(t.name)}</b><small>${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : ""].filter(Boolean).map(esc).join(" · ")}</small></span><button class="btn tonal sm" data-act="rcp-new" data-id="${t.id}">New food</button><button class="icon-btn sm" data-act="rcp-del" data-id="${t.id}" aria-label="Dismiss ${esc(t.name)}">${ic("close", "sm")}</button></div>`).join("")}</section>`; }
+ACT["rcp-new"] = el => { const t = (S.shop.rcTodo || []).find(x => x.id === el.dataset.id); if (!t) return; S.shop.rcTodo = S.shop.rcTodo.filter(x => x.id !== t.id); put("shop", "", S.shop); UI.rcLearn = { key: rcKey(t), eur: t.eur, g: t.w ? rcGrams({ pack: 0 }, t) : 0, sid: t.sid || null };
   openSheet("food", { draft: { ...blankFood([t.brand, t.name].filter(Boolean).join(" ")), pack: t.w ? rcGrams({ pack: 0 }, t) / t.qty : 0 }, isNew: true, then: null, date: UI.date, meal: suggestMeal() }); };
-ACT["rc-del"] = el => { S.shop.rcTodo = (S.shop.rcTodo || []).filter(x => x.id !== el.dataset.id); put("shop", "", S.shop); scheduleRender(); };
+ACT["rcp-del"] = el => { S.shop.rcTodo = (S.shop.rcTodo || []).filter(x => x.id !== el.dataset.id); put("shop", "", S.shop); scheduleRender(); };
 ACT["rc-clear"] = () => { const old = S.shop.rcTodo; S.shop.rcTodo = []; put("shop", "", S.shop); scheduleRender(); toast("List cleared", () => { S.shop.rcTodo = old; put("shop", "", S.shop); scheduleRender(); }); };
 ACT["rc-copy"] = async () => { const t = (S.shop.rcTodo || []).map(x => `${x.name}${x.brand ? " (" + x.brand + ")" : ""}${x.eur != null ? " " + fmtEur(x.eur) : ""}`).join("\n"); try { await navigator.clipboard.writeText(t); toast("Copied"); } catch (e) { toast("Copy isn't available here"); } };
 /* what you ticked today stays on the list, so a wrong tick is taken back whenever you notice: the pantry and the history go back as they were */

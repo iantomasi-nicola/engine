@@ -777,9 +777,16 @@ test("M11i race circuits as workouts: the editor adds Fire Set, Cut or a Stage w
   app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
   const r = await app.page.evaluate(() => { ACT["we-new"](); const d = S_().draft; ACT["we-race"]({ dataset: { i: "0" } }); const one = d.script, nm = d.name; ACT["we-race"]({ dataset: { i: "1" } }); const two = parseScript(d.script).blocks.map(b => [b.kind, b.title]); closeSheet();
     S.train.race = { stages: [], places: "", rest: 8 }; DATA_V++; const st = buildTasks(raceStageScript()).map(t => [t.t, t.dur || t.cap]);
-    ACT["race-save"]({ dataset: { i: "stage" } }); ACT["race-save"]({ dataset: { i: "0" } }); ACT["race-save"]({ dataset: { i: "0" } }); const tp = WK().tpls.filter(t => /Fire Set|Stage/.test(t.name)).map(t => [t.name, t.sport === strengthSport(), parseScript(t.script).blocks.map(b => b.kind).join("+")]);
+    ACT["circ-save"]({ dataset: { i: "stage" } }); ACT["circ-save"]({ dataset: { i: "0" } }); ACT["circ-save"]({ dataset: { i: "0" } }); const tp = WK().tpls.filter(t => /Fire Set|Stage/.test(t.name)).map(t => [t.name, t.sport === strengthSport(), parseScript(t.script).blocks.map(b => b.kind).join("+")]);
     UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt = document.body.textContent; return { one, nm, two, st, tp, txt }; });
   assert.match(r.one, /^Fire Set \(Open\) race 6 min\n- 5 Pull-up\n- 10 Dip/); assert.equal(r.nm, "Fire Set (Open)"); assert.deepEqual(r.two, [["race", "Fire Set (Open) race 6 min"], ["race", "Cut · Mix C.L. race 6 min"]]);
   assert.deepEqual(r.st, [["race", 360], ["rest", 480], ["race", 360]], "8 minutes of rest as set"); assert.deepEqual(r.tp, [["Stage: Fire Set + Cut", true, "race+rest+race"], ["Fire Set (Open)", true, "race"]], "saving twice updates the same workout");
   assert.ok(/8 min rest, then Cut/.test(r.txt) && /Rest between circuits/.test(r.txt) && /Save as a workout/.test(r.txt)); assert.deepEqual(app.errors, []);
+});
+
+test("M11i regression: the calendar races keep their own Save and Start (the race-circuit actions must not reuse their names)", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { speechSynthesis.speak = () => {}; ACT["rc-new"]({ dataset: { date: addDays(todayISO(), 30) } }); const d = S_().draft; d.name = "City 10k"; d.km = 10; ACT["race-save"](); const saved = races().filter(x => x.name === "City 10k").length;
+    ACT["rc-edit"]({ dataset: { id: races().find(x => x.name === "City 10k").id } }); ACT["race-start"](); const L = LV(); return { saved, live: !!L, race: L?.race === races().find(x => x.name === "City 10k").id, fuel: !!L?.fuel }; });
+  assert.equal(r.saved, 1, "Save adds the race to the calendar"); assert.ok(r.live && r.race, "Start opens the live player tied to that race"); assert.ok(r.fuel, "with its fuelling plan"); assert.deepEqual(app.errors, []);
 });
