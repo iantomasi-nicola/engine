@@ -192,4 +192,16 @@ test("D18: today's steps are a projection: steps so far + the typical steps of t
   near(r.e, 2000 + 9000 * (1 - 8 / 15), 1e-9);   // 15 h: (15 - 7) / 15 of the waking day has gone
 });
 
+/* The daily "active kcal" of a smartwatch leaves out resting energy, so the part of it that belongs to a workout is the workout's net figure: NEAT = daily active kcal - the session net of rest (same device, same basis).
+   80 kg, 180 cm, 30 y male, BMR 1780 = 1.2361 kcal/min: a 60-minute Polar session of 600 kcal (gross) is 526 net; with 1000 active kcal that day, NEAT = 1000 - 526 = 474 (it was 400 when the gross 600 was taken off). */
+const watchDay = o => ev(o => { const t = todayISO(), d = addDays(t, -1), m = d.slice(0, 7); S.logm = {}; Object.assign(FIT().energy, { watchMode: o.mode || "active", netKcal: o.net || "on", netFrom: "", neatMode: "on", minWatchNeat: 150 }); FIT().devices.find(x => x.id === "polar").kcal = o.dev || "gross"; FIT().trackStart = addDays(t, -3);
+  S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { watch: o.watch, workouts: [{ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1" }] }; DATA_V++; const r = energyAt(d); FIT().devices.find(x => x.id === "polar").kcal = "gross"; return { neat: r.neat, src: r.neatSrc, eat: r.eat }; }, o);
+test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the sensor counts rest (1000 - 526 = 474), the gross value when it does not (net sensor, switch off), and total mode keeps BMR + gross", async () => {
+  await profile();
+  const a = await watchDay({ watch: 1000 }); assert.equal(a.neat, 474); assert.equal(a.src, "watch"); assert.equal(a.eat, 526);
+  assert.equal((await watchDay({ watch: 1000, dev: "net" })).neat, 400);
+  assert.equal((await watchDay({ watch: 1000, net: "off" })).neat, 400);
+  assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 600);   // total mode: the watch total holds the BMR and the gross session
+});
+
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });

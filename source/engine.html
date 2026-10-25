@@ -3864,7 +3864,9 @@ function energySeries() {
       const kcals = sess.list.map(w => sessionKcal(w, d, trend).kcal);
       const eat = kcals.reduce((a, b) => a + b, 0);
       // the day's watch total holds everything the watch counted, extra minutes of a session left running included: take out the raw value, not the trimmed one
-      const watchView = (L.workouts || []).reduce((a, w) => a + (w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal), 0);
+      const watchView = (L.workouts || []).reduce((a, w) => { const dev = w.watch > 0 || w.raw?.kcal > 0 || (w.kcal > 0 && fromDevice(w)), k = w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal;
+        // the daily "active kcal" leaves out resting energy: the workout's share of it is the sensor's figure net of rest (same device, same basis); in total mode the gross figure stays
+        return a + (dev && E.watchMode === "active" ? netOfRest(k, w, d, trend) : k); }, 0);
       let neat = null, neatSrc = "watch";
       if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= E.minWatchNeat) neat = v; }
       const amb = sess.list.some(w => w.sport && w.sport !== "Rest" && (w.sport === fit.runSport || isWalkSport(w.sport))), stepsD = L.steps > 0 ? +L.steps : 0;
