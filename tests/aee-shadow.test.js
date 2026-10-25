@@ -37,11 +37,11 @@ test("a sensor that reports net calories is not reduced again; unknown is shown 
   assert.equal(r.net.kcal, 400); assert.equal(r.net.q, "medium"); assert.ok(r.unknown.kcal < 400); assert.equal(r.unknown.q, "low");
 });
 
-test("NEAT from steps: net walking cost 0.5 kcal per kg per km with a stride of 0.415 x height; missing steps are unknown, not zero", async () => {
+test("NEAT from steps: net walking cost 0.606101 kcal per kg per km (Ludlow & Weyand 2016, 1.8 m at 1.3 m/s) with a stride of 0.415 x height; missing steps are unknown, not zero", async () => {
   const page = await start(), t = new Date().toISOString().slice(0, 10);
   const r = await page.evaluate(async ([setup, d]) => { eval(setup); eval(`(() => { const m = "${d}".slice(0, 7); S.logm[m] = { days: { "${d}": { steps: 10000 } } }; DATA_V++; })()`);
     const a = aeeShadow(d), kg = trendAt(d), none = aeeShadow(addDays(d, -1)); return { a, kg, none }; }, [setup, t]);
-  near(r.a.neat.observed, 0.5 * r.kg * 10000 * 0.415 * 1.8 / 1000, 0.5); near(r.a.neat.observed, 0.5 * 80 * 7.47, 0.6);
+  near(r.a.neat.observed, 0.606101 * r.kg * 10000 * 0.415 * 1.8 / 1000, 0.5); near(r.a.neat.observed, 0.606101 * 80 * 7.47, 0.6);
   assert.equal(r.a.neat.src, "steps"); assert.equal(r.none.neat.total, null); assert.equal(r.none.aee, null);
 });
 
@@ -59,7 +59,7 @@ test("the non-step part of NEAT is learned from the days you typed your watch fi
   const r = await page.evaluate(async ([setup, d]) => { eval(setup);
     const few = neatBase(); // no history
     for (let i = 1; i <= 20; i++) eval(`(() => { const d = addDays("${d}", -${i}), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { steps: 9000, watch: 520, weight: 80 }; DATA_V++; })()`);
-    const many = neatBase(), stepsPart = 0.5 * 80 * 9000 * 0.415 * 1.8 / 1000;
+    const many = neatBase(), stepsPart = 0.606101 * 80 * 9000 * 0.415 * 1.8 / 1000;
     return { few, many, stepsPart, shadow: aeeShadow(addDays(d, -1)).neat }; }, [setup, t]);
   assert.equal(r.few, null); assert.ok(r.many.kcal > 0 && r.many.n >= 14); near(r.many.kcal, 520 - r.stepsPart, 40);
   assert.equal(r.shadow.modelled, true);

@@ -2944,7 +2944,7 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
-  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
+  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom", "bmrAutoFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
   // the lean bonus is no part of the published Harris-Benedict equation (F-01): off for a new profile, left on for one saved before the switch so its numbers do not move
   if (s?.fit && s.fit.energy?.hbBonusOn === undefined) o.fit.energy.hbBonusOn = "on";
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
@@ -3518,7 +3518,7 @@ function defaultFit() {
       Bulk: { p: 1.6, f: 0.8, cmin: 4.0, wmin: 0.002, wmax: 0.005 },
       Maintenance: { p: 1.8, f: 0.8, cmin: 4.0, wmin: -0.002, wmax: 0.002 }
     },
-    energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
+    energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
       warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 7000, calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
@@ -3650,7 +3650,7 @@ const fromDevice = w => w.src === "intervals" || /^icu-a-/.test(w.ext || "") || 
 function netOfRest(kc, w, date, kg, learn) {
   const E = FIT().energy, min = parseMinutes(w.min) || 0;
   if (E.netKcal === "off" || (!learn && E.netFrom && date < E.netFrom) || !(min > 0) || devById(devOf(w))?.kcal !== "gross") return kc;
-  return Math.max(0, r0(kc - bmrOf(kg || trendNow(), FIT().profile.bf, ageAt(date)) / 1440 * min));
+  return Math.max(0, r0(kc - bmrOf(kg || trendNow(), FIT().profile.bf, ageAt(date), date) / 1440 * min));
 }
 function realKcal(w, date) { if (w.watch > 0) return netOfRest(+w.watch, w, date, 0, true); if (w.kcal > 0 && fromDevice(w)) return netOfRest(+w.kcal, w, date, 0, true); if (w.kcal > 0 && FIT().learn.realBefore && date < FIT().learn.realBefore) return +w.kcal; return 0; }
 /* learned kcal/min by sport and intensity from sessions with real kcal (watch), else the MET table */
@@ -3799,12 +3799,20 @@ function intakeFor(date) {
 const isWalkSport = sp => /walk|hik/i.test(sp || "");
 /* NEAT from steps (formula approved 24/10): a day with steps and no walk or run = what the steps cost (0.5 kcal per kg per km, stride 0.415 x height; ACSM walking)
    + the part steps don't show, the median over the previous 90 days of (typed watch NEAT - steps cost) on days with both and no walk or run; it needs 14 such days. */
-const STEP_KCAL = (kg, steps, heightCm) => 0.5 * kg * (steps * 0.415 * (heightCm || 175) / 100 / 1000);
+/* Net walking cost from the Height-Weight-Speed equation of Ludlow & Weyand 2016 (J Appl Physiol, PMID 26679617): net VO2 = 3.85 + 5.97 V^2 / Ht (ml/kg/min; V m/s, Ht m), 5 kcal per litre of oxygen. The ACSM equation used before
+   underpredicted nearly all their 127 values (SEE 4.5 against 1.13 ml/kg/min). V = 1.3 m/s is the free-living walking speed assumed (cadence of 100 steps/min = 3 METs, CADENCE-Adults, PMID 30654810).
+   Stride = 0.415 x height is the usual approximation (not checked against a primary source here). 80 kg, 1.8 m: 0.606 kcal/kg/km, 2000 steps = 1.494 km = 72.4 kcal. */
+const walkKcalKgKm = htM => (3.85 + 5.97 * 1.3 * 1.3 / (htM || 1.75)) * (1000 / (1.3 * 60)) * 0.005;
+const STEP_KCAL = (kg, steps, heightCm) => walkKcalKgKm((heightCm || 175) / 100) * kg * (steps * 0.415 * (heightCm || 175) / 100 / 1000);
 /* Calibration v2 (M7b, F-06/D8, formula approved by the owner on 26/10; method and assumptions in docs/NUTRITION_AUDIT.md F-06: 7000 kcal/kg is an assumption, the prior 0.08 is a design choice, no coefficient from a primary source): the factor that scales the modelled TDEE to what your weight really did.
    Window of up to 28 days; weight slope by least squares (with its standard error) instead of the difference of two 7-day means;
    quality gates (>= 21 days of log, intake typed or from food on >= 70 % of them, >= 8 weigh-ins); shrunk toward 1 by how uncertain the slope is
    (Gaussian prior: the factor is usually within calPrior = 0.08 of 1); symmetric clamp 1 +/- calBand; the factor moves at most calWeekKcal per week.
    rows: the series so far (day -> {real, intake, tdeeW}); returns null when the data do not pass the gates. Pure: no state, no clock. */
+/* Energy per kg of weight change by body fat (Hall 2008, Int J Obes, PMID 17848938: the 7700 kcal/kg rule overestimates the energy of lost weight for lean people): Forbes partition, fat share p = FM / (FM + 10.4 kg),
+   9400 kcal/kg of fat and 1800 kcal/kg of lean tissue. 12 kg of fat: 5871 kcal/kg; 30 kg: 7443.6 (where the rule holds, as the paper says). Without body fat, the fixed value (energy.kcalPerKg). Off: energy.kcalPerKgMode "fixed". */
+const energyDensity = fm => { const p = fm / (fm + 10.4); return p * 9400 + (1 - p) * 1800; };
+const kcalPerKgFor = (kg, bf, E) => E.kcalPerKgMode === "fixed" || !(bf > 0 && bf < 60 && kg > 0) ? E.kcalPerKg : energyDensity(kg * bf / 100);
 function calibV2(rows, d, E) {
   const W = E.calWin || 28; let nDays = 0, nI = 0, sI = 0, sT = 0; const pts = [];
   for (let k = 1; k <= W; k++) {
@@ -3818,8 +3826,9 @@ function calibV2(rows, d, E) {
   const sxx = pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0), sxy = pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0);
   if (!(sxx > 0)) return null;
   const b = sxy / sxx, sse = pts.reduce((a, p) => a + (p[1] - my - b * (p[0] - mx)) ** 2, 0), se = Math.sqrt(Math.max(0, sse) / Math.max(1, n - 2) / sxx);
-  const T = sT / nI, dataTdee = sI / nI - b * E.kcalPerKg, raw = dataTdee / T;
-  const u = se * E.kcalPerKg / T, tau = E.calPrior || 0.08, w = tau * tau / (tau * tau + u * u);
+  const last = rows[addDays(d, -1)], kpk = kcalPerKgFor(last?.trend, last?.bf, E);
+  const T = sT / nI, dataTdee = sI / nI - b * kpk, raw = dataTdee / T;
+  const u = se * kpk / T, tau = E.calPrior || 0.08, w = tau * tau / (tau * tau + u * u);
   const band = E.calBand || 0.2, target = clamp(1 + w * (raw - 1), 1 - band, 1 + band);
   return { raw, target, u, w, n, nI, nDays, dataTdee, rel: u <= 0.03 && n >= 14 ? "high" : u <= 0.06 ? "medium" : "low" };
 }
@@ -3831,11 +3840,16 @@ function hbBonusKcal(bf) { const E = FIT().energy; return E.hbBonusOn === "on" &
 /* Ten Haaf and Weijs 2014, weight version (kg, HEIGHT IN METRES, years). Derived on 90 recreational athletes aged 18-35: outside that range the uncertainty grows.
    Coefficients taken from docs/NUTRITION_SPEC.md §5, not checked against the paper's text. */
 function tenHaafWeight(kg, m, age, female) { return 29.279 + 11.936 * kg + 587.728 * m - 8.129 * age + (female ? 0 : 191.027); }
-function bmrOf(kg, bf, age) {
-  const E = FIT().energy, prof = FIT().profile, female = prof.sex === "Female";
-  if (E.bmr === "Harris-Benedict") return hbOriginal(kg, prof.height, age, female) + hbBonusKcal(bf);
-  if (E.bmr === "Ten Haaf (weight)") return tenHaafWeight(kg, prof.height / 100, age, female);
-  if (E.bmr === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
+/* Ten Haaf & Weijs 2014 (PLoS One, PMID 25275434; 90 recreational athletes of 18-35 y, indirect calorimetry): Harris-Benedict, WHO, Schofield, Mifflin and Owen were under 50 % accurate (within 10 %) in them; Cunningham and the two new equations
+   performed equally well. kJ/day = 49.940 kg + 2459.053 m - 34.014 y + 799.257 (male) + 122.502, or 95.272 FFM + 2026.161; 1 kcal = 4.184 kJ. "Auto" = Ten Haaf (weight) from 18 to 35 y, Mifflin outside, and Mifflin before energy.bmrAutoFrom. */
+function bmrOf(kg, bf, age, date) {
+  const E = FIT().energy, prof = FIT().profile, female = prof.sex === "Female"; let m = E.bmr;
+  if (m === "Auto") m = E.bmrAutoFrom && date && date < E.bmrAutoFrom ? "Mifflin-St Jeor" : age >= 18 && age <= 35 ? "Ten Haaf (weight)" : "Mifflin-St Jeor";
+  if (m === "Ten Haaf (FFM)" && bf > 0 && bf < 60) return (95.272 * kg * (1 - bf / 100) + 2026.161) / 4.184;
+  if (m === "Ten Haaf (FFM)") m = "Ten Haaf (weight)";
+  if (m === "Harris-Benedict") return hbOriginal(kg, prof.height, age, female) + hbBonusKcal(bf);
+  if (m === "Ten Haaf (weight)") return tenHaafWeight(kg, prof.height / 100, age, female);
+  if (m === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
   return 10 * kg + 6.25 * prof.height - 5 * age + (prof.sex === "Female" ? -161 : 5);
 }
 /* D18 (approved 26/10): NEAT from the steps when no watch figure has taught the app your usual extra movement. The default NEAT stands for a day of neatRefSteps steps (an assumption you can change);
@@ -3859,7 +3873,7 @@ function energySeries() {
       const ws = wins.filter(x => x != null); if (ws.length) trend = ws.reduce((a, b) => a + b, 0) / ws.length;
       if (L.bf > 0) bf = +L.bf;
       const age = ageAt(d);
-      const bmr = bmrOf(trend, bf, age);
+      const bmr = bmrOf(trend, bf, age, d);
       const sess = sessionsFor(d);
       const kcals = sess.list.map(w => sessionKcal(w, d, trend).kcal);
       const eat = kcals.reduce((a, b) => a + b, 0);
@@ -5663,10 +5677,11 @@ function fitSettings() {
     <div class="faint" style="font-size:12.5px">Cut = negative (−500 = 500 kcal deficit), bulk = positive. Maintenance with 0 kcal can take a slight deficit as a % of TDEE (0–15%, e.g. 5% ≈ −120 kcal); a kcal number there wins. Add a row to change calories: past days keep the target they had.${f.phases.map(p => p.phase === "Cut" && p.kcal >= 0 ? " ⚠ A cut needs a negative number." : "").join("")}</div>`, false, (ph => `${ph.phase}${phaseKcal(ph, energyAt(todayISO()).tdee) ? ` · ${phaseKcal(ph, energyAt(todayISO()).tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(ph, energyAt(todayISO()).tdee))} kcal` : ""}`)(phaseFor(todayISO())));
   h += grp("Phase rules · grams per kg", tbl(["Phase", "Protein g/kg", "Fat g/kg", "Min carbs g/kg", "Weekly change min %", "max %"], ["Cut", "Bulk", "Maintenance"].map(p => `<tr><td><b>${p}</b></td>${["p", "f", "cmin"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${f.phaseParams[p][k]}" data-fit="phaseParams.${p}.${k}" data-t="num"></td>`).join("")}${["wmin", "wmax"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${r1(f.phaseParams[p][k] * 100 * 10) / 10}" data-fit="phaseParams.${p}.${k}" data-t="pct"></td>`).join("")}</tr>`)) + `<div class="faint" style="font-size:12.5px">Protein and fat = g/kg × trend weight; carbs fill the rest. Cut: protein 1.7–2.5, fat 0.7–0.8, lose 0.5–1% per week. Bulk: +10–15% calories, carbs ≥ 4 g/kg. Maintenance: protein 1.4–2, carbs 4–5+.</div>`, false, `Cut ${f.phaseParams.Cut.p} g protein · ${f.phaseParams.Cut.f} g fat per kg`);
   const En = f.energy, hbSel = [["off", "Off"], ["on", "On"]], onOff = [["on", "On"], ["off", "Off"]];
-  h += grp("Energy model", `<div class="grid2"><div class="fld-wide">${fitSel("energy.bmr", "BMR formula", [["Mifflin-St Jeor", "Mifflin-St Jeor"], ["Harris-Benedict", "Harris-Benedict"], ["Ten Haaf (weight)", "Ten Haaf (weight)"], ["MET", "MET (kg × 24)"]])}</div><div class="fld-wide">${fitSel("energy.watchMode", "Watch daily kcal", [["active", "Active (incl. workouts)"], ["neat", "NEAT only"], ["total", "Total (BMR + activity)"]])}</div></div>
+  h += grp("Energy model", `<div class="grid2"><div class="fld-wide">${fitSel("energy.bmr", "BMR formula", [["Auto", "Auto (athlete 18–35: Ten Haaf)"], ["Mifflin-St Jeor", "Mifflin-St Jeor"], ["Harris-Benedict", "Harris-Benedict"], ["Ten Haaf (weight)", "Ten Haaf (weight)"], ["Ten Haaf (FFM)", "Ten Haaf (lean mass)"], ["MET", "MET (kg × 24)"]])}</div><div class="fld-wide">${fitSel("energy.watchMode", "Watch daily kcal", [["active", "Active (incl. workouts)"], ["neat", "NEAT only"], ["total", "Total (BMR + activity)"]])}</div></div>
     ${En.bmr === "Harris-Benedict" ? (En.hbBonusOn === "on" ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${fitSel("energy.hbBonusOn", "Lean bonus", hbSel)}${fitIn("energy.hbBonus", "Bonus", "kcal/pt")}${fitIn("energy.hbThr", "Below body fat", "%")}</div>` : fitSel("energy.hbBonusOn", "Lean bonus", hbSel)) : ""}
-    ${En.bmr === "Harris-Benedict" || En.bmr === "Ten Haaf (weight)" ? `<div class="faint" style="font-size:12.5px">${En.bmr === "Harris-Benedict" ? "Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation." : "Ten Haaf (weight) was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows."} Mifflin-St Jeor stays the default.</div>` : ""}
-    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitIn("energy.kcalPerKg", "kcal per kg of weight", "kcal")}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}${fitIn("energy.netFrom", "From", "", "date")}</div>
+    ${(a => a >= 18 && a <= 35 && En.bmr !== "Auto" && !/Ten Haaf/.test(En.bmr) ? `<div class="note" role="note">Recreational athletes aged 18–35: in a study of 90 of them (Ten Haaf 2014, PMID 25275434) Mifflin and Harris-Benedict predicted resting energy within 10% in under half of them; Ten Haaf did as well as Cunningham. Choose Auto or Ten Haaf.</div>` : "")(ageAt(todayISO()))}
+    ${En.bmr === "Harris-Benedict" ? `<div class="faint" style="font-size:12.5px">Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation.</div>` : /Ten Haaf|Auto/.test(En.bmr) ? `<div class="faint" style="font-size:12.5px">Ten Haaf was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows (Auto then uses Mifflin). The lean-mass version needs your body fat.</div>` : ""}
+    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : "<div></div>"}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}</div>
     <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (an assumption); today's steps are projected to the end of the day.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
   h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"]])}${fitSel("energy.warn", "Target warnings", onOff)}</div>
     ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}</div>`}
@@ -11350,7 +11365,7 @@ function eatCandidates(w, date) {
   const out = [], fit = FIT(), min = parseMinutes(w?.min) || 0; if (!w || !w.sport || w.sport === "Rest" || !(min > 0)) return out;
   const kg = trendAt(date), rest = energyAt(date).bmr / 1440, run = w.sport === fit.runSport, walk = isWalkSport(w.sport), km = +w.km || 0, strength = isStrength(w.sport);
   if ((run || walk) && km > 0.3) {
-    const v = km * 1000 / min, g = Math.max(0, (+w.elev || 0) / (km * 1000)), vo2 = run ? 0.2 * v + 0.9 * v * g : 0.1 * v + 1.8 * v * g, ok = run ? v >= 100 && v <= 400 : v >= 40 && v <= 130;
+    const v = km * 1000 / min, g = Math.max(0, (+w.elev || 0) / (km * 1000)), vo2 = run ? 0.2 * v + 0.9 * v * g : 3.85 + 5.97 * (v / 60) ** 2 / ((FIT().profile.height || 175) / 100) + 1.8 * v * g, ok = run ? v >= 100 && v <= 400 : v >= 40 && v <= 130;
     out.push({ m: "acsm", kcal: r0(vo2 * kg * min / 1000 * AEE_KCAL_PER_L), q: ok && w.elev ? "high" : ok ? "medium" : "low", note: `${run ? "running" : "walking"} equation from pace${w.elev ? " and climb" : ", flat assumed"}` });
   }
   const kc = +w.kcal > 0 ? +w.kcal : +w.watch > 0 ? +w.watch : 0;
@@ -11361,7 +11376,7 @@ function eatCandidates(w, date) {
   const order = run || walk ? ["acsm", "device", "hr", "met"] : strength ? ["device", "met"] : ["device", "hr", "met"];
   return out.filter(c => order.includes(c.m)).sort((a, b) => order.indexOf(a.m) - order.indexOf(b.m));
 }
-const stepKcal = (date, steps) => 0.5 * trendAt(date) * steps * 0.415 * ((FIT().profile.height || 175) / 100) / 1000;   // net walking cost 0.5 kcal/kg/km (ACSM walking, 0.1 ml/kg/m x 5 kcal/l); stride 0.415 x height
+const stepKcal = (date, steps) => STEP_KCAL(trendAt(date), steps, FIT().profile.height);   // net walking cost 0.5 kcal/kg/km (ACSM walking, 0.1 ml/kg/m x 5 kcal/l); stride 0.415 x height
 const ambulatory = date => sessionsFor(date).list.some(w => w.sport && w.sport !== "Rest" && (w.sport === FIT().runSport || isWalkSport(w.sport)));
 const medianOf = a => { if (!a.length) return null; const x = [...a].sort((p, q) => p - q), h = x.length >> 1; return x.length % 2 ? x[h] : (x[h - 1] + x[h]) / 2; };
 /* the part of NEAT that steps don't show: the median of (watch NEAT - steps NEAT) over past days with both and no run or walk. Needs 14 days. */
@@ -11418,9 +11433,9 @@ function energyView() {
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
     <div class="stat-grid${r.target !== r.tdee ? " four" : ""}">${r.target !== r.tdee ? kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (phaseKcal(r.phase, r.tdee) ? ` · ${phaseKcal(r.phase, r.tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(r.phase, r.tdee))}` : "")) : ""}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
-  const bonus = E.bmr === "Harris-Benedict" ? hbBonusKcal(bf) : 0, inTh = age >= 18 && age <= 35;   // the "used today" line only when the lean bonus or the MET shortcut moves the number
+  const inTh = age >= 18 && age <= 35, bmrUsed = E.bmr === "Auto" ? (inTh ? "Ten Haaf (weight)" : "Mifflin-St Jeor") : E.bmr, bonus = bmrUsed === "Harris-Benedict" ? hbBonusKcal(bf) : 0;   // the "used today" line only when the lean bonus or the MET shortcut moves the number
   hh += `<div class="section-h"><h2>Basal metabolism</h2><span class="faint" style="font-size:12.5px">${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}</span></div>
-    <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", E.bmr === "Mifflin-St Jeor" ? "in use" : "", E.bmr === "Mifflin-St Jeor" ? "on" : "")}${kpi(fmtN(hb), "Harris‑Benedict (1918/1919)", E.bmr === "Harris-Benedict" ? "in use" : "", E.bmr === "Harris-Benedict" ? "on" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(th), "Ten Haaf (weight)", (E.bmr === "Ten Haaf (weight)" ? "in use · " : "") + (inTh ? "athletes 18–35" : "outside 18–35, less certain"), E.bmr === "Ten Haaf (weight)" ? "on" : "")}</div>${bonus > 0 || E.bmr === "MET" ? `<div class="faint" style="font-size:12.5px">Used today: <b>${fmtN(r.bmr)} kcal</b> (${E.bmr === "MET" ? "kg × 24" : `Harris-Benedict plus a lean bonus of ${fmtN(bonus)}`}).</div>` : ""}`;
+    <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", bmrUsed === "Mifflin-St Jeor" ? "in use" : "", bmrUsed === "Mifflin-St Jeor" ? "on" : "")}${kpi(fmtN(hb), "Harris‑Benedict (1918/1919)", bmrUsed === "Harris-Benedict" ? "in use" : "", bmrUsed === "Harris-Benedict" ? "on" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(th), "Ten Haaf (weight)", (bmrUsed === "Ten Haaf (weight)" ? "in use · " : "") + (inTh ? "athletes 18–35" : "outside 18–35, less certain"), bmrUsed === "Ten Haaf (weight)" ? "on" : "")}</div>${bonus > 0 || bmrUsed === "MET" ? `<div class="faint" style="font-size:12.5px">Used today: <b>${fmtN(r.bmr)} kcal</b> (${bmrUsed === "MET" ? "kg × 24" : `Harris-Benedict plus a lean bonus of ${fmtN(bonus)}`}).</div>` : ""}`;
   hh += aeeShadowCard();
   hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
@@ -13827,9 +13842,9 @@ function modelCheck(days = 28) {
     for (let i = days; i >= 1; i--) { const r = s.rows[addDays(today, -i)]; if (r?.intake && !r.intake.est) L.push(r); }
     if (L.length < 10 || !o) return { nI: L.length, nW: o?.n || 0 };
     const av = f => L.reduce((a, r) => a + f(r), 0) / L.length;
-    const eat = av(r => r.intake.kcal), formula = av(r => r.tdeeW), used = av(r => r.tdee), measured = eat - o.kgDay * E.kcalPerKg;
+    const eat = av(r => r.intake.kcal), formula = av(r => r.tdeeW), used = av(r => r.tdee), kpk = kcalPerKgFor(L[L.length - 1].trend, L[L.length - 1].bf, E), measured = eat - o.kgDay * kpk;
     const plan = av(r => +r.phase?.kcal || 0);
-    return { nI: L.length, nW: o.n, eat, formula, used, measured, real: eat - measured, plan, expKg: (eat - formula) * days / E.kcalPerKg, actKg: o.kgDay * days, gap: measured - formula };
+    return { nI: L.length, nW: o.n, eat, formula, used, measured, real: eat - measured, plan, expKg: (eat - formula) * days / kpk, actKg: o.kgDay * days, gap: measured - formula };
   });
 }
 function accuracyHTML() {

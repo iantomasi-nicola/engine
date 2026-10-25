@@ -1,15 +1,15 @@
 /* M7a2/P2 (formula approved by the user on 24/10): the NEAT of a day with steps = what the steps cost + a base learned from your own days with watch figure and steps.
-   Independent numbers: net walking cost 0.5 kcal per kg per km, stride 0.415 x height (ACSM walking; see docs/AEE_ENGINE_PROPOSAL.md). Synthetic data only. */
+   Independent numbers: net walking cost from Ludlow & Weyand 2016 (PMID 26679617) at 1.3 m/s for 1.8 m: (3.85 + 5.97 * 1.3^2 / 1.8) ml/kg/min * (1000 / 78 min per km) * 5 kcal/l = 9.45517 * 12.8205 * 0.005 = 0.606101 kcal/kg/km, stride 0.415 x height. Synthetic data only. */
 const test = require("node:test"), assert = require("node:assert/strict"), H = require("./lib/harness"), F = require("./fixtures/synthetic");
 let dir, app;
 test.before(async () => { dir = H.build(H.tmp("neat-build")); });
 test.afterEach(async () => { await app?.close(); app = null; });
 const start = async () => { app = await H.startApp({ dir, seed: F.seed({ withPlan: false }) }); return app.page; };
 const KG = 80, HEIGHT = 180;                                                    // the synthetic profile
-const stepCost = steps => 0.5 * KG * (steps * 0.415 * HEIGHT / 100 / 1000);    // kcal, computed here without the app's code
+const stepCost = steps => 0.606101 * KG * (steps * 0.415 * HEIGHT / 100 / 1000);    // kcal, computed here without the app's code
 /* 20 days with a typed watch figure and steps (watch = steps cost + 300: the learned base must come out at 300), then the days under test */
 const seed = (page, nTyped = 20) => page.evaluate(([n, kg]) => {
-  const t = todayISO(); for (let i = 40; i > 40 - n; i--) { const d = addDays(t, -i), steps = 5000 + (i * 997) % 7000; const cost = 0.5 * kg * (steps * 0.415 * 180 / 100 / 1000);
+  const t = todayISO(); for (let i = 40; i > 40 - n; i--) { const d = addDays(t, -i), steps = 5000 + (i * 997) % 7000; const cost = 0.606101 * kg * (steps * 0.415 * 180 / 100 / 1000);
     mutateLog(d, x => { x.weight = kg; x.steps = steps; x.watch = Math.round((cost + 300) * 100) / 100; }); }
   for (let i = 40 - n; i >= 1; i--) mutateLog(addDays(t, -i), x => { x.weight = kg; });
 }, [nTyped, KG]);

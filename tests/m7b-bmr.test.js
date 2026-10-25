@@ -86,7 +86,7 @@ test("Settings: the BMR select offers the three formulas plus MET, the bonus has
     const lab = x => d.querySelector(`label[for="fit-energy-${x}"]`)?.textContent;
     const grids = [...d.querySelectorAll(".grid2")].filter(g => g.querySelector("#fit-energy-bmr") || g.querySelector("#fit-energy-hbBonusOn")).map(g => g.children.length);
     return { sel, on: lab("hbBonusOn"), grids, text: d.textContent }; });
-  assert.deepEqual(r.sel, ["Mifflin-St Jeor", "Harris-Benedict", "Ten Haaf (weight)", "MET"]);
+  assert.deepEqual(r.sel, ["Auto", "Mifflin-St Jeor", "Harris-Benedict", "Ten Haaf (weight)", "Ten Haaf (FFM)", "MET"]);
   assert.equal(r.on, undefined, "the lean bonus switch shows only with Harris-Benedict");
   assert.ok(r.grids.every(n => n % 2 === 0), "odd grid " + r.grids);
   const hb = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; FIT().energy.hbBonusOn = "off"; DATA_V++; const d = document.createElement("div"); d.innerHTML = fitSettings(); const off = d.querySelector('label[for="fit-energy-hbBonusOn"]')?.textContent, offFields = !!d.querySelector("#fit-energy-hbBonus");
@@ -102,4 +102,26 @@ test("changing the switch in Settings is saved and survives a reload", async () 
   await ev(() => { const el = document.createElement("select"); el.dataset.fit = "energy.hbBonusOn"; el.dataset.t = "text"; el.innerHTML = '<option value="on" selected>on</option>'; el.value = "on"; fitChange(el); });
   await app.page.reload(); await app.page.waitForFunction(() => typeof FIT === "function" && FIT());
   assert.equal(await ev(() => FIT().energy.hbBonusOn), "on");
+});
+
+/* Ten Haaf & Weijs 2014 (PMID 25275434), kJ/day: weight form 49.940 kg + 2459.053 m - 34.014 y + 799.257 (male) + 122.502; lean-mass form 95.272 FFM + 2026.161. 1 kcal = 4.184 kJ.
+   80 kg, 1.80 m, 30 y male: (3995.2 + 4426.3 - 1020.42 + 799.257 + 122.502) / 4.184 = 8322.84 / 4.184 = 1989.2 kcal. 12 % body fat: FFM 70.4 kg -> (6706.9 + 2026.161) / 4.184 = 8733.06 / 4.184 = 2087.3 kcal. */
+test("BMR «Ten Haaf (lean mass)» = (95.272 FFM + 2026.161) / 4.184 (2087.3 for 80 kg at 12 % fat), and falls back to the weight form without body fat", async () => {
+  await profile({ bmr: "Ten Haaf (FFM)", bf: 12 }); near(await ev(() => energyAt(todayISO()).bmr), 2087.3, 0.1);
+  await profile({ bmr: "Ten Haaf (FFM)" }); near(await ev(() => energyAt(todayISO()).bmr), 1989.2, 0.1);
+});
+test("BMR «Auto»: Ten Haaf (weight) from 18 to 35 years (1989.2 at 30), Mifflin outside (40 y: 800 + 1125 - 200 + 5 = 1730), and Mifflin before its start date", async () => {
+  await ev(() => { FIT().energy.bmrAutoFrom = ""; });
+  await profile({ bmr: "Auto" }); near(await ev(() => energyAt(todayISO()).bmr), 1989.2, 0.1);
+  await ev(() => { const t = todayISO(); Object.assign(FIT().profile, { dob: addDays(t, -Math.round(40.4 * 365.25)) }); DATA_V++; }); near(await ev(() => energyAt(todayISO()).bmr), 1730, 0.1);
+  await ev(() => { const t = todayISO(); Object.assign(FIT().profile, { dob: addDays(t, -Math.round(30.4 * 365.25)) }); FIT().energy.bmrAutoFrom = addDays(t, 5); DATA_V++; }); near(await ev(() => energyAt(todayISO()).bmr), 1780, 0.1);
+  await ev(() => { FIT().energy.bmrAutoFrom = ""; FIT().energy.bmr = "Mifflin-St Jeor"; });
+});
+test("energy per kg of weight change by body fat (Hall 2008, PMID 17848938; Forbes partition p = FM / (FM + 10.4), 9400 kcal/kg fat, 1800 lean): 12 kg of fat = 5871.4, 30 kg = 7443.6; fixed mode and no body fat keep 7000", async () => {
+  const r = await ev(() => ({ a: energyDensity(12), b: energyDensity(30), fixed: kcalPerKgFor(80, 15, { kcalPerKgMode: "fixed", kcalPerKg: 7000 }), none: kcalPerKgFor(80, null, { kcalPerKgMode: "auto", kcalPerKg: 7000 }), auto: kcalPerKgFor(80, 15, { kcalPerKgMode: "auto", kcalPerKg: 7000 }) }));
+  near(r.a, 5871.4, 0.1); near(r.b, 7443.6, 0.1); assert.equal(r.fixed, 7000); assert.equal(r.none, 7000); near(r.auto, 5871.4, 0.1);   // 80 kg at 15 % = 12 kg of fat
+});
+test("net walking cost (Ludlow & Weyand 2016, PMID 26679617) for 1.8 m at 1.3 m/s: (3.85 + 5.97 * 1.69 / 1.8) = 9.45517 ml/kg/min over 12.8205 min per km at 5 kcal/l = 0.606101 kcal/kg/km; 80 kg and 2000 steps (1.494 km) = 72.44 kcal", async () => {
+  const r = await ev(() => ({ k: walkKcalKgKm(1.8), c: STEP_KCAL(80, 2000, 180) }));
+  near(r.k, 0.606101, 1e-5); near(r.c, 72.44, 0.01);
 });

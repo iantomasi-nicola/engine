@@ -165,26 +165,26 @@ test("D20: fewer than 6 sessions, the switch off, and days before hrFrom leave t
 });
 
 /* D18 (approved 26/10): NEAT from the steps when no watch figure taught the app your usual extra movement. The default NEAT (350 kcal) stands for a day of 7000 steps (an assumption, set in Settings);
-   a step costs 0.5 kcal/kg/km at a stride of 0.415 x height. 80 kg, 180 cm: stride 0.747 m; 2000 steps = 1.494 km -> 0.5 * 80 * 1.494 = 59.76 kcal; 7000 steps -> 209.16; 14000 -> 418.32.
-   Base = 350 - 209.16 = 140.84: 2000 steps -> 200.60, 7000 -> 350, 14000 -> 559.16. */
+   a step costs 0.606101 kcal/kg/km (Ludlow & Weyand 2016, 1.3 m/s, 1.8 m) at a stride of 0.415 x height. 80 kg, 180 cm: stride 0.747 m; 2000 steps = 1.494 km -> 48.4881 * 1.494 = 72.44 kcal; 7000 steps -> 253.53; 14000 -> 507.07.
+   Base = 350 - 253.53 = 96.47: 2000 steps -> 168.91, 7000 -> 350, 14000 -> 603.54. */
 const stepsDay = o => ev(o => { const t = todayISO(), d0 = addDays(t, -18); S.logm = {}; Object.assign(FIT().energy, { neatMode: "on", neatFrom: "", neatRefSteps: 7000, neat: 350, watchMode: "active" }, o.energy || {}); FIT().trackStart = d0; FIT().phases = [{ start: d0, phase: "Maintenance", kcal: 0 }];
   for (let i = 0; i <= 18; i++) { const d = addDays(d0, i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; const L = { steps: o.steps }; if (o.watch) L.watch = o.watch; if (o.walk && i === 17) L.workouts = [{ sport: "Walking", min: 30, km: 2 }]; S.logm[m].days[d] = L; }
   if (o.last != null) { const d = addDays(t, -1), m = d.slice(0, 7); S.logm[m].days[d].steps = o.last; delete S.logm[m].days[d].watch; }
   DATA_V++; const r = energyAt(addDays(t, -1)); return { neat: r.neat, src: r.neatSrc, bmr: r.bmr, tdeeW: r.tdeeW }; }, o);
-test("D18: without any watch figure the NEAT follows the steps: 2000 steps -> 200.6, 7000 -> 350, 14000 -> 559.2 (and the TDEE of a 2000-step day is (1780 + 200.6) * 1.1 = 2178.7)", async () => {
+test("D18: without any watch figure the NEAT follows the steps: 2000 steps -> 168.9, 7000 -> 350, 14000 -> 603.5 (and the TDEE of a 2000-step day is (1780 + 168.9) * 1.1 = 2143.8)", async () => {
   await profile();
   const a = await stepsDay({ steps: 2000 }), b = await stepsDay({ steps: 7000 }), c = await stepsDay({ steps: 14000 });
-  near(a.neat, 200.6, 0.1); near(b.neat, 350, 0.1); near(c.neat, 559.16, 0.1); assert.equal(a.src, "stepsRef");
-  near(a.tdeeW, (1780 + 200.6) * 1.1, 0.2);
+  near(a.neat, 168.91, 0.1); near(b.neat, 350, 0.1); near(c.neat, 603.54, 0.1); assert.equal(a.src, "stepsRef");
+  near(a.tdeeW, (1780 + 168.91) * 1.1, 0.2);
 });
-test("D18: off switch, a start date in the future, a walk that day, or no steps leave the old NEAT (the 350 default); a base learned from your watch figures still wins (620.7 = 59.76 + 560.96)", async () => {
+test("D18: off switch, a start date in the future, a walk that day, or no steps leave the old NEAT (the 350 default); a base learned from your watch figures still wins (582.7 = 72.44 + 510.24)", async () => {
   await profile();
   assert.equal((await stepsDay({ steps: 2000, energy: { neatMode: "off" } })).neat, 350);
   assert.equal((await stepsDay({ steps: 2000, energy: { neatFrom: "2999-01-01" } })).neat, 350);
   assert.equal((await stepsDay({ steps: 2000, walk: true })).src, "avg");
   assert.equal((await stepsDay({ steps: 0 })).src, "avg");
-  // 17 days with a watch figure of 800 and 8000 steps (STEP 239.04): base = 560.96; a last day of 2000 steps -> 59.76 + 560.96
-  const w = await stepsDay({ steps: 8000, watch: 800, last: 2000 }); near(w.neat, 620.72, 0.1); assert.equal(w.src, "steps");
+  // 17 days with a watch figure of 800 and 8000 steps (STEP 289.76): base = 510.24; a last day of 2000 steps -> 72.44 + 510.24
+  const w = await stepsDay({ steps: 8000, watch: 800, last: 2000 }); near(w.neat, 582.68, 0.1); assert.equal(w.src, "steps");
 });
 test("D18: today's steps are a projection: steps so far + the typical steps of the rest of the day (waking day 7-22 h); late evening or no history = the steps as they are", async () => {
   const r = await ev(() => ({ a: stepsProjected(2000, 10, 8000), b: stepsProjected(2000, 22, 8000), c: stepsProjected(2000, 10, null), d: stepsProjected(2000, 6, 8000), e: stepsProjected(2000, 15, 9000) }));
