@@ -298,6 +298,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rk-t>div{grid-template-columns:minmax(0,1.5fr) 1fr 1fr 1fr!important;gap:6px!important;font-size:12.5px!important}.rk-t .you{background:var(--accent-soft);border-radius:8px;font-weight:600}.rk-nm{max-width:220px}.rk-paste summary{padding:6px 0}
 
 .tools{width:100%;max-width:880px;margin-inline:auto;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.tc-out{display:flex;flex-direction:column;gap:8px}
+.chip.doms.l1{background:color-mix(in srgb,var(--warn) 14%,var(--surface-2))}.chip.doms.l2{background:color-mix(in srgb,var(--warn) 32%,var(--surface-2))}.chip.doms.l3{background:color-mix(in srgb,var(--bad) 30%,var(--surface-2))}
 .rec-sec{display:flex;flex-direction:column;border-radius:var(--r-card,20px);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .rec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;text-align:left;color:var(--ink)}.rec-h>span{display:flex;flex-direction:column;gap:2px;min-width:0}.rec-h b{font-family:var(--display);font-size:17px;font-weight:600}.rec-h small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec-b{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}.rec-b .section-h{margin:0}.rec-b>.card,.rec-b>.card.pad{box-shadow:none;background:var(--surface-2)}
@@ -3547,11 +3548,11 @@ function weightsSeries(withEst = false) {
    jr = { p, m, e, s, n, t }: they sync, back up, export and stay private with the rest of the log.
    t holds the time each field was last edited, so two devices merge field by field and a cleared field
    (kept as null) is an edit too. A day without an entry is not a zero: it is left out of every average. */
-const JR_KEYS = ["p", "m", "e", "s"], JR_NAME = { p: "productivity", m: "mood", e: "energy", s: "stress" };
+const JR_KEYS = ["p", "m", "e", "s", "f"], JR_NAME = { p: "productivity", m: "mood", e: "energy", s: "stress", f: "training feel" }, JR_MERGE = [...JR_KEYS, "n", "d"];   // d = sore muscles (DOMS): [[area, 1–3], …]
 const JR_MIN_N = 14, JR_MIN_RHO = .3;
 const jrOf = d => logGet(d)?.jr || null;
 const jrHas = (j, k) => !!j && Number.isInteger(j[k]) && j[k] >= 1 && j[k] <= 5;
-const jrFilled = d => { const j = jrOf(d); return !!j && (JR_KEYS.some(k => jrHas(j, k)) || (typeof j.n === "string" && j.n.length > 0)); };
+const jrFilled = d => { const j = jrOf(d); return !!j && (JR_KEYS.some(k => jrHas(j, k)) || (typeof j.n === "string" && j.n.length > 0) || (Array.isArray(j.d) && j.d.length > 0)); };
 function jrSet(d, k, v) {
   if (!JR_KEYS.includes(k) || (v !== null && !(Number.isInteger(v) && v >= 1 && v <= 5))) return;
   mutateLog(d, x => { const j = { ...(x.jr || {}) }; j[k] = v; j.t = { ...(j.t || {}), [k]: Math.max(Date.now(), (j.t?.[k] || 0) + 1) }; x.jr = j; });
@@ -3564,11 +3565,11 @@ function jrNote(d, text) {
 function jrMergeDay(a, b) {
   const x = a?.jr, y = b?.jr; if (!x && !y) return null; if (!x) return clone(y); if (!y) return clone(x);
   const out = { t: {} };
-  for (const k of [...JR_KEYS, "n"]) { const tx = x.t?.[k] || 0, ty = y.t?.[k] || 0, src = tx > ty ? x : y, st = tx > ty ? tx : ty;
+  for (const k of JR_MERGE) { const tx = x.t?.[k] || 0, ty = y.t?.[k] || 0, src = tx > ty ? x : y, st = tx > ty ? tx : ty;
     if (k in src) { out[k] = src[k] ?? null; if (st) out.t[k] = st; } else if (k in (src === x ? y : x)) { const o = src === x ? y : x; out[k] = o[k] ?? null; if (o.t?.[k]) out.t[k] = o.t[k]; } }
   return out;
 }
-const jrSig = j => JSON.stringify([...JR_KEYS, "n"].map(k => [j?.[k] ?? null, j?.t?.[k] || 0]));
+const jrSig = j => JSON.stringify(JR_MERGE.map(k => [j?.[k] ?? null, j?.t?.[k] || 0]));
 /* a server copy of a month, with this device's newer journal fields put back in; null when the server copy already has everything */
 function jrMergeDoc(loc, rem) {
   let changed = false; const out = clone(rem);
@@ -4477,7 +4478,7 @@ VIEWS.stats = function (embedded) {
     <div class="stat"><b>${fmtN(avg("kcal"))}</b><small>avg kcal · ${r0(avg("kcal") / (avgT("kcal") || 1) * 100)}% of target</small></div>
     <div class="stat"><b>${(avg("p") / w).toFixed(1)}</b><small>g protein per kg</small></div>
     <div class="stat"><b>${onTarget}/${has.length}</b><small>days within ±10%</small></div></div>`;
-  h += `<div class="section-h"><h2>Calories vs target</h2><span class="legend"><span><i></i>${basis === "eaten" ? "Eaten" : "Planned"}</span><span><i style="background:var(--accent);height:2px"></i>Target</span></span></div><div class="card pad">${kcalChart(rows)}</div>`;
+  h += `<div class="section-h"><h2>Calories vs target</h2><span class="faint" style="font-size:12.5px">${basis === "eaten" ? "eaten" : "planned"} per day</span></div><div class="card pad">${kcalChart(rows)}</div>`;
   h += `<div class="section-h"><h2>Average macros vs target</h2></div><div class="card pad">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"], ["Fibre", "fib", "good"]].map(([l, k, c]) => {
     const a = avg(k), t = k === "fib" ? 30 : avgT(k); const pct = a / (t || 1) * 100;
     return `<div class="adh" style="--c:var(--${c})"><span>${l}</span><span class="bar"><i style="width:${clamp(pct / 1.3, 0, 100)}%"></i><u style="left:${100 / 1.3}%"></u></span><span class="v">${r0(a)} g<br><small class="faint">${r0(pct)}%</small></span></div>`; }).join("")}
@@ -4510,11 +4511,11 @@ const xStep = colW => Math.max(1, Math.ceil(52 / Math.max(1, colW)));
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
-  const mx = niceMax(Math.max(...rows.map(r => Math.max(r.tot.kcal, r.T.kcal))) * 1.05);
+  const top = Math.max(...rows.map(r => Math.max(r.tot.kcal, r.T.kcal))) * 1.05, stp = [100, 200, 250, 500, 1000, 2000].find(x => top / x <= 5) || 2000, mx = Math.max(stp, Math.ceil(top / stp) * stp);   // round steps (500, 1000…), never 1.3k
   const y = v => Tp + (H - Tp - B) * (1 - v / mx);
   const bw = (W - L - R) / n; const barW = Math.max(2, bw * (n > 31 ? 0.7 : 0.58));
   let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v >= 1000 ? r1(v / 1000) + "k" : r0(v)}</text>`; }
+  for (let v = 0; v <= mx + 1e-9; v += stp) { g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v >= 1000 ? (v % 1000 ? r1(v / 1000) : v / 1000) + "k" : r0(v)}</text>`; }
   const every = n <= 7 ? 1 : n <= 31 ? (W < 420 ? 7 : 5) : (W < 420 ? 30 : 15);
   rows.forEach((r, i) => {
     const x = L + i * bw + (bw - barW) / 2;
@@ -4524,7 +4525,7 @@ function kcalChart(rows) {
     if (i % every === 0 || n <= 7) g += `<text x="${x + barW / 2}" y="${H - 7}" text-anchor="middle">${n <= 7 ? DOW[dow(r.d)] : fmtDM(r.d)}</text>`;
   });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily calories compared with target">${g}</svg>
-    <div class="legend" style="margin-top:6px"><span><i></i>Within ±10%</span><span><i style="background:var(--bad)"></i>Over</span><span><i style="background:var(--faint)"></i>Under</span></div>`;
+    <div class="legend" style="margin-top:6px"><span><i></i>Within ±10%</span><span><i style="background:var(--bad)"></i>Over</span><span><i style="background:var(--faint)"></i>Under</span><span><i style="background:var(--accent);height:2px"></i>Target</span></div>`;
 }
 function proteinChart(rows, w) {
   const W = chartW(true), H = 170, L = 30, R = 8, Tp = 10, B = 22, n = rows.length;
@@ -4550,22 +4551,38 @@ function splitDonut(p, c, f) {
   return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="130" height="130" role="img" aria-label="Calorie split">${g}<text x="70" y="66" text-anchor="middle" style="fill:var(--ink);font-family:var(--display);font-weight:760;font-size:20px">${fmtN(tot)}</text><text x="70" y="84" text-anchor="middle" style="fill:var(--muted);font-size:10px">kcal / day</text></svg>
     <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px">${labs.map((l, i) => `<div class="mlabel" style="--c:${cols[i]}"><i></i><b class="num" style="min-width:42px">${r0(k[i] / tot * 100)}%</b><span class="muted">${l}</span></div>`).join("")}</div></div>`;
 }
+/* Days without a weigh-in get an estimate: the last weigh-in plus what the energy balance says happened each day (yesterday's intake minus TDEE in kg at your kcal per kg; the phase's planned balance when
+   nothing was logged). When a weigh-in comes after a gap the estimates in between are bent to end on it: the difference between the estimate and the scale is spread over the days of the gap in
+   proportion to the days elapsed. Shown on the weight chart and in the Today tile only: the trend, the TDEE and the calibration never use it. At most 28 days after the last weigh-in. Docs: docs/WEIGHT_ESTIMATE.md */
+function weightFill(from, to, dk) {
+  const R = weightsSeries(false); if (!R.length) return []; const E = FIT().energy, s = dk ? null : energySeries();
+  const step = dk || (d => { const r = s.rows[d]; if (!r) return 0; return (r.balance != null ? r.balance : phaseKcal(r.phase, r.tdee)) / (E.kcalPerKg || 7000); });
+  const out = [];
+  for (let i = 0; i < R.length; i++) { const [d0, w0] = R[i], nx = R[i + 1], last = nx ? addDays(nx[0], -1) : to < addDays(d0, 28) ? to : addDays(d0, 28), seg = []; let cum = 0;
+    for (let d = addDays(d0, 1); d <= (nx ? nx[0] : last); d = addDays(d, 1)) { cum += step(addDays(d, -1)); seg.push({ d, kg: +w0 + cum }); }
+    const gap = nx ? daysBetween(d0, nx[0]) : 0, err = nx && seg.length ? +nx[1] - seg[seg.length - 1].kg : 0;
+    for (const x of seg) { if (nx && x.d >= nx[0]) continue; const kg = x.kg + (gap ? err * daysBetween(d0, x.d) / gap : 0); if (x.d >= from && x.d <= to && !(logGet(x.d)?.weight > 0 && !logGet(x.d).estW)) out.push({ d: x.d, kg: Math.round(kg * 100) / 100, est: true }); } }
+  return out;
+}
+const weightEstNow = () => { const t = todayISO(), R = weightsSeries(false), last = R[R.length - 1]; if (!last || daysBetween(last[0], t) < 2) return null; const e = weightFill(t, t).pop(); return e ? { ...e, since: daysBetween(last[0], t) } : null; };
 function weightChart(ws) {
   ws = ws.slice(-120);
   const W = chartW(), H = 180, L = 40, R = 10, Tp = 12, B = 24, n = ws.length;
-  const t0 = parseISO(ws[0][0]).getTime(), t1 = parseISO(ws[n - 1][0]).getTime(); const span = Math.max(1, t1 - t0);
-  const vs = ws.map(w => +w[1]); const lo = Math.floor(Math.min(...vs) - 0.5), hi = Math.ceil(Math.max(...vs) + 0.5);
+  const est = weightFill(ws[0][0], todayISO()), t0 = parseISO(ws[0][0]).getTime(), t1 = Math.max(parseISO(ws[n - 1][0]).getTime(), ...est.map(e => parseISO(e.d).getTime())); const span = Math.max(1, t1 - t0);
+  const vs = ws.map(w => +w[1]); const lo = Math.floor(Math.min(...vs, ...est.map(e => e.kg)) - 0.5), hi = Math.ceil(Math.max(...vs, ...est.map(e => e.kg)) + 0.5);
   const x = s => L + (W - L - R) * (parseISO(s).getTime() - t0) / span;
   const y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1));
   let g = ""; const step = Math.max(1, Math.ceil((hi - lo) / 4));
   for (let v = lo; v <= hi; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
   const ma = vs.map((_, i) => { const s = vs.slice(Math.max(0, i - 6), i + 1); return s.reduce((a, b) => a + b, 0) / s.length; });
   g += `<path d="${ws.map((w, i) => (i ? "L" : "M") + x(w[0]) + " " + y(ma[i])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
-  ws.forEach((w, i) => g += `<circle cx="${x(w[0])}" cy="${y(vs[i])}" r="${i === n - 1 ? 4.5 : 2.6}" fill="${i === n - 1 ? "var(--accent)" : "var(--faint)"}"><title>${fmtDM(w[0])}: ${vs[i]} kg</title></circle>`);
-  g += `<text x="${L}" y="${H - 6}">${fmtDM(ws[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(ws[n - 1][0])}</text>`;
+  ws.forEach((w, i) => g += `<circle cx="${x(w[0])}" cy="${y(vs[i])}" r="${i === n - 1 && !est.length ? 4.5 : 2.6}" fill="${i === n - 1 && !est.length ? "var(--accent)" : "var(--faint)"}"><title>${fmtDM(w[0])}: ${vs[i]} kg</title></circle>`);
+  if (est.length) { const pts = [...ws.map(w => ({ d: w[0], kg: +w[1] })), ...est].sort((a, b) => a.d.localeCompare(b.d)); g += `<path d="${pts.map((q, i) => (i ? "L" : "M") + x(q.d) + " " + y(q.kg)).join(" ")}" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 4" opacity=".8"/>`;
+    est.forEach(e => g += `<circle cx="${x(e.d)}" cy="${y(e.kg)}" r="2.4" fill="var(--bg,#fff)" stroke="var(--faint)" stroke-width="1.4"><title>${fmtDM(e.d)}: about ${e.kg} kg (estimated)</title></circle>`); }
+  g += `<text x="${L}" y="${H - 6}">${fmtDM(ws[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(est.length ? est[est.length - 1].d : ws[n - 1][0])}</text>`;
   const ch = r1(ma[n - 1] - ma[0]);
   return `<div class="row" style="justify-content:space-between"><span><b class="num" style="font-size:22px">${vs[n - 1]}</b> <span class="muted">kg latest</span></span><span class="muted" style="font-size:13px">Trend ${ch > 0 ? "+" : ""}${ch} kg since ${fmtDM(ws[0][0])}</span></div>
-    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Body weight trend">${g}</svg><div class="faint" style="font-size:12px">Dots = weigh-ins · line = 7-entry average</div>`;
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Body weight trend">${g}</svg><div class="faint" style="font-size:12px">Dots = weigh-ins · line = 7-entry average${est.length ? ` · hollow dots and dashes = estimated from your intake on days without a weigh-in (about ${est[est.length - 1].kg} kg today), bent to the next weigh-in` : ""}</div>`;
 }
 
 /* ================= settings view ================= */
@@ -4838,7 +4855,7 @@ function trainRecords() {
       return `<tr><td>${k}</td><td class="n"><b>${pb ? fmtClock(pb.sec) : "—"}</b></td><td class="n">${pb ? fmtPace(pb.sec / 60 / km) : ""}</td><td>${pb ? fmtDM(pb.date) : ""}</td><td class="n">${v ? r1(v) : ""}</td><td class="n">${pb && p?.sec ? (pb.sec <= p.sec ? "−" : "+") + fmtClock(Math.abs(pb.sec - p.sec)) : ""}</td></tr>`; }))}
     <div class="faint" style="font-size:12.5px">Races at 3k, 5k, 10k, half or marathon distance update your PBs by themselves. Minus = faster than the VDOT prediction.</div>`;
   h += `<button class="btn tonal sm" data-act="go-tprog" style="align-self:flex-start">${ic("chart", "sm")}Progress charts</button>`;
-  h += `<div class="section-h"><h2>Calisthenics tests</h2><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Add</button></div>
+  h += `<div class="section-h"><h2>Calisthenics tests</h2><span class="row" style="gap:12px"><button class="link" data-act="test-start">${ic("play", "sm")} Test day</button><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Add</button></span></div>
     ${(() => { const ct = calisTable().filter(c => c.n); return ct.length ? tbl(["Exercise", "Reps latest", "Best", "Change", "1RM +kg", "× BW", "Hold", "Tests"], ct.map(c => `<tr><td><b>${esc(c.name)}</b></td><td class="n">${c.repsLast ?? "—"}</td><td class="n">${c.repsBest ?? "—"}${c.repsBestOn ? `<span class="s">${fmtDM(c.repsBestOn)}</span>` : ""}</td><td class="n">${c.repsLast != null && c.repsPrev != null ? sgn(c.repsLast - c.repsPrev, 0) : ""}</td><td class="n">${c.rmBest != null ? "+" + r1(c.rmBest) : "—"}${c.rmLast != null && c.rmPrev != null ? `<span class="s">${sgn(c.rmLast - c.rmPrev)} vs prev</span>` : ""}</td><td class="n">${c.xbw ? c.xbw.toFixed(2) : ""}</td><td class="n">${c.hold ? c.hold + " s" : ""}</td><td class="n">${c.n || ""}</td></tr>`)) : `<div class="note">No calisthenics tests yet. Add max reps, a 1RM with added weight or a hold time.</div>`; })()}`;
   const L = S.train.calis || [];
   if (L.length) h += `<details class="card"><summary class="lrow"><span class="t">Test log (${L.length})</span></summary>${[...L].sort((a, b) => b.date.localeCompare(a.date)).map(c => `<button class="lrow" data-act="edit-result" data-type="calis" data-id="${c.id}"><span><span class="t">${esc(c.ex)} · ${esc(c.test)}: ${RM_N(c.test) ? "+" + c.val + " kg" : c.test === "Hold (s)" ? c.val + " s" : c.val + " reps"}</span><span class="s">${fmtDM(c.date)}${c.notes ? " · " + esc(c.notes) : ""}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</details>`;
@@ -4850,7 +4867,7 @@ function trainRecords() {
     ${!circuitTable().some(c => c.n) ? `<div class="note">No circuit times yet${FIT().circuits.length ? ` for ${FIT().circuits.map(c => esc(c.name)).join(", ")}` : ""}. Name and describe circuits in Settings, then log a time.</div>` : tbl(["Circuit", "Best", "Latest", "Change", "Runs"], circuitTable().filter(c => c.n).map(c => `<tr><td><b>${esc(c.name)}</b>${c.desc ? `<span class="s">${esc(c.desc)}</span>` : ""}</td><td class="n">${c.best ? fmtClock(c.best.sec) : "—"}${c.best ? `<span class="s">${fmtDM(c.best.date)}</span>` : ""}</td><td class="n">${c.last ? fmtClock(c.last.sec) : "—"}</td><td class="n">${c.chg == null ? "" : (c.chg <= 0 ? "−" : "+") + fmtClock(Math.abs(c.chg))}</td><td class="n">${c.n || ""}</td></tr>`))}`;
   h += raceSection();
   const lc = loadState();
-  h += `<div class="note">Test day protocol (every 6 weeks, same time of day): 10′ general warm-up + 2 ramp-up sets per exercise, 3–5′ rest between attempts, same order every time (skills and max strength first, max reps last).${lc.nextCal ? ` Next calisthenics test from <b>${fmtDM(lc.nextCal)}</b>.` : ""}</div>`;
+  h += `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="test-start">${ic("play", "sm")}Start a test day</button><button class="btn text sm" data-act="test-save">Save it as a workout</button></div><div class="note">Test day protocol (every 6 weeks, same time of day): 10′ general warm-up + 2 ramp-up sets per exercise, 3–5′ rest between attempts, same order every time (skills and max strength first, max reps last).${lc.nextCal ? ` Next calisthenics test from <b>${fmtDM(lc.nextCal)}</b>.` : ""}</div>`;
   return h;
 }
 
@@ -8430,6 +8447,7 @@ function sgBuild(L) {
     const rg = ringAdvice(e, p, L); if (rg) items.push({ id: "r:" + k, kind: "ring", ...base, ...rg });
   }
   if (soft && !L.sg?.lightDone) items.push({ id: "lighter", kind: "lighter", name: "A lighter day", from: "every block of 3+ sets", to: "one set less", why: `Readiness is ${st.ready === "red" ? "low" : "reduced"}${readyWhy(st) ? ` (${readyWhy(st)})` : ""}`, last: "", edit: { type: "sets_all", by: -1 } });
+  for (const i of domsItems(L)) if (editScript(L.script, i.edit)) items.push(i);
   for (const a of L.sg?.ai || []) if (editScript(L.script, a.edit)) items.push(a);
   return { items, same, st };
 }
@@ -8440,14 +8458,14 @@ ACT["sg-load"] = el => { const L = LV(), g = sgOn(L), id = el.dataset.id, it = s
 ACT["sg-all"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => i.edit), all = pick.every(i => g.on[i.id]); pick.forEach(i => { g.on[i.id] = !all; }); scheduleRender(); };
 ACT["sg-apply"] = () => { const L = LV(), g = sgOn(L), B = sgBuild(L), pick = B.items.filter(i => i.edit && g.on[i.id]); if (!pick.length) return;
   const old = L.script; let sc = old, n = 0; const names = [];
-  for (const i of pick) { const r = editScript(sc, i.edit); if (r) { sc = r; n++; names.push(i.kind === "lighter" ? "lighter day" : i.kind === "ring" ? i.name + " rings" : i.name); if (i.kind === "lighter") g.lightDone = true; } }
+  for (const i of pick) { const r = editScript(sc, i.edit); if (r) { sc = r; n++; names.push(i.kind === "lighter" ? "lighter day" : i.kind === "ring" ? i.name + " rings" : i.kind === "doms" ? i.name + " (sore)" : i.name); if (i.kind === "lighter") g.lightDone = true; } }
   if (!n || !applyEdit(sc)) { toast("Nothing could be changed in the script."); return; }
   g.on = {}; g.over = {}; g.ai = (g.ai || []).filter(a => !pick.some(i => i.id === a.id)); g.done = names; g.undo = old; saveWK(); scheduleRender();
   toast(`${n} change${n === 1 ? "" : "s"} written into the workout`, () => { const L2 = LV(); if (!L2) return; applyEdit(old); const g2 = sgOn(L2); g2.done = []; g2.undo = null; g2.lightDone = false; saveWK(); scheduleRender(); }); };
 ACT["sg-ai"] = async () => { const L = LV(), g = sgOn(L); if (!Sync.sample || g.busy) return; g.busy = true; g.err = ""; scheduleRender();
   const st = L.date === todayISO() ? loadState() : null, hist = [...new Set(L.tasks.filter(t => t.t === "set").flatMap(t => t.exs.map(e => e.name)))].map(n => { const l = lastFor({ name: n }, L.date); return l ? `${n}: ${lastText(l)} (${l.date})` : `${n}: no history`; });
   const prompt = `You are a rigorous but fair strength and calisthenics coach. Today's workout script (intervals.icu text; "Nx" at the end of a title line = sets, "- 6 Pull-up +10kg" = reps, exercise, load):\n"""${String(L.script).slice(0, 2500)}"""
-The athlete's last session of each exercise:\n${hist.join("\n")}\nReadiness today: ${st ? st.ready + (readyWhy(st) ? " (" + readyWhy(st) + ")" : "") : "unknown"}.
+The athlete's last session of each exercise:\n${hist.join("\n")}\nReadiness today: ${st ? st.ready + (readyWhy(st) ? " (" + readyWhy(st) + ")" : "") : "unknown"}.${domsOf(L.date).length ? ` Sore muscles today: ${domsOf(L.date).map(r => `${DOMS_AREAS.find(x => x[0] === r[0])[1]} (${DOMS_LVL[r[1]].toLowerCase()})`).join(", ")}: go lighter on exercises that load them.` : ""}
 Suggest at most 4 small, safe changes to today's script that make it better for this athlete today (progression, less volume when tired, or swapping an exercise that is a poor fit). Allowed changes only:
 {"change":"reps","exercise":"name exactly as written","to":number} · {"change":"load","exercise":"name exactly as written","to":kg number} · {"change":"sets","block":"the title line exactly as written without the 'Nx'","to":number} · {"change":"swap","exercise":"name exactly as written","to":"a similar exercise"}.
 Reply with only JSON: {"changes":[{"change":"...", "exercise":"...", "block":"...", "to":..., "why":"one short sentence"}]}`;
@@ -8487,7 +8505,7 @@ function livePreview(L) {
   h += `<section class="pv-sec sg"><div class="section-h"><h2>Tune today's workout${B.items.length ? ` · ${B.items.length}` : ""}</h2>${pick.length > 1 ? `<button class="link" data-act="sg-all">${pick.every(i => g.on[i.id]) ? "Clear" : "Select all"}</button>` : ""}</div>
     <p class="pv-sub">${B.items.length ? "Suggestions from how you did last time and how you feel today. Tick the ones you want and press Apply: they are written into this workout." : "Compared with your last sessions nothing needs changing."}</p>
     ${recapNote(L)}
-    ${B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
+    ${B.items.map(i => { const body = `<span class="sg-t"><b>${esc(i.name)}${i.kind === "ai" ? ' <em class="sg-tag">AI</em>' : i.kind === "lighter" ? ' <em class="sg-tag">Recovery</em>' : i.kind === "ring" ? ' <em class="sg-tag">Rings</em>' : i.kind === "doms" ? ' <em class="sg-tag">Sore</em>' : ""}</b>${i.from || i.to ? `<span class="sg-d">${i.from ? esc(i.from) + " → " : ""}<strong>${esc(i.to)}</strong></span>` : ""}<small>${esc([i.why, i.last].filter(Boolean).join(" · "))}</small></span>`;
       const adj = i.adj && i.edit?.type === "load" ? `<span class="sg-adj" role="group" aria-label="Adjust the load of ${esc(i.name)}"><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="-1" aria-label="Less weight">${ic("minus", "sm")}</button><input class="inp sm" inputmode="decimal" value="${fmtKg(i.edit.to)}" data-chg="sg-load" data-id="${esc(i.id)}" aria-label="Load in kg"><span>kg</span><button class="icon-btn sm" data-act="sg-load" data-id="${esc(i.id)}" data-d="1" aria-label="More weight">${ic("plus", "sm")}</button><small>no plates for it? adjust</small></span>` : "";
       return i.edit ? `<div class="sg-item"><button class="sg-row" data-act="sg-toggle" data-id="${esc(i.id)}" aria-pressed="${!!g.on[i.id]}"><span class="sg-chk">${ic("check", "sm")}</span>${body}</button>${adj}</div>` : `<div class="sg-row tip"><span class="sg-chk tipi">${ic("trend", "sm")}</span>${body}</div>`; }).join("")}
     ${g.done.length ? `<div class="sg-done">${ic("check", "sm")}<span>Written in: ${esc(g.done.join(" · "))}</span>${g.undo ? `<button class="link" data-act="sg-undo">Undo</button>` : ""}</div>` : ""}
@@ -8634,6 +8652,22 @@ function prsOf(L, R) {
   for (const a of R.amrap) { const last = (exIndex().idx["amrap:" + normEx(a.title + " " + a.desc)] || []).filter(x => x.date < L.date)[0]; if (last && a.rounds * 100 + a.partial > last.rounds * 100 + (last.partial || 0)) out.push(`AMRAP ${a.rounds}+${a.partial} beats ${last.rounds}+${last.partial || 0}`); }
   return out;
 }
+/* ================= Test days: a workout with «test» in its name or in a block title (max reps, a 3RM …). At the end its results are listed and each one can go to Records › Calisthenics tests ================= */
+const TEST_DAY = ["Pull-up test 1x", "- 3 Pull-up", "- 2m Rest", "- max Pull-up", "- 4m Rest", "", "Dip test 1x", "- 3 Dip", "- 2m Rest", "- max Dip", "- 4m Rest", "", "Push-up test 1x", "- 5 Push-up", "- 1m Rest", "- max Push-up", "- 4m Rest", "",
+  "Weighted pull-up 3RM test 1x", "- 5 Pull-up +10kg", "- 3m Rest", "- 3 Pull-up +20kg RIR 0", "- 4m Rest", "", "Weighted dip 5RM test 1x", "- 5 Dip +10kg", "- 3m Rest", "- 5 Dip +25kg RIR 0"].join("\n");
+const isTestWo = L => /\btest\b/i.test(L.name || "") || scriptBlocks(L.script).some(b => /\btest\b/i.test(b.title));
+const TEST_RM = { 1: "1RM (+kg)", 3: "3RM (+kg)", 5: "5RM (+kg)" };
+/* what the sets of a test workout would add to the records: max reps without weight, and a 1, 3 or 5 rep set with weight as an RM test */
+function testCands(L, R) { const by = {};
+  for (const s of R.sets) { const reps = setReps(s), load = +s.load || 0; if (!(reps > 0)) continue; const o = by[normEx(s.ex)] = by[normEx(s.ex)] || { ex: s.ex, bw: 0, w: null };
+    if (load > 0) { if (!o.w || load > o.w.load || (load === o.w.load && reps > o.w.reps)) o.w = { load, reps }; } else o.bw = Math.max(o.bw, reps); }
+  const out = [], best = (ex, test) => Math.max(0, ...(S.train.calis || []).filter(c => c.ex === ex && c.test === test).map(c => +c.val || 0));
+  for (const o of Object.values(by)) { if (o.bw >= 2) out.push({ k: "bw:" + normEx(o.ex), ex: o.ex, test: "Max reps (BW)", val: o.bw, text: `${o.bw} reps`, prev: best(o.ex, "Max reps (BW)") });
+    if (o.w && TEST_RM[o.w.reps]) out.push({ k: "rm:" + normEx(o.ex), ex: o.ex, test: TEST_RM[o.w.reps], val: o.w.load, text: `+${fmtKg(o.w.load)} kg × ${o.w.reps}`, prev: best(o.ex, TEST_RM[o.w.reps]) }); }
+  return out; }
+ACT["lv-trec"] = el => { const L = LV(); L.testRec = L.testRec || {}; L.testRec[el.dataset.k] = L.testRec[el.dataset.k] === false; saveWK(); scheduleRender(); };
+ACT["test-start"] = () => startWorkout({ script: TEST_DAY, name: "Test day · calisthenics", sport: strengthSport(), date: todayISO() });
+ACT["test-save"] = () => { const w = WK(), name = "Test day · calisthenics", t = w.tpls.find(x => x.name === name); if (t) { t.script = TEST_DAY; t.updated = todayISO(); } else w.tpls.push({ id: puid("tpl"), name, sport: strengthSport(), script: TEST_DAY, updated: todayISO() }); saveWK(); toast(`${name} saved in Train › Workouts: plan it like any workout`); scheduleRender(); };
 const RPE_TXT = { 5: "Easy", 6: "Moderate · 4+ left", 7: "Hard · 3 left", 8: "Very hard · 2 left", 9: "1 rep left", 10: "Max effort" };
 function liveSummary(L) {
   const R = liveResults(L), prs = prsOf(L, R);
@@ -8646,6 +8680,8 @@ function liveSummary(L) {
   const exDef = {}; L.tasks.forEach(t => (t.exs || []).forEach(e => { exDef[e.name] = exDef[e.name] || e; }));
   let h = topBar(`<button class="icon-btn" data-act="lv-resume-steps" aria-label="Back to the workout">${ic("chevL")}</button>`, "Workout complete", `${esc(L.name)} · ${fmtDM(L.date)}`, `<span></span>`);
   h += `<div class="lv-wrap two"><div class="lv-main"><div class="sum-stats"><span><b>${L.minutes}</b><small>min</small></span><span><b>${R.sets.length}</b><small>sets</small></span><span><b>${fmtN(reps)}</b><small>reps</small></span><span><b>${vol ? fmtN(vol) : holds ? holds + "s" : "—"}</b><small>${vol ? "kg × reps" : "holds"}</small></span></div>`;
+  const TC = isTestWo(L) ? testCands(L, R) : [];
+  if (TC.length) h += `<section class="lv-card flush"><div class="lv-eb pad"><span class="eyebrow">Test results · add to Records</span></div>${TC.map(c => { const on = L.testRec?.[c.k] !== false; return `<div class="lrow"><span><span class="t">${esc(c.ex)} · ${esc(c.test.replace(" (+kg)", "").replace(" (BW)", ""))}</span><span class="s">${c.prev ? `best on record ${RM_N(c.test) ? "+" + fmtKg(c.prev) + " kg" : c.prev + " reps"}${c.val > c.prev ? " · new best" : ""}` : "first result"}</span></span><b class="num">${esc(c.text)}</b><button class="switch" role="switch" aria-checked="${on}" data-act="lv-trec" data-k="${esc(c.k)}" aria-label="Add ${esc(c.ex)} ${esc(c.test)} to Records"></button></div>`; }).join("")}</section>`;
   if (prs.length) h += `<section class="lv-card"><span class="eyebrow">Personal bests</span>${prs.map(p => `<div class="pr">${ic("spark", "sm")}${esc(p)}</div>`).join("")}</section>`;
   h += `<section class="lv-card flush"><div class="lv-eb pad"><span class="eyebrow">Exercises · notes for next time</span></div>
     ${R.emom.map(e => `<div class="lrow"><span><span class="t">${esc(e.title)}</span><span class="s">EMOM</span></span><b class="num">${e.done}/${e.of} min</b></div>`).join("")}
@@ -8758,6 +8794,8 @@ ACT["lv-save"] = () => {
   mutateLog(L.date, day => { day.wsess = [...(day.wsess || []).filter(x => x.id !== L.id), rec]; day.workouts = [...(day.workouts || []).filter(w => w.sid !== L.id), wClean({ sport: L.sport, min: L.minutes, km: L.auto ? L.km : null, int, rpe: L.rpe, sid: L.id, note: L.name, tpl: L.tplId })]; });
   if (L.toRecords !== false) { const T = S.train, best = {}; for (const s of R.sets) if ((+s.load || 0) > 0 && setReps(s) > 0) { const e = { date: L.date, ex: s.ex, kg: +s.load, reps: setReps(s), rir: s.rir || 0 }; if (!best[s.ex] || e.kg * (1 + e.reps / 30) > best[s.ex].kg * (1 + best[s.ex].reps / 30)) best[s.ex] = e; }
     for (const e of Object.values(best)) T.topSets = wUpsert(T.topSets || [], e, x => x.date === e.date && x.ex === e.ex); }
+  if (isTestWo(L)) { const T = S.train; for (const c of testCands(L, R)) { if (L.testRec?.[c.k] === false) continue; if (!FIT().exercises.includes(c.ex)) { FIT().exercises.push(c.ex); saveSettings(); }
+      T.calis = wUpsert(T.calis || [], { date: L.date, ex: c.ex, test: c.test, val: c.val, bw: r1(trendAt(L.date)), notes: "Test day" }, x => x.date === L.date && x.ex === c.ex && x.test === c.test); } put("train", "", T); }
   /* near-max sets with no added weight that beat what is on record are only suggested: the session keeps them and you decide whether they become records */
   const sug = []; { const mx = {}, hd = {};
     for (const x of R.sets) { if ((+x.load || 0) > 0 || x.rir == null || x.rir > 1) continue; const r = setReps(x); if (r > 0) mx[x.ex] = Math.max(mx[x.ex] || 0, r); const h = Math.max(0, ...(x.hold || [])); if (h > 0) hd[x.ex] = Math.max(hd[x.ex] || 0, h); }
@@ -9388,7 +9426,7 @@ VIEWS.today = function () {
       const k = sessionKcal(w, today).kcal, sess = isDone && w.sid ? (Lg.wsess || []).find(s => s.id === w.sid) : null, g = workoutGist(isDone ? (p || w) : w);
       const meta = isDone ? [w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", k ? fmtN(k) + " kcal" : "", sess ? "RPE " + sess.rpe : ""].filter(Boolean).join(" · ")
         : [(p || w).at || "", title.toLowerCase().includes(String(w.sport).toLowerCase().slice(0, 4)) ? "" : shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", intOf(w)].filter(Boolean).join(" · ");
-      const extra = isDone ? (p && p.min && w.min ? compliance(p, w) : "") : (isStrength(w.sport) ? "" : sessionDetail(w));
+      const extra = isDone ? (p && p.min && w.min ? compliance(p, w) : "") : [isStrength(w.sport) ? "" : sessionDetail(w), domsNote(w, today)].filter(Boolean).join(" · ");
       return woRow({ done: isDone, color: INT_COLOR[intOf(w)] || "fat", title, meta, g: !isDone && g.text ? g.text : "", pv: isDone ? "" : woMini(w), x: extra, open: `data-act="wo-open" data-date="${today}" data-i="${i}"`,
         edit: x.ri >= 0 ? `data-act="edit-session" data-list="planned" data-date="${today}" data-i="${x.ri}"` : "", go: `data-act="wo-start" data-date="${today}" data-i="${i}"`, goLabel: LV() && LV().planDate === today ? "Resume" : "Start" }); }).join("");
     const si = items.findIndex(x => x.st === "planned" && (x.w.script || x.w.tpl || isStrength(x.w.sport)));
@@ -12824,7 +12862,7 @@ ACT["cal-view"] = el => { UI.calView = el.dataset.k; scheduleRender(); };
 /* ================= daily journal: the entry sheet, Today card, Progress › Journal =================
    One screen, one tap per answer, saved at once. Today shows a card in the evening while the day is empty;
    past days open with the same day picker as the Check-in. Recaps skip empty days and always say how many count. */
-const JR_FIELDS = [["p", "Productivity", "Little done", "Very productive"], ["m", "Mood", "Awful", "Great"], ["e", "Energy", "Drained", "Fully charged"], ["s", "Stress", "Calm", "Very stressed"]];
+const JR_FIELDS = [["p", "Productivity", "Little done", "Very productive"], ["m", "Mood", "Awful", "Great"], ["e", "Energy", "Drained", "Fully charged"], ["s", "Stress", "Calm", "Very stressed"], ["f", "Training feel", "Heavy and flat", "Strong and smooth"]];
 const JR_MOODS = ["Awful", "Low", "Okay", "Good", "Great"];
 const jrMoodOf = v => JR_MOODS[clamp(Math.round(v), 1, 5) - 1];
 /* five drawn faces, one line weight: the mouth goes from a frown to a smile */
@@ -12839,10 +12877,38 @@ SHEETS.journal = sh => {
     <div class="jr-ends"><span>${lo}</span><span>${hi}</span></div></div>`;
   return { title: "Journal", titleHTML: dayNavHTML(d, "jr-go"),
     body: `${JR_FIELDS.map(q).join("")}
+      <div class="field"><span class="flabel">Sore muscles (DOMS) <span class="faint">· tap an area: light, moderate, strong, none</span></span><div class="chips">${DOMS_AREAS.map(([k, l]) => { const v = domsOf(d).find(r => r[0] === k)?.[1] || 0; return `<button class="chip doms l${v}" data-act="doms-set" data-k="${k}" aria-pressed="${v > 0}" aria-label="${l}: ${v ? DOMS_LVL[v] : "no soreness"}">${l}${v ? ` · ${DOMS_LVL[v].toLowerCase()}` : ""}</button>`; }).join("")}</div>
+        <small class="faint">The workout suggestions and the Today rows use this: sore areas get fewer sets or an easier session.</small></div>
       <div class="field"><label for="jr-n">One sentence <span class="faint">(optional)</span></label><input id="jr-n" class="inp" maxlength="140" value="${esc(j.n || "")}" placeholder="What stood out today?" data-chg="jr-note" autocomplete="off"></div>
       <small class="faint">${ctx ? `From your Check-in: ${esc(ctx)}. ` : ""}Nothing here is required; tap a chosen answer again to clear it.</small>`,
     foot: `<button class="btn soft" data-act="open-checkin" data-date="${d}">Check-in</button><button class="btn primary" data-act="close-sheet">Done</button>` };
 };
+/* ================= DOMS: where you are sore and how much, from the Journal. The suggestions before a workout and the Today rows read it ================= */
+const DOMS_AREAS = [["quads", "Quads"], ["ham", "Hamstrings"], ["glutes", "Glutes"], ["calves", "Calves"], ["chest", "Chest"], ["back", "Back"], ["shoulders", "Shoulders"], ["arms", "Arms"], ["core", "Core"], ["lback", "Lower back"]], DOMS_LVL = ["", "Light", "Moderate", "Strong"];
+const domsOf = d => { const a = jrOf(d)?.d; return Array.isArray(a) ? a.filter(r => Array.isArray(r) && DOMS_AREAS.some(x => x[0] === r[0]) && r[1] >= 1 && r[1] <= 3) : []; };
+function domsSet(d, area, lvl) { mutateLog(d, x => { const j = { ...(x.jr || {}) }, cur = (Array.isArray(j.d) ? j.d : []).filter(r => r[0] !== area); if (lvl > 0) cur.push([area, lvl]); j.d = cur; j.t = { ...(j.t || {}), d: Math.max(Date.now(), (j.t?.d || 0) + 1) }; x.jr = j; }); }
+ACT["doms-set"] = el => { const sh = S_(), d = sh?.date || todayISO(), k = el.dataset.k, cur = domsOf(d).find(r => r[0] === k)?.[1] || 0; domsSet(d, k, (cur + 1) % 4); if (UI.sheet) renderSheet(); scheduleRender(); };
+const DOMS_GROUP = { Chest: ["chest", "arms"], Back: ["back", "arms"], Shoulders: ["shoulders"], Arms: ["arms"], Legs: ["quads", "ham", "glutes", "calves"], Core: ["core", "lback"] };
+const domsAreasOfEx = name => [...new Set(musclesOf(name).flatMap(g => DOMS_GROUP[g] || []))];
+/* the blocks of a script with their exercises: "Pull 4x" then "- 5 Pull-up +10kg" lines */
+function scriptBlocks(script) { const out = []; let cur = null;
+  for (const line of String(script || "").split("\n")) { const t = line.trim(); if (!t) { cur = null; continue; }
+    if (!isStepLine(line)) { const m = t.match(/^(.*?)\s*(\d+)\s*x\s*$/i); cur = { title: (m ? m[1] : t).trim(), n: m ? +m[2] : 0, exs: [] }; out.push(cur); continue; }
+    if (cur) { const e = t.replace(/^[-•*]\s*/, "").replace(/^(?:\d+(?:[-–]\d+)*|max)\s*(?:x|×)?\s*/i, "").replace(/\s*[+@].*$/, "").replace(/\(.*?\)/g, "").trim(); if (e && !/^rest\b|^\d+\s*(s|m)\b/i.test(e)) cur.exs.push(e); } }
+  return out; }
+/* the areas a session loads: running and riding are legs, a script by its exercises */
+function domsAreasOf(w) { const sp = String(w?.sport || ""), fam = sportFam(sp);
+  if (fam === "run" || fam === "ride" || /hik|walk|trail/i.test(sp)) return ["quads", "ham", "glutes", "calves"]; if (/swim|nuoto/i.test(sp)) return ["shoulders", "back"];
+  const sc = sessScript(w); return [...new Set(scriptBlocks(sc).flatMap(b => b.exs.flatMap(domsAreasOfEx)))]; }
+function domsClash(w, d, min = 2) { const A = new Set(domsAreasOf(w)); return domsOf(d).filter(r => A.has(r[0]) && r[1] >= min).map(r => ({ k: r[0], l: DOMS_AREAS.find(x => x[0] === r[0])[1], v: r[1] })); }
+/* one line for a Today row: what is sore and what to do about it */
+function domsNote(w, d) { if (d !== todayISO()) return ""; const C = domsClash(w, d); if (!C.length) return ""; const mx = Math.max(...C.map(c => c.v)), names = C.map(c => c.l.toLowerCase()).join(", "), run = domsAreasOf(w).includes("calves") && !isStrength(w.sport);
+  return mx >= 3 ? `${names} strongly sore: ${run ? "keep it easy and short, or rest" : "swap or skip the work that loads them"}` : `${names} sore: ${run ? "keep it easy" : "one set less on those blocks"}`; }
+function domsItems(L) { if (L.date !== todayISO()) return []; const out = [];
+  for (const b of scriptBlocks(L.script)) { if (!(b.n >= 2)) continue; const hit = new Map(); for (const e of b.exs) for (const a of domsAreasOfEx(e)) hit.set(a, true);
+    const C = domsOf(L.date).filter(r => hit.has(r[0]) && r[1] >= 2); if (!C.length) continue; const mx = Math.max(...C.map(c => c[1])), to = Math.max(1, b.n - (mx >= 3 ? 2 : 1)); if (to === b.n) continue;
+    out.push({ id: "doms:" + normEx(b.title), kind: "doms", name: b.title || "Block", from: `${b.n} sets`, to: `${to} sets`, why: `${C.map(c => DOMS_AREAS.find(x => x[0] === c[0])[1].toLowerCase()).join(", ")} ${mx >= 3 ? "strongly" : "moderately"} sore`, last: "", edit: { type: "sets", block: b.title, to } }); }
+  return out; }
 ACT["jr-open"] = el => { const t = todayISO(), d = el?.dataset?.date || t; openSheet("journal", { date: d > t ? t : d, live: true }); };
 ACT["jr-go"] = el => { const sh = S_(); if (sh?.type !== "journal" || !el.dataset.date) return; const t = todayISO(); sh.date = el.dataset.date > t ? t : el.dataset.date; renderSheet(); };
 ACT["jr-set"] = el => { const sh = S_(), d = sh?.date || todayISO(), k = el.dataset.k, v = +el.dataset.v; jrSet(d, k, jrOf(d)?.[k] === v ? null : v); renderSheet(); };
@@ -14736,7 +14802,8 @@ SHEETS.rcimp = sh => { const can = AIF("recipeimport") && !!Sync.sample, img = c
     <div class="field"><span class="flabel">Ingredients <small class="faint">· ${R.rows.filter(r => r.sel !== "__skip").length} used</small></span>
       ${R.rows.map((r, i) => `<div class="card ri-row${r.sel === "__skip" ? " skip" : ""}"><div class="ri-top"><span class="t">${esc(r.n)}</span><div class="unit-inp"><input class="inp" inputmode="decimal" value="${r.g}" data-in="ri-g" data-i="${i}" aria-label="Amount of ${esc(r.n)}"><span>${r.u}</span></div></div><select class="inp" data-chg="ri-sel" data-i="${i}" aria-label="Food for ${esc(r.n)}">${opts(r)}</select>${r.sel === "__new" ? `<small class="faint">${fmtN(r.est.kcal)} kcal · ${r1(r.est.c)}C ${r1(r.est.p)}P ${r1(r.est.f)}F per 100 ${r.u}: an estimate you can edit in Foods.</small>` : ""}</div>`).join("")}</div>
     <div class="field"><label for="ri-note">Method</label><textarea id="ri-note" class="inp" rows="${Math.min(10, Math.max(3, R.note.split("\n").length + 1))}" data-in="ri-r" data-k="note">${esc(R.note)}</textarea></div>` : `
-    <div class="field"><span class="flabel">From</span><div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn tonal sm">${ic("camera", "sm")}Photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="ri-photo"></label><label class="btn soft sm">${ic("image", "sm")}Gallery or screenshot<input type="file" accept="image/*" class="sr" data-chg="ri-photo"></label>` : ""}</div>
+    <div class="field"><label for="ri-url">From a link</label><div class="row" style="gap:8px;flex-wrap:nowrap"><input id="ri-url" class="inp" type="url" inputmode="url" placeholder="https://… the page of the recipe" value="${esc(sh.url || "")}" data-in="ri-url" autocomplete="off" style="flex:1;min-width:0"><button class="btn tonal" data-act="ri-link" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Read</button></div>${sh.linkErr ? `<div class="note warn">${esc(sh.linkErr)}</div>` : ""}</div>
+    <div class="field"><span class="flabel">Or from</span><div class="row" style="gap:8px;flex-wrap:wrap">${img ? `<label class="btn tonal sm">${ic("camera", "sm")}Photo<input type="file" accept="image/*" capture="environment" class="sr" data-chg="ri-photo"></label><label class="btn soft sm">${ic("image", "sm")}Gallery or screenshot<input type="file" accept="image/*" class="sr" data-chg="ri-photo"></label>` : ""}</div>
       ${sh.photoURL ? `<img class="eo-ph" data-blob="${sh.photoURL}" alt="Recipe photo">` : ""}
       <textarea id="ri-desc" class="inp" rows="6" placeholder="Paste the recipe: ingredients and steps, in any language" data-in="ri-desc">${esc(sh.desc || "")}</textarea>
       <button class="btn primary" data-act="ri-go" ${sh.busy ? "disabled" : ""}>${sh.busy ? '<span class="spinner"></span>Reading it…' : ic("spark", "sm") + "Read the recipe"}</button>${sh.busy ? skel(sh.photo ? "Reading the photo…" : "Reading the recipe…", 3) : ""}</div>`,
@@ -14748,6 +14815,25 @@ INP["ri-g"] = (v, el) => { S_().res.rows[+el.dataset.i].g = v; };
 CHG["ri-sel"] = (v, el) => { const sh = S_(); sh.res.rows[+el.dataset.i].sel = v; renderSheet(); };
 CHG["ri-photo"] = async (v, el) => { const f = el.files?.[0], sh = S_(); if (!f) return; el.value = ""; try { sh.photo = await shrink(f, 1400); if (sh.photoURL) URL.revokeObjectURL(sh.photoURL); sh.photoURL = URL.createObjectURL(sh.photo); } catch (e) { toast("Couldn't read that picture."); return; } renderSheet(); ACT["ri-go"](); };
 ACT["ri-back"] = () => { const sh = S_(); sh.res = null; renderSheet(); };
+/* a recipe from the address of a page: sites that allow it are read directly. Most recipe sites publish the recipe as structured data (schema.org Recipe in a ld+json block): the name, the servings, the time, the ingredient lines and the steps are taken from there; without it the visible text of the page is used. The AI then turns the ingredient lines into grams and foods, as for a pasted text. */
+const isoMin = d => { const m = String(d || "").match(/^P(?:\d+D)?T?(?:(\d+)H)?(?:(\d+)M)?/i); return m ? (+m[1] || 0) * 60 + (+m[2] || 0) : 0; };
+function recipeFromHTML(html) {
+  const doc = new DOMParser().parseFromString(String(html || ""), "text/html"), nodes = [];
+  const walk = x => { if (!x) return; if (Array.isArray(x)) return x.forEach(walk); if (typeof x !== "object") return; if (x["@graph"]) walk(x["@graph"]); const t = x["@type"]; if ((Array.isArray(t) ? t : [t]).some(y => /^Recipe$/i.test(y))) nodes.push(x); };
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(sc => { try { walk(JSON.parse(sc.textContent)); } catch (e) {} });
+  const R = nodes[0]; if (!R) { doc.querySelectorAll("script,style,nav,footer,header,aside,form,noscript").forEach(e => e.remove()); const txt = (doc.body?.innerText || doc.body?.textContent || "").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); return txt.length > 80 ? { name: (doc.title || "").trim(), text: txt.slice(0, 6000), structured: false } : null; }
+  const str = x => String(x ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(), yld = [].concat(R.recipeYield || []).map(str).find(x => /\d/.test(x)) || "";
+  const steps = x => [].concat(x || []).flatMap(y => typeof y === "string" ? [str(y)] : y?.itemListElement ? steps(y.itemListElement) : y?.text ? [str(y.text)] : []).filter(Boolean);
+  const ing = [].concat(R.recipeIngredient || R.ingredients || []).map(str).filter(Boolean), st = steps(R.recipeInstructions);
+  return { name: str(R.name), servings: +(yld.match(/\d+(?:[.,]\d+)?/)?.[0] || "").replace(",", ".") || null, time: isoMin(R.totalTime) || (isoMin(R.prepTime) + isoMin(R.cookTime)) || null, ingredients: ing, steps: st, structured: true,
+    text: [`${str(R.name)}`, yld ? `Servings: ${yld}` : "", "Ingredients:", ...ing.map(x => "- " + x), "Steps:", ...st.map((x, i) => `${i + 1}. ${x}`)].filter(Boolean).join("\n").slice(0, 6000) };
+}
+ACT["ri-link"] = async () => { const sh = S_(); let u = String(sh.url || "").trim(); if (!u) { toast("Paste the address of the recipe page."); return; } if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  let html = ""; sh.busy = true; sh.linkErr = ""; renderSheet();
+  try { const r = await fetch(u, { mode: "cors", credentials: "omit", referrerPolicy: "no-referrer" }); if (!r.ok) throw new Error("HTTP " + r.status); html = await r.text(); } catch (e) { sh.busy = false; sh.linkErr = "This site does not let the app read it (most sites don't). Open the page, select all, copy, and paste it in the box: the same AI reads it from there."; if (UI.sheet === sh) renderSheet(); return; }
+  const R = recipeFromHTML(html); if (!R) { sh.busy = false; sh.linkErr = "No recipe found on that page. Paste the text of the recipe in the box."; if (UI.sheet === sh) renderSheet(); return; }
+  sh.desc = (R.structured ? "" : `${R.name}\n`) + R.text; sh.fromUrl = u; sh.busy = false; if (UI.sheet === sh) renderSheet(); ACT["ri-go"](); };
+INP["ri-url"] = v => { S_().url = v; };
 ACT["ri-go"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if (!text && !sh.photo) { toast("Take a photo or paste the recipe."); return; }
   sh.busy = true; renderSheet();
   const prompt = `Read this recipe${sh.photo ? " (in the photo: a book page, a screenshot or handwriting)" : ""}${text ? `: """${text.slice(0, 6000)}"""` : ""}.
@@ -14969,7 +15055,8 @@ function glanceHTML() {
   const has = weightsSeries().length, a = has ? trendSimple(t) : null, b = has ? trendSimple(addDays(t, -7)) : null;
   const pts = has ? [...Array(14)].map((_, i) => trendSimple(addDays(t, i - 13))).filter(v => v > 0) : [], lo = Math.min(...pts), hi = Math.max(...pts), span = Math.max(0.4, hi - lo);
   const spark = pts.length > 2 ? `<svg class="gl-sp" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.map((v, i) => `${(i / (pts.length - 1) * 100).toFixed(1)},${(22 - (v - lo) / span * 20).toFixed(1)}`).join(" ")}"/></svg>` : "";
-  const t3 = tile("tab", 'data-tab="progress"', "weight", "Weight trend", a ? r1(a) : "—", a ? "kg" : "", a && b ? `${sgn(a - b)} kg in 7 days` : "Weigh in to start the trend", "", spark);
+  const we = a ? weightEstNow() : null, t3 = we ? tile("tab", 'data-tab="progress"', "weight", "Weight trend", "≈ " + r1(we.kg), "kg", `estimated · last weigh-in ${we.since} days ago`, "", spark)
+    : tile("tab", 'data-tab="progress"', "weight", "Weight trend", a ? r1(a) : "—", a ? "kg" : "", a && b ? `${sgn(a - b)} kg in 7 days` : "Weigh in to start the trend", "", spark);
   const t4 = tile("train-seg", 'data-k="perf"', "pulse", "Form", F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", "%", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
   return `<div class="glance">${t1}${t2}${t3}${t4}</div>`;
 }
@@ -15115,6 +15202,39 @@ const gainsHTML = (R, Q, n = 6) => { const G = weekGains(R, Q); if (!G.up.length
   const g = gainsHTML(R, Q); if (!g) return h; const m = h.match(/data-act="rep-copy">[\s\S]*?<\/button><\/div>/); return m ? h.replace(m[0], m[0] + g) : h + `<div class="card pad">${g}</div>`; }; }
 { const _wc = weeklyCard; const c = TODAY_CARDS.find(x => x.fn === _wc); weeklyCard = function () { const h = _wc(); if (!h) return h; const R = periodStats(periodOf("week", -1)), Q = periodStats(periodOf("week", -2)), g = gainsHTML(R, Q, 3);
   return g ? h.replace('<ul class="wk-tips">', g + '<ul class="wk-tips">') : h; }; }
+/* ================= weekly and monthly report: recovery, soreness, body composition and the Fire Set, from the newer data ================= */
+function periodExtras(P, end) {
+  const out = {}, days = []; for (let d = P.a; d <= end; d = addDays(d, 1)) days.push(d);
+  const sl = days.map(d => +logGet(d)?.sleep).filter(v => v > 0), tgt = +SLP().target;
+  if (sl.length) out.sleep = { avg: sl.reduce((a, b) => a + b, 0) / sl.length, n: sl.length, owed: sl.reduce((a, v) => a + Math.max(0, tgt - v), 0), tgt, short: sl.filter(v => v < 6.5).length };
+  let nap = 0, nn = 0; for (const d of days) { const L = logGet(d) || {}; for (const x of L.naps || []) { nap += +x.min || 0; nn++; } if (!L.naps && +L.nap > 0) { nap += +L.nap; nn++; } } if (nn) out.nap = { min: nap, n: nn };
+  const bt = []; for (const d of days) if (d <= todayISO() && +logGet(d)?.sleep > 0) { try { bt.push(btDay(d).wake); } catch (e) {} } if (bt.length) out.battery = bt.reduce((a, b) => a + b, 0) / bt.length;
+  const ar = {}; let dd = 0; for (const d of days) { const D = domsOf(d); if (D.length) dd++; for (const [k, v] of D) ar[k] = (ar[k] || 0) + v; }
+  if (dd) out.doms = { days: dd, top: Object.entries(ar).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => DOMS_AREAS.find(x => x[0] === k)[1]) };
+  const f = days.map(d => jrOf(d)?.f).filter(v => v >= 1 && v <= 5); if (f.length) out.feel = f.reduce((a, b) => a + b, 0) / f.length;
+  const a = leanEst(end), b = leanEst(addDays(P.a, -1)); if (a) out.lean = { now: a.lean, se: a.se, d: b && a.n >= 2 && b.n >= 2 ? a.lean - b.lean : null };
+  const est = weightFill(P.a, end).length; if (est) out.est = est;
+  const fs = raceSel().fire.name, fb = (S.train.circuitLog || []).filter(c => c.circuit === fs && c.date >= P.a && c.date <= end && c.sec > 0).map(c => c.sec); if (fb.length) out.fire = { name: fs, best: Math.min(...fb), n: fb.length };
+  return out;
+}
+function extrasHTML(X) {
+  const row = (l, v, sub = "") => tcRow(l, v, sub), rows = [];
+  if (X.sleep) rows.push(row("Sleep", `${r1(X.sleep.avg)} h`, `${X.sleep.n} nights · need ${r1(X.sleep.tgt)} h · ${X.sleep.owed > 0.5 ? `${r1(X.sleep.owed)} h owed` : "no debt"}${X.sleep.short ? ` · ${X.sleep.short} under 6.5 h` : ""}`));
+  if (X.nap) rows.push(row("Naps", `${X.nap.n}`, `${r0(X.nap.min)} min in all`));
+  if (X.battery != null) rows.push(row("Energy battery at wake", `${r0(X.battery)}%`, "average of the nights logged"));
+  if (X.feel != null) rows.push(row("Training feel", `${r1(X.feel)} / 5`, "from the Journal"));
+  if (X.doms) rows.push(row("Sore days", `${X.doms.days}`, `most: ${X.doms.top.join(", ").toLowerCase()}`));
+  if (X.lean) rows.push(row("Lean mass", `${r1(X.lean.now)} kg`, `± ${r1(X.lean.se)} kg${X.lean.d != null ? ` · ${sgn(X.lean.d, 1)} kg in the period` : ""}`));
+  if (X.fire) rows.push(row(X.fire.name, fmtClock(X.fire.best), `best of ${X.fire.n} run${X.fire.n > 1 ? "s" : ""}`));
+  if (X.est) rows.push(row("Weight estimated", `${X.est} day${X.est > 1 ? "s" : ""}`, "no weigh-in: from your intake, bent to the next one"));
+  return rows.length ? `<div class="section-h"><h2>Recovery and body</h2></div><div class="card">${rows.join("")}</div>` : "";
+}
+{ const _rv2 = reportsView; reportsView = function () { const h = _rv2(), kind = UI.dashSeg === "month" ? "month" : "week", P = periodOf(kind, UI.repOff || 0), R = periodStats(P); if (!R.days) return h;
+    const x = extrasHTML(periodExtras(P, (R.end < todayISO() ? R.end : todayISO()))); if (!x) return h; const i = h.indexOf('<div class="section-h"><h2>Calories vs target</h2>'); return i < 0 ? h + x : h.slice(0, i) + x + h.slice(i); }; }
+{ const _rt = reportText; reportText = function () { const t = _rt(), kind = UI.dashSeg === "month" ? "month" : "week", P = periodOf(kind, UI.repOff || 0), R = periodStats(P); if (!R.days) return t; const X = periodExtras(P, (R.end < todayISO() ? R.end : todayISO())), L = [];
+    if (X.sleep) L.push(`Sleep: ${r1(X.sleep.avg)} h on ${X.sleep.n} nights, need ${r1(X.sleep.tgt)} h${X.sleep.owed > 0.5 ? `, ${r1(X.sleep.owed)} h owed` : ""}`); if (X.nap) L.push(`Naps: ${X.nap.n}, ${r0(X.nap.min)} min`); if (X.battery != null) L.push(`Energy battery at wake: ${r0(X.battery)}%`);
+    if (X.feel != null) L.push(`Training feel: ${r1(X.feel)} / 5`); if (X.doms) L.push(`Sore days: ${X.doms.days} (${X.doms.top.join(", ")})`); if (X.lean) L.push(`Lean mass: ${r1(X.lean.now)} kg ± ${r1(X.lean.se)}${X.lean.d != null ? `, ${sgn(X.lean.d, 1)} kg in the period` : ""}`); if (X.fire) L.push(`${X.fire.name}: ${fmtClock(X.fire.best)}`);
+    if (!L.length) return t; const i = t.indexOf("\n\nNext week:"); return i < 0 ? t + "\n" + L.join("\n") : t.slice(0, i) + "\n" + L.join("\n") + t.slice(i); }; }
 /* ================= every exercise: sets and reps done, by muscle group ================= */
 const MUSCLE = [["Chest", /push.?up|piegament|dip|bench|chest|pec|fly|croci|archer push|pseudo planche push/i], ["Back", /pull.?up|chin|row|rematore|lat|muscle.?up|front lever|back lever|trazion|deadlift|stacco|face pull|australian/i],
   ["Shoulders", /handstand|hspu|pike|overhead|military|shoulder|lateral raise|alzate|planche|press(?!.*bench)|wall walk/i], ["Arms", /curl|bicep|tricep|extension|skull|french|hammer/i],

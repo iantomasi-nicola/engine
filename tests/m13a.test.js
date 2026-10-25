@@ -209,3 +209,99 @@ test("Tools: «Use my data» fills the fields from the body weight, the last top
   await page.click('[data-act="tool-back"]'); await page.waitForTimeout(200);
   assert.equal(await page.evaluate(() => [UI.tab, UI.perfSeg].join()), "train,records", "back goes to where you came from");
 });
+
+test("DOMS and training feel in the Journal: tap an area to cycle light → moderate → strong → none; both merge field by field between devices", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(() => { const t = todayISO(); openSheet("journal", { date: t, live: true });
+    const seq = []; for (let i = 0; i < 4; i++) { ACT["doms-set"]({ dataset: { k: "quads" } }); seq.push(JSON.stringify(domsOf(t))); }
+    ACT["doms-set"]({ dataset: { k: "calves" } }); ACT["doms-set"]({ dataset: { k: "calves" } }); jrSet(t, "f", 4);
+    const a = { jr: { f: 4, d: [["calves", 2]], t: { f: 100, d: 100 } } }, b = { jr: { f: 2, d: [["chest", 3]], t: { f: 200, d: 50 } } }, m = jrMergeDay(a, b);
+    return { seq, now: domsOf(t), feel: jrOf(t).f, filled: jrFilled(t), merged: { f: m.f, d: m.d }, txt: document.querySelector(".sheet")?.innerText.replace(/\s+/g, " ") }; });
+  assert.deepEqual(r.seq, ['[["quads",1]]', '[["quads",2]]', '[["quads",3]]', "[]"]);
+  assert.deepEqual(r.now, [["calves", 2]]); assert.equal(r.feel, 4); assert.equal(r.filled, true);
+  assert.deepEqual(r.merged, { f: 2, d: [["calves", 2]] }, "the newer feel wins, the newer DOMS list wins");
+  assert.match(r.txt, /Training feel/); assert.match(r.txt, /Calves · moderate/); assert.match(r.txt, /Sore muscles \(DOMS\)/);
+});
+test("DOMS change the workout: moderately sore legs take one set off the leg blocks, strongly sore two, the pull block stays; a run says to keep it easy", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(() => { const t = todayISO(); if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
+    const script = ["Legs 4x", "- 8 Squat", "- 10 Lunge", "", "Pull 4x", "- 6 Pull-up +10kg"].join("\n");
+    startWorkout({ script, name: "Mix", sport: strengthSport(), date: t }); const L = LV(), o = {};
+    domsSet(t, "quads", 2); o.mod = sgBuild(L).items.filter(i => i.kind === "doms").map(i => [i.name, i.from, i.to]);
+    domsSet(t, "quads", 3); o.strong = sgBuild(L).items.filter(i => i.kind === "doms").map(i => [i.name, i.to]);
+    domsSet(t, "quads", 1); o.light = sgBuild(L).items.filter(i => i.kind === "doms").length;
+    domsSet(t, "quads", 0); domsSet(t, "calves", 2); o.runNote = domsNote({ sport: FIT().runSport, min: 40 }, t); o.legNote = domsNote({ sport: strengthSport(), script }, t);
+    domsSet(t, "calves", 0); domsSet(t, "core", 3); o.strNote = domsNote({ sport: strengthSport(), script }, t); domsSet(t, "core", 0); domsSet(t, "chest", 3); o.pushNote = domsNote({ sport: strengthSport(), script: "Push 3x\n- 10 Push-up\n- 8 Dip" }, t); o.pullNote = domsNote({ sport: strengthSport(), script }, t);
+    return o; });
+  assert.deepEqual(r.mod, [["Legs", "4 sets", "3 sets"]]); assert.deepEqual(r.strong, [["Legs", "2 sets"]]); assert.equal(r.light, 0, "light soreness changes nothing");
+  assert.match(r.runNote, /calves sore: keep it easy/); assert.match(r.legNote, /calves sore: one set less on those blocks/);
+  assert.equal(r.strNote, "", "core is not loaded by this script"); assert.equal(r.pullNote, "", "pull-ups do not load the chest");
+  assert.match(r.pushNote, /chest strongly sore: swap or skip the work that loads them/);
+});
+
+test("weight estimate: the days without a weigh-in follow the energy balance and bend to the next weigh-in; after the last one it just continues (28 days at most)", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(); if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
+    for (let i = 0; i <= 40; i++) mutateLog(addDays(t, -i), d => { d.weight = null; });
+    mutateLog(addDays(t, -10), d => { d.weight = 80; }); mutateLog(addDays(t, -6), d => { d.weight = 79.2; }); DATA_V++;
+    const dk = () => -0.1, gap = weightFill(addDays(t, -9), addDays(t, -7), dk).map(x => [daysBetween(addDays(t, -10), x.d), x.kg]),
+      after = weightFill(addDays(t, -5), t, dk).map(x => x.kg), far = weightFill(addDays(t, -9), t, dk).length;
+    return { gap, after, far }; });
+  // 80 − 0.1k at k = 1..3 is 79.9, 79.8, 79.7; at the next weigh-in (k = 4) the model says 79.6 and the scale 79.2: −0.4 spread as k/4 → 79.8, 79.6, 79.4
+  assert.deepEqual(r.gap, [[1, 79.8], [2, 79.6], [3, 79.4]]);
+  // after 79.2: −0.1 a day, 5 days of gap days from −5 to today (day −6 was the weigh-in): 79.1, 79.0, …
+  assert.equal(r.after[0], 79.1); assert.equal(r.after[1], 79); assert.equal(r.after.length, 6);
+  assert.equal(r.far, 3 + 6, "gap days plus days after the last weigh-in, none of the weigh-in days");
+});
+
+test("test day: the workout runs like any other; at the end the results are listed with what is on record, each can be switched off, the ones on go to Records › Calisthenics tests", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(() => { const t = todayISO(); if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
+    S.train.calis = [{ id: "old", date: addDays(t, -40), ex: "Pull-up", test: "Max reps (BW)", val: 12 }]; DATA_V++;
+    ACT["test-start"](); const L = LV(), o = { name: L.name, tasks: L.tasks.filter(x => x.t === "set").length, isTest: isTestWo(L), plain: isTestWo({ name: "Pull day", script: "Pull 4x\n- 6 Pull-up" }) };
+    L.tasks.forEach((tk, i) => { if (tk.t !== "set") return; L.res[i] = L.res[i] || {}; Object.assign(L.res[i], { done: true, ex: tk.exs.map(e => ({ reps: [e.max ? 14 : e.reps || 0], load: e.load || 0, hold: [], mini: 0 })) }); });
+    const R = liveResults(L); o.cands = testCands(L, R).map(c => [c.ex, c.test, c.val, c.prev]);
+    L.phase = "done"; UI.tab = "live"; render(); o.card = /Test results · add to Records/.test(document.body.innerText);
+    ACT["lv-trec"]({ dataset: { k: "bw:push up" } }); ACT["lv-save"](); o.calis = (S.train.calis || []).filter(c => c.date === t).map(c => [c.ex, c.test, c.val]).sort(); return o; });
+  assert.equal(r.name, "Test day · calisthenics"); assert.equal(r.tasks, 10); assert.equal(r.isTest, true); assert.equal(r.plain, false);
+  assert.deepEqual(r.cands.sort(), [["Dip", "Max reps (BW)", 14, 0], ["Dip", "5RM (+kg)", 25, 0], ["Pull-up", "3RM (+kg)", 20, 0], ["Pull-up", "Max reps (BW)", 14, 12], ["Push-up", "Max reps (BW)", 14, 0]].sort());
+  assert.equal(r.card, true);
+  assert.deepEqual(r.calis, [["Dip", "5RM (+kg)", 25], ["Dip", "Max reps (BW)", 14], ["Pull-up", "3RM (+kg)", 20], ["Pull-up", "Max reps (BW)", 14]], "the push-up result was switched off");
+});
+
+test("reports: the weekly report has a Recovery and body card with sleep against need, naps, battery, training feel, sore days, lean mass and the Fire Set, and the copied text carries them", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(() => { const t = todayISO(); if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings); S.settings.sleep = { target: 7.5, wake: "07:00" };
+    const ws = weekStartOf(t), pw = addDays(ws, -7);   // last week: complete
+    for (let i = 0; i < 7; i++) mutateLog(addDays(pw, i), d => { d.sleep = i < 2 ? 6 : 7.5; d.weight = 80; d.bf = i === 6 ? 16 : i === 0 ? 15 : null; if (i === 1) d.naps = [{ at: "14:00", min: 25 }]; });
+    domsSet(addDays(pw, 2), "quads", 3); domsSet(addDays(pw, 3), "quads", 2); domsSet(addDays(pw, 3), "chest", 1); jrSet(addDays(pw, 2), "f", 4); jrSet(addDays(pw, 4), "f", 2);
+    S.train.circuitLog = [{ id: "c", date: addDays(pw, 5), circuit: raceSel().fire.name, sec: 199.5 }]; DATA_V++;
+    UI.tab = "progress"; UI.progSeg = "reports"; UI.repSeg = "week"; UI.dashSeg = "week"; UI.repOff = -1; render();
+    const P = periodOf("week", -1), X = periodExtras(P, P.b);
+    return { X: { sleep: X.sleep && [r1(X.sleep.avg), X.sleep.n, r1(X.sleep.owed), X.sleep.short], nap: X.nap, doms: X.doms, feel: X.feel, fire: X.fire && X.fire.best }, card: /Recovery and body/.test(document.body.innerText), text: reportText() }; });
+  // 2 nights of 6 h and 5 of 7.5 h: mean 7.07; owed 2 × 1.5 = 3 h; both under 6.5 h
+  assert.deepEqual(r.X.sleep, [7.1, 7, 3, 2]); assert.deepEqual(r.X.nap, { min: 25, n: 1 }); assert.deepEqual(r.X.doms, { days: 2, top: ["Quads", "Chest"] }); assert.equal(r.X.feel, 3); assert.equal(r.X.fire, 199.5);
+  assert.equal(r.card, true); assert.match(r.text, /Sleep: 7\.1 h on 7 nights, need 7\.5 h, 3 h owed/); assert.match(r.text, /Sore days: 2 \(Quads, Chest\)/); assert.match(r.text, /Training feel: 3 \/ 5/); assert.ok(r.text.indexOf("Sore days") < r.text.indexOf("Next week:"), "before the tips for next week");
+});
+
+const LD = `<html><head><title>Pasta e ceci</title><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"x"},{"@type":["Recipe"],"name":"Pasta e ceci","recipeYield":["4","4 servings"],"totalTime":"PT1H15M","recipeIngredient":["200 g pasta","1 can chickpeas (240 g)","2 tbsp olive oil"],"recipeInstructions":[{"@type":"HowToStep","text":"Sauté the garlic."},{"@type":"HowToSection","itemListElement":[{"@type":"HowToStep","text":"Add the chickpeas."},{"@type":"HowToStep","text":"Cook the pasta in it."}]}]}]}</script></head><body><p>ads</p></body></html>`;
+test("recipe from a link: the structured recipe of the page is read, the AI turns the lines into grams and foods; a site that blocks the app, or has no recipe, says what to do", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const page = app.page;
+  const r = await page.evaluate(async html => { const o = {}; const P = recipeFromHTML(html); o.P = { name: P.name, servings: P.servings, time: P.time, ing: P.ingredients.length, steps: P.steps, text: P.text.split("\n").slice(0, 3) };
+    o.plain = recipeFromHTML("<html><head><title>Blog</title></head><body><p>" + "Mix flour and water and bake it for an hour. ".repeat(5) + "</p></body></html>")?.structured; o.none = recipeFromHTML("<html><body>hi</body></html>");
+    let prompt = ""; Sync.sample = { json: async p => { prompt = p; return { name: "Pasta e ceci", servings: 4, time_min: 75, ingredients: [{ name: "pasta", grams: 200, unit: "g", kcal: 350, protein: 12, carbs: 72, fat: 1.5, fiber: 3 }, { name: "olive oil", grams: 27, unit: "g", kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 }], steps: ["Sauté", "Cook"] }; } };
+    ACT["rcimp-open"](); S_().url = "example.org/pasta"; let asked = "";
+    window.fetch = async u => { asked = u; return { ok: true, text: async () => html }; }; await ACT["ri-link"](); await new Promise(r => setTimeout(r, 80));
+    o.asked = asked; o.res = S_().res && [S_().res.name, S_().res.servings, S_().res.time, S_().res.rows.length]; o.inPrompt = /200 g pasta/.test(prompt) && /Servings: 4/.test(prompt);
+    S_().res = null; S_().url = "blocked.example"; window.fetch = async () => { throw new TypeError("Failed to fetch"); }; await ACT["ri-link"](); o.err = S_().linkErr;
+    window.fetch = async () => ({ ok: true, text: async () => "<html><body>hi</body></html>" }); S_().linkErr = ""; await ACT["ri-link"](); o.err2 = S_().linkErr; return o; }, LD);
+  assert.deepEqual(r.P, { name: "Pasta e ceci", servings: 4, time: 75, ing: 3, steps: ["Sauté the garlic.", "Add the chickpeas.", "Cook the pasta in it."], text: ["Pasta e ceci", "Servings: 4", "Ingredients:"] });
+  assert.equal(r.plain, false); assert.equal(r.none, null);
+  assert.equal(r.asked, "https://example.org/pasta"); assert.deepEqual(r.res, ["Pasta e ceci", 4, 75, 2]); assert.equal(r.inPrompt, true);
+  assert.match(r.err, /does not let the app read it/); assert.match(r.err2, /No recipe found/);
+});

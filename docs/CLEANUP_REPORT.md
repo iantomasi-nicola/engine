@@ -367,3 +367,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Eliminato**: `SHEETS.calc` e le azioni `calc-tab`, `calc-km`, `INP.calc` (il calcolatore a foglio è sostituito dalla pagina Tools, che riusa `calcRM`, `calcLoads`, `calcPace`, `calcOut`); `tmrSetup` (la pagina del timer è la scheda Timers di Tools); la vecchia `VIEWS.progress` morta (sovrascritta più avanti); `recFold`/`REC_SUM` come casi particolari: ora `foldView`/`foldOne`/`FOLD_SUM` per ogni scheda.
 - **Aggiornato**: `navFix` porta le vecchie rotte (`goals`, `lab`, `level`) alle nuove sezioni; l'elenco di swipe di Progress; test su Lab/Level/obiettivo km/larghezza del timer; `RACE()` non copia più.
 - **Aperto**: M7b (formule), test-workout → record, DOMS nel Journal e nei suggerimenti, stima del peso nei buchi, import ricetta da link, riscrittura dei report, redesign delle altre schermate; non so quale grafico «kcal x/y/z short» fosse buggato (ho sistemato la dentellatura di «Last 6 weeks»).
+
+## M13c DOMS, test day, stima del peso, report, ricetta da link (26/10/2026)
+- **Verificato**: suite completa e layout audit (aggiunti `sheet-journal`, `sheet-rcimp`); test numerici a mano per stima del peso e report; screenshot.
+- **Aggiornato**: `JR_KEYS` con `f`, `JR_MERGE` (include `d`) in unione e firma del Journal; `sgBuild` (suggerimenti) con i blocchi doloranti; `kcalChart` (asse tondo, una legenda); `weightChart`; `reportsView`/`reportText` (scheda Recovery and body).
+- **Eliminato**: la seconda definizione di `clean0` che avevo aggiunto (collideva); legenda duplicata di «Calories vs target».
+- **Aperto**: M7b (formule); correzione per dispositivo da dati propri (D20b); la stima del sonno non impara dai dati; la ricetta da link non funziona sui siti senza CORS (serve una funzione Supabase come proxy: non fatto, richiede un'autorizzazione tua).
