@@ -285,6 +285,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .sc-parts{display:grid;grid-template-columns:96px minmax(0,1fr) 30px;gap:2px 12px;align-items:center}.sc-p{display:contents}.sc-pn{font-size:13.5px;font-weight:600}.sc-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}.sc-pv{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.sc-p small{grid-column:2 / 4;font-size:12px;color:var(--muted);line-height:1.35;margin-bottom:8px}.sc-p.na .sc-pn,.sc-p.na .sc-pv{color:var(--muted);font-weight:400}
 .sc-t{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}.sc-t li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:14px;line-height:1.4}.sc-t .ic{width:18px;height:18px;margin-top:1px}.sc-t .g .ic{color:var(--good)}.sc-t .b .ic{color:var(--warn)}.sc-t .t .ic{color:var(--muted)}
 .sc-how>summary{cursor:pointer;font-size:13px;color:var(--muted)}.sc-how p{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.pp-sync{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;line-height:1.4;color:var(--muted);margin:-2px 0 8px}.pp-sync span{flex:1 1 220px;min-width:0}.pp-sync .ic{width:16px;height:16px;vertical-align:-.25em;color:var(--good);margin-right:4px}.pp-sync .btn{flex:none}
+.bmi{display:flex;flex-direction:column;gap:6px}.bmi-t{display:flex;align-items:baseline;gap:10px}.bmi-n{font-family:var(--display);font-size:36px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.bmi-c{font-size:14px;font-weight:600}.bmi small{font-size:12.5px;color:var(--muted);line-height:1.45}
+.wbal{display:flex;flex-direction:column;gap:6px}.wbal-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.wbal-n{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.wbal-s{font-size:12.5px;line-height:1.45}.wbal svg{margin-top:4px}.wbal-nav{display:inline-flex;align-items:center;gap:4px;font-size:12.5px}.wbal-nav .icon-btn[disabled]{opacity:.35}
 .inst{display:flex;flex-direction:column;gap:10px}.inst .section-h{margin:0}.inst .section-h h2{font-size:17px!important}.inst-n{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}.inst-s{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.45}.inst-s li::marker{color:var(--muted);font-weight:600}
 .rm-l{display:flex;flex-direction:column}
 .rm-r{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-align:left;color:var(--ink);min-width:0;width:100%}.rm-l>.rm-r:first-child{border-top:0}
@@ -4814,7 +4817,7 @@ function overviewView() {
   const today = todayISO(), s = energySeries(), r = s.rows[today], G = goalState(), C = coaching(), E = FIT().energy;
   const W = weeklyTable(); const cw = W[W.length - 1];
   const r14 = s.rows[addDays(today, -14)];
-  let h = "";
+  let h = weekBalanceHTML();
   h += `<div class="card pad goal"><div class="row" style="justify-content:space-between"><span class="flabel">Goal</span><button class="link" data-act="tab" data-tab="settings">Edit</button></div>
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
     <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${etaKpi(G)}</div>
@@ -4837,6 +4840,23 @@ function changeChart() {
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.a)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected and actual weight change">${g}</svg><div class="legend"><span><i style="background:var(--carb)"></i>From intake</span><span><i style="background:var(--accent)"></i>Trend weight</span></div>`;
 }
+/* the balance of one week (Monday to Sunday): intake minus TDEE for every day that has food in it; the total is the sum, in kcal and in kg at your kcal-per-kg */
+function weekBalance(off = 0) {
+  const t = todayISO(), ws = addDays(weekStartOf(t), 7 * off), s = energySeries(), days = []; let total = 0, n = 0, est = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), r = s.rows[d], ok = r && r.intake && d <= t; if (ok) { total += r.balance || 0; n++; if (r.intake.est) est++; } days.push({ d, bal: ok ? r.balance || 0 : null, est: ok && !!r.intake.est, today: d === t }); }
+  return { ws, days, total: Math.round(total), n, est, kg: total / (FIT().energy.kcalPerKg || 7000) };
+}
+function weekBalanceHTML() {
+  const o = Math.min(0, UI.balWk || 0), W = weekBalance(o), last = W.days.filter(x => x.bal != null);
+  const Wd = chartW(), H = 150, L = 4, R = 4, Tp = 18, B = 20, mx = Math.max(400, ...last.map(x => Math.abs(x.bal))) * 1.3, y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (Wd - L - R) / 7;   /* room for the value above or below the longest bar */ let g = `<line class="gl" x1="${L}" x2="${Wd - R}" y1="${y(0)}" y2="${y(0)}"/>`;
+  W.days.forEach((x, i) => { const cx = L + i * bw + bw / 2, w = Math.min(28, bw * 0.55); g += `<text x="${cx}" y="${H - 5}" text-anchor="middle"${x.today ? ' style="font-weight:700;fill:var(--ink)"' : ""}>${DOW[i][0]}</text>`;
+    if (x.bal == null) return; const up = x.bal >= 0, y0 = y(0), y1 = y(x.bal); g += `<rect x="${cx - w / 2}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="3" fill="var(--${up ? "pro" : "fat"})" opacity="${x.est ? .45 : 1}"><title>${fmtDM(x.d)}: ${x.bal > 0 ? "+" : "−"}${fmtN(Math.abs(r0(x.bal)))} kcal${x.est ? " (planned, not logged)" : ""}</title></rect><text x="${cx}" y="${up ? y1 - 4 : y1 + 11}" text-anchor="middle">${x.bal > 0 ? "+" : x.bal < 0 ? "−" : ""}${fmtN(Math.abs(r0(x.bal)))}</text>`; });
+  const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + fmtN(Math.abs(v)), word = W.total < 0 ? "deficit" : W.total > 0 ? "surplus" : "balanced", prev = weekBalance(o - 1);
+  return `<div class="section-h"><h2>${o === 0 ? "This week" : `Week of ${fmtDM(W.ws)}`}</h2><span class="wbal-nav"><button class="icon-btn sm" data-act="wbal" data-d="-1" aria-label="Previous week">${ic("chevL", "sm")}</button><span class="faint">${fmtDM(W.ws)} – ${fmtDM(addDays(W.ws, 6))}</span><button class="icon-btn sm" data-act="wbal" data-d="1" aria-label="Next week" ${o === 0 ? "disabled" : ""}>${ic("chevR", "sm")}</button></span></div>
+    <div class="card pad wbal"><div class="wbal-top"><b class="wbal-n">${W.n ? sg(W.total) : "—"}</b><span>${W.n ? `kcal ${word}` : "nothing logged yet"}</span></div>
+      <div class="faint wbal-s">${W.n ? `≈ ${W.kg > 0 ? "+" : W.kg < 0 ? "−" : ""}${r1(Math.abs(W.kg))} kg of body mass · ${W.n} of 7 days with food${W.est ? ` (${W.est} planned, not logged)` : ""}${prev.n ? ` · week before ${sg(prev.total)}` : ""}` : "Log or plan what you eat: each day counts intake minus what you burn."}</div>
+      <svg class="chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Energy balance by day, ${fmtDM(W.ws)} to ${fmtDM(addDays(W.ws, 6))}">${g}</svg></div>`;
+}
 function balanceChart() {
   const W8 = weeklyTable().slice(-8); if (!W8.length) return `<div class="faint">No weeks yet.</div>`;
   const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.max(500, ...vals.map(Math.abs));
@@ -4851,9 +4871,14 @@ function macroGkg() {
   const av = k => last.length ? last.reduce((a, x) => a + (x[k] || 0), 0) / last.length : null; if (!r?.trend) return "";
   return `<div class="card pad gkg"><span class="flabel">Per kg of body weight (${r1(r.trend)} kg trend) · target → 7-day average</span><div class="gkg-r">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"]].map(([l, k, c]) => `<span style="--c:var(--${c})"><small><i></i>${l}</small><b>${r1(T[k] / r.trend)} → ${av(k) != null ? r1(av(k) / r.trend) : "—"}</b><small>g/kg</small></span>`).join("")}</div></div>`;
 }
+/* BMI = kg / m² (WHO bands: under 18.5, 18.5-24.9, 25-29.9, 30 and over). It cannot tell muscle from fat: shown with that note, never used in any target. */
+function bmiOf(kg, cm) { kg = +kg; cm = +cm; if (!(kg > 0) || !(cm > 50)) return null; const v = r1(kg / (cm / 100) ** 2); return { v, cat: v < 18.5 ? "Underweight" : v < 25 ? "Normal weight" : v < 30 ? "Overweight" : "Obesity" }; }   /* the band follows the number shown */
+function bmiHTML() { const cm = FIT().profile.height, kg = energyAt(todayISO()).trend || weightsSeries().pop()?.[1] || null, b = bmiOf(kg, cm);
+  if (!b) return `<div class="bmi faint" style="font-size:13px">BMI needs your height (Settings › Targets › Profile) and a weight.</div>`;
+  return `<div class="section-h"><h2>Body mass index</h2></div><div class="bmi"><div class="bmi-t"><b class="bmi-n">${b.v}</b><span class="bmi-c">${b.cat}</span></div><small>${r1(kg)} kg at ${r0(cm)} cm. BMI can't tell muscle from fat: for a trained body, waist and body fat say more.</small></div>`; }
 function bodyView() {
   const M = measureTable();
-  let h = weightCard();
+  let h = weightCard() + bmiHTML();
   h += `<div class="section-h"><h2>Measurements (cm)</h2><button class="link" data-act="open-result" data-type="measure">${ic("plus", "sm")} Add</button></div>
     ${M.dates.length ? tbl(["Site", "First", "Previous", "Latest", "vs prev", "vs first"], M.rows.filter(r => r.n).map(r => `<tr><td>${r.l}</td><td class="n">${r1(r.first)}</td><td class="n">${r.prev != null ? r1(r.prev) : "—"}</td><td class="n"><b>${r1(r.last)}</b></td><td class="n">${sgn(r.dPrev)}</td><td class="n">${sgn(r.dFirst)}</td></tr>`)) + `<div class="faint" style="font-size:12.5px">Latest ${fmtDM(M.lastD)}${M.prevD ? `, previous ${fmtDM(M.prevD)}` : ""}${M.wh ? ` · waist/height ${M.wh.toFixed(2)}` : ""}${M.whip ? ` · waist/hips ${M.whip.toFixed(2)}` : ""}</div>` : `<div class="note">No measurements yet.</div>`}`;
   if (M.dates.length) h += `<details class="card"><summary class="lrow"><span class="t">All measurement dates (${M.dates.length})</span></summary>${[...M.dates].reverse().map(d => `<button class="lrow" data-act="edit-result" data-type="measure" data-id="${d}"><span><span class="t">${fmtLong(d)}</span><span class="s">${M.sites.filter(([k]) => S.body.m[d][k]).map(([k, l]) => `${l} ${S.body.m[d][k]}`).join(" · ")}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</details>`;
@@ -11681,6 +11706,31 @@ async function photoBlob(x) {
   return b;
 }
 async function photoURL(x) { if (PH_URL[x.id]) return PH_URL[x.id]; const b = await photoBlob(x); if (!b) return null; return PH_URL[x.id] = URL.createObjectURL(b); }
+/* ----- on every device: the picture lives in this device's IndexedDB and, when you are signed in, in your private cloud folder («progress»).
+   Photos taken before signing in, offline or before the folder existed are uploaded later (once); photos that are in the cloud but not on this
+   device are downloaded and kept, so they also open offline. The list of photos itself syncs with the rest of your data. ----- */
+const PH_SYNC = { busy: false, err: null };
+const photosStatus = () => { const P = PHOTOS(); return { total: P.length, pending: P.filter(p => !p.cloud).length, signed: cloudOK(), err: PH_SYNC.err, busy: PH_SYNC.busy }; };
+async function photosSync() {
+  if (!cloudOK() || PH_SYNC.busy) return photosStatus();
+  PH_SYNC.busy = true; PH_SYNC.err = null; let changed = false;
+  try { for (const x of PHOTOS()) {
+    if (!x.cloud) { const b = await IDB.get(x.id).catch(() => null); if (!b) continue; const path = `${ENGINE.uid}/${x.id}.jpg`, { error } = await ENGINE.sb.storage.from("progress").upload(path, b, { contentType: "image/jpeg", upsert: true });
+      if (error) { PH_SYNC.err = String(error.message || error); break; } x.cloud = path; changed = true; }
+    else if (!(await IDB.get(x.id).catch(() => null))) await photoBlob(x); } }
+  catch (e) { PH_SYNC.err = String(e?.message || e); }
+  PH_SYNC.busy = false; if (changed) put("body", "", S.body); try { scheduleRender(); } catch (e) {}
+  return photosStatus();
+}
+function photosSyncHTML() { const st = photosStatus(); if (!st.total) return "";
+  const msg = !st.signed ? `<span>These photos are only on this device. Sign in to keep them on all your devices.</span>${window.ENGINE?.sb ? `<button class="btn soft sm" data-act="eg-signin">Sign in</button>` : ""}`
+    : st.pending ? `<span>${st.pending} photo${st.pending > 1 ? "s" : ""} only on this device${st.err ? `. ${/bucket|not found|policy|row-level|404/i.test(st.err) ? "The cloud folder is not set up: run supabase/schema.sql in your Supabase project (the «progress» folder)" : esc(st.err)}` : ""}.</span><button class="btn soft sm" data-act="pp-sync" ${st.busy ? "disabled" : ""}>${st.busy ? "Syncing…" : "Sync now"}</button>`
+    : `<span>${ic("check", "sm")}All photos are in your private cloud folder and on all your devices.</span>`;
+  return `<div class="pp-sync${st.signed && !st.pending ? " ok" : ""}">${msg}</div>`; }
+ACT["wbal"] = el => { UI.balWk = Math.min(0, (UI.balWk || 0) + +el.dataset.d); scheduleRender(); };
+ACT["pp-sync"] = async () => { toast("Syncing photos…"); const st = await photosSync(); toast(st.pending ? "Some photos did not upload: see the message under Progress photos" : "Photos synced"); };
+setTimeout(() => { if (cloudOK()) photosSync(); }, 7000);
+window.addEventListener("online", () => { if (cloudOK()) setTimeout(photosSync, 1500); });
 /* fills every <img data-ph="id"> once the picture is at hand */
 function photosHydrate() { for (const el of $$("img[data-ph]")) { if (el.dataset.done) continue; el.dataset.done = 1; const x = PHOTOS().find(p => p.id === el.dataset.ph); if (!x) continue;
   photoURL(x).then(u => { if (u) { el.src = u; el.classList.add("ok"); } else el.closest(".pp-img")?.classList.add("miss"); }); } }
@@ -11689,7 +11739,7 @@ async function photoAdd(file, date, pose) {
   const blob = await shrink(file), id = puid("ph"), x = { id, date, pose, w: logGet(date)?.weight || null };
   await IDB.put(id, blob);
   if (cloudOK()) { try { const path = `${ENGINE.uid}/${id}.jpg`, { error } = await ENGINE.sb.storage.from("progress").upload(path, blob, { contentType: "image/jpeg", upsert: true }); if (!error) x.cloud = path; else if (!PHOTOS().some(p => p.cloud)) toast("Photo kept on this device (cloud folder not set up: see Settings)"); } catch (e) {} }
-  PHOTOS().push(x); put("body", "", S.body); return x;
+  PHOTOS().push(x); put("body", "", S.body); if (cloudOK() && !x.cloud) setTimeout(photosSync, 400); return x;
 }
 async function photoDel(id) { const x = PHOTOS().find(p => p.id === id); S.body.photos = PHOTOS().filter(p => p.id !== id); put("body", "", S.body); try { await IDB.del(id); } catch (e) {} if (x?.cloud && cloudOK()) { try { await ENGINE.sb.storage.from("progress").remove([x.cloud]); } catch (e) {} } }
 /* the numbers next to a photo: weight (trend), body fat and the measurements nearest to that date */
@@ -11702,7 +11752,7 @@ function photoDates() { const by = {}; for (const p of PHOTOS()) (by[p.date] = b
 function photosSection() {
   const D = photoDates(), sel = UI.ppCmp || {}, pose = UI.ppPose || "front";
   const withPose = D.filter(x => x.ps.some(p => p.pose === pose)), a = sel.a && withPose.some(x => x.d === sel.a) ? sel.a : withPose[0]?.d, b = sel.b && withPose.some(x => x.d === sel.b) ? sel.b : withPose[withPose.length - 1]?.d;
-  let h = `<div class="section-h"><h2>Progress photos</h2><button class="link" data-act="pp-new">${ic("camera", "sm")} Add</button></div>`;
+  let h = `<div class="section-h"><h2>Progress photos</h2><button class="link" data-act="pp-new">${ic("camera", "sm")} Add</button></div>${photosSyncHTML()}`;
   if (!D.length) return h + `<div class="empty slim"><p>Same light, same place, same time of day: front, side and back every 2–4 weeks. Compare any two dates side by side, with weight and measurements.</p><button class="btn tonal" data-act="pp-new">${ic("camera", "sm")}Take the first photos</button></div>`;
   const img = p => p ? `<span class="pp-img"><img data-ph="${p.id}" alt="${esc(POSES.find(x => x[0] === p.pose)?.[1] || "")} ${fmtDM(p.date)}"></span>` : `<span class="pp-img miss"></span>`;
   if (a && b) {

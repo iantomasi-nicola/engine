@@ -375,3 +375,56 @@ test("M11e score on screen: the workout sheet of a logged session has a flat «S
     assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
 });
+
+/* ---------- M11f: BMI, this week's balance, photos on every device ---------- */
+test("M11f BMI: kg / m² with the WHO bands, from the trend weight and your height, shown in Progress › Body with a note that it can't tell muscle from fat", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const b = (kg, cm) => { const x = bmiOf(kg, cm); return [x.v, x.cat]; };
+    UI.tab = "progress"; UI.progSeg = "body"; render(); const el = document.querySelector(".bmi");
+    return { a: b(50, 175), n: b(80, 180), o: b(90, 180), ob: b(110, 175), edge: [bmiOf(18.5 * 1.7 ** 2, 170).cat, bmiOf(25 * 1.7 ** 2, 170).cat, bmiOf(30 * 1.7 ** 2, 170).cat], bad: bmiOf(0, 180), txt: el?.innerText.replace(/\s+/g, " ") || "" }; });
+  assert.deepEqual(r.a, [16.3, "Underweight"]); assert.deepEqual(r.n, [24.7, "Normal weight"]); assert.deepEqual(r.o, [27.8, "Overweight"]); assert.deepEqual(r.ob, [35.9, "Obesity"]);
+  assert.deepEqual(r.edge, ["Normal weight", "Overweight", "Obesity"], "18.5, 25 and 30 start their bands"); assert.equal(r.bad, null);
+  assert.match(r.txt, /BMI/); assert.match(r.txt, /24\.7/); assert.match(r.txt, /Normal weight/); assert.match(r.txt, /muscle/i); assert.deepEqual(app.errors, []);
+});
+
+test("M11f this week's balance: total kcal deficit or surplus (intake − TDEE) over the days with food, a bar per day, kg equivalent, previous/next week; shown at the top of Progress › Overview", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), ws = weekStartOf(t);
+    for (let i = 0; i <= dow(t) && i < 3; i++) mutateLog(addDays(ws, i), d => { d.kcal = 1800 + i * 700; }); DATA_V++;
+    const W = weekBalance(0), s = energySeries(), want = W.days.filter(x => x.bal != null).reduce((a, x) => a + (s.rows[x.d].intake.kcal - s.rows[x.d].tdee), 0);
+    UI.tab = "progress"; UI.progSeg = "overview"; render(); const sec = document.querySelector(".wbal"), P = weekBalance(-1);
+    return { n: W.n, total: W.total, want: Math.round(want), days: W.days.length, kg: W.kg, svg: !!sec?.querySelector("svg.chart"), label: sec?.querySelector("svg")?.getAttribute("aria-label"), txt: sec?.innerText.replace(/\s+/g, " "), first: document.querySelector(".main")?.innerHTML.indexOf("wbal") < document.querySelector(".main")?.innerHTML.indexOf("kpi"), prev: P.ws === addDays(ws, -7), bars: sec?.querySelectorAll("svg rect").length }; });
+  assert.ok(r.n >= 1 && r.days === 7); assert.ok(Math.abs(r.total - r.want) <= 3, `${r.total} vs ${r.want}`); assert.ok(r.svg); assert.match(r.label, /balance/i); assert.match(r.txt, /deficit|surplus/); assert.match(r.txt, /kg/); assert.ok(r.prev); assert.ok(r.bars >= r.n);
+  assert.ok(Math.abs(r.kg - r.total / 7000) < 0.01); assert.deepEqual(app.errors, []);
+});
+
+test("M11f photos on every device: photos taken before signing in or offline are uploaded later (once), a second device downloads and keeps them, the section says where they are and fixes itself with «Sync now»", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { const t = todayISO(), store = new Map(), log = []; let fail = null;
+    const sb = { storage: { from: () => ({ upload: async (p, b) => { log.push(p); if (fail) return { error: { message: fail } }; store.set(p, b); return { error: null }; }, download: async p => store.has(p) ? { data: store.get(p), error: null } : { data: null, error: { message: "not found" } }, remove: async ps => { ps.forEach(p => store.delete(p)); return { error: null }; } }) } };
+    const blob = new Blob(["jpegdata"], { type: "image/jpeg" }); await IDB.put("ph-a", blob); await IDB.put("ph-b", blob);
+    S.body.photos = [{ id: "ph-a", date: t, pose: "front" }, { id: "ph-b", date: t, pose: "side" }]; DATA_V++;
+    const html = () => { UI.tab = "progress"; UI.progSeg = "body"; render(); return document.querySelector(".pp-sync")?.innerText.replace(/\s+/g, " ") || ""; };
+    const out = { signedOut: html(), status0: photosStatus() };
+    window.ENGINE.sb = sb; window.ENGINE.uid = "u1";
+    fail = "Bucket not found"; await photosSync(); out.err = [html(), photosStatus().pending, PH_SYNC.err];
+    fail = null; await photosSync(); out.up = [log.length, [...store.keys()].sort(), S.body.photos.map(p => p.cloud)];
+    const n0 = log.length; await photosSync(); out.again = log.length - n0; out.synced = html();
+    await IDB.del("ph-a"); delete PH_URL["ph-a"]; const b = await photoBlob(S.body.photos[0]); out.dl = [!!b, !!(await IDB.get("ph-a"))];
+    return out; });
+  assert.match(r.signedOut, /only on this device/i); assert.match(r.signedOut, /Sign in/); assert.equal(r.status0.signed, false); assert.equal(r.status0.pending, 2);
+  assert.equal(r.err[1], 2); assert.match(r.err[0], /cloud folder/i); assert.match(r.err[0], /schema\.sql/); assert.match(r.err[2], /Bucket not found/);
+  assert.deepEqual(r.up[1], ["u1/ph-a.jpg", "u1/ph-b.jpg"]); assert.deepEqual(r.up[2], ["u1/ph-a.jpg", "u1/ph-b.jpg"]); assert.equal(r.again, 0, "nothing to upload twice"); assert.match(r.synced, /all your devices/i);
+  assert.deepEqual(r.dl, [true, true], "the other device downloads it and keeps a copy"); assert.deepEqual(app.errors, []);
+});
+
+test("M11f balance chart: no value label touches a day letter or leaves the chart, even with a big deficit and a big surplus", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: vp });
+    const r = await app.page.evaluate(() => { const t = todayISO(), ws = weekStartOf(t); for (let i = 0; i <= dow(t); i++) mutateLog(addDays(ws, i), d => { d.kcal = i % 2 ? 4200 : 900; }); DATA_V++; UI.tab = "progress"; UI.progSeg = "overview"; render();
+      const svg = document.querySelector(".wbal svg"), box = svg.getBoundingClientRect(), T = [...svg.querySelectorAll("text")].map(e => ({ t: e.textContent, r: e.getBoundingClientRect() })), over = [];
+      for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) { const a = T[i].r, b = T[j].r; if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2) over.push(T[i].t + "×" + T[j].t); }
+      return { over, out: T.filter(x => x.r.top < box.top - 1 || x.r.bottom > box.bottom + 1 || x.r.left < box.left - 1 || x.r.right > box.right + 1).map(x => x.t) }; });
+    assert.deepEqual(r.over, [], `${vp.width}: touching labels`); assert.deepEqual(r.out, [], `${vp.width}: labels outside the chart`); assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+});

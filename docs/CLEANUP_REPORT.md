@@ -308,3 +308,9 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `wsess[].plan` opzionale; nessun dato esistente cambia.
 **Aperto:** pesi e soglie sono scelte dell'app, da tarare con dati reali; H5 completo (cadenza, intervalli per fase, contesto) e un colpo d'occhio nello storico (punteggio nelle righe) non fatti.
 
+## M11f BMI, bilancio settimanale, foto (25/10/2026)
+**Verificato:** `tests/m11c.test.js` (BMI con fasce e casi limite, totale settimanale = somma indipendente di assunzione − TDEE, navigazione tra settimane, nessuna etichetta del grafico che tocchi un'altra o esca dal grafico; sincronizzazione foto con un cloud simulato: caricamento tardivo, nessun doppio caricamento, errore «cartella non pronta», secondo dispositivo che scarica e conserva). **Trappola evitata dal test:** `ACT["wbal"]` registrato prima della dichiarazione di `ACT` (TDZ, avvio azzerato) → spostato dopo.
+**Aggiunto:** `bmiOf/bmiHTML`, `weekBalance/weekBalanceHTML`, `photosSync/photosStatus/photosSyncHTML`. **Nessuna eliminazione.**
+**Compatibilità:** `S.body.photos[].cloud` esistente; le foto senza `cloud` vengono caricate al primo avvio collegati.
+**Aperto:** la cartella cloud `progress` e le sue policy devono esistere nel progetto Supabase (`supabase/schema.sql`); finché l'account non è collegato le foto restano locali.
+
