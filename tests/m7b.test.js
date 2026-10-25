@@ -90,7 +90,8 @@ test("algorithm version (F-11): a saved profile from before gets the fixed v2 st
   const n = await ev(() => { const a = normalizeSettings({ fit: { energy: { bmr: "x" } } }).fit.energy, f = normalizeSettings({}).fit.energy; return { a: [a.netKcal, a.netFrom, a.hrLearn, a.hrFrom], f: [f.netKcal, f.netFrom, f.hrLearn, f.hrFrom] }; });
   assert.deepEqual(n, { a: ["on", "2026-10-25", "on", "2026-10-25"], f: ["on", "", "on", ""] });
   const m = await ev(() => { const a = normalizeSettings({ fit: { energy: { bmr: "x" } } }).fit.energy, f = normalizeSettings({}).fit.energy; return { a: [a.neatMode, a.neatFrom, a.neatRefSteps], f: [f.neatMode, f.neatFrom, f.neatRefSteps] }; });
-  assert.deepEqual(m, { a: ["on", "2026-10-25", 7000], f: ["on", "", 7000] });
+  assert.deepEqual(m, { a: ["on", "2026-10-25", 6540], f: ["on", "", 6540] });
+  assert.equal(await ev(() => normalizeSettings({ fit: { energy: { neatRefSteps: 7000 } } }).fit.energy.neatRefSteps), 6540, "the first guess is replaced");
 });
 
 test("switching from legacy to v2 in the middle of a series moves the factor by no more than one step at the boundary", async () => {

@@ -2943,6 +2943,7 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.avoid)) o.avoid = [];
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
+  if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
   if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom", "bmrAutoFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
   // the lean bonus is no part of the published Harris-Benedict equation (F-01): off for a new profile, left on for one saved before the switch so its numbers do not move
@@ -3520,7 +3521,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 7000, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3852,9 +3853,9 @@ function bmrOf(kg, bf, age, date) {
   if (m === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
   return 10 * kg + 6.25 * prof.height - 5 * age + (prof.sex === "Female" ? -161 : 5);
 }
-/* D18 (approved 26/10): NEAT from the steps when no watch figure has taught the app your usual extra movement. The default NEAT stands for a day of neatRefSteps steps (an assumption you can change);
+/* D18 (approved 26/10): NEAT from the steps when no watch figure has taught the app your usual extra movement. The default NEAT stands for a day of neatRefSteps steps = 6540, the mean of US adults in NHANES 2005-06 after censoring inactivity counts (Tudor-Locke 2009, PMID 19516163: the 9676 of all counts overestimate); you can change it;
    the steps add or take away what they cost. Today's steps are a projection: steps so far + the typical steps of the rest of the waking day (7-22 h), from the median of the last 14 days. */
-function neatFromSteps(kg, steps, heightCm, E) { return STEP_KCAL(kg, steps, heightCm) + Math.max(0, E.neat - STEP_KCAL(kg, E.neatRefSteps || 7000, heightCm)); }
+function neatFromSteps(kg, steps, heightCm, E) { return STEP_KCAL(kg, steps, heightCm) + Math.max(0, E.neat - STEP_KCAL(kg, E.neatRefSteps || 6540, heightCm)); }
 function stepsProjected(steps, hour, med) { return med > 0 ? steps + med * (1 - clamp((hour - 7) / 15, 0, 1)) : steps; }
 function energySeries() {
   return memo("energy", () => {
@@ -5508,7 +5509,7 @@ SHEETS.onboard = sh => ({
     <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Plan my next 7 days now</span><span class="s">Uses common Italian and Mediterranean staples until it learns your habits</span></span><button class="switch" role="switch" aria-checked="${sh.plan}" data-act="ob-plan" aria-label="Plan the next 7 days"></button></div>`,
   foot: `<button class="btn primary" data-act="ob-done">Start</button>`
 });
-const NEAT_SRC = { watch: "from your watch", steps: "from your steps and your usual extra movement", stepsRef: "from your steps: the default NEAT counts as a day of 7,000 steps", stepsRefProj: "from today's steps so far plus a typical rest of the day", avg: "average of the last 7 days", default: "default value: no data yet" };
+const NEAT_SRC = { watch: "from your watch", steps: "from your steps and your usual extra movement", stepsRef: "from your steps: the default NEAT counts as an average day of steps", stepsRefProj: "from today's steps so far plus a typical rest of the day", avg: "average of the last 7 days", default: "default value: no data yet" };
 /* a day picker for sheets: previous day, the date (tap it to pick any day), next day. go = the action that opens that day */
 function dayNavHTML(d, go) {
   const t = todayISO(), txt = `${d < t ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`;
@@ -5697,7 +5698,7 @@ function fitSettings() {
     ${(a => a >= 18 && a <= 35 && En.bmr !== "Auto" && !/Ten Haaf/.test(En.bmr) ? `<div class="note" role="note">Recreational athletes aged 18–35: in a study of 90 of them (Ten Haaf 2014, PMID 25275434) Mifflin and Harris-Benedict predicted resting energy within 10% in under half of them; Ten Haaf did as well as Cunningham. Choose Auto or Ten Haaf.</div>` : "")(ageAt(todayISO()))}
     ${En.bmr === "Harris-Benedict" ? `<div class="faint" style="font-size:12.5px">Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation.</div>` : /Ten Haaf|Auto/.test(En.bmr) ? `<div class="faint" style="font-size:12.5px">Ten Haaf was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows (Auto then uses Mifflin). The lean-mass version needs your body fat.</div>` : ""}
     <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : "<div></div>"}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}</div>
-    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (an assumption); today's steps are projected to the end of the day.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
+    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (6,540 = the US adult mean, NHANES 2005-06); today's steps are projected to the end of the day.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
   h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"], ["off", "Off (factor 1)"]])}${fitSel("energy.warn", "Target warnings", onOff)}${fitIn("energy.calManual", "Manual factor (empty = learns)")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}</div>
     ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}${fitIn("energy.calMinCov", "Min intake share", "%", "pct")}</div>`}
     ${(r => `<div class="faint" style="font-size:12.5px">Now ×${r.factor.toFixed(2)}${r.calRel ? ` · ${r.calRel} reliability` : ""} · formulas ${fmtN(r.tdeeW)} → TDEE ${fmtN(r.tdee)}${r.tdeeSE ? ` ± ${fmtN(r0(r.tdeeSE))}` : ""}${(M => M.measured != null ? ` · measured over 4 weeks ${fmtN(M.measured)}` : "")(modelCheck())}. A manual factor stops the learning; Off uses the formulas as they are.<br><b>${calStatus(energyAt(todayISO()))}</b></div>`)(energyAt(todayISO()))}
