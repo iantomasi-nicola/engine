@@ -1,0 +1,109 @@
+diff --git a/source/engine.html b/source/engine.html
+index 574e969..3002c6c 100644
+--- a/source/engine.html
++++ b/source/engine.html
+@@ -5657,7 +5657,7 @@ SHEETS.checkin = sh => {
+     const aee = r.neatSrc === "watch" && r.nx?.mode === "active", stillK = (r.sess.items || []).reduce((a, x, i) => a + (x.st !== "done" ? r.kcals[i] || 0 : 0), 0);
+     body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
+       <div class="ci-calc">${aee ? `<span><small>AEE</small><b>${fmtN(L.watch)}</b></span><span class="op">−</span><span><small>Workouts</small><b>${fmtN(r.nx.sub)}</b></span><span class="op">=</span>` : `<span><small>Training (EAT)</small><b>${fmtN(r.eat)}</b></span><span class="op">+</span>`}<span><small>NEAT${{ avg: " (7-day)", default: " (default)" }[r.neatSrc] || ""}</small><b>${fmtN(r.neat)}</b></span><span class="ci-tdee"><small>TDEE</small><b>${fmtN(r.tdee)}</b></span></div>
+-      <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${stillK > 0 ? ` · ${fmtN(stillK)} kcal of training still planned` : ""}${aee ? " · NEAT = AEE − the workouts the watch counted" : !sh.energy ? ` · NEAT ${NEAT_SRC[r.neatSrc] || NEAT_SRC.avg}` : ""}.</small>`;
++      <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${stillK > 0 ? ` · ${fmtN(stillK)} kcal of training still planned` : ""}${aee ? " · NEAT = AEE − the workouts the watch counted" : !sh.energy ? ` · NEAT ${/^steps/.test(r.neatSrc) ? `from your ${fmtN(L.steps)} steps${{ steps: " plus your usual extra movement", stepsProj: " so far, a typical rest of the day and your usual extra movement", stepsRef: ": the default NEAT counts as an average day of steps", stepsRefProj: " so far plus a typical rest of the day" }[r.neatSrc] || ""}` : NEAT_SRC[r.neatSrc] || NEAT_SRC.avg}` : ""}.</small>`;
+     const more = [L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : "", L.rhr ? `RHR ${L.rhr}` : "", L.steps ? `${fmtN(L.steps)} steps` : "", logged.length ? `${logged.length} workout${logged.length > 1 ? "s" : ""}` : "", food.kcal ? `${fmtN(food.kcal)} kcal eaten` : ""].filter(Boolean).join(" · ");
+     body += `<button class="ci-more" data-act="ci-more" aria-expanded="${!!sh.more}"><span><b>From intervals.icu and your plan</b><small>${esc(more || "Sleep, HRV, resting HR, steps, workouts, intake")}</small></span>${ic(sh.more ? "chevU" : "chevD", "sm")}</button>`;
+     if (sh.more) {
+diff --git a/tests/m7b.test.js b/tests/m7b.test.js
+index a6f1994..30d2849 100644
+--- a/tests/m7b.test.js
++++ b/tests/m7b.test.js
+@@ -148,21 +148,21 @@ const hrSetup = n => ev(n => { const t = todayISO(); S.logm = {}; FIT().energy.h
+ const hrKcal = (dev, o = {}) => ev(([dev, o]) => { Object.assign(FIT().energy, o); DATA_V++; return sessionKcal({ sport: "Cycling", min: 30, hr: 150, dev }, todayISO(), 80); }, [dev, o]);
+ test("D20: a sensor with 6+ sessions of its own gets its learned heart-rate factor (0.625), a sensor without history keeps the global one (0.794)", async () => {
+   await profile(); await hrSetup(8);
+-  assert.deepEqual(await hrKcal("zepp"), { kcal: 276, how: "hr" });
+-  assert.deepEqual(await hrKcal("polar"), { kcal: 350, how: "hr" });
++  assert.deepEqual(await hrKcal("zepp"), { kcal: 260, how: "hr" });
++  assert.deepEqual(await hrKcal("polar"), { kcal: 313, how: "hr" });
+ });
+ test("D20: strength sessions do not teach the factor (6 cycling at 0.499 and 6 strength at 0.34 give (6 * 0.49898 + 6 * 0.794) / 12 = 0.6465 -> 285 kcal, not the 0.42 of a mixed median)", async () => {
+   await profile(); await hrSetup(6);
+   await ev(() => { const t = todayISO(); for (let i = 1; i <= 6; i++) { const d = addDays(t, -i - 10), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Strength training", min: 60, hr: 150, kcal: 300, src: "intervals", ext: "icu-s-" + i, dev: "zepp" }] }; } DATA_V++; });
+-  assert.equal((await hrKcal("zepp")).kcal, 285);
++  assert.equal((await hrKcal("zepp")).kcal, 267);
+ });
+ test("D20: fewer than 6 sessions, the switch off, and days before hrFrom leave the global factor in use", async () => {
+   await profile(); await hrSetup(5);
+-  assert.equal((await hrKcal("zepp")).kcal, 350);
++  assert.equal((await hrKcal("zepp")).kcal, 313);
+   await hrSetup(8);
+-  assert.equal((await hrKcal("zepp", { hrLearn: "off" })).kcal, 350);
+-  assert.equal((await hrKcal("zepp", { hrLearn: "on", hrFrom: "2999-01-01" })).kcal, 350);
+-  assert.equal((await hrKcal("zepp", { hrFrom: "" })).kcal, 276);
++  assert.equal((await hrKcal("zepp", { hrLearn: "off" })).kcal, 313);
++  assert.equal((await hrKcal("zepp", { hrLearn: "on", hrFrom: "2999-01-01" })).kcal, 313);
++  assert.equal((await hrKcal("zepp", { hrFrom: "" })).kcal, 260);
+ });
+ 
+ /* D18 (approved 26/10): NEAT from the steps when no watch figure taught the app your usual extra movement. The default NEAT (350 kcal) stands for a day of 7000 steps (an assumption, set in Settings);
+@@ -197,12 +197,12 @@ test("D18: today's steps are a projection: steps so far + the typical steps of t
+    80 kg, 180 cm, 30 y male, BMR 1780 = 1.2361 kcal/min: a 60-minute Polar session of 600 kcal (gross) is 526 net; with 1000 active kcal that day, NEAT = 1000 - 526 = 474 (it was 400 when the gross 600 was taken off). */
+ const watchDay = o => ev(o => { const t = todayISO(), d = addDays(t, -1), m = d.slice(0, 7); S.logm = {}; Object.assign(FIT().energy, { watchMode: o.mode || "active", netKcal: o.net || "on", netFrom: "", neatMode: "on", minWatchNeat: 150 }); FIT().devices.find(x => x.id === "polar").kcal = o.dev || "gross"; FIT().trackStart = addDays(t, -3);
+   S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { watch: o.watch, workouts: [{ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1" }] }; DATA_V++; const r = energyAt(d); FIT().devices.find(x => x.id === "polar").kcal = "gross"; return { neat: r.neat, src: r.neatSrc, eat: r.eat }; }, o);
+-test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the sensor counts rest (1000 - 526 = 474), the gross value when it does not (net sensor, switch off), and total mode keeps BMR + gross", async () => {
++test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the sensor counts rest (1000 - 526 = 474), the gross value when it does not (net sensor, switch off), and total mode takes the session off net too (#3)", async () => {
+   await profile();
+   const a = await watchDay({ watch: 1000 }); assert.equal(a.neat, 474); assert.equal(a.src, "watch"); assert.equal(a.eat, 526);
+   assert.equal((await watchDay({ watch: 1000, dev: "net" })).neat, 400);
+   assert.equal((await watchDay({ watch: 1000, net: "off" })).neat, 400);
+-  assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 600);   // total mode: the watch total holds the BMR and the gross session
++  assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 526);   // total mode (M14b #3): the total holds the rest of the session once, in the BMR: the session comes off net, as in the EAT
+ });
+ 
+ test("calibration controls: a manual factor holds every day (0.9) and nothing is learned; Off keeps 1 whatever the data say", async () => {
+diff --git a/tests/m7c.test.js b/tests/m7c.test.js
+index 18157d1..92a753c 100644
+--- a/tests/m7c.test.js
++++ b/tests/m7c.test.js
+@@ -98,8 +98,8 @@ test("D7: the intervals.icu import keeps the start time, and merging two overlap
+ /* ---------- F-11: one list of algorithm versions ---------- */
+ test("F-11: one registry lists every formula version with its switch and its first-day setting; the version stamp is the newest entry", async () => {
+   const r = await ev(() => ({ keys: ALGO.map(a => [a.v, a.k, a.from]), v: ALGO_VERSION, starts: [...new Set(ALGO.map(a => a.start))], defaults: ALGO.map(a => defaultFit().energy[a.from]) }));
+-  assert.deepEqual(r.keys, [[1, "cal", "calV2From"], [2, "net", "netFrom"], [3, "hr", "hrFrom"], [4, "neat", "neatFrom"], [5, "bmr", "bmrAutoFrom"], [6, "nutr", "nutrFrom"], [7, "one", "oneFrom"]]);
+-  assert.equal(r.v, 7); assert.deepEqual(r.starts, ["2026-10-25"]); assert.deepEqual(r.defaults, ["", "", "", "", "", "", ""]);
++  assert.deepEqual(r.keys, [[1, "cal", "calV2From"], [2, "net", "netFrom"], [3, "hr", "hrFrom"], [4, "neat", "neatFrom"], [5, "bmr", "bmrAutoFrom"], [6, "nutr", "nutrFrom"], [7, "one", "oneFrom"], [8, "hrnet", "hrNetFrom"], [9, "bmrramp", "bmrRampFrom"], [10, "kpk", "kpkFrom"]]);
++  assert.equal(r.v, 10); assert.deepEqual(r.starts, ["2026-10-25"]); assert.deepEqual(r.defaults, ["", "", "", "", "", "", "", "", "", ""]);
+ });
+ 
+ test("F-11: old settings keep loading: a profile saved before an entry gets its constant start, dates already saved stay, a new profile starts from the first day, and loading twice changes nothing", async () => {
+@@ -108,8 +108,8 @@ test("F-11: old settings keep loading: a profile saved before an entry gets its
+     const a = normalizeSettings(prev).fit.energy, f = normalizeSettings(undefined).fit.energy, k = normalizeSettings({ fit: { energy: { oneFrom: "2026-11-02" } } }).fit.energy;
+     const once = normalizeSettings({ fit: { energy: { bmr: "x" } } }), twice = normalizeSettings(JSON.parse(JSON.stringify(once)));
+     return { a: [a.oneFrom, a.oneSrc, a.algoV, a.netFrom], f: [f.oneFrom, f.oneSrc, f.algoV], k: k.oneFrom, same: JSON.stringify(once.fit.energy) === JSON.stringify(twice.fit.energy) }; });
+-  assert.deepEqual(r.a, ["2026-10-25", "on", 7, "2026-10-25"]);
+-  assert.deepEqual(r.f, ["", "on", 7]);
++  assert.deepEqual(r.a, ["2026-10-25", "on", 10, "2026-10-25"]);
++  assert.deepEqual(r.f, ["", "on", 10]);
+   assert.equal(r.k, "2026-11-02"); assert.ok(r.same, "stable across a save and a load (nothing drifts on sync)");
+ });
+ 
+@@ -117,9 +117,9 @@ test("F-11: the entries in force on a date follow the switches and the first day
+   const r = await ev(() => { const t = todayISO(), E = { ...FIT().energy, calMode: "v2", calManual: null, netKcal: "on", hrLearn: "on", neatMode: "on", bmr: "Auto", nutrCoverage: "on", oneSrc: "on" };
+     for (const a of ALGO) E[a.from] = "";
+     const all = algoAt(t, E).map(a => a.k); E.bmr = "Mifflin-St Jeor"; E.neatFrom = addDays(t, 3); E.oneSrc = "off"; const some = algoAt(t, E).map(a => a.k); return { all, some, later: algoAt(addDays(t, 3), E).map(a => a.k) }; });
+-  assert.deepEqual(r.all, ["cal", "net", "hr", "neat", "bmr", "nutr", "one"]);
+-  assert.deepEqual(r.some, ["cal", "net", "hr", "nutr"]);
+-  assert.deepEqual(r.later, ["cal", "net", "hr", "neat", "nutr"]);
++  assert.deepEqual(r.all, ["cal", "net", "hr", "neat", "bmr", "nutr", "one", "hrnet", "bmrramp", "kpk"]);
++  assert.deepEqual(r.some, ["cal", "net", "hr", "nutr", "hrnet", "kpk"]);
++  assert.deepEqual(r.later, ["cal", "net", "hr", "neat", "nutr", "hrnet", "kpk"]);
+ });
+ 
+ /* ---------- D3: How it is calculated ---------- */
+@@ -143,7 +143,7 @@ test("D3: the steps show the engine's own numbers, each once; the BMR formula wr
+   assert.equal(r.eat, 838);
+   assert.ok(Math.abs(Function(`return ${r.formula}`)() - r.bmr) < 0.5, `${r.formula} vs ${r.bmr}`);
+   assert.ok(r.dup, "the copy row says where it is counted");
+-  assert.equal(r.vers, 7); assert.deepEqual(r.pills, ["In use", "In use", "In use", "In use", "Off", "In use", "In use"]);
++  assert.equal(r.vers, 10); assert.deepEqual(r.pills, ["In use", "In use", "In use", "In use", "Off", "In use", "In use", "In use", "Off", "In use"]);
+ });
+ 
+ test("D3: with the explanation open the app starts without errors and Settings shows it", async () => {

@@ -1,0 +1,844 @@
+From 0f4cc3fdbdfb41bebdccaea1ae0c0d18d1f2a316 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 25 Oct 2026 23:31:13 +0000
+Subject: [PATCH 1/2] WIP M14b-A sync engine: three-way merge on send,
+ per-account queue/snapshot and owner, unsent-edit outbox, derived sync pill,
+ keyset paging
+
+Tests: tests/m14b-sync.test.js with an in-memory Supabase (tests/lib/fake-supabase.js);
+all 11 failed on the previous code. Not yet fully verified: see docs/review/fix-A-report.md.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FuCgrQUezsfAKC8XTMLS2D
+---
+ source/engine.html         | 197 ++++++++++++++++++++++++++-----------
+ source/web/shim.js         | 117 +++++++++++++++++-----
+ tests/lib/fake-supabase.js |  93 +++++++++++++++++
+ tests/m14b-sync.test.js    | 180 +++++++++++++++++++++++++++++++++
+ 4 files changed, 503 insertions(+), 84 deletions(-)
+ create mode 100644 tests/lib/fake-supabase.js
+ create mode 100644 tests/m14b-sync.test.js
+
+diff --git a/source/engine.html b/source/engine.html
+index f164ef9..515c596 100644
+--- a/source/engine.html
++++ b/source/engine.html
+@@ -3002,14 +3002,22 @@ function normalizeSettings(s) {
+ const LS_KEY = "fuelplanner.v1";
+ const S = { settings: null, foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: { checked: {}, extras: [], pantry: {}, range: 7 }, body: { w: {}, m: {} }, train: { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [] } };
+ const UI = { trainSeg: "cal", progSeg: "overview", dashSeg: "all", tab: "today", date: todayISO(), sheet: null, foodsSeg: "all", foodsQ: "", shopStart: todayISO(), statsRange: 7, statsBasis: null, addMeal: null };
+-const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), inflight: new Set(), timers: new Map(), retry: new Set(), known: {}, fresh: {}, sample: null, downloads: null, ready: false };
++/* owner = the account the data on this device belongs to (none: never signed in); dirty = edits that account has not confirmed yet;
++   seen = the account's copy each mergeable document was last read as (the base of a three-way merge); union = first sign-in of this device's own data */
++const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), timers: new Map(), known: {}, fresh: {}, seen: {}, dirty: new Set(), owner: "", union: false, sample: null, downloads: null, ready: false };
++const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty";
+ 
+ let SAVE_WARNED = false;
+ function saveLocal() {
+   DATA_V++;
+   try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
+-  catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
++  catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db && window.ENGINE?.status?.().online ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
+ }
++/* put() saves the device copy once per task: a burst of writes (a restore, a week of plans) costs one save, and the copy is on disk before the tab can close */
++let SAVE_Q = false;
++function saveSoon() { DATA_V++; if (SAVE_Q) return; SAVE_Q = true; queueMicrotask(() => { SAVE_Q = false; saveDirty(); saveLocal(); }); }
++function saveDirty() { if (!Sync.owner) return; try { localStorage.setItem(DIRTY_KEY, JSON.stringify({ uid: Sync.owner, keys: [...Sync.dirty] })); } catch (e) {} }
++let DIRTY_T = 0; const saveDirtyLater = () => { clearTimeout(DIRTY_T); DIRTY_T = setTimeout(saveDirty, 1000); };
+ function loadLocal() {
+   try {
+     const j = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+@@ -3019,9 +3027,15 @@ function loadLocal() {
+   S.shop = { checked: {}, extras: [], pantry: {}, range: 7, stores: [], ...(S.shop || {}) };
+   S.body = { w: {}, m: {}, ...(S.body || {}) };
+   S.train = { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...(S.train || {}) };
++  try { Sync.owner = localStorage.getItem(OWNER_KEY) || ""; const d = JSON.parse(localStorage.getItem(DIRTY_KEY) || "null"); if (Sync.owner && d?.uid === Sync.owner) Sync.dirty = new Set(d.keys || []); } catch (e) {}
+   DATA_V++;
+ }
+ const DOC_KINDS = ["settings", "shop", "body", "train"];
++const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm";
++const keyOf = (kind, id) => kind + "|" + (id || "");
++const splitKey = key => { const i = key.indexOf("|"); return [key.slice(0, i), key.slice(i + 1)]; };
++const pathOf = (kind, id) => DOC_KINDS.includes(kind) ? kind : "lib/" + kind + "/" + id;
++const keyOfPath = p => { const a = p.split("/"); return a[0] === "lib" ? keyOf(a[1], a.slice(2).join("/")) : keyOf(a[0]); };
+ function setLocal(kind, id, data) {
+   if (DOC_KINDS.includes(kind)) S[kind] = data;
+   else if (data === null) delete S[kind][id];
+@@ -3034,47 +3048,82 @@ function refFor(kind, id) {
+ }
+ function setSync(s) { if (Sync.state === s) return; Sync.state = s; $$(".sync").forEach(el => { el.dataset.s = s; el.querySelector("span").textContent = SYNC_LABEL[s]; }); }
+ const SYNC_LABEL = { local: "On this device", saving: "Saving", synced: "Synced", offline: "Offline" };
++/* the pill tells what the queue really holds: Synced only when the account has answered and nothing is waiting */
++function syncState() {
++  if (!Sync.db) return setSync("local");
++  const st = window.ENGINE?.status?.() || {}, waiting = Sync.pending.size + (st.pending || 0);
++  setSync(st.online === false ? "offline" : waiting || st.online == null ? "saving" : "synced");
++}
++const SYNC_MSG = { storage: false, blocked: 0 };
++function syncEvent(st) {
++  syncState();
++  if (st.storageFull && !SYNC_MSG.storage) { SYNC_MSG.storage = true; toast("This device's storage is full: changes waiting for the network are lost if the app is closed. Stay online until it says Synced, or free some space."); }
++  if (st.blocked > SYNC_MSG.blocked) toast(`A change couldn't be saved to your account (${st.lastError || "refused by the server"}). It stays on this device and is tried again the next time you open the app.`);
++  SYNC_MSG.blocked = st.blocked;
++}
++function syncSent(path) { if (Sync.dirty.delete(keyOfPath(path))) saveDirtyLater(); }
+ 
+ function put(kind, id, data) {
+   setLocal(kind, id, data);
+-  saveLocal();
++  const key = keyOf(kind, id);
++  if (Sync.owner) Sync.dirty.add(key);
++  saveSoon();
+   scheduleRender();
+   if (!Sync.db) return;
+-  const key = kind + "|" + (id || "");
+   Sync.pending.set(key, { kind, id, data });
+   clearTimeout(Sync.timers.get(key));
+   Sync.timers.set(key, setTimeout(() => flush(key), 380));
+-  setSync("saving");
++  syncState();
+ }
+ const del = (kind, id) => put(kind, id, null);
+-async function flush(key) {
+-  if (Sync.inflight.has(key)) { Sync.timers.set(key, setTimeout(() => flush(key), 250)); return; }
++/* hands an edit to the account's queue (saved on the device); a document two devices can both change goes with the copy it was edited from, and is merged when sent */
++function flush(key) {
+   const job = Sync.pending.get(key);
+   if (!job) return;
+-  Sync.pending.delete(key);
+-  Sync.inflight.add(key);
+-  let failed = false;
+-  try {
+-    const ref = refFor(job.kind, job.id);
+-    if (job.data === null) await ref.delete(); else await ref.set(clone(job.data));
+-    Sync.retry.delete(key);
+-  } catch (e) {
+-    failed = true;
+-    if (e && e.code === "unavailable" && !Sync.retry.has(key)) {
+-      Sync.retry.add(key);
+-      if (!Sync.pending.has(key)) Sync.pending.set(key, job);
+-      Sync.timers.set(key, setTimeout(() => flush(key), 700 + Math.random() * 900));
+-    } else if (e && e.code === "quota_exceeded") {
+-      toast("Storage is full. Delete foods or recipes you no longer use, then try again.");
+-    } else setSync("offline");
+-  } finally {
+-    Sync.inflight.delete(key);
+-    if (!failed && !Sync.pending.size && !Sync.inflight.size) setSync("synced");
+-  }
+-}
++  Sync.pending.delete(key); clearTimeout(Sync.timers.get(key)); Sync.timers.delete(key);
++  if (!Sync.db) return;
++  const ref = refFor(job.kind, job.id);
++  Promise.resolve(job.data === null ? ref.delete() : ref.set(clone(job.data), MERGED(job.kind) ? { base: Sync.seen[key] ?? null } : undefined)).catch(() => {});
++  syncState();
++}
++/* the tab is hidden or closing: nothing waits for its timer */
++function flushNow() { for (const key of [...Sync.pending.keys()]) flush(key); window.ENGINE?.persist?.(); }
++addEventListener("pagehide", flushNow);
++document.addEventListener("visibilitychange", () => { if (document.hidden) flushNow(); });
++if (window.ENGINE) Object.assign(window.ENGINE, { onStatus: syncEvent, onSent: syncSent, merge: (path, base, l, r) => syncMerge(path, base, l, r, "l") });
+ /* one-time clean-ups run on the account's own data: signed in, that means the first answer from the server, not the copy kept on this device */
+ const dataReady = (...kinds) => !Sync.db || (Sync.ready && kinds.every(k => Sync.fresh[k]));
+-const isPending = key => Sync.pending.has(key) || Sync.inflight.has(key);
++
++/* ================= merging two copies of a synced document =================
++   base = the copy this device started from, l = this device's, r = the account's. Per key, what only one side changed comes from that side,
++   and a removal stays removed; a value both sides changed goes to `win` ("l" this device, "r" the account); an edit beats a removal.
++   Lists of records with an id (records, races, photos, shopping lines) merge by id, other lists are one value.
++   The journal of a day (jr) goes field by field to the newest edit (jrMergeDay). */
++const isPlain = v => !!v && typeof v === "object" && !Array.isArray(v);
++function deq(a, b) {
++  if (a === b) return true;
++  if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
++  const ka = Object.keys(a); if (ka.length !== Object.keys(b).length) return false;
++  for (const k of ka) if (!Object.prototype.hasOwnProperty.call(b, k) || !deq(a[k], b[k])) return false;
++  return true;
++}
++const idList = a => Array.isArray(a) && a.every(x => isPlain(x) && (typeof x.id === "string" || typeof x.id === "number")) && new Set(a.map(x => String(x.id))).size === a.length;
++function merge3(b, l, r, win) {
++  if (deq(l, b)) return r;
++  if (deq(r, b) || deq(l, r)) return l;
++  if (isPlain(l) && isPlain(r)) { const out = {}, bb = isPlain(b) ? b : {}; for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) { const v = merge3(bb[k], l[k], r[k], win); if (v !== undefined) out[k] = v; } return out; }
++  if (idList(l) && idList(r) && (b == null || idList(b))) {
++    const m = a => new Map((a || []).map(x => [String(x.id), x])), B = m(b), L = m(l), R = m(r), out = [];
++    for (const id of new Set([...L.keys(), ...R.keys()])) { const v = merge3(B.get(id), L.get(id), R.get(id), win); if (v !== undefined) out.push(v); }
++    return out;
++  }
++  return win === "r" ? (r === undefined ? l : r) : (l === undefined ? r : l);
++}
++function syncMerge(path, base, l, r, win) {
++  const out = clone(merge3(base ?? undefined, l, r, win));
++  if (path.startsWith("lib/logm/") && isPlain(out?.days)) for (const [d, x] of Object.entries(out.days)) { const a = l?.days?.[d], c = r?.days?.[d]; if (isPlain(x) && a?.jr && c?.jr) x.jr = jrMergeDay(a, c); }
++  return out;
++}
+ 
+ /* ================= domain ================= */
+ function getFood(id) { const u = S.foods[id]; if (u && !u.hidden) return u; return u?.hidden ? null : (BUILTIN[id] || null); }
+@@ -10144,48 +10193,82 @@ ACT["off-refresh"] = async () => {
+   if (!d.brand) d.brand = n.brand; renderSheet(); toast("Values updated from Open Food Facts · Save to keep them");
+ };
+ /* ================= sync subscriptions ================= */
++const shapeDoc = (kind, d) => kind === "settings" ? normalizeSettings(d) : kind === "shop" ? { checked: {}, extras: [], pantry: {}, range: 7, stores: [], pref: {}, ...d } : kind === "train" ? { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...d } : { w: {}, m: {}, ...d };
++/* what counts as this device's own data on a first sign-in (defaults alone don't) */
++const HAS_LOCAL = {
++  settings: v => !!v?.onboarded,
++  shop: v => !!v && !!(Object.keys(v.pantry || {}).length || (v.extras || []).length || (v.stores || []).length || Object.keys(v.prices || {}).length),
++  train: v => !!v && Object.values(v).some(x => Array.isArray(x) ? x.length > 0 : isPlain(x) && Object.keys(x).length > 0),
++  body: v => !!v && !!(Object.keys(v.w || {}).length || Object.keys(v.m || {}).length || (v.photos || []).length)
++};
++/* first sign-in of a device with its own data into an account that has data: both are kept (the account wins a clash), after a restore point of this device */
++let JOIN_NOTE = false;
++function joinNote() { if (JOIN_NOTE) return; JOIN_NOTE = true; restorePoint("before sign-in"); toast("This device's data was merged into your account · a restore point was saved first (Settings → Backups → Restore points)"); }
+ function applyDoc(kind, snap) {
+-  if (isPending(kind + "|")) return;
+-  if (snap.exists) {
+-    const d = clone(snap.data());
+-    S[kind] = kind === "settings" ? normalizeSettings(d) : kind === "shop" ? { checked: {}, extras: [], pantry: {}, range: 7, stores: [], pref: {}, ...d } : kind === "train" ? { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...d } : { w: {}, m: {}, ...d };
+-  } else if (!snap.metadata.fromCache) {
+-    // first visit with this account: push anything this browser already had
+-    const local = S[kind];
+-    const hasLocal = kind === "settings" ? local?.onboarded : kind === "shop" ? Object.keys(local?.pantry || {}).length || (local?.extras || []).length : kind === "train" ? (local?.tests || []).length : Object.keys(local?.w || {}).length;
+-    if (hasLocal && !Sync.known[kind]) put(kind, "", local);
++  const key = keyOf(kind);
++  if (Sync.pending.has(key)) return;
++  const fc = !!snap.metadata?.fromCache, remote = snap.exists ? snap.data() : null;
++  let next = remote ? clone(remote) : null, send = false;
++  if (!Sync.known[kind] && Sync.dirty.has(key) && !deq(S[kind], remote)) { next = clone(S[kind]); send = true; }   // an edit never sent (the tab closed first): kept, and merged with the account's copy when sent
++  else if (!fc && !Sync.fresh[kind] && Sync.union && HAS_LOCAL[kind](S[kind])) {
++    const m = remote ? syncMerge(kind, null, S[kind], remote, "r") : clone(S[kind]);
++    if (!deq(m, remote)) { if (remote) joinNote(); next = m; send = true; }
+   }
+-  Sync.known[kind] = true; if (!snap.metadata?.fromCache) Sync.fresh[kind] = true;
++  Sync.seen[key] = remote ? clone(remote) : null;
++  if (next) S[kind] = shapeDoc(kind, next);
++  Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
+   saveLocal(); scheduleRender();
++  if (send) put(kind, "", S[kind]);
+   if (kind === "settings") maybeOnboard();
+ }
++/* days older than the 180 the app reads: the account may have them already, so only the missing ones go up */
++async function pushIfMissing(kind, ids) { for (const id of ids) { try { const s = await refFor(kind, id).get(); if (!s.exists && S[kind][id] !== undefined) put(kind, id, S[kind][id]); } catch (e) {} } }
+ function applyCollection(kind, qs) {
+-  const next = {};
+-  for (const d of qs.docs) next[d.id] = clone(d.data());
+-  for (const key of [...Sync.pending.keys(), ...Sync.inflight]) {
+-    const [k, id] = key.split("|"); if (k !== kind) continue;
+-    const job = Sync.pending.get(key);
+-    if (job) { if (job.data === null) delete next[id]; else next[id] = job.data; }
+-    else if (S[kind][id] !== undefined) next[id] = S[kind][id]; else delete next[id];
+-  }
+-  if (kind === "logm") for (const [mk, rem] of Object.entries(next)) { if (isPending(kind + "|" + mk)) continue; const m = jrMergeDoc(S.logm[mk], rem); if (m) { next[mk] = m; put(kind, mk, m); } }
++  const fc = !!qs.metadata?.fromCache, first = !Sync.known[kind], join = !fc && !Sync.fresh[kind] && Sync.union, next = {}, send = [];
++  for (const d of qs.docs) { next[d.id] = clone(d.data()); if (kind === "logm" && !Sync.pending.has(keyOf(kind, d.id))) Sync.seen[keyOf(kind, d.id)] = clone(d.data()); }
++  for (const [key, job] of Sync.pending) { const [k, id] = splitKey(key); if (k !== kind) continue; if (job.data === null) delete next[id]; else next[id] = job.data; }
++  /* edits this device never sent (the tab closed first) */
++  if (first) for (const key of Sync.dirty) { const [k, id] = splitKey(key); if (k !== kind || Sync.pending.has(key)) continue;
++    const loc = S[kind]?.[id];
++    if (loc === undefined) { if (next[id] !== undefined) { delete next[id]; send.push([id, null]); } }
++    else if (!deq(loc, next[id])) { next[id] = loc; send.push([id, loc]); } }
++  const since = addDays(todayISO(), -180), old = [];
++  if (join) for (const [id, loc] of Object.entries(S[kind] || {})) { if (Sync.pending.has(keyOf(kind, id))) continue;
++    if (next[id] === undefined) { if (kind === "days" && id < since) old.push(id); else send.push([id, loc]); }
++    else if (kind === "logm" && !deq(loc, next[id])) { const m = syncMerge(pathOf(kind, id), null, loc, next[id], "r"); if (!deq(m, next[id])) send.push([id, m]); } }
++  if (join && qs.docs.length && send.length) joinNote();
++  if (kind === "logm") for (const [mk, rem] of Object.entries(next)) { if (Sync.pending.has(keyOf(kind, mk)) || send.some(x => x[0] === mk)) continue; const m = jrMergeDoc(S.logm[mk], rem); if (m) send.push([mk, m]); }
+   if (kind === "queue") notifyQueue(S.queue, next);
+-  if (!qs.docs.length && !qs.metadata.fromCache && !Sync.known[kind]) {
+-    // migrate this browser's local data into the account once
+-    for (const [id, v] of Object.entries(S[kind] || {})) { next[id] = v; put(kind, id, v); }
+-  }
+-  Sync.known[kind] = true; if (!qs.metadata?.fromCache) Sync.fresh[kind] = true;
+-  if (kind === "days") { const since = addDays(todayISO(), -180); for (const [id, v] of Object.entries(S.days)) if (id < since && !next[id]) next[id] = v; }
+-  S[kind] = next; saveLocal(); scheduleRender();
++  Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
++  if (kind === "days") for (const [id, v] of Object.entries(S.days)) if (id < since && !next[id]) next[id] = v;
++  S[kind] = next;
++  for (const [id, v] of send) put(kind, id, v);
++  saveLocal(); scheduleRender();
++  if (old.length) pushIfMissing(kind, old);
+ }
+ function notifyQueue(prev, next) {
+   for (const [id, q] of Object.entries(next)) if (q.status === "done" && prev[id] && prev[id].status !== "done") {
+     const f = getFood(q.food); if (f) toast(`Imported from Open Food Facts: ${f.name}`);
+   }
+ }
++/* the data on this device belongs to one account at most. Another account signing in starts from its own data: nothing of the first one
++   (keys included) is uploaded, and the first one's unsent edits wait in its own queue for its next sign-in */
++function claimLocal(id) {
++  let snaps = []; try { snaps = Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) {}
++  const owner = Sync.owner, mine = owner ? owner === id : !snaps.some(k => k !== "engine.snap." + id);
++  Sync.union = mine && !owner && !snaps.includes("engine.snap." + id);
++  if (!mine) {
++    if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
++    Sync.dirty = new Set();
++    Object.assign(S, { settings: normalizeSettings(null), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
++    saveLocal(); scheduleRender();
++  }
++  Sync.owner = id; try { localStorage.setItem(OWNER_KEY, id); } catch (e) {}
++  saveDirty();
++}
+ function subscribe() {
+   const db = Sync.db, b = Sync.base;
+-  const onErr = e => { if (e?.code === "revoked") { Sync.db = null; setSync("local"); } else setSync("offline"); };
++  const onErr = () => syncState();
+   for (const k of DOC_KINDS) db.doc(b + "/" + k).onSnapshot(s => applyDoc(k, s), onErr);
+   // outcome of the last intervals.icu sync run (written by the sync task, read-only here)
+   db.doc(b + "/syncstat").onSnapshot(s => { const v = s.exists ? clone(s.data()) : null; const fresh = v && UI.syncstat && v.at !== UI.syncstat.at; UI.syncstat = v;
+@@ -16219,7 +16302,7 @@ ACT["check-update"] = async () => {
+     if (sample) { try { const lim = await sample.limits(); Sync.sampleImages = !!(lim && lim.images); } catch (e) {} }
+     if (db && user) {
+       let id = null; try { id = await user.id(); } catch (e) {}
+-      if (id) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; setSync("synced"); subscribe(); }
++      if (id) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; claimLocal(id); syncState(); subscribe(); }
+     }
+     Sync.ready = true; scheduleRender();
+     if (!Sync.db) setTimeout(maybeOnboard, 300);
+diff --git a/source/web/shim.js b/source/web/shim.js
+index 74836e0..b30b33b 100644
+--- a/source/web/shim.js
++++ b/source/web/shim.js
+@@ -2,7 +2,7 @@
+    (db, user, downloads, sample) using Supabase, the browser and an optional free AI key. */
+ (function () {
+   const CFG = window.ENGINE_CONFIG || {};
+-  const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
++  const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+   const sb = CFG.supabaseUrl && CFG.supabaseKey && window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "engine-auth", detectSessionInUrl: true } }) : null;
+   const E = window.ENGINE = { sb, LS, uid: null, email: null, mode: "local", cloud: !!sb };
+   const T = "engine_docs";
+@@ -42,18 +42,48 @@
+       // offline with an expired token: keep using the account saved on this device, it refreshes once back online
+       if (!s && (err || !navigator.onLine)) { try { const st = JSON.parse(localStorage.getItem("engine-auth") || "null"), u = st?.user || st?.currentSession?.user; if (u?.id) s = { user: u }; } catch (e) {} }
+       if (!s && !LS.get("engine.localOnly", false)) s = await E.loginScreen();
+-      if (s) { E.uid = s.user.id; E.email = s.user.email; E.mode = "cloud"; }
++      if (s) { E.uid = s.user.id; E.email = s.user.email; E.mode = "cloud"; queue = loadQ(E.uid); qPaths = new Set(queue.map(q => q.path)); }
+       return E.uid;
+     })();
+     return authP;
+   }
+-  E.signOut = async () => { try { await sb?.auth.signOut(); } catch (e) {} LS.set("engine.localOnly", true); location.reload(); };
++  /* what is still waiting is sent first (a few seconds at most); what can't go stays in this account's own queue on this device */
++  E.signOut = async () => { try { await Promise.race([flushQ(), new Promise(r => setTimeout(r, 4000))]); } catch (e) {} persistQ(); try { await sb?.auth.signOut(); } catch (e) {} LS.set("engine.localOnly", true); location.reload(); };
+   E.signIn = async () => { const s = await E.loginScreen({ cancel: true }); if (s) { LS.del("engine.localOnly"); location.reload(); } };
+ 
+-  /* ---------- db: a small Firestore-like layer over one Supabase table, with an offline write queue ---------- */
+-  let cache = new Map(), loaded = false, loadP = null, chan = null;
++  /* ---------- db: a small Firestore-like layer over one Supabase table, with an offline write queue ----------
++     Each account has its own queue (engine.q.<uid>) and its own copy on this device (engine.snap.<uid>).
++     A document the app can merge comes with the copy it was edited from (`base`): right before sending, it is merged
++     with what the server holds now (E.merge, given by the app), so two devices that edited it both keep their changes. */
++  let cache = new Map(), loaded = false, loadP = null, loading = false, chan = null, loadedAt = 0;
+   const docL = new Map(), colL = new Map();
+-  let queue = LS.get("engine.q", []);
++  let queue = [], qPaths = new Set();
++  const st = { online: null, storageFull: false, lastError: "" };
++  E.status = () => { let blocked = 0; for (const q of queue) if (q.bad) blocked++; return { online: st.online, pending: queue.length - blocked, blocked, storageFull: st.storageFull, lastError: st.lastError, loadedAt }; };
++  const emit = () => { try { E.onStatus?.(E.status()); } catch (e) {} };
++  const sent = p => { try { E.onSent?.(p); } catch (e) {} };
++  const errText = e => String(e?.message || e || "").slice(0, 160);
++  /* deep equality that ignores key order (the server's jsonb does not keep it) */
++  const same = (a, b) => { if (a === b) return true; if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
++    const ka = Object.keys(a); if (ka.length !== Object.keys(b).length) return false; for (const k of ka) if (!Object.prototype.hasOwnProperty.call(b, k) || !same(a[k], b[k])) return false; return true; };
++  const snapKeys = () => { try { return Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) { return []; } };
++  /* this account's queue; the single queue of older versions is taken over only when this device holds no other account's data.
++     A change the server refused (bad) is tried again once in every session. */
++  function loadQ(uid) {
++    const own = LS.get("engine.q." + uid, null); if (Array.isArray(own)) return own.map(q => ({ ...q, bad: false }));
++    const legacy = LS.get("engine.q", null), snaps = snapKeys();
++    if (Array.isArray(legacy) && (snaps.includes("engine.snap." + uid) || !snaps.length)) { LS.set("engine.q." + uid, legacy); LS.del("engine.q"); return legacy; }
++    return [];
++  }
++  let qT = 0;
++  function persistQ() { clearTimeout(qT); qT = 0; if (!E.uid) return;
++    const ok = LS.set("engine.q." + E.uid, queue);
++    if (ok === st.storageFull) { st.storageFull = !ok; emit(); } }
++  const saveQ = () => { if (!qT) qT = setTimeout(persistQ, 250); };
++  /* changes made on this device while it was signed out of account uid: kept in that account's queue for its next sign-in */
++  E.stash = (uid, items) => { const k = "engine.q." + uid, q = LS.get(k, []), snap = new Map(LS.get("engine.snap." + uid, [])), out = q.filter(x => !items.some(y => y.path === x.path));
++    for (const x of items) { const old = q.find(y => y.path === x.path); out.push(x.op === "del" ? { op: "del", path: x.path, data: null } : { op: "set", path: x.path, data: x.data, ...(x.mb ? { mb: true, base: old?.mb ? old.base : snap.get(x.path) } : {}) }); }
++    return LS.set(k, out); };
+   const rel = p => p.split("/").slice(3).join("/");
+   const collOf = p => { const a = p.split("/"); return a.length > 1 ? a.slice(0, -1).join("/") : ""; };
+   const snapDoc = (p, fc) => ({ id: p.split("/").pop(), exists: cache.has(p), data: () => cache.get(p), metadata: { fromCache: !!fc } });
+@@ -61,61 +91,94 @@
+   const snapCol = (c, w, fc) => { const docs = []; for (const [p, d] of cache) if (collOf(p) === c && test(d, w)) docs.push({ id: p.split("/").pop(), data: () => d }); return { docs, size: docs.length, empty: !docs.length, metadata: { fromCache: !!fc } }; };
+   function notify(p) { for (const cb of docL.get(p) || []) try { cb(snapDoc(p)); } catch (e) { console.warn(e); } const c = collOf(p); for (const l of colL.get(c) || []) try { l.cb(snapCol(c, l.w)); } catch (e) { console.warn(e); } }
+   const errs = new Set(); const fail = e => { for (const f of errs) try { f(e); } catch (x) {} };
+-  /* a copy of everything on this device: the app opens and works with no network, then catches up */
++  /* a copy on this device: the app opens and works with no network, then catches up. Days older than the app reads (180) stay in the account only */
+   const snapKey = () => "engine.snap." + E.uid;
+-  let snapT = 0; const saveSnap = () => { clearTimeout(snapT); snapT = setTimeout(() => { if (E.uid && loaded) try { localStorage.setItem(snapKey(), JSON.stringify([...cache])); } catch (e) {} }, 1200); };
++  let snapT = 0; const saveSnap = () => { clearTimeout(snapT); snapT = setTimeout(() => { if (!E.uid || !loaded) return; const since = new Date(Date.now() - 182 * 864e5).toISOString().slice(0, 10);
++    try { localStorage.setItem(snapKey(), JSON.stringify([...cache].filter(([p]) => !(p.startsWith("lib/days/") && p.slice(9) < since)))); } catch (e) {} }, 1200); };
+   function apply(out, fromCache) {
+     for (const q of queue) q.op === "del" ? out.delete(q.path) : out.set(q.path, q.data);
+     cache = out; loaded = true;
+     for (const p of docL.keys()) for (const cb of docL.get(p)) cb(snapDoc(p, fromCache));
+     for (const [c, ls] of colL) for (const l of ls) l.cb(snapCol(c, l.w, fromCache));
+   }
++  /* pages by path (keyset): stable when rows change between two pages, and complete whatever page size the project allows */
+   async function loadAll() {
+-    const out = new Map(); let from = 0;
+-    for (;;) { const { data, error } = await sb.from(T).select("path,data").range(from, from + 999); if (error) throw error; for (const r of data) out.set(r.path, r.data); if (data.length < 1000) break; from += 1000; }
+-    apply(out, false); saveSnap(); E.online = true;
++    const out = new Map(); let last = null;
++    for (;;) { let q = sb.from(T).select("path,data").order("path").limit(1000); if (last !== null) q = q.gt("path", last);
++      const { data, error } = await q; if (error) throw error; if (!data?.length) break;
++      for (const r of data) out.set(r.path, r.data); last = data[data.length - 1].path; }
++    apply(out, false); loadedAt = Date.now(); st.online = true; saveSnap(); emit();
+     live();
+   }
+   function ensureLoad() {
+     if (loadP) return loadP;
+     if (!loaded && E.uid) { try { const raw = localStorage.getItem(snapKey()); if (raw) apply(new Map(JSON.parse(raw)), true); } catch (e) {} }
+-    loadP = loadAll().catch(e => { loadP = null; E.online = false; if (!loaded) fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); });
++    loading = true;
++    loadP = loadAll().catch(e => { loadP = null; st.online = false; st.lastError = errText(e); emit(); if (!loaded) fail({ code: "unavailable", message: errText(e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); }).finally(() => { loading = false; });
+     return loadP;
+   }
++  /* back in the foreground or online: read the account again (live updates missed while asleep are not replayed) */
++  function refresh(force) { if (!E.uid || !sb || !loaded || loading || (!force && Date.now() - loadedAt < 10000)) return; loadP = null; ensureLoad(); }
+   function live() {
+     if (chan || !E.uid) return;
+     chan = sb.channel("engine-" + E.uid).on("postgres_changes", { event: "*", schema: "public", table: T, filter: "user_id=eq." + E.uid }, p => {
+-      if (queue.some(q => q.path === (p.new?.path || p.old?.path))) return; // our own write still on its way
++      if (qPaths.has(p.new?.path || p.old?.path)) return; // a change of ours not sent yet: it is merged with the server's copy when it goes
+       if (p.eventType === "DELETE") { if (!p.old?.path || !cache.has(p.old.path)) return; cache.delete(p.old.path); notify(p.old.path); return; }
+-      const r = p.new; if (!r?.path) return; if (JSON.stringify(cache.get(r.path)) === JSON.stringify(r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
++      const r = p.new; if (!r?.path) return; if (same(cache.get(r.path), r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
+     }).subscribe();
+   }
+-  let flushing = false;
++  /* a refusal that a retry can't fix (too large, not allowed, invalid): the change is set aside and the rest goes on */
++  const permanent = r => { const s = r?.status || 0; return s >= 400 && s < 500 && ![401, 408, 429].includes(s); };
++  let flushing = false, retryT = 0;
+   async function flushQ() {
+-    if (flushing || !queue.length || !E.uid) return; flushing = true;
+-    try { while (queue.length) { const q = queue[0];
+-        const r = q.op === "del" ? await sb.from(T).delete().eq("user_id", E.uid).eq("path", q.path) : await sb.from(T).upsert({ user_id: E.uid, path: q.path, data: q.data, updated_at: new Date().toISOString() });
+-        if (r.error) throw r.error; queue.shift(); LS.set("engine.q", queue); } }
+-    catch (e) { fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(flushQ, 8000); }
++    if (flushing || !E.uid || !sb) return; flushing = true;
++    try {
++      for (;;) {
++        const q = queue.find(x => !x.bad); if (!q) break;
++        let data = q.data, r = null;
++        if (q.op === "del") r = await sb.from(T).delete().eq("user_id", E.uid).eq("path", q.path);
++        else {
++          if (q.mb && E.merge) { const g = await sb.from(T).select("data").eq("user_id", E.uid).eq("path", q.path).maybeSingle();
++            if (g.error) r = g; else if (g.data && !same(g.data.data, q.base)) data = E.merge(q.path, q.base, q.data, g.data.data); }
++          if (!r) r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
++        }
++        if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
++        st.online = true;
++        const i = queue.indexOf(q);   // -1: a newer edit of the same document replaced it meanwhile, and goes next
++        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path); }
++        saveQ(); emit();
++      }
++    } catch (e) { st.online = false; st.lastError = errText(e); emit(); clearTimeout(retryT); retryT = setTimeout(flushQ, 8000); }
+     finally { flushing = false; }
+   }
+-  addEventListener("online", () => { flushQ(); if (!E.online) { loadP = null; ensureLoad(); } });
+-  function write(p, op, data) { if (op === "del") cache.delete(p); else cache.set(p, data); queue = queue.filter(q => q.path !== p); queue.push({ op, path: p, data: op === "del" ? null : data }); LS.set("engine.q", queue); notify(p); saveSnap(); flushQ(); return Promise.resolve(); }
++  addEventListener("online", () => { st.online = null; emit(); flushQ(); refresh(true); });
++  addEventListener("offline", () => { st.online = false; emit(); });
++  addEventListener("pagehide", persistQ);
++  document.addEventListener("visibilitychange", () => { if (document.hidden) persistQ(); else { flushQ(); refresh(); } });
++  function write(p, op, data, opts) {
++    const has = qPaths.has(p);
++    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p); return Promise.resolve(); }   // the account already has exactly this
++    const old = has ? queue.find(q => q.path === p) : null, q = { op, path: p, data: op === "del" ? null : data };
++    if (op !== "del" && opts && "base" in opts) { q.mb = true; q.base = old?.mb ? old.base : opts.base; }   // the oldest copy this edit started from
++    if (op === "del") cache.delete(p); else cache.set(p, data);
++    if (has) queue = queue.filter(x => x.path !== p);
++    queue.push(q); qPaths.add(p); saveQ(); saveSnap(); emit(); flushQ(); return Promise.resolve();
++  }
+   function docRef(full) { const p = rel(full);
+     return { id: p.split("/").pop(), path: full,
+-      onSnapshot(cb, err) { (docL.get(p) || docL.set(p, new Set()).get(p)).add(cb); if (err) errs.add(err); if (loaded) cb(snapDoc(p)); else ensureLoad(); return () => docL.get(p)?.delete(cb); },
++      onSnapshot(cb, err) { (docL.get(p) || docL.set(p, new Set()).get(p)).add(cb); if (err) errs.add(err); if (loaded) cb(snapDoc(p, !loadedAt)); else ensureLoad(); return () => docL.get(p)?.delete(cb); },
+       async get() { await ensureLoad(); return snapDoc(p); },
+-      set(data) { return write(p, "set", JSON.parse(JSON.stringify(data))); },
++      set(data, opts) { return write(p, "set", JSON.parse(JSON.stringify(data)), opts); },
+       update(data) { return write(p, "set", { ...(cache.get(p) || {}), ...JSON.parse(JSON.stringify(data)) }); },
+       delete() { return write(p, "del"); },
+       collection(n) { return colRef(full + "/" + n); } }; }
+   function colRef(full, w) { const c = rel(full);
+     return { path: full, doc: id => docRef(full + "/" + id), where: (f, op, v) => colRef(full, [f, op, v]),
+-      onSnapshot(cb, err) { const l = { cb, w }; (colL.get(c) || colL.set(c, new Set()).get(c)).add(l); if (err) errs.add(err); if (loaded) cb(snapCol(c, w)); else ensureLoad(); return () => colL.get(c)?.delete(l); },
++      onSnapshot(cb, err) { const l = { cb, w }; (colL.get(c) || colL.set(c, new Set()).get(c)).add(l); if (err) errs.add(err); if (loaded) cb(snapCol(c, w, !loadedAt)); else ensureLoad(); return () => colL.get(c)?.delete(l); },
+       async get() { await ensureLoad(); return snapCol(c, w); } }; }
+   const db = { doc: docRef, collection: p => colRef(p) };
+-  E.pending = () => queue.length;
+-  E.flush = flushQ;
++  E.pending = () => E.status().pending;
++  E.flush = flushQ; E.persist = persistQ;
+ 
+   /* ---------- user ---------- */
+   const user = { id: async () => E.uid, me: async () => ({ id: E.uid, name: E.email || "", email: E.email }), isOwner: () => true, canEdit: () => true, can: () => true, profiles: async () => ({}), search: async () => [] };
+diff --git a/tests/lib/fake-supabase.js b/tests/lib/fake-supabase.js
+new file mode 100644
+index 0000000..4b568f0
+--- /dev/null
++++ b/tests/lib/fake-supabase.js
+@@ -0,0 +1,93 @@
++/* An in-memory Supabase for sync tests: one server shared by several browser contexts ("devices"), each running the real shim.js.
++   Synthetic data only, no network: vendor/supabase.js is replaced by a stub that forwards every query to this Node process.
++   The stub implements just what shim.js uses: auth.getSession/signOut, from(T).select/eq/gt/order/limit/range/maybeSingle, upsert, delete, channel. */
++const H = require("./harness");
++const STUB = `
++window.supabase = { createClient: () => {
++  const call = spec => window.__srv(spec);
++  const q = (spec) => { const o = {
++      select(cols) { spec.op = spec.op || "select"; spec.cols = cols; return o; },
++      eq(k, v) { (spec.eq = spec.eq || {})[k] = v; return o; },
++      gt(k, v) { spec.gt = [k, v]; return o; },
++      order(k) { spec.order = k; return o; },
++      limit(n) { spec.limit = n; return o; },
++      range(a, b) { spec.range = [a, b]; return o; },
++      maybeSingle() { spec.single = true; return o; },
++      then(res, rej) { return call(spec).then(res, rej); } }; return o; };
++  const from = () => ({ select: c => q({ op: "select" }).select(c), upsert: row => q({ op: "upsert", row }), delete: () => q({ op: "delete" }) });
++  const user = () => ({ id: window.__fakeUid, email: window.__fakeUid + "@example.test" });
++  const auth = { getSession: async () => ({ data: { session: window.__fakeUid ? { user: user() } : null }, error: null }), signOut: async () => ({ error: null }),
++    signInWithPassword: async () => ({ data: { session: { user: user() } }, error: null }), signUp: async () => ({ data: {}, error: null }) };
++  const chan = { on(t, o, cb) { window.__rt = cb; return chan; }, subscribe() { return chan; } };
++  const storage = { from: () => ({ upload: async () => ({ error: { message: "no storage in tests" } }), download: async () => ({ error: { message: "no storage in tests" } }), remove: async () => ({}) }) };
++  return { from, auth, storage, channel: () => chan, removeChannel() {} };
++} };`;
++
++/* the server: rows per user, kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
++function server({ maxRows = 1000 } = {}) {
++  const S = { users: new Map(), log: [], maxRows, devs: [], reject: null, onPage: null };
++  S.rows = uid => S.users.get(uid) || S.users.set(uid, new Map()).get(uid);
++  S.get = (uid, path) => { const r = S.rows(uid).get(path); return r ? JSON.parse(JSON.stringify(r.data)) : undefined; };
++  S.set = (uid, path, data) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: JSON.parse(JSON.stringify(data)), at: Date.now() }); };
++  S.handle = async (dev, spec) => {
++    if (dev.down) return { data: null, error: { message: "TypeError: Failed to fetch" }, status: 0 };
++    const uid = dev.uid, T = S.rows(uid);
++    if (spec.op === "select") {
++      if (spec.single) { const r = T.get(spec.eq?.path); return { data: r ? { data: JSON.parse(JSON.stringify(r.data)) } : null, error: null, status: 200 }; }
++      let list = [...T].map(([path, r]) => ({ path, data: JSON.parse(JSON.stringify(r.data)) }));
++      if (spec.order) list.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
++      if (spec.gt) list = list.filter(r => r[spec.gt[0]] > spec.gt[1]);
++      if (spec.range) list = list.slice(spec.range[0], spec.range[1] + 1);
++      if (spec.limit) list = list.slice(0, spec.limit);
++      list = list.slice(0, S.maxRows);
++      S.pages = (S.pages || 0) + 1; if (S.onPage) await S.onPage(S.pages);
++      return { data: list, error: null, status: 200 };
++    }
++    if (spec.op === "upsert") {
++      const row = spec.row; if (S.reject && S.reject(row.path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
++      S.set(uid, row.path, row.data); S.log.push([dev.name, "upsert", row.path]);
++      for (const d of S.devs) if (d !== dev && d.uid === uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "UPDATE", new: r }), { path: row.path, data: row.data }).catch(() => {});
++      return { data: null, error: null, status: 201 };
++    }
++    if (spec.op === "delete") {
++      const p = spec.eq?.path; T.delete(p); S.log.push([dev.name, "delete", p]);
++      for (const d of S.devs) if (d !== dev && d.uid === uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "DELETE", old: r }), { path: p }).catch(() => {});
++      return { data: null, error: null, status: 204 };
++    }
++    return { data: null, error: null, status: 200 };
++  };
++  return S;
++}
++
++/* one device = one browser context with its own localStorage; signed in as uid (null = signed out) */
++async function device(srv, name, { dir, uid = "u1", seed = null, local = null, viewport = H.VIEWPORTS.desktop, browser } = {}) {
++  const { chromium } = H.loadPlaywright();
++  const own = !browser; browser = browser || await chromium.launch();
++  const http = await H.serve(dir), ctx = await browser.newContext({ viewport, serviceWorkers: "block" });
++  const dev = { name, uid, down: false, asleep: false, errors: [], srv, ctx, url: http.url };
++  /* seed = the app's localStorage file, local = any other keys, both written only on the very first load of this device */
++  await ctx.addInitScript(([k, v, extra]) => { try { if (!localStorage.getItem("__dev")) { localStorage.setItem("__dev", "1"); if (v) localStorage.setItem(k, v); for (const [a, b] of Object.entries(extra || {})) localStorage.setItem(a, b); } } catch (e) {} }, [H.LS_KEY, seed ? JSON.stringify(seed) : "", local]);
++  await ctx.addInitScript(() => { window.__toasts = []; });
++  await ctx.route("**/vendor/supabase.js", r => r.fulfill({ contentType: "text/javascript", body: STUB }));
++  await ctx.route(u => { const h = new URL(u).hostname; return h !== "127.0.0.1" && h !== "localhost"; }, r => r.abort());
++  dev.attach = async page => {
++    dev.page = page;
++    page.on("pageerror", e => dev.errors.push("pageerror: " + e.message));
++    page.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) dev.errors.push("console: " + m.text().slice(0, 200)); });
++    await page.addInitScript(u => { window.__fakeUid = u; }, dev.uid);
++    await page.exposeFunction("__srv", spec => srv.handle(dev, spec));
++  };
++  dev.open = async () => {
++    const page = await ctx.newPage(); await dev.attach(page); await page.goto(http.url);
++    await page.waitForFunction(() => typeof S !== "undefined" && S.settings && Sync.ready, null, { timeout: 20000 });
++    await page.evaluate(() => { const t = toast; toast = (m, u) => { __toasts.push(String(m)); try { t(m, u); } catch (e) {} }; });
++    return page;
++  };
++  /* waits until this device has nothing left to send and the server has answered */
++  dev.settle = (ms = 4000) => dev.page.waitForFunction(() => Sync.pending.size === 0 && ENGINE.pending() === 0 && ENGINE.status().online === true, null, { timeout: ms }).catch(() => {});
++  dev.close = async () => { await ctx.close().catch(() => {}); http.close(); if (own) await browser.close(); };
++  srv.devs.push(dev);
++  await dev.open();
++  return dev;
++}
++module.exports = { server, device, STUB };
+diff --git a/tests/m14b-sync.test.js b/tests/m14b-sync.test.js
+new file mode 100644
+index 0000000..2b6bd49
+--- /dev/null
++++ b/tests/m14b-sync.test.js
+@@ -0,0 +1,180 @@
++/* M14b group A: the sync engine (docs/review/area10-sync-backup.md #1-#9, #24; area11-pwa-security.md #3).
++   Real shim.js against an in-memory Supabase shared by several browser contexts (tests/lib/fake-supabase.js). Synthetic data only, no network. */
++const test = require("node:test"), assert = require("node:assert/strict"), H = require("./lib/harness"), F = require("./fixtures/synthetic"), FS = require("./lib/fake-supabase");
++let dir, browser; const devs = [];
++test.before(async () => { dir = H.build(H.tmp("m14b-sync")); browser = await H.loadPlaywright().chromium.launch(); });
++test.after(async () => { await browser?.close(); });
++test.afterEach(async () => { for (const d of devs.splice(0)) await d.close(); });
++const dev = async (srv, name, o = {}) => { const d = await FS.device(srv, name, { dir, browser, ...o }); devs.push(d); return d; };
++const wait = ms => new Promise(r => setTimeout(r, ms));
++/* a past month, so the two days of a log document are in the same month whatever today is */
++const YM = F.plus(-40).slice(0, 7), DX = YM + "-10", DY = YM + "-12";
++const food = (id, name) => ({ id, name, brand: "", unit: "g", per: { kcal: 100, p: 10, c: 10, f: 1, fib: 0 }, servings: [], pack: 0, cat: "pantry", role: "P", meals: ["m"], source: "custom" });
++const SETTINGS = dob => ({ onboarded: true, fit: { profile: { sex: "Male", dob, height: 180, startWeight: 80, bf: null, maxHr: null } } });
++
++test("merge rules: per key, deletions kept, records by id, journal by time, key order ignored", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) });
++  const r = await A.page.evaluate(() => {
++    const M = (p, b, l, r) => ENGINE.merge(p, b, l, r);
++    return {
++      /* base a=1 b=2; this device removed b and added c; the server changed a to 5 and added d -> a=5 (server), c=3, d=4, no b */
++      body: M("body", { w: { a: 1, b: 2 }, m: {} }, { w: { a: 1, c: 3 }, m: {} }, { w: { a: 5, b: 2, d: 4 }, m: {} }).w,
++      /* records by id: this device added 2; the server removed 1 and added 3 -> [2, 3] (this device's order, then the server's new ones) */
++      train: M("train", { tests: [{ id: 1, v: 1 }] }, { tests: [{ id: 1, v: 1 }, { id: 2, v: 2 }] }, { tests: [{ id: 3, v: 3 }] }).tests.map(x => x.id),
++      /* both changed the same value: the edit being sent wins */
++      clash: M("settings", { x: 1 }, { x: 2 }, { x: 3 }).x,
++      /* the journal: per field the newest time (m from this device at 200, e from the server) */
++      jr: M("lib/logm/2026-01", null, { days: { "2026-01-05": { jr: { m: 4, t: { m: 200 } } } } }, { days: { "2026-01-05": { water: 500, jr: { m: 2, e: 3, t: { m: 100, e: 150 } } } } }).days["2026-01-05"],
++      same: ENGINE.merge("body", { w: { a: 1 } }, { w: { a: 1, b: 2 } }, { w: { b: 2, a: 1 } }).w
++    };
++  });
++  assert.deepEqual(r.body, { a: 5, c: 3, d: 4 });
++  assert.deepEqual(r.train, [2, 3]);
++  assert.equal(r.clash, 2);
++  assert.deepEqual([r.jr.water, r.jr.jr.m, r.jr.jr.e], [500, 4, 3]);
++  assert.deepEqual(r.same, { a: 1, b: 2 });
++  assert.deepEqual(A.errors, []);
++});
++
++test("#1 two devices: an offline device coming back does not wipe what the other one saved (body and log of the same month)", async () => {
++  const srv = FS.server(), seed = F.seed({ withPlan: false }); seed.body = { w: { [F.plus(-5)]: 81 }, m: {} };
++  const A = await dev(srv, "A", { seed }); await A.settle();
++  const B = await dev(srv, "B"); await B.settle();
++  assert.equal(await B.page.evaluate(d => S.body.w[d], F.plus(-5)), 81);
++  A.down = true;
++  await A.page.evaluate(([d0, d1, dx]) => { const w = { ...S.body.w, [d1]: 80.5 }; delete w[d0]; put("body", "", { ...S.body, w }); mutateLog(dx, d => { d.workouts = [{ sport: "Running", min: 40, km: 6, int: "Moderate" }]; }); }, [F.plus(-5), F.plus(-1), DX]);
++  await B.page.evaluate(([d2, dy]) => { put("body", "", { ...S.body, w: { ...S.body.w, [d2]: 79.9 } }); mutateLog(dy, d => { d.water = 2000; }); }, [F.plus(-2), DY]);
++  await B.settle(); await wait(500);
++  A.down = false; await A.page.evaluate(() => dispatchEvent(new Event("online"))); await A.settle(8000); await wait(800);
++  /* expected by hand: 81 on day -5 removed by A, 80.5 on day -1 from A, 79.9 on day -2 from B; the run on DX (A) and the water on DY (B) */
++  const want = { [F.plus(-1)]: 80.5, [F.plus(-2)]: 79.9 };
++  assert.deepEqual(srv.get("u1", "body").w, want);
++  const lg = srv.get("u1", "lib/logm/" + YM).days;
++  assert.deepEqual([lg[DX]?.workouts?.length, lg[DY]?.water], [1, 2000]);
++  for (const d of [A, B]) {
++    const s = await d.page.evaluate(([dx, dy]) => ({ w: S.body.w, run: logGet(dx)?.workouts?.length, water: logGet(dy)?.water }), [DX, DY]);
++    assert.deepEqual(s, { w: want, run: 1, water: 2000 }, d.name);
++  }
++  assert.deepEqual([...A.errors, ...B.errors], []);
++});
++
++test("#2 an edit made just before the tab closes is kept and sent at the next opening", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle();
++  await A.page.evaluate(d => put("body", "", { ...S.body, w: { ...S.body.w, [d]: 70 } }), F.plus(-3)); await A.settle(); await wait(1500);
++  /* pagehide: what is waiting is handed to the queue saved on the device at once */
++  const q = await A.page.evaluate(d => { put("body", "", { ...S.body, w: { ...S.body.w, [d]: 71 } }); dispatchEvent(new Event("pagehide")); return JSON.parse(localStorage.getItem("engine.q.u1") || "[]").map(x => x.path); }, F.plus(-4));
++  assert.ok(q.includes("body"), "queued at pagehide: " + q);
++  await A.settle();
++  /* a tab killed inside the 380 ms window, with no pagehide at all */
++  await A.page.evaluate(d => put("body", "", { ...S.body, w: { ...S.body.w, [d]: 77.7 } }), F.plus(-1));
++  await A.page.close();
++  await A.open(); await A.settle(6000);
++  assert.equal(await A.page.evaluate(d => S.body.w[d], F.plus(-1)), 77.7);
++  assert.deepEqual(srv.get("u1", "body").w, { [F.plus(-3)]: 70, [F.plus(-4)]: 71, [F.plus(-1)]: 77.7 });
++  assert.deepEqual(A.errors, []);
++});
++
++test("#3 first sign-in of a device with its own data into an account with data: both kept, restore point first", async () => {
++  const srv = FS.server();
++  srv.set("u1", "settings", SETTINGS("1985-01-01")); srv.set("u1", "lib/foods/t-a", food("t-a", "Account food")); srv.set("u1", "body", { w: { [F.plus(-2)]: 80 }, m: {} });
++  const seed = { settings: SETTINGS("1999-09-09"), foods: { "t-b": food("t-b", "Device food") }, recipes: {}, days: {}, body: { w: { [F.plus(-1)]: 75 }, m: {} } };
++  const B = await dev(srv, "B", { seed }); await B.settle(); await wait(600);
++  const s = await B.page.evaluate(async () => { const ks = await BKDB.keys("pts"), why = []; for (const k of ks) why.push((await BKDB.get("pts", k))?.why); return { foods: Object.keys(S.foods).sort(), w: S.body.w, dob: S.settings.fit.profile.dob, why, toasts: __toasts }; });
++  /* expected: the union of foods and weighings; on a clash the account wins (its date of birth), this device's copy is in the restore point */
++  assert.deepEqual(s.foods, ["t-a", "t-b"]);
++  assert.deepEqual(s.w, { [F.plus(-2)]: 80, [F.plus(-1)]: 75 });
++  assert.equal(s.dob, "1985-01-01");
++  assert.ok(s.why.includes("before sign-in"), JSON.stringify(s.why));
++  assert.ok(s.toasts.some(t => /merged/i.test(t)), JSON.stringify(s.toasts));
++  assert.ok(srv.get("u1", "lib/foods/t-b"), "device food uploaded");
++  assert.deepEqual(srv.get("u1", "body").w, { [F.plus(-2)]: 80, [F.plus(-1)]: 75 });
++  assert.deepEqual(B.errors, []);
++});
++
++test("#4 another account on the same browser never receives the previous account's data, keys or queue", async () => {
++  const srv = FS.server(), seed = F.seed({ withPlan: false });
++  seed.settings.ai = { services: [{ id: "s1", provider: "gemini", key: "SYNTH-KEY-A", on: true }] }; seed.settings.intervals = { key: "SYNTH-ICU-A", athlete: "i1" };
++  const legacyQ = [{ op: "set", path: "lib/foods/t-legacy", data: food("t-legacy", "Queued by A") }];
++  const local = { "engine.snap.uA": JSON.stringify([["settings", seed.settings], ["lib/foods/t-rice", seed.foods["t-rice"]]]), "engine.q": JSON.stringify(legacyQ), "engine.owner": "uA" };
++  const B = await dev(srv, "B", { uid: "uB", seed, local }); await B.settle(); await wait(800);
++  const dump = JSON.stringify([...srv.rows("uB")]);
++  assert.doesNotMatch(dump, /SYNTH-KEY-A|SYNTH-ICU-A|t-rice|t-legacy|Test chicken/);
++  const s = await B.page.evaluate(() => ({ foods: Object.keys(S.foods), key: JSON.stringify(S.settings).includes("SYNTH"), snapA: !!localStorage.getItem("engine.snap.uA"), qB: localStorage.getItem("engine.q.uB"), owner: localStorage.getItem("engine.owner") }));
++  assert.deepEqual(s.foods, []); assert.equal(s.key, false); assert.equal(s.snapA, true); assert.equal(s.owner, "uB");
++  assert.doesNotMatch(String(s.qB), /t-legacy/);
++  assert.deepEqual(B.errors, []);
++});
++
++test("#5 a restore-sized burst of writes saves the local copy once, stays fast, and all of it reaches the account", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle();
++  const r = await A.page.evaluate(() => {
++    const n = {}, real = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { n[k] = (n[k] || 0) + 1; return real.call(this, k, v); };
++    const t0 = performance.now();
++    for (let i = 0; i < 1500; i++) put("foods", "bulk" + i, { id: "bulk" + i, name: "Bulk " + i, unit: "g", per: { kcal: 1, p: 0, c: 0, f: 0 }, servings: [], cat: "pantry", role: "C", meals: [], source: "custom" });
++    const ms = performance.now() - t0;
++    return new Promise(ok => setTimeout(() => { Storage.prototype.setItem = real; ok({ ms, local: n["fuelplanner.v1"] || 0 }); }, 50));
++  });
++  assert.equal(r.local, 1, "the local copy is written once for the whole burst");
++  assert.ok(r.ms < 1500, `1500 writes took ${Math.round(r.ms)} ms`);
++  await A.settle(30000);
++  assert.equal([...srv.rows("u1").keys()].filter(p => p.startsWith("lib/foods/bulk")).length, 1500);
++  assert.deepEqual(A.errors, []);
++});
++
++test("#6 a change the server refuses is set aside: the others still go, the user is told once", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle();
++  srv.reject = p => p === "body";
++  await A.page.evaluate(([d, dx]) => { put("body", "", { ...S.body, w: { [d]: 72 } }); mutateLog(dx, x => { x.water = 1500; }); }, [F.plus(-1), DX]);
++  await A.settle(6000); await wait(500);
++  assert.equal(srv.get("u1", "lib/logm/" + YM)?.days?.[DX]?.water, 1500);
++  const s = await A.page.evaluate(() => ({ pending: ENGINE.pending(), blocked: ENGINE.status().blocked, toasts: __toasts.filter(t => /couldn.t be saved/i.test(t)).length, pill: Sync.state }));
++  assert.deepEqual(s, { pending: 0, blocked: 1, toasts: 1, pill: "synced" });
++  assert.deepEqual(A.errors, []);
++});
++
++test("#7 the pill follows the real queue: Offline while waiting, Synced once sent, never Synced on an offline start", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle(); await wait(500);
++  assert.equal(await A.page.evaluate(() => Sync.state), "synced");
++  A.down = true; await A.ctx.setOffline(true);
++  await A.page.evaluate(d => put("body", "", { ...S.body, w: { [d]: 73 } }), F.plus(-1)); await wait(1500);
++  assert.equal(await A.page.evaluate(() => Sync.state), "offline");
++  A.down = false; await A.ctx.setOffline(false); await A.settle(8000); await wait(300);
++  assert.deepEqual(await A.page.evaluate(() => [Sync.state, ENGINE.pending()]), ["synced", 0]);
++  A.down = true; await A.page.reload(); await A.page.waitForFunction(() => typeof S !== "undefined" && Sync.ready); await wait(1200);
++  assert.notEqual(await A.page.evaluate(() => Sync.state), "synced");
++  assert.deepEqual(A.errors, []);
++});
++
++test("#8 a queue that can't be saved on the device is reported; the device copy keeps only the recent days", async () => {
++  const srv = FS.server(), seed = F.seed({ withPlan: false }), old = F.plus(-400), recent = F.plus(-3);
++  seed.days = { [old]: { date: old, meals: {} }, [recent]: { date: recent, meals: { m: [] }, note: "x" } };
++  const A = await dev(srv, "A", { seed }); await A.settle(); await wait(1800);
++  const snap = await A.page.evaluate(() => JSON.parse(localStorage.getItem("engine.snap.u1") || "[]").map(x => x[0]));
++  assert.ok(snap.includes("lib/days/" + recent) && !snap.includes("lib/days/" + old), JSON.stringify(snap.filter(p => p.includes("days"))));
++  assert.ok(srv.get("u1", "lib/days/" + old), "the old day is still in the account");
++  A.down = true;
++  const msgs = await A.page.evaluate(async d => { const real = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (/^engine\.q/.test(k)) throw new DOMException("full", "QuotaExceededError"); return real.call(this, k, v); };
++    put("body", "", { ...S.body, w: { [d]: 74 } }); dispatchEvent(new Event("pagehide")); put("body", "", { ...S.body, w: { [d]: 75 } }); dispatchEvent(new Event("pagehide"));
++    await new Promise(r => setTimeout(r, 300)); Storage.prototype.setItem = real; return __toasts.filter(t => /storage is full/i.test(t)); }, F.plus(-1));
++  assert.equal(msgs.length, 1, JSON.stringify(msgs));
++  assert.deepEqual(A.errors, []);
++});
++
++test("#9 every row is loaded when the server returns fewer than 1000 rows per page", async () => {
++  const srv = FS.server({ maxRows: 300 });
++  srv.set("u1", "settings", SETTINGS("1990-06-15")); for (let i = 0; i < 700; i++) srv.set("u1", "lib/foods/f" + String(i).padStart(4, "0"), food("f" + i, "Food " + i));
++  const A = await dev(srv, "A"); await A.settle(); await wait(500);
++  assert.equal(await A.page.evaluate(() => Object.keys(S.foods).length), 700);
++  assert.deepEqual(A.errors, []);
++});
++
++test("#24 a device that missed live updates while asleep catches up when it comes back to the foreground", async () => {
++  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle();
++  const B = await dev(srv, "B"); await B.settle();
++  B.asleep = true;
++  await A.page.evaluate(d => put("body", "", { ...S.body, w: { [d]: 69 } }), F.plus(-1)); await A.settle();
++  await B.page.waitForFunction(() => Date.now() - (ENGINE.status().loadedAt || 0) > 10500, null, { timeout: 15000 }).catch(() => {});
++  B.asleep = false; await B.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange"))); await wait(1500);
++  assert.equal(await B.page.evaluate(d => S.body.w[d], F.plus(-1)), 69);
++  assert.deepEqual([...A.errors, ...B.errors], []);
++});
+-- 
+2.43.0
+
+
+From a43e4e1d82616d53cb07ee36180fc35b51b124db Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 25 Oct 2026 23:33:14 +0000
+Subject: [PATCH 2/2] WIP M14b-A: sent callback carries the data; fix-A report
+ (status, open defects #1 base after send, #3 restore point)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FuCgrQUezsfAKC8XTMLS2D
+---
+ docs/review/fix-A-report.md | 23 +++++++++++++++++++++++
+ source/web/shim.js          |  6 +++---
+ 2 files changed, 26 insertions(+), 3 deletions(-)
+ create mode 100644 docs/review/fix-A-report.md
+
+diff --git a/docs/review/fix-A-report.md b/docs/review/fix-A-report.md
+new file mode 100644
+index 0000000..676a8b8
+--- /dev/null
++++ b/docs/review/fix-A-report.md
+@@ -0,0 +1,23 @@
++# M14b gruppo A — motore di sync: report (STATO: WIP, interrotto per limite di utilizzo)
++
++Ramo: `worktree-agent-ab375f64a7b1360dd` (locale, non spinto: le istruzioni del builder vietano il push). Base: `17fddb7`.
++Test: `tests/m14b-sync.test.js` con Supabase finto in memoria condiviso da più contesti Chromium (`tests/lib/fake-supabase.js`, shim.js reale, dati sintetici, nessuna rete). **Sul codice precedente falliscono tutti e 11** (riproduzione confermata).
++
++Ultima esecuzione (prima dell'ultimo ritocco, poi annullato): `m14b-sync` 9/11 verdi + `sync-gating` 3/3 verdi. **Suite completa, layout-audit e avvio sui 3 viewport NON eseguiti.**
++
++| Voce | Stato | Test | Note / rischio residuo |
++|---|---|---|---|
++| area10 #1 unione per chiave | **parziale** | «#1 two devices…» ROSSO; «merge rules» verde | Unione a tre vie (`merge3`/`syncMerge` in engine.html, registrata come `ENGINE.merge`): per chiave, record con id per id, `jr` per tempo (`jrMergeDay`), ordine delle chiavi ignorato (`deq`). Lo shim, prima di inviare un documento unibile, legge la copia del server e unisce con la `base` passata dall'app (`ref.set(data, {base})`, `Sync.seen`). **Difetto aperto**: la base dopo un invio senza unione resta quella vecchia (`Sync.seen` non si aggiorna all'esito), quindi una cancellazione fatta offline può ricomparire (il test lo mostra: il peso cancellato torna). Un tentativo di aggiornare `seen` in `syncSent` ha fatto perdere l'aggiunta offline: annullato, da capire (sospetto: `seen` sovrascritto con la copia locale sovrapposta dalla coda in `applyDoc` dopo `loadAll`). Rischio: finestra tra lettura e scrittura (nessun compare-and-swap). |
++| #2 flush a pagehide + modifiche non inviate | **fatto** | «#2 …» verde | `flushNow` su pagehide/visibilitychange + `ENGINE.persist()`; outbox `engine.dirty` (chiavi non confermate, legate all'uid) salvata in modo sincrono con la copia locale: al riavvio la modifica locale più recente non viene sostituita e viene inviata con unione. |
++| #3 primo accesso con dati locali | **parziale** | «#3 …» ROSSO (solo l'asserzione sul restore point) | Unione (vince l'account sui conflitti), giorni vecchi inviati solo se mancanti (`pushIfMissing`), toast. Il restore point «before sign-in» non risulta in IndexedDB nel test: da verificare se `restorePoint` fallisce in silenzio in quel momento o è solo tempistica del test. |
++| #4 + area11 #3 cambio account | **fatto** | «#4 …» verde | `engine.owner` (proprietario dei dati locali), `engine.q.<uid>` per account (la vecchia `engine.q` adottata solo se il dispositivo non ha dati di altri), `claimLocal`: altro account = stato azzerato, nulla caricato (chiavi comprese), modifiche non inviate del primo spostate nella sua coda (`ENGINE.stash`). Sign-out: invia prima ciò che aspetta (max 4 s). Rischio: le foto in IndexedDB del primo account restano sul dispositivo. |
++| #5 scritture in massa | **fatto** | «#5 …» verde (1500 put: copia locale scritta 1 volta) | Invece di una `putMany` separata: `put` salva una volta per task (`saveSoon`, microtask) e la coda dello shim si salva con debounce (250 ms) + salvataggio sincrono a pagehide; lo shim non notifica più le scritture locali. Copre anche il ripristino senza toccare `rs-go`. |
++| #6 errore permanente | **fatto** | «#6 …» verde | 4xx (non 401/408/429) = elemento messo da parte (`bad`), la coda prosegue, toast, riprovato una volta a ogni sessione. Manca: testo in Settings › Account con il numero dei bloccati (after.js non toccato). |
++| #7 pillola dalla coda reale | **fatto** | «#7 …» verde | `syncState()` da `ENGINE.status()` (online/pending) e da `Sync.pending`; niente più «Synced» all'avvio. |
++| #8 LS pieno + snapshot ridotto | **fatto** | «#8 …» verde | Avviso unico se la coda non si salva; snapshot senza giorni più vecchi di ~182 giorni; testo del toast di `saveLocal` corretto (offline non dice più «kept in your account»). |
++| #24 refresh a primo piano/online | **fatto** | «#24 …» verde | `refresh()` su visibilitychange (max ogni 10 s) e online. |
++| #9 paginazione | **fatto** | «#9 …» verde (server a 300 righe/pagina) | Keyset `.order("path").gt("path", last).limit(1000)` fino a pagina vuota (+1 richiesta). |
++
++Altro cambiato: `onSnapshot` dello shim segnala `fromCache` corretto quando i dati vengono dalla copia sul dispositivo (prima diceva «dal server»); rimossi i rami morti di `flush()` (`unavailable`/`quota_exceeded`) e `revoked` di `subscribe()` (area10 #20), `Sync.inflight/retry`, `isPending`.
++
++Da fare per chiudere: correggere la base dopo invio (#1) e il restore point (#3); eseguire `node --test` dei file sync/persistenza/journal/scenario/registry, suite completa, avvio con `app.errors` vuoto sui tre viewport; sezione in `docs/CLEANUP_REPORT.md`. Domanda per l'utente: al primo accesso, le chiavi API locali di un dispositivo mai collegato vengono unite nell'account (oggi sì, se l'account non le ha): va bene o vanno escluse sempre?
+diff --git a/source/web/shim.js b/source/web/shim.js
+index b30b33b..0fecab3 100644
+--- a/source/web/shim.js
++++ b/source/web/shim.js
+@@ -61,7 +61,7 @@
+   const st = { online: null, storageFull: false, lastError: "" };
+   E.status = () => { let blocked = 0; for (const q of queue) if (q.bad) blocked++; return { online: st.online, pending: queue.length - blocked, blocked, storageFull: st.storageFull, lastError: st.lastError, loadedAt }; };
+   const emit = () => { try { E.onStatus?.(E.status()); } catch (e) {} };
+-  const sent = p => { try { E.onSent?.(p); } catch (e) {} };
++  const sent = (p, data, merged) => { try { E.onSent?.(p, data, merged); } catch (e) {} };
+   const errText = e => String(e?.message || e || "").slice(0, 160);
+   /* deep equality that ignores key order (the server's jsonb does not keep it) */
+   const same = (a, b) => { if (a === b) return true; if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
+@@ -145,7 +145,7 @@
+         if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
+         st.online = true;
+         const i = queue.indexOf(q);   // -1: a newer edit of the same document replaced it meanwhile, and goes next
+-        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path); }
++        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path, data, data !== q.data); }
+         saveQ(); emit();
+       }
+     } catch (e) { st.online = false; st.lastError = errText(e); emit(); clearTimeout(retryT); retryT = setTimeout(flushQ, 8000); }
+@@ -157,7 +157,7 @@
+   document.addEventListener("visibilitychange", () => { if (document.hidden) persistQ(); else { flushQ(); refresh(); } });
+   function write(p, op, data, opts) {
+     const has = qPaths.has(p);
+-    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p); return Promise.resolve(); }   // the account already has exactly this
++    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p, data, false); return Promise.resolve(); }   // the account already has exactly this
+     const old = has ? queue.find(q => q.path === p) : null, q = { op, path: p, data: op === "del" ? null : data };
+     if (op !== "del" && opts && "base" in opts) { q.mb = true; q.base = old?.mb ? old.base : opts.base; }   // the oldest copy this edit started from
+     if (op === "del") cache.delete(p); else cache.set(p, data);
+-- 
+2.43.0
+
