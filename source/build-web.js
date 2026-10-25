@@ -11,9 +11,9 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   let s = fs.readFileSync(path.join(SRC, "engine.html"), "utf8");
   const R = (a, b) => { if (!s.includes(a)) throw new Error("missing: " + a.slice(0, 60)); s = s.split(a).join(b); };
   R('"https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"', 'new URL("vendor/tesseract.min.js", location.href).href');
-  // main script + css (minified)
-  const a = s.indexOf("<style>", 200), b = s.indexOf("</style>", a);
-  if (MIN) { const cm = css.transform({ filename: "a.css", code: Buffer.from(s.slice(a + 7, b)), minify: true, errorRecovery: true }); s = s.slice(0, a + 7) + cm.code.toString() + s.slice(b); }
+  // css (every <style> block before the main script is minified) and main script
+  const first = s.indexOf("<script>");
+  if (MIN) s = s.slice(0, first).replace(/<style>([\s\S]*?)<\/style>/g, (m, c) => "<style>" + css.transform({ filename: "a.css", code: Buffer.from(c), minify: true, errorRecovery: true }).code.toString() + "</style>") + s.slice(first);
   const j = s.indexOf("<script>"), k = s.lastIndexOf("</script>");
   let main = s.slice(j + 8, k);
   const pre = fs.readFileSync(W + "/shim.js", "utf8"), post = fs.readFileSync(W + "/icu-direct.js", "utf8") + "\n" + fs.readFileSync(W + "/after.js", "utf8");
@@ -25,7 +25,10 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   s = s.replace("<head>", "<head>" + head);
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(OUT + "/index.html", s);
-  fs.writeFileSync(OUT + "/sw.js", fs.readFileSync(W + "/sw.js", "utf8").replace("__BUILD__", build));
+  /* the heavy cache (libraries, label reader, icons) is named after what is in those folders: a changed file reaches installed copies, an unchanged one is not downloaded again */
+  const hash = require("crypto").createHash("sha1"), walk = d => { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else hash.update(path.relative(ROOT, p) + "\0").update(fs.readFileSync(p)); } };
+  for (const d of ["vendor", "ocr", "icons"]) walk(path.join(ROOT, d));
+  fs.writeFileSync(OUT + "/sw.js", fs.readFileSync(W + "/sw.js", "utf8").replace("__BUILD__", build).replace("__HEAVY__", hash.digest("hex").slice(0, 10)));
   cp(W + "/manifest.webmanifest", OUT + "/manifest.webmanifest");
   /* static assets (icons, libraries, label reader, schema) live at the repository root; copy them for other outputs */
   if (OUT !== ROOT) for (const d of ["icons", "vendor", "ocr", "supabase"]) cpdir(path.join(ROOT, d), path.join(OUT, d));

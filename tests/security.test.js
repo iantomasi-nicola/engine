@@ -65,13 +65,13 @@ test("the page's content policy forbids plugins, foreign bases and foreign forms
   const html = fs.readFileSync(path.join(H.ROOT, "source", "engine.html"), "utf8"), csp = (html.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || "";
   for (const d of ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'"]) assert.ok(csp.includes(d), "missing " + d);
   const scripts = (csp.match(/script-src ([^;]*)/) || [])[1] || ""; assert.ok(!/\*|http:|data:/.test(scripts), scripts);
-  assert.deepEqual(scripts.split(/\s+/).filter(x => /^https:/.test(x)).sort(), ["https://cdnjs.cloudflare.com"]);
+  assert.deepEqual(scripts.split(/\s+/).filter(x => /^https:/.test(x)), [], "no foreign script host: Excel export, barcode and label readers are served from vendor/");
 });
 
 test("every script loaded from another site is pinned to an exact version", async () => {
   const html = fs.readFileSync(path.join(H.ROOT, "source", "engine.html"), "utf8");
   const urls = [...html.matchAll(/https:\/\/(?:cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net)[^"'`\s)]*\.js/g)].map(m => m[0]);
-  assert.ok(urls.length >= 2);
+  assert.ok(urls.length >= 1);
   for (const u of urls) assert.ok(/\/\d+\.\d+\.\d+[/.]|@\d+\.\d+\.\d+\//.test(u), "not pinned: " + u);
 });
 
