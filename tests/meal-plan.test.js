@@ -40,19 +40,45 @@ test("the week view is a tablet and desktop thing: it is offered there and not o
   }
 });
 
-test("the week view shows seven days by the meals, with each day's total against its target (seven columns on a wide window)", async () => {
+test("the week view shows seven days by the meals, with each day's total against its target (one row per day, the meals side by side)", async () => {
   const page = await start({ width: 1920, height: 1080 }); await plan(page);
   await page.evaluate(() => { UI.tab = "plan"; UI.planView = "week"; scheduleRender(); }); await page.waitForSelector(".pw");
-  const r = await page.evaluate(() => ({ days: document.querySelectorAll(".pw-day").length, rows: [...document.querySelectorAll(".pw-row")].map(x => x.dataset.meal), items: document.querySelectorAll(".pw-it").length, macDay: [...document.querySelectorAll(".pw-mac")].filter(x => /^C[\d,]+ \/ [\d,]+ gP[\d,]+ \/ [\d,]+ gF[\d,]+ \/ [\d,]+ g$/.test(x.textContent.replace(/\s+/g, " ").replace(/ ([PCF])/g, "$1").trim())).length, macItem: [...document.querySelectorAll(".pw-im")].filter(x => /^C \d+ · P \d+ · F \d+$/.test(x.textContent.trim())).length, macMeal: [...document.querySelectorAll(".pw-mt")].filter(x => /kcal.*C \d+ · P \d+ · F \d+/.test(x.textContent)).length, tot: document.querySelector(".pw-day .pw-kcal")?.innerText, over: document.documentElement.scrollWidth > innerWidth, mon: document.querySelector(".pw-day").dataset.date === weekStartOf(todayISO()) }));
+  const r = await page.evaluate(() => ({ days: document.querySelectorAll(".pw-day").length, rows: [...document.querySelector(".pw-dr:not(.pw-th)").querySelectorAll(".pw-cell")].map(x => x.dataset.meal), items: document.querySelectorAll(".pw-it").length, macDay: [...document.querySelectorAll(".pw-mac")].filter(x => /^C[\d,]+ \/ [\d,]+ gP[\d,]+ \/ [\d,]+ gF[\d,]+ \/ [\d,]+ g$/.test(x.textContent.replace(/\s+/g, " ").replace(/ ([PCF])/g, "$1").trim())).length, macItem: [...document.querySelectorAll(".pw-im")].filter(x => /^C \d+ · P \d+ · F \d+$/.test(x.textContent.trim())).length, macMeal: [...document.querySelectorAll(".pw-mt")].filter(x => /kcal.*C \d+ · P \d+ · F \d+/.test(x.textContent)).length, tot: document.querySelector(".pw-day .pw-kcal")?.innerText, over: document.documentElement.scrollWidth > innerWidth, mon: document.querySelector(".pw-day").dataset.date === weekStartOf(todayISO()) }));
   assert.equal(r.macDay, 7, "every day shows protein, carbs and fat"); assert.equal(r.macMeal, 21, "every filled meal shows its kcal and macros (carbs, protein, fat)"); assert.equal(r.macItem, 21, "every food shows its own carbs, protein and fat"); assert.equal(r.days, 7); assert.deepEqual(r.rows, ["lunch", "dinner", "snack"]); assert.equal(r.items, 21); assert.match(r.tot, /\d/); assert.equal(r.over, false); assert.equal(r.mon, true);
 });
 
-test("on a PC window too narrow for seven readable columns the week is one row per day, the meals side by side, with nothing cut off", async () => {
+test("on a PC the week is a table, one row per day with the meals side by side, nothing cut off and no sideways scroll; the add button of a meal is always visible", async () => {
   const page = await start(H.VIEWPORTS.desktop); await plan(page);
   await page.evaluate(() => { UI.tab = "plan"; UI.planView = "week"; scheduleRender(); }); await page.waitForSelector(".pw");
-  const r = await page.evaluate(() => { const cut = [...document.querySelectorAll(".pw-kcal")].filter(k => k.getBoundingClientRect().right > k.closest(".pw-day").getBoundingClientRect().right - 8).length;
-    return { tall: !!document.querySelector(".pw.tall"), days: document.querySelectorAll(".pw-day").length, items: document.querySelectorAll(".pw-it").length, cut, over: document.documentElement.scrollWidth > innerWidth, side: document.querySelector(".pw-mn").scrollWidth > document.querySelector(".pw-mn").clientWidth }; });
-  assert.equal(r.tall, true); assert.equal(r.days, 7); assert.equal(r.items, 21); assert.equal(r.cut, 0); assert.equal(r.over, false); assert.equal(r.side, false);
+  const r = await page.evaluate(() => { const cut = [...document.querySelectorAll(".pw-kcal")].filter(k => k.getBoundingClientRect().right > k.closest(".pw-day").getBoundingClientRect().right - 4).length;
+    const text = [...document.querySelectorAll(".pw-nm,.pw-d,.pw-mt")].filter(e => e.scrollWidth > e.clientWidth + 1).length;
+    return { stack: !!document.querySelector(".pw.stack"), days: document.querySelectorAll(".pw-day").length, items: document.querySelectorAll(".pw-it").length, cut, text, over: document.documentElement.scrollWidth > innerWidth, side: document.querySelector(".pw-mn").scrollWidth > document.querySelector(".pw-mn").clientWidth,
+      adds: [...document.querySelectorAll('.pw-cell:not(.vac) [data-act="pw-add"]')].filter(b => getComputedStyle(b).opacity === "1" && b.getBoundingClientRect().width > 0).length, fab: getComputedStyle(document.querySelector("#fab")).display };
+  });
+  assert.equal(r.stack, false, "three meals fit side by side on a PC"); assert.equal(r.days, 7); assert.equal(r.items, 21); assert.equal(r.cut, 0); assert.equal(r.text, 0, "no text is cut"); assert.equal(r.over, false); assert.equal(r.side, false);
+  assert.equal(r.adds, 21, "every filled meal has its + visible"); assert.equal(r.fab, "none", "the floating + is not needed: every meal has its own");
+});
+
+test("on a narrow window the meals of a day stack under each other, each one with its own name, and nothing is cut", async () => {
+  const page = await start({ width: 820, height: 1000 }); await plan(page);
+  const r = await page.evaluate(async () => { S.settings.meals.forEach(m => { m.on = true; }); UI.tab = "plan"; UI.planView = "week"; render(); await new Promise(x => setTimeout(x, 100)); const g = document.querySelector(".pw");
+    return { stack: g.classList.contains("stack"), labels: [...g.querySelector(".pw-dr:not(.pw-th)").querySelectorAll(".pw-ml")].filter(e => getComputedStyle(e).display !== "none").length, over: document.documentElement.scrollWidth > innerWidth }; });
+  assert.equal(r.stack, true, "all the meals do not fit side by side on a tablet"); assert.ok(r.labels >= 3, "the meal name sits in every meal when the header row is gone"); assert.equal(r.over, false);
+});
+
+test("an empty meal offers «Usual» (what you usually have there): one click fills it, one undo takes it back; a day tool fills all its empty meals; past days and locked meals offer nothing", async () => {
+  const page = await start(H.VIEWPORTS.desktop); await plan(page);
+  const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); const t = todayISO(), ws = weekStartOf(t), next = addDays(ws, 7), nm = addDays(next, 1);
+    S.days[nm] = { date: nm, meals: {} }; DATA_V++; render(); await new Promise(x => setTimeout(x, 100));
+    UI.date = next; render(); await new Promise(x => setTimeout(x, 100));
+    const us = [...document.querySelectorAll('[data-act="pw-usual"]')].length, fills = document.querySelectorAll('[data-act="day-fill"]').length;
+    const before = (getDay(next).meals.lunch || []).length; ACT["pw-usual"]({ dataset: { date: next, meal: "lunch" } }); const after = (getDay(next).meals.lunch || []).length; toast.undo(); const undone = (getDay(next).meals.lunch || []).length;
+    ACT["day-fill"]({ dataset: { date: nm } }); const day = dayItems(getDay(nm)).length; toast.undo();
+    UI.date = ws; render(); await new Promise(x => setTimeout(x, 100)); const pastUsual = [...document.querySelectorAll('.pw-dr:not(.pw-th)')].slice(0, dow(t)).some(r => r.querySelector('[data-act="pw-usual"]'));
+    return { us, fills, before, after, undone, day, pastUsual }; });
+  assert.ok(r.us >= 1, "an empty future meal with history offers Usual"); assert.ok(r.fills >= 1, "a day with empty meals offers the fill tool"); assert.equal(r.before, 0); assert.ok(r.after >= 1, "Usual fills the meal"); assert.equal(r.undone, 0, "undo");
+  assert.ok(r.day >= 1, "the day tool fills the empty meals"); assert.equal(r.pastUsual, false, "days already past offer no Usual");
+  assert.deepEqual(app.errors, []);
 });
 
 test("move, copy and duplicate from the item menu, each with undo; an eaten item can't be moved", async () => {
