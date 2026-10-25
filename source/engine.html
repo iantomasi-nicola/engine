@@ -200,7 +200,8 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 @media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
 /* expanded (computer): calendar and the open day side by side */
 .cv-split{display:flex;flex-direction:column;gap:14px}
-@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-split .cv-day{position:sticky;top:16px}}
+.cv-next{display:none}
+@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
 /* expanded: settings groups in two columns */
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
 
@@ -1155,8 +1156,8 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-st{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--muted)}
 .cv-st.done{color:var(--good)}.cv-st.missed{color:var(--bad)}
 .cv-empty{font-size:13px;color:var(--faint);padding:6px 2px}.cv-empty.pad{padding:10px 14px}
-.cv-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
-.cv-leg span{display:inline-flex;align-items:center;gap:6px}
+.cv-leg{display:flex;flex-wrap:wrap;gap:6px 11px;font-size:12px;color:var(--muted)}
+.cv-leg span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}@media (max-width:560px){.cv-leg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}}
 .cv-leg span>i:not(.cv-dot){width:12px;height:6px;border-radius:3px}
 .cv-agenda{display:flex;flex-direction:column;gap:12px;touch-action:pan-y}
 .cv-wk{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
@@ -2588,6 +2589,8 @@ details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px
 .tc-out .an-g>.an-k:last-child{text-align:right;align-items:flex-end;padding-right:14px}
 .tc-reps>div{display:grid;grid-template-columns:minmax(0,1fr) 84px 52px;gap:0 12px;padding:7px 14px;align-items:baseline}.tc-reps>div>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
 .tc-reps b{font-weight:600}
+/* calendar tools: Route, intervals.icu and Import are one kind of control (text buttons) */
+.cv-tools .chip-a{background:none!important;color:var(--md-primary)!important;font-weight:600!important;font-size:inherit;min-height:0;padding:0 12px;border-radius:var(--r-pill)!important}
 /* the paste / season rows of the Endurance Cup are fold rows like the others: same inset as the card text, chevron on the right */
 .rk .rk-paste>summary.lrow{padding:6px 0!important}
 /* design review 1 (25 Oct): one card-title style on Today (.td-ov, also the label of the four tiles), the Body card on one row, the rest-day line under its title */
@@ -4724,7 +4727,7 @@ function readinessDot() {
 VIEWS.train = function () {
   const seg = UI.trainSeg;
   let h = `<header class="top"><div class="top-row"><div><div class="top-title">Training</div><div class="top-sub hide-sm">${seg === "races" ? "Races, countdowns and results" : seg === "wk" ? "Programs, workouts and history" : seg === "cal" ? "Your training calendar" : seg === "season" ? "Blocks, deloads and the plan to your races" : seg === "fitness" ? "Fitness, fatigue and form" : seg === "week" ? (icuPlanMode() ? "Your intervals.icu plan, week by week" : "Plan, pattern and calories of your sessions") : seg === "running" ? "Zones, paces and predictions from your tests" : "Personal bests and tests"}</div></div>
-    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
+    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="icon-btn hide-xs" data-act="open-result" aria-label="Log a result" title="Log a result">${ic("flag")}</button>${settingsBtn()}</div></div>
     <div style="padding:10px 0 12px">${segBar("train-seg", seg, [["cal", "Calendar"], ["week", "Plan"], ...(FEAT("period") ? [["season", "Season"]] : []), ["wk", "Workouts"], ["fitness", "Fitness"], ["races", "Races"], ["running", "Running"], ["records", "Records"]])}</div></header>`;
   return h + (seg === "season" && FEAT("period") ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
 };
@@ -7687,6 +7690,14 @@ function calDayPanel(d) {
     ${rows || `<div class="cv-empty">${d < today ? "Nothing logged · rest day" : "Rest day"}</div>`}
     <button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
 }
+/* the right-hand column of the calendar on a PC: the open day, then the sessions still to come */
+function calNextCard(sel) {
+  const today = todayISO(), L = [];
+  for (let i = 0; i <= 14 && L.length < 5; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 5) L.push([d, x]); }
+  if (!L.length) return "";
+  return `<section class="card cv-next" aria-label="Next sessions"><span class="flabel">Next sessions</span>${L.map(([d, x]) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null, meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · ");
+    return `<button class="lrow" data-act="cal-sel" data-date="${d}"><span style="min-width:0"><span class="t">${esc(t?.name || x.p?.note || w.note || w.sport)}</span><span class="s">${d === today ? "Today" : DOWL[dow(d)]} ${fmtDM(d)} · ${esc(meta)}</span></span></button>`; }).join("")}</section>`;
+}
 function trainCalendar() {
   const today = todayISO(), off = UI.calOff || 0, t = parseISO(today), view = UI.calView || "month", narrow = innerWidth < 640;
   const m0 = new Date(t.getFullYear(), t.getMonth() + off, 1), ms = isoOf(m0), me = isoOf(new Date(m0.getFullYear(), m0.getMonth() + 1, 0));
@@ -7697,7 +7708,7 @@ function trainCalendar() {
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
   let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
     ${subBar("cal-view", view, [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>
-    <div class="cv-kpi"><span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span><span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
+    <div class="cv-kpi">${mDone || mPlan ? `<span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span>` : `<span>No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
     for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
@@ -7718,9 +7729,9 @@ function trainCalendar() {
         <span class="cv-n"><span>${+d.slice(8)}</span>${race ? ic("flag", "sm") : ""}</span><span class="cv-ss">${its.slice(0, max).map((x, k) => calItem(d, x, k, narrow)).join("")}${its.length > max ? `<span class="cv-more">+${its.length - max}</span>` : ""}</span></button>`;
     }
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
-    h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
+    h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}${T.n ? `<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>` : ""}${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
-  h += `</div>` + calDayPanel(sel) + `</div>`;
+  h += `</div><div class="cv-side">${calDayPanel(sel)}${calNextCard(sel)}</div></div>`;
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
     <div class="faint" style="font-size:12.5px">Tap a day to see it below. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
@@ -12842,7 +12853,7 @@ function navFix() {
   if (UI.trainSeg === "season" && !FEAT("period")) UI.trainSeg = "season"; // the tab then shows the races only
 }
 const trainHead = (sub) => `<header class="top"><div class="top-row"><div><div class="top-title">Training</div>${sub ? `<div class="top-sub hide-sm">${sub}</div>` : ""}</div>
-    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="btn soft sm hide-xs" data-act="open-result">Result</button>${settingsBtn()}</div></div>
+    <div class="row"><button class="btn primary sm" data-act="free-open">${ic("play", "sm")}Free</button><button class="icon-btn" data-act="timer-open" aria-label="Tools: timers and calculators">${ic("timer")}</button><button class="icon-btn" data-act="plan-wo" aria-label="Plan a workout">${ic("plus")}</button><button class="icon-btn hide-xs" data-act="open-result" aria-label="Log a result" title="Log a result">${ic("flag")}</button>${settingsBtn()}</div></div>
     <div style="padding:10px 0 12px">${segBar("train-seg", UI.trainSeg, [["cal", "Calendar"], ["wk", "Workouts"], ["season", FEAT("period") ? "Season" : "Races"], ["perf", "Stats"]])}</div></header>`;
 VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
   if (seg === "wk") return trainHead("Programs, workouts and history") + trainWorkouts();
