@@ -58,7 +58,7 @@ test("choosing sensors changes no energy number", async () => {
 test("the profile notice appears when the date of birth is missing and disappears when it is set; the number is unchanged", async () => {
   const page = await start();
   const r = await page.evaluate(() => {
-    FIT().profile.dob = ""; DATA_V++; const noDob = { note: /provisional/.test(profileNote()), view: /provisional/.test(energyView()), bmr: energyAt(todayISO()).bmr, age: ageAt(todayISO()) };
+    FIT().profile.set = ["sex"]; FIT().profile.dob = ""; DATA_V++; const noDob = { note: /provisional/.test(profileNote()), view: /provisional/.test(energyView()), bmr: energyAt(todayISO()).bmr, age: ageAt(todayISO()) };
     FIT().profile.dob = addDays(todayISO(), -Math.round(30 * 365.25) - 5); DATA_V++; return { noDob, withDob: { note: profileNote(), age: ageAt(todayISO()) } };
   });
   assert.equal(r.noDob.note, true); assert.equal(r.noDob.view, true); assert.equal(r.noDob.age, 30);

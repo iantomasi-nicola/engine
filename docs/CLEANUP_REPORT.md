@@ -398,3 +398,8 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Differenza voluta da documentare**: `eatCandidates` (AEE in ombra) ha la propria conversione indipendente e tratta anche «unknown» come lordo (qualità «low»), mentre `netOfRest` lascia «unknown» com'è. Non cambia alcun target (T8).
 - **Eliminato**: la formula BMR duplicata dentro `energySeries` (ora `bmrOf`). Niente altro da rimuovere.
 - **Aperto**: D19 (3000 contro 2750 Zepp): D5b ne spiega solo una parte (≈ riposo dentro le sessioni, 75–150 kcal per sessione); il resto non è spiegabile senza i dati reali dell'utente → D20 e confronto con il valore dell'orologio. Restano D20, D18 (`neatMode`), F-01, F-02/D9, F-09, D7, F-11 `algoVersion` generale (oggi solo date di attivazione).
+
+## M7b-2d · F-02/D9 profilo incompleto (26/10)
+- **Verificato**: `profileGaps` legge solo `profile.set`, i valori e i pesi registrati; nessun default cambiato, nessun calcolo energetico toccato (`energyAt().bmr` invariato nel test). Tutti i punti che scrivono sesso/altezza/peso: `fitChange` (Settings › Profile) e `ob-done` (setup); `profileNote` è usata da Check-in ed Energy.
+- **Aggiornato**: `tests/devices.test.js` (il profilo «completo» ora conferma anche il sesso); nuovo `tests/m7b-data.test.js`.
+- **Aperto**: F-09/D12 (null ≠ 0, copertura dei nutrienti, `settings.nutrCoverage`) non iniziata; audit di layout e screenshot non eseguiti per questo punto (cambia solo il testo di una nota esistente).
