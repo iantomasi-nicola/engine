@@ -314,3 +314,12 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `S.body.photos[].cloud` esistente; le foto senza `cloud` vengono caricate al primo avvio collegati.
 **Aperto:** la cartella cloud `progress` e le sue policy devono esistere nel progetto Supabase (`supabase/schema.sql`); finché l'account non è collegato le foto restano locali.
 
+### Guida all'installazione rimossa (25/10/2026)
+Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `beforeinstallprompt`/`appinstalled`, il CSS `.inst*`, la riga in Settings › Account e il suo test. Restano le scorciatoie dell'icona nel manifest.
+
+## M11g Analisi attività, score severo, Lab (25/10/2026)
+**Verificato:** `tests/m11c.test.js` — motore `analyseStreams` su corse sintetiche calcolate a mano (split, migliori sforzi, decoupling 3,39%, EF, battiti/km, sosta, dislivello); score severo con punti calcolati a mano (CV 5% = 60, collina = 82, secondo tempo +8% = −39, decoupling 8% = 50, ripetute regolari/calanti/irregolari); flusso intervals.icu con `fetch` simulato (una sola scarica, rifiuto spiegato e non ripetuto); Lab con monotonia/strain di Foster, pendenza del peso con R², aderenza, efficienza, migliori sforzi; sezioni a schermo sui tre viewport.
+**Aggiunto:** `analyseStreams`, `icuRecording/icuAnalyse/anAttach`, `analysisSection`, ramo severo di `workoutScore`, `labData/labView`. **Eliminato:** guida all'installazione.
+**Compatibilità:** `wsess[].an` opzionale (riassunto compatto, nessuno stream salvato); le sessioni senza `an` mantengono il calcolo precedente.
+**Non verificato dal vivo:** i campi esatti di `/activity/{id}/intervals` di intervals.icu (letti in modo difensivo; senza ripetute l'analisi usa solo lo stream); lo stream `velocity_smooth`/`moving` (se rifiutato si riprova con i quattro tipi già usati per il percorso). **Aperto:** cadenza e potenza non analizzate (unità non uniformi tra dispositivi).
+

@@ -22,3 +22,16 @@ Altri sport: solo Execution (40) ed Effort (10).
 ## Totale, testi, limiti
 Le parti senza dati sono escluse e le altre contano di più; sotto 45 di peso disponibile non c'è punteggio. Etichette: ≥ 85 Excellent, ≥ 70 Solid, ≥ 55 Fair, altrimenti Off plan. Le frasi (cosa è andato bene, cosa correggere, suggerimenti) vengono da regole fisse per parte. **Non coperto**: cadenza, fasi di una corsa a intervalli, contesto (meteo, dislivello, sonno), confronto con le zone di potenza. **Soglie e pesi sono scelte dell'app, da tarare con i tuoi dati.**
 Test: `tests/m11c.test.js` (M11e): casi costruiti a mano per forza e corsa, idempotenza, assenza di dati, scheda a schermo su 390/820/1440 px.
+
+## Resistenza con analisi della registrazione (M11g, 25/10/2026) — più severa
+Quando la sessione ha `an` (scaricata da intervals.icu, vedi `analyseStreams`) il punteggio usa dati ai secondi. Tutte le soglie sono **scelte dell'app**, interpolazione lineare tra i punti.
+| Parte | Peso | Punti (valore → punti) |
+|---|---|---|
+| Execution | 20 | scarto dal piano su tempo (e km): 5% → 100, 10% → 85, 20% → 60, 35% → 35, 50% → 15 |
+| Intensity (continua) | 30 | Leggero: % del tempo in Z1–2: 40 → 15, 60 → 40, 75 → 65, 85 → 85, 92 → 100. Moderato: % in Z2–4: 30 → 20, 50 → 50, 70 → 80, 85 → 100. Duro: % sopra Z2: 10 → 20, 30 → 50, 50 → 80, 65 → 100. Senza stream: FC media |
+| Pacing | 25 | CV degli split dal 2° km (≥ 3 split giudicati): 2% → 100, 3,5 → 80, 5 → 60, 8 → 35, 12 → 10; se il dislivello supera 15 m/km il CV si divide per 1,5; secondo tempo più lento di p% oltre 1,5 → meno (p − 1,5) × 6 punti (max 40) |
+| Heart drift | 15 | decoupling Pa:Hr (≥ 20 min, non per sessioni dure): 2% → 100, 5 → 75, 8 → 50, 12 → 25, 15 → 10 |
+| Effort | 10 | RPE fuori dalla fascia dell'intento: −25 punti per punto |
+**Ripetute** (≥ 2 «WORK» e almeno un «RECOVERY» da intervals.icu): Execution 20, Intensity 30 (FC media delle ripetute vs intento), **Reps 40** (CV delle velocità: 1,5% → 100, 3 → 80, 5 → 55, 8 → 30, 12 → 10, meno (calo − 3) × 6 punti se l'ultima è più lenta delle prime due), Effort 10. Il pacing continuo non si giudica.
+Test: `tests/m11c.test.js` («severe endurance score»), valori calcolati a mano.
+

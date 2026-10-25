@@ -15,7 +15,7 @@
       [40, setGrp("nut", "Nutrition extras", "Pro nutrients, shopping and pantry, carb cycling", proSettingsCard() + shopSettingsCard() + cards(c => c.o === 2))],
       [70, setGrp("rem", "Reminders", `${R.on ? "On" : "Off"} · supplements, water, pantry, check-ups, weekly report`, suppSettingsCard() + reminderCard() + cards(c => c.o === 1))],
       [80, setGrp("ai", "AI", ai ? `${ai} service${ai > 1 ? "s" : ""} on` : "Not set up", aiCard() + aiFeatCard())],
-      [90, setGrp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", installCard() + acctCard() + cards(c => c.o === 0))],
+      [90, setGrp("acct", "Account and backups", E.uid ? esc(E.email || "Signed in") : "This device only", acctCard() + cards(c => c.o === 0))],
       [100, setGrp("feat", "Features", "Switch off what you don't use", cards(c => c.o === -1 || c.o > 2))]];
   }
   document.addEventListener("toggle", e => { const d = e.target; if (!d.matches?.("details.set-grp")) return; UI.setOpen = { ...(UI.setOpen || {}), [d.dataset.grp]: d.open }; try { localStorage.setItem("engine.setOpen", JSON.stringify(UI.setOpen)); } catch (x) {} }, true);

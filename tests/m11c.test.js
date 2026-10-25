@@ -308,17 +308,6 @@ test("icons: every icon named in the code exists, and the treat uses its own ico
   assert.equal((src.match(/ic\("star"\)\}<span>Treat/g) || []).length, 0); assert.deepEqual(app.errors, []);
 });
 
-test("install guide: the right steps for each browser (Brave on Android says it usually only makes a plain shortcut and points to Chrome), installed state, and it shows in Settings › Account", async () => {
-  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
-  const UA = { pixelChrome: "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36", firefox: "Mozilla/5.0 (Android 15; Mobile; rv:130.0) Gecko/130.0 Firefox/130.0", iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1", win: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0" };
-  const r = await app.page.evaluate(UA => ({ chrome: installGuide(UA.pixelChrome, false, false), brave: installGuide(UA.pixelChrome, true, false), ff: installGuide(UA.firefox, false, false), ios: installGuide(UA.iphone, false, false), edge: installGuide(UA.win, false, false), done: installGuide(UA.pixelChrome, false, true),
-    card: (UI.tab = "settings", render(), typeof installCard === "function" && /Install|installed/.test(installCard())) }), UA);
-  assert.equal(r.chrome.kind, "android"); assert.ok(r.chrome.steps.some(x => /Install app/.test(x)) && r.chrome.steps.some(x => /Long-press/.test(x)));
-  assert.equal(r.brave.kind, "brave"); assert.match(r.brave.title, /Brave/); assert.ok(r.brave.steps.some(x => /Chrome/.test(x)) && /plain shortcut/.test(r.brave.note + r.brave.alt));
-  assert.equal(r.ff.kind, "firefox"); assert.equal(r.ios.kind, "ios"); assert.ok(r.ios.steps.some(x => /Add to Home Screen/.test(x))); assert.equal(r.edge.kind, "desktop"); assert.match(r.edge.title, /Edge/);
-  assert.equal(r.done.kind, "installed"); assert.match(r.done.note, /Check-in/); assert.ok(r.card); assert.deepEqual(app.errors, []);
-});
-
 /* ---------- M11e: Workout Score (1-100), deterministic, from the logged data only ---------- */
 const SC_SEED = () => { const s = F.seed({ withPlan: false }); return s; };
 test("M11e score, strength: completion vs the plan, progress against last time, effort and volume; sub-scores add up by their weights; no data → no score", async () => {
@@ -426,5 +415,102 @@ test("M11f balance chart: no value label touches a day letter or leaves the char
       for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) { const a = T[i].r, b = T[j].r; if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2) over.push(T[i].t + "×" + T[j].t); }
       return { over, out: T.filter(x => x.r.top < box.top - 1 || x.r.bottom > box.bottom + 1 || x.r.left < box.left - 1 || x.r.right > box.right + 1).map(x => x.t) }; });
     assert.deepEqual(r.over, [], `${vp.width}: touching labels`); assert.deepEqual(r.out, [], `${vp.width}: labels outside the chart`); assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+});
+
+test("photos: opening Progress photos while signed in uploads what is still only on this device, without a tap", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { const store = new Map(); await IDB.put("ph-z", new Blob(["x"], { type: "image/jpeg" })); S.body.photos = [{ id: "ph-z", date: todayISO(), pose: "back" }]; DATA_V++;
+    window.ENGINE.sb = { storage: { from: () => ({ upload: async (p, b) => { store.set(p, b); return { error: null }; }, download: async () => ({ data: null }), remove: async () => ({}) }) } }; window.ENGINE.uid = "u9";
+    UI.tab = "progress"; UI.progSeg = "body"; render(); await new Promise(r => setTimeout(r, 1200)); return { keys: [...store.keys()], cloud: S.body.photos[0].cloud, msg: document.querySelector(".pp-sync")?.innerText.replace(/\s+/g, " ") }; });
+  assert.deepEqual(r.keys, ["u9/ph-z.jpg"]); assert.equal(r.cloud, "u9/ph-z.jpg"); assert.match(r.msg, /all your devices/i); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11g: activity analysis from the second-by-second streams (hand-calculated synthetic runs) ---------- */
+const STREAM = `(o => { const n = o.sec + 1, t = [], dist = [], hr = [], alt = [], moving = []; let d = 0, clock = 0;
+  for (let i = 0; i < n; i++) { const pause = o.pause && i >= o.pause[0] && i < o.pause[0] + o.pause[1]; t.push(i); const v = pause ? 0 : (typeof o.v === "function" ? o.v(i) : o.v); if (i) d += v; dist.push(d); moving.push(!pause); hr.push(typeof o.hr === "function" ? o.hr(i) : o.hr); alt.push(o.alt ? o.alt(i) : 0); }
+  return { time: t, distance: dist, heartrate: hr, altitude: alt, moving }; })`;
+test("M11g analysis engine: km splits, best efforts, decoupling, efficiency, cardiac cost, stopped time, climb — all hand-calculated", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(`(() => { const mk = ${STREAM};
+    const st = mk({ sec: 3060, v: 10 / 3, hr: i => 140 + 10 * (i < 1500 ? i : i < 1560 ? 1500 : i - 60) / 3000, pause: [1500, 60], alt: i => 50 * i / 3060 });
+    const a = analyseStreams({ time: st.time, dist: st.distance, hr: st.heartrate, alt: st.altitude, moving: st.moving }, { zones: null, bike: false });
+    return { a, none: analyseStreams({ time: [0, 1, 2], dist: [0, 3, 6] }, {}) }; })()`);
+  const a = r.a; assert.equal(r.none, null, "too short to analyse");
+  assert.equal(a.sec, 3000, "moving time without the minute stopped"); assert.equal(a.el, 3060); assert.ok(Math.abs(a.m - 10000) < 4, `distance ${a.m}`);
+  assert.equal(a.spl.length, 10); assert.ok(a.spl.every(s => Math.abs(s[0] - 300) <= 1), JSON.stringify(a.spl.map(s => s[0])));
+  assert.ok(Math.abs(a.best.k1 - 300) <= 1 && Math.abs(a.best.k5 - 1500) <= 2 && Math.abs(a.best.k10 - 3000) <= 3 && Math.abs(a.best.m1 - 482.8) <= 1.5, JSON.stringify(a.best));
+  assert.ok(Math.abs(a.hr - 145) <= 0.6, `avg HR ${a.hr}`); assert.ok(Math.abs(a.cost - 725) <= 4, `cardiac cost ${a.cost} beats/km`); assert.ok(Math.abs(a.ef - 200 / 145) <= 0.02, `EF ${a.ef}`);
+  assert.ok(Math.abs(a.dec - 3.39) <= 0.25, `decoupling ${a.dec} (hand: 3.39 %)`); assert.ok(a.up >= 47 && a.up <= 50, `climb ${a.up}`); assert.equal(a.z, null, "no zones without a threshold");
+  assert.deepEqual(app.errors, []);
+});
+
+test("M11g severe endurance score from the analysis: pacing from the km splits (CV, fade, hills), intensity from time in zone, cardiac drift, rep consistency for intervals — hand-computed points", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { FIT().run.lthrManual = 170; DATA_V++; const t = todayISO(), sp = FIT().runSport;
+    const base = { v: 1, sec: 2400, el: 2400, m: 8000, hr: 135, hx: 150, up: 20, dn: 20, len: 1000, rem: null, best: {}, ef: 1.4, cost: 700, dec: 1.5, h: [300, 300], z: [1800, 600, 0, 0, 0, 0, 0], laps: null };
+    const run = (an, o = {}, plan = { sport: sp, min: 40, int: "Light", note: "Easy run" }) => { mutateLog(t, d => { d.workouts = [{ sport: sp, min: o.min || 40, km: 8, hr: an.hr, rpe: o.rpe ?? 3, int: "Light", sid: "q1", note: "Easy run" }]; d.planned = plan ? [plan] : []; d.wsess = [{ id: "q1", name: "Easy run", min: o.min || 40, rpe: o.rpe ?? 3, an }]; }); DATA_V++; return workoutScore(t, logGet(t).workouts[0]); };
+    const spl = c => [300, ...Array.from({ length: 7 }, (_, i) => c[i % c.length])].map(sec => [sec, 135, 3]);       // first split is the warm-up and not judged
+    const P = x => Object.fromEntries(x.parts.map(p => [p.k, p.pts == null ? null : Math.round(p.pts)]));
+    const steady = run({ ...base, spl: spl([300]) }), cv5 = run({ ...base, spl: spl([285, 315]) }), fade = run({ ...base, spl: spl([300]), h: [300, 324] }), hilly = run({ ...base, spl: spl([285, 315]), up: 300 });
+    const wrongZone = run({ ...base, z: [200, 600, 1600, 0, 0, 0, 0], hr: 152 }), drift = run({ ...base, dec: 8 }), short = run({ ...base, spl: spl([300]).slice(0, 3) });
+    const ints = (w, extra = {}) => ({ ...base, hr: 165, z: [300, 300, 300, 900, 600, 0, 0], laps: [["R", 300, 800, 120, 2.7], ...w.map(s => ["W", 240, Math.round(s * 240), 172, s]), ["R", 120, 300, 130, 2.5]], ...extra });
+    const iv = (p, o) => { const x = run(ints(p), { rpe: 8, ...o }, { sport: sp, min: 40, int: "Hard", note: "Intervals" }); return x; };
+    const evenI = iv([4.0, 4.0, 4.0, 4.0]), fadeI = iv([4.1, 4.0, 3.8, 3.6]), ragI = iv([4.4, 3.8, 4.4, 3.8]);
+    return { steady: [steady.score, P(steady)], cv5: P(cv5), fade: P(fade), hilly: P(hilly), wrongZone: [wrongZone.score, P(wrongZone), wrongZone.neg], drift: P(drift), short: P(short), evenI: [evenI.score, P(evenI)], fadeI: P(fadeI), ragI: P(ragI) }; });
+  assert.ok(r.steady[0] >= 95, JSON.stringify(r.steady)); assert.deepEqual([r.steady[1].pacing, r.steady[1].intensity, r.steady[1].cardiac, r.steady[1].execution], [100, 100, 100, 100]);
+  assert.equal(r.cv5.pacing, 60, "a 5 % spread of the km splits is 60"); assert.equal(r.hilly.pacing, 82, "on a hilly run the same spread counts at two thirds (CV 4.98/1.5 = 3.32 %: 100 - 1.32/1.5 x 20)"); assert.equal(r.fade.pacing, 100 - Math.round((8 - 1.5) * 6), "an 8 % positive split loses (8 - 1.5) x 6 points");
+  assert.equal(r.short.pacing, null, "fewer than 3 judged splits: not scored"); assert.ok(r.wrongZone[1].intensity <= 20 && r.wrongZone[0] < r.steady[0] - 20, JSON.stringify(r.wrongZone)); assert.ok(r.wrongZone[2].some(x => /intensity/i.test(x)));
+  assert.equal(r.drift.cardiac, 50, "8 % decoupling is 50"); assert.ok(r.evenI[1].consistency >= 95 && r.fadeI.consistency < 70 && r.ragI.consistency < 60, JSON.stringify([r.evenI[1], r.fadeI, r.ragI]));
+  assert.ok(r.evenI[1].pacing === undefined, "interval sessions are judged on their reps, not on steady pacing"); assert.deepEqual(app.errors, []);
+});
+
+test("M11g intervals.icu: opening a synced run downloads its whole recording once, analyses it (splits, best efforts, drift, zones, reps), saves it with the session and scores pacing; a refusal is explained and not retried", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { FIT().run.lthrManual = 170; S.settings.intervals = { ...(S.settings.intervals || {}), key: "k-test", athlete: "i1" }; DATA_V++;
+    const t = todayISO(), N = 2401, time = [], dist = [], hr = [], alt = []; for (let i = 0; i < N; i++) { time.push(i); dist.push(i * 3.3333); hr.push(130 + Math.round(i / 2400 * 8)); alt.push(i / 120); }
+    const calls = []; const real = window.fetch; let refuse = false;
+    window.fetch = async (url, o) => { url = String(url); calls.push([url.replace(/^.*api\/v1/, ""), o?.headers?.Authorization ? "auth" : ""]);
+      if (/streams\.json/.test(url)) return refuse ? { ok: false, status: 404, json: async () => ({}) } : { ok: true, status: 200, json: async () => [{ type: "time", data: time }, { type: "distance", data: dist }, { type: "heartrate", data: hr }, { type: "altitude", data: alt }] };
+      if (/\/intervals/.test(url)) return { ok: true, status: 200, json: async () => ({ icu_intervals: [] }) }; return real(url, o); };
+    mutateLog(t, d => { d.workouts = [{ sport: FIT().runSport, min: 40, km: 8, hr: 144, rpe: 3, int: "Light", ext: "icu-a-777", src: "intervals", note: "Easy run" }]; d.planned = [{ sport: FIT().runSport, min: 40, int: "Light", note: "Easy run" }]; }); DATA_V++;
+    UI.tab = "today"; render(); openSheet("wo", { r: woResolve({ dataset: { date: t, i: "0" } }) }); await new Promise(r => setTimeout(r, 1800));
+    const sess = (logGet(t).wsess || []).find(x => x.id === logGet(t).workouts[0].sid), txt = document.querySelector(".sheet")?.innerText.replace(/\s+/g, " ") || "";
+    const out = { calls: calls.map(c => c[0].split("?")[0]), auth: calls.every(c => c[1] === "auth" || !/streams/.test(c[0])), an: sess?.an && { km: sess.an.spl.length, sec: sess.an.sec, best: sess.an.best.k1, z: !!sess.an.z, dec: sess.an.dec }, hasAnalysis: !!document.querySelector(".sheet .an"), hasPacing: /Pacing/.test(txt), score: document.querySelector(".sheet .sc-n")?.textContent, body: /splits/i.test(txt) && /Best efforts/.test(txt) };
+    closeSheet(); calls.length = 0; openSheet("wo", { r: woResolve({ dataset: { date: t, i: "0" } }) }); await new Promise(r => setTimeout(r, 700)); out.again = calls.length;
+    // a second run that intervals.icu refuses
+    refuse = true; mutateLog(addDays(t, -1), d => { d.workouts = [{ sport: FIT().runSport, min: 30, km: 5, hr: 140, ext: "icu-a-888", src: "intervals", note: "Other" }]; }); DATA_V++; const y = addDays(t, -1);
+    closeSheet(); calls.length = 0; openSheet("wo", { r: woResolve({ dataset: { date: y, i: "0" } }) }); await new Promise(r => setTimeout(r, 900)); const m1 = document.querySelector(".sheet")?.innerText.replace(/\s+/g, " ") || ""; closeSheet(); openSheet("wo", { r: woResolve({ dataset: { date: y, i: "0" } }) }); await new Promise(r => setTimeout(r, 600));
+    out.refused = [calls.filter(c => /streams/.test(c[0])).length, /doesn't share|Strava|analys/i.test(m1)]; window.fetch = real; return out; });
+  assert.deepEqual(r.calls.filter(c => /streams/.test(c)).length, 1, JSON.stringify(r.calls)); assert.ok(r.auth); assert.ok(r.an && r.an.km === 7 && r.an.sec === 2400 && Math.abs(r.an.best - 300) <= 1 && r.an.z && r.an.dec != null, JSON.stringify(r.an));
+  assert.ok(r.hasAnalysis && r.hasPacing && r.body, JSON.stringify([r.hasAnalysis, r.hasPacing, r.body])); assert.ok(+r.score >= 80, `score ${r.score}`); assert.equal(r.again, 0, "analysed once: nothing is downloaded again");
+  assert.deepEqual(r.refused, [1, true], "a refusal is asked once and explained"); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11g Lab: the numbers a nerd wants, from what is logged, each with a hand-checked formula ---------- */
+test("M11g Lab numbers: Foster monotony and strain, intensity distribution, weight slope with R² and noise, calorie adherence, run efficiency trend, best efforts across runs — hand-computed", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), sp = FIT().runSport, L = d => addDays(t, -d);
+    const loads = [100, 200, 0, 300, 100, 200, 100]; loads.forEach((v, i) => { if (v) mutateLog(L(6 - i), d => { d.workouts = [{ sport: strengthSport(), min: v, rpe: 1, int: i === 1 ? "Hard" : i === 3 ? "Moderate" : "Light" }]; }); });
+    for (let i = 0; i < 14; i++) mutateLog(L(13 - i), d => { d.weight = 80 - 0.05 * i; });                    // an exact line down 0.35 kg a week
+    for (let i = 0; i < 10; i++) { const d = L(i + 10); mutateLog(d, x => { x.kcal = Math.round(targetsFor(d).kcal * (i < 7 ? 0.95 : 1.3)); }); }  // 7 days on target, 3 well above
+    for (const [k, hr] of [[10, 140], [17, 140], [24, 140], [50, 143], [57, 143], [64, 143]]) mutateLog(L(k), d => { d.workouts = [...(d.workouts || []), { sport: sp, min: 48, km: 8, hr, int: "Light", rpe: 3 }]; });   // EF 1.190 now, 1.166 before
+    mutateLog(L(12), d => { d.wsess = [{ id: "b1", name: "x", min: 40, an: { v: 1, sec: 2400, m: 8000, best: { k1: 290, k5: 1500 }, spl: [], h: [1, 1] } }]; d.workouts = [...(d.workouts || []), { sport: sp, min: 40, km: 8, sid: "b1" }]; });
+    mutateLog(L(40), d => { d.wsess = [{ id: "b2", name: "y", min: 40, an: { v: 1, sec: 2400, m: 8000, best: { k1: 281, k5: 1530 }, spl: [], h: [1, 1] } }]; d.workouts = [{ sport: sp, min: 40, km: 8, sid: "b2" }]; });
+    DATA_V++; return labData(); });
+  const wk = r.load.now; assert.equal(wk.load, 1000); assert.ok(Math.abs(wk.mono - 1.464) < 0.005, `monotony ${wk.mono}`); assert.ok(Math.abs(wk.strain - 1464) < 6, `strain ${wk.strain}`);
+  assert.deepEqual([r.dist.light, r.dist.mod, r.dist.hard], [644, 340, 200], "minutes by intensity over the last 28 days"); assert.equal(Math.round(r.dist.lightPct), 54);
+  assert.ok(Math.abs(r.weight.perWeek - -0.35) < 0.005 && r.weight.r2 > 0.999 && r.weight.sd < 0.001 && r.weight.n === 14, JSON.stringify(r.weight));
+  assert.equal(r.nutri.n, 10); assert.equal(r.nutri.adh, 70, "7 of 10 days within ±10 % of the target");
+  assert.ok(r.ef.n1 === 3 && r.ef.n2 === 3 && Math.abs(r.ef.recent - 8000 / 48 / 140) < 0.001 && Math.abs(r.ef.d - ((8000 / 48 / 140) / (8000 / 48 / 143) - 1) * 100) < 0.01, JSON.stringify(r.ef));
+  assert.equal(r.best.k1.sec, 281); assert.equal(r.best.k5.sec, 1500); assert.deepEqual(app.errors, []);
+});
+
+test("M11g Lab on screen: Progress › Lab has the sections, each says what it needs when data is missing, and nothing overflows on phone, tablet and PC", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: SC_SEED(), viewport: vp });
+    const r = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "lab"; render(); const heads = [...document.querySelectorAll("main .section-h h2")].map(h => h.textContent), txt = document.querySelector("main").innerText;
+      return { heads, needs: /needs|Needs/.test(txt), over: document.documentElement.scrollWidth > innerWidth + 1, tab: !!document.querySelector('[data-act="prog-seg"][data-k="lab"]') }; });
+    assert.ok(r.tab); assert.deepEqual(r.heads.slice(0, 5), ["Training load", "Running", "Strength", "Body", "Food and recovery"]); assert.ok(r.needs, "empty sections say what they need"); assert.equal(r.over, false); assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
 });
