@@ -157,6 +157,8 @@ Riuso: i dati vivono nel documento del giorno (`S.logm[mese].days[data]`, campo 
 | T3 | `shopRowHTML`: definizione base + ridefinizione successiva | Unificare con la lista spesa |
 | T4 | Testi sorgente con «Claude» sostituiti in build con «AI» | Uniformare nel sorgente |
 | T5 | ~960 `!important` nel CSS | J4 |
+| T6 | Revisione grafica 1 (25/10): fatti i difetti 1–15. Restano i minori del rapporto: pillole di stato «• -» in Progress › Overview, grafici vuoti con linea piatta, tacche d'asse non tonde in Progress › Energy, 1,470 contro 1,467 (stessa media), interruttore «Photo reminder» a sinistra, titoli doppi in Goals, «Columns n/n» su una riga sola, cinque file di controlli in Reports › History, due verdi della barra Battery/Energy in Today. «Season settings» sta ancora dentro la card Advice (la riga è ora una piega con chevron; spostarla fuori richiede di toccare `raceAdvice`, area di M11m) | Aperto |
+| T7 | `trainHead` e la testata di `VIEWS.train` base (morta) hanno lo stesso markup del pulsante Result: la base morta si elimina in M15 | Aperto |
 
 ## Won't Have per ora (rinviati, non cancellati)
 - I4 contatore push-up (dopo spike di fattibilità).

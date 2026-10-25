@@ -108,6 +108,7 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-24 | M11d: sgarro a calorie, Reminders in Today, scorciatoie, promemoria pre-allenamento, allenamento saltato; revisione del lavoro precedente (movePlanned, grafici, layout-audit) | vedi `git log` |
 | 2026-10-25 | M11d (parte 2): kcal pre-allenamento calibrate (formula da approvare), icona treat, guida all'installazione; M11e: Workout Score | vedi `git log` |
 | 2026-10-25 | M11k: anteprime grafiche del workout, race con ranking a tappe | vedi `git log` |
+| 2026-10-25 | Revisione grafica 1 (design-reviewer, HEAD a4046b7), difetti 1–15: scheda pasto vuota, badge Shopping, «oggi» senza contorno, pillole Progress sul margine, AEE e Cup con chevron, grafici a coppie di pari altezza, numeri ripetuti mostrati una volta, tile Form, barra azioni Meals, Today con un solo stile di titolo e Body su una riga, Tools allineata a sinistra con assi comuni, intestazione Train e calendario coerenti, piè delle sheet unico; consiglio proteine deterministico e unico componente (`tipHTML`) | vedi `git log` |
 | 2026-10-26 | M11l: regolamento Fire Set rev. 5, pisolini, arm band, stima del tempo, grafici del workout | vedi `git log` |
 | 2026-10-25 | M11j: race circuits, batteria su Today, calcolatori | vedi `git log` |
 | 2026-10-25 | M11i: Level duro + consigli, batteria, storico goal, foto numerose, handoff | vedi `git log` |
