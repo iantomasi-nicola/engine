@@ -40,7 +40,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | **M13a Today, Records a stagioni, pisolino veloce, sonno, massa magra, bug dei campi** (26/10) | L132–L138 | M | Medio | **Fatta (26/10)** |
 | **M13b Tools, Stats a sezioni, Progress più snello, campi stabili** (26/10) | L139–L144 | M | Medio | **Fatta (26/10)** |
 | **M13c DOMS, test day, stima del peso, report, ricetta da link** (26/10) | L145–L150 | M | Medio | **Fatta (26/10)** |
-| **M11m Lacune della verifica del 26/10**: consiglio di categoria Endurance Cup, report All-time e PDF aggiornati, promemoria DOMS | L151–L153 | S | Basso | – (Sonnet 5.5 · high) |
+| **M11m Lacune della verifica del 26/10**: consiglio di categoria Endurance Cup, report All-time e PDF aggiornati, promemoria DOMS | L151–L153 | S | Basso | **Fatta (26/10)** (resta aperta la correlazione DOMS ↔ sessione nel Lab) |
 | **M13d Redesign delle altre schermate** (con l'agente `design-reviewer` a ogni giro; includere i difetti del suo primo report) | J2–J6, L12 | XL | Medio | – (Opus 5.5 · high) |
 | M12 Calcolatori, sport, spike push-up | I3, I4 (spike), G4, **L27** (contaflessioni nel live, disattivabile) | M | Basso | – |
 | **M13 Redesign totale** — ultima milestone prima dei controlli finali: design system, **nuovo logo e grafiche**, animazioni minimal, valutazione gesti | J2–J6, **L12** | XL | Medio | – |

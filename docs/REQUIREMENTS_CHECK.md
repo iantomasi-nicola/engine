@@ -113,7 +113,7 @@ Controllo di tutti i messaggi dell'utente dall'inizio della sessione (gli ID son
 | Batteria biologica (modello a due processi, HRV/FC), in bella vista in Today | Fatto (non validata su dati reali) | M11h/j, `BATTERY.md` |
 | Goal: storico con date, conteggi, per sport | Fatto | L121 |
 | Endurance Cup (Fire Set e taglio), tool nel live con voce, regolamento, ranking, passare/no, consigli | Fatto; regolamento rev. 5, stagioni, import, consigli | M11j/k/l, M13a, `RACE.md` |
-| «…se provare la categoria successiva» | **Lacuna → M11m** | L151 |
+| «…se provare la categoria successiva» | Fatto (M11m): riga nel box Advice dell'Endurance Cup ranking | L151 |
 | Anteprima grafica del workout per sport; grafici veri per forza/calisthenics/circuiti/misti | Fatto | M11k/l |
 | Wo con i circuiti Fire Set/Cut, riposo a scelta, vista compatta nel live | Fatto | M11k |
 | Today rifatta; altre schermate «premium» | Today fatta (M13a); **Milestone** M13d per le altre | L133 |
@@ -129,12 +129,12 @@ Controllo di tutti i messaggi dell'utente dall'inizio della sessione (gli ID son
 | Records: modifica/elimina, come registrare il best del Fire Set, importa ranking, dove sono i consigli, sezioni compatte | Fatto | L137, L138 |
 | Calorie in base al dispositivo (polso contro fascia) | **Milestone** M7b (D20/D20b): nessun moltiplicatore da letteratura, va appreso dai dati | D20b |
 | Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **Milestone** M7b (Fable 5.1 xhigh) | `NUTRITION_AUDIT.md` |
-| Migliorare tutti i report con i dati nuovi | Fatto per settimana/mese/testo copiato; **Lacuna → M11m**: riepilogo «All-time» e PDF del recap con le stesse sezioni | L148, L152 |
+| Migliorare tutti i report con i dati nuovi | Fatto per settimana/mese/testo copiato, riepilogo «All-time» e PDF del workout (M11m); un PDF del report settimanale/mensile non esiste | L148, L152 |
 | Micronutrienti con AI | **Milestone** M7e | L16 |
 | Scambio pranzo↔cena | Fatto (Fuel › Meals › ⋯ in alto a destra › «Swap lunch and dinner», visibile se il giorno ha cibi) | C5 |
 | Test day con risultati scelti per i record | Fatto | L146 |
 | Stima del peso nei buchi con correzione retroattiva | Fatto come visualizzazione; entrare nel trend/TDEE solo con approvazione (M7b) | L147 |
-| Journal: sensazioni di allenamento e DOMS (dove e intensità); suggerimenti dei workout in base ai DOMS per sport | Fatto; **Lacuna → M11m**: promemoria del mattino dopo una sessione dura («Sore anywhere?») e DOMS nei suggerimenti del Free Workout | L145, L153 |
+| Journal: sensazioni di allenamento e DOMS (dove e intensità); suggerimenti dei workout in base ai DOMS per sport | Fatto, compreso (M11m) il promemoria del mattino dopo una sessione dura («Sore anywhere?») e i DOMS nei suggerimenti della giornata libera; manca la correlazione nel Lab | L145, L153 |
 | Ricetta da link con i prodotti già in Foods | Fatto dove il sito lo permette (CORS); **Milestone** proxy Supabase (serve autorizzazione) | L149 |
 | Grafico «kcal x/y/z short» storto | Sistemati l'asse di «Calories vs target», «Last 6 weeks» e l'anello kcal di Fuel; **da confermare con l'utente** quale grafico intendesse | L150 |
 | Season: filtro Calisthenics senza gare di corsa; barre di «this week» storte | Fatto | L143 |
