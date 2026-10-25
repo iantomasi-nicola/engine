@@ -410,3 +410,7 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Aggiornato**: `bmrOf` usa `hbOriginal`, `hbBonusKcal`, `tenHaafWeight`; `energyView` usa le stesse funzioni (4 tile affiancati; riga «Used today» solo con bonus o MET); `normalizeSettings` imposta `hbBonusOn` ("on" per i profili salvati prima).
 - **Eliminato**: le formule HB arrotondate duplicate in `bmrOf` e `energyView`, il tile «used today» e il ramo Katch-McArdle irraggiungibile di `inUse`.
 - **Aperto**: coefficienti Ten Haaf non verificati su un testo primario in questo ambiente; Cunningham/Ten Haaf-FFM; la scelta della formula cambia la serie passata (F-11).
+## M7b-2d · F-02/D9 profilo incompleto (26/10)
+- **Verificato**: `profileGaps` legge solo `profile.set`, i valori e i pesi registrati; nessun default cambiato, nessun calcolo energetico toccato (`energyAt().bmr` invariato nel test). Tutti i punti che scrivono sesso/altezza/peso: `fitChange` (Settings › Profile) e `ob-done` (setup); `profileNote` è usata da Check-in ed Energy.
+- **Aggiornato**: `tests/devices.test.js` (il profilo «completo» ora conferma anche il sesso); nuovo `tests/m7b-data.test.js`.
+- **Aperto**: F-09/D12 (null ≠ 0, copertura dei nutrienti, `settings.nutrCoverage`) non iniziata; audit di layout e screenshot non eseguiti per questo punto (cambia solo il testo di una nota esistente).

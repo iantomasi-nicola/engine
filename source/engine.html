@@ -6901,7 +6901,7 @@ ACT["ob-done"] = () => {
   if (!st.types.length) st.types = fresh.types;
   st.meals = prev.meals.map(m => ({ ...m, on: sh.meals.includes(m.id) }));
   for (const k of DOWK) st.schedule[k] = { t: sh.sched[k], i: st.schedule[k]?.i ?? 1 };
-  S.settings = st; saveSettings();
+  S.settings = st; profileConfirm("startWeight"); saveSettings();
   if (!S.body.w[todayISO()]) { S.body.w[todayISO()] = w; put("body", "", S.body); }
   const plan = sh.plan; closeSheet();
   if (plan) {
@@ -7123,7 +7123,9 @@ CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.
 function fitChange(el) {
   const t = el.dataset.t, p = el.dataset.fit; let v = el.value;
   if (t === "num") v = v.trim() === "" ? null : num(v); else if (t === "pct") v = v.trim() === "" ? null : num(v) / 100; else v = v.trim();
-  setPath(FIT(), p, v); saveSettings();
+  setPath(FIT(), p, v);
+  if (p === "profile.sex" || p === "profile.height" || p === "profile.startWeight") profileConfirm(p.slice(8));
+  saveSettings();
 }
 function listChange(el) {
   const f = FIT(), i = +el.dataset.i;
@@ -11348,8 +11350,17 @@ function aeeShadowCard() {
   return foldOne("energy", "AEE in the shadow", "not used for your targets", "", () => `<div class="aee-shadow"><div class="faint" style="font-size:12.5px;margin:0 0 8px">Each cell reads: figure in use → shadow. Training (EAT) from the best data each session has; daily movement (NEAT) from the steps outside workouts. All net of resting energy. ${B.n ? `Against your own watch figures on ${B.n} past days (each day left out of what is learned): the shadow is ${B.bias >= 0 ? "+" : "−"}${fmtN(r0(Math.abs(B.bias)))} kcal on average, typical gap ${fmtN(r0(B.mae))} kcal. Your watch figure is itself an estimate.` : "Not enough days with both your watch figure and steps to compare yet."}</div>
     <div class="tbl-scroll"><table class="aee-t"><thead><tr><th>Day</th><th>Steps</th><th>NEAT</th><th>EAT</th><th>AEE</th></tr></thead><tbody>${rows}</tbody></table></div></div>`);
 }
-const profileGaps = () => { const p = FIT().profile || {}, g = []; if (!p.dob) g.push("date of birth (age 30 is assumed)"); return g; };
-const profileNote = () => { const g = profileGaps(); return g.length ? `<div class="note warn" role="note">Energy numbers are provisional: ${esc(g.join(", "))} missing. <button class="link" data-act="tab" data-tab="settings">Add it in Settings</button></div>` : ""; };
+/* sex, height and starting weight have defaults (Male, 175, 75): a field counts as set when profile.set lists it (Settings › Profile, the setup),
+   when its value is not the default, or, for height and weight, when a weight is logged. Defaults are never changed; only the notice depends on this. */
+const PROFILE_DEF = { sex: ["Male", "sex (Male is assumed)"], height: [175, "height (175 cm is assumed)"], startWeight: [75, "starting weight (75 kg is assumed)"] };
+const profileConfirm = k => { const p = FIT().profile; if (!(p.set || []).includes(k)) p.set = [...(p.set || []), k]; };
+const profileGaps = () => {
+  const p = FIT().profile || {}, g = [], hasW = weightsSeries(true).length > 0;
+  if (!p.dob) g.push("date of birth (age 30 is assumed)");
+  for (const [k, [def, msg]] of Object.entries(PROFILE_DEF)) if (!(p[k] && ((p.set || []).includes(k) || p[k] !== def || (k !== "sex" && hasW)))) g.push(msg);
+  return g;
+};
+const profileNote = () => { const g = profileGaps(); return g.length ? `<div class="note warn" role="note">Energy numbers are provisional: ${esc(g.join(", "))} missing. <button class="link" data-act="tab" data-tab="settings">Add them in Settings</button></div>` : ""; };
 function energyView() {
   const s = energySeries(), today = todayISO(), r = s.rows[today] || energyAt(today), E = FIT().energy, prof = FIT().profile;
   if (!r) return `<div class="note">Add your profile (Settings → Profile) and a weight to see your energy numbers.</div>`;
