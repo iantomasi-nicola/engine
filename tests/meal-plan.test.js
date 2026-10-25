@@ -91,3 +91,23 @@ for (const [name, vp] of [["tablet", H.VIEWPORTS.tablet], ["desktop", H.VIEWPORT
   const r = await page.evaluate(() => { const g = document.querySelector(".pw").getBoundingClientRect(); return { over: document.documentElement.scrollWidth > innerWidth, w: Math.round(g.width), inside: g.right <= innerWidth + 1 }; });
   assert.deepEqual([r.over, r.inside], [false, true]);
 });
+
+test("Auto-plan again: with every meal already planned a second run builds a new plan that avoids what each meal had; «Cook once, eat twice» is on the same sheet; saved weeks keep a named week and bring it back whole with an undo", async () => {
+  const page = await start({ width: 1920, height: 1080 }); await plan(page);
+  const r = await page.evaluate(async () => { UI.tab = "plan"; UI.planView = "week"; UI.date = todayISO(); render(); await new Promise(x => setTimeout(x, 100));
+    const t = todayISO(), ws = weekStartOf(t), days = [...Array(7)].map((_, i) => addDays(ws, i)).filter(d => d >= t);
+    const sig = () => days.map(d => dayItems(getDay(d)).map(([m, it]) => m + "|" + it.ref).sort().join(",")).join(";");
+    const btn = !!document.querySelector('[data-act="pw-plan"]'), wtBtn = !!document.querySelector('[data-act="wt-open"]');
+    ACT["pw-plan"](); const sh = UI.sheet, mode0 = plannerMode(sh, plannerPreview(plannerDates(sh), sh.mode)), pairsSwitch = !!document.querySelector('[data-act="pl-toggle"][data-k="pairs"]'), again = !!document.querySelector('[data-act="pl-mode"][data-k="again"]');
+    const before = sig(); await runPlanner(); await new Promise(x => setTimeout(x, 200)); const after = sig();
+    // saved weeks
+    const sigAll = () => [...Array(7)].map((_, i) => dayItems(getDay(addDays(ws, i))).map(([m, it]) => m + "|" + it.ref).sort().join(",")).join(";"), keep = sigAll();
+    openSheet("weektpl", { name: "" }); UI.sheet.name = "Cutting week"; ACT["wt-save"](); const saved = weekTpls().map(x => x.name), st = weekTplStats(weekTpls()[0]);
+    ACT["pw-clear-week"](); ACT["confirm-yes"](); await new Promise(x => setTimeout(x, 100)); const cleared = [...Array(7)].reduce((a, _, i) => a + dayItems(getDay(addDays(ws, i))).length, 0);
+    const tid = weekTpls()[0].id; const nextW = addDays(ws, 7); applyWeekTpl(tid, nextW, "replace"); const next = [...Array(7)].reduce((a, _, i) => a + dayItems(getDay(addDays(nextW, i))).length, 0);
+    ACT["wt-del"]({ dataset: { id: tid } }); const gone = weekTpls().length;
+    return { btn, wtBtn, mode0, pairsSwitch, again, changed: before !== after, saved, n: st.n, cleared, next, gone, keep: keep.length > 0 }; });
+  assert.equal(r.btn, true); assert.equal(r.wtBtn, true); assert.equal(r.mode0, "again", "everything planned: the run is a new plan"); assert.equal(r.pairsSwitch, true); assert.equal(r.again, true); assert.equal(r.changed, true, "the second plan differs from the first");
+  assert.deepEqual(r.saved, ["Cutting week"]); assert.ok(r.n > 0); assert.equal(r.cleared, 0); assert.ok(r.next > 0, "the saved week is brought back whole on another week"); assert.equal(r.gone, 0);
+  assert.deepEqual(app.errors, []);
+});

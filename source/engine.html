@@ -3337,6 +3337,7 @@ function scoreFood(ctx, f, mealId) {
   if (f.source !== "builtin") s += 0.4;
   s += ctx.pantryBoost(f.id);
   if (ctx.recent[mealId + "|" + f.id]) s -= 1.6;
+  if (ctx.avoid?.[ctx.cur]?.[mealId + "|" + f.id]) s -= 3.5;   // «plan again»: not what this meal already has
   // anti-waste: reuse an open pack across the week (perishables most)
   const wk = Math.min(ctx.week[f.id] || 0, 3);
   if (wk) s += wk * (["produce", "meat", "fish", "dairy", "bakery"].includes(f.cat) ? 0.6 : 0.3);
@@ -3365,7 +3366,7 @@ function planMeal(meal, T, ctx, keep = []) {
     if (kind === "s" && T.kcal > 420) slots = [...tpl, { roles: ["R", "C", "F", "D"], opt: 0.8 }];
     if (kind === "b" && T.kcal > 700) slots = [...tpl, { roles: ["R", "C"], opt: 0.8 }];
     if (Math.random() < recW && !keep.length) {
-      const scored = recPool.map(r => ({ x: r, s: 1 + 1.3 * Math.log1p(ctx.habits[meal.id + "|" + r.id] || 0) + (r.ingredients || []).reduce((a, ing) => a + 0.6 * ctx.pantryBoost(ing.food), 0) + (r.fav ? 1.2 : 0) - (ctx.recent[meal.id + "|" + r.id] ? 1.8 : 0) + (Math.random() - 0.5) * 2 * ctx.jit })).sort((a, b) => b.s - a.s);
+      const scored = recPool.map(r => ({ x: r, s: 1 + 1.3 * Math.log1p(ctx.habits[meal.id + "|" + r.id] || 0) + (r.ingredients || []).reduce((a, ing) => a + 0.6 * ctx.pantryBoost(ing.food), 0) + (r.fav ? 1.2 : 0) - (ctx.recent[meal.id + "|" + r.id] ? 1.8 : 0) - (ctx.avoid?.[ctx.cur]?.[meal.id + "|" + r.id] ? 3.5 : 0) + (Math.random() - 0.5) * 2 * ctx.jit })).sort((a, b) => b.s - a.s);
       const pk = weightedPick(scored);
       if (pk) {
         const ps = recipePerServing(pk.x);
@@ -3399,7 +3400,7 @@ function planMeal(meal, T, ctx, keep = []) {
 }
 /* scope: array of meal ids; mode: "fill" keeps everything, "replace" keeps only eaten items */
 function planDay(date, ctx, { mode = "fill", meals = null, picker = null } = {}) {
-  const day = clone(getDay(date)); day.date = date; day.meals = day.meals || {};
+  ctx.cur = date; const day = clone(getDay(date)); day.date = date; day.meals = day.meals || {};
   const T = targetsFor(date);
   const act = activeMeals().filter(m => !meals || meals.includes(m.id));
   if (mode === "replace") for (const m of act) { day.meals[m.id] = (day.meals[m.id] || []).filter(it => it.eaten || it.cheat); if (day.dish) delete day.dish[m.id]; }
@@ -5411,21 +5412,23 @@ function plannerDates(sh) {
   return mk(UI.date, sh.scope === "week" ? (sh.pairs ? 8 : 7) : sh.pairs ? 2 : 1);
 }
 /* what the plan will touch: meals that already have food stay untouched when filling; «start fresh» replaces what is planned (eaten and cheat meals always stay) */
+/* with every meal already filled «keep, fill the gaps» would do nothing: clicking again means a new plan, different from the one there */
+const plannerMode = (sh, P) => sh.mode === "fill" && !P.empty && P.filled ? "again" : sh.mode;
 function plannerPreview(dates, mode) {
   let filled = 0, empty = 0, replaced = 0;
   for (const d of dates) for (const m of activeMeals()) { const L = getDay(d).meals?.[m.id] || []; if (L.length) { filled++; replaced += L.filter(it => !it.eaten && !it.cheat).length; } else empty++; }
   return { filled, empty, replaced };
 }
 SHEETS.planner = sh => {
-  const dates = plannerDates(sh), days = dates.length, P = plannerPreview(dates, sh.mode), t = todayISO();
+  const dates = plannerDates(sh), days = dates.length, P = plannerPreview(dates, sh.mode), t = todayISO(), mode = plannerMode(sh, P);
   const range = days > 1 ? `${fmtDM(dates[0])} – ${fmtDM(dates[days - 1])}` : fmtDM(dates[0]);
   return {
     title: "Auto-plan",
     body: `<div class="field"><span class="flabel">What to plan</span><div class="seg fill pl-seg" role="group" aria-label="What to plan">${[["day", relDay(UI.date)], ["week", "7 days"], ["next", "Next week"], ["range", "Custom"]].map(([k, l]) => `<button data-act="pl-scope" data-k="${k}" aria-pressed="${sh.scope === k}">${esc(l)}</button>`).join("")}</div>
         ${sh.scope === "range" ? `<div class="grid2"><div class="field"><label for="pl-from">From</label><input id="pl-from" type="date" class="inp" min="${t}" value="${dates[0]}" data-chg="pl-from"></div><div class="field"><label for="pl-to">To</label><input id="pl-to" type="date" class="inp" min="${dates[0]}" value="${dates[days - 1]}" data-chg="pl-to"></div></div>` : ""}
         <span class="faint" style="font-size:12.5px">${days} day${days === 1 ? "" : "s"} · ${range}${sh.scope === "range" && sh.to && daysBetween(dates[0], sh.to) + 1 > PL_MAX ? ` (at most ${PL_MAX} at a time)` : ""}</span></div>
-      <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["fill", "Keep, fill the gaps"], ["replace", "Start fresh"]].map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${sh.mode === k}">${l}</button>`).join("")}</div>
-        <span class="faint" style="font-size:12.5px">${sh.mode === "replace" ? `${P.replaced ? `<b>${P.replaced}</b> planned item${P.replaced === 1 ? "" : "s"} will be replaced.` : "Nothing planned to replace."} Anything already marked as eaten stays.` : `${P.filled ? `<b>${P.filled}</b> meal${P.filled === 1 ? "" : "s"} already ${P.filled === 1 ? "has" : "have"} food and stay${P.filled === 1 ? "s" : ""} exactly as ${P.filled === 1 ? "it is" : "they are"}; ` : ""}<b>${P.empty}</b> empty meal${P.empty === 1 ? "" : "s"} get${P.empty === 1 ? "s" : ""} planned to cover what's left.`}</span></div>
+      <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["fill", "Keep, fill the gaps"], ["again", "New, different plan"], ["replace", "Start fresh"]].map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}</div>
+        <span class="faint" style="font-size:12.5px">${mode === "again" ? `${P.replaced ? `<b>${P.replaced}</b> planned item${P.replaced === 1 ? "" : "s"} will be replaced by a plan that avoids what each meal has now.` : "Nothing planned to replace."} ${!sh.mode || sh.mode === "fill" ? "Every meal already has food, so this builds a new plan. " : ""}Eaten food and treats stay.` : mode === "replace" ? `${P.replaced ? `<b>${P.replaced}</b> planned item${P.replaced === 1 ? "" : "s"} will be replaced.` : "Nothing planned to replace."} Anything already marked as eaten stays.` : `${P.filled ? `<b>${P.filled}</b> meal${P.filled === 1 ? "" : "s"} already ${P.filled === 1 ? "has" : "have"} food and stay${P.filled === 1 ? "s" : ""} exactly as ${P.filled === 1 ? "it is" : "they are"}; ` : ""}<b>${P.empty}</b> empty meal${P.empty === 1 ? "" : "s"} get${P.empty === 1 ? "s" : ""} planned to cover what's left.`}</span></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Food at home goes into the plan first, the closest to its use-by date first. Expired food is left out.</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Cook once, eat twice</span><span class="s">Lunch and dinner repeat over pairs of days: lunch day 1 = lunch day 2, dinner day 1 = dinner day 2. Portions still follow each day's target.</span></span><button class="switch" role="switch" aria-checked="${!!sh.pairs}" data-act="pl-toggle" data-k="pairs" aria-label="Cook once, eat twice"></button></div>
       ${AIF("plan") ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dishes chosen by the AI</span><span class="s">The AI builds real dishes from your habits and foods, in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.useAI}" data-act="pl-toggle" data-k="useAI" aria-label="Dishes chosen by the AI"></button></div>` : ""}
@@ -6359,7 +6362,7 @@ function quickPlan(date) {
 async function runPlanner() {
   const sh = UI.sheet;
   rememberPlannerPrefs(sh);
-  const dates = plannerDates(sh), pre = plannerPreview(dates, sh.mode), meals = activeMeals();
+  const dates = plannerDates(sh), pre = plannerPreview(dates, sh.mode), meals = activeMeals(), mode = plannerMode(sh, pre);
   // with pairs, the second day of each pair eats the first day's lunch and dinner
   const twinOf = {}; if (sh.pairs) for (const [a, b] of pairDates(dates)) if (b) twinOf[b] = a;
   let picks = null;
@@ -6371,18 +6374,19 @@ async function runPlanner() {
   sh.busy = "Calculating portions…"; renderSheet(); await sleep(30);
   const snap = snapshotDays(dates);
   const ctx = plannerContext({ usePantry: sh.pantry }); seedRecent(ctx, dates[0]);
+  if (mode === "again") { ctx.avoid = {}; for (const d of dates) { const a = ctx.avoid[d] = {}; for (const [m, it] of dayItems(getDay(d))) if (!it.eaten && !it.cheat) a[m + "|" + it.ref] = 1; } }
   let total = 0; const made = {};
   for (const d of dates) {
     const twin = twinOf[d] && made[twinOf[d]];
     const picker = (date, m, MT) => {
       if (twin && (m.kind || "m") === "m") { const src = (twin.meals[m.id] || []).filter(it => it.kind !== "quick" && !it.cheat); if (src.length) { const items = itemsFromIds(src.map(it => it.ref), MT); if (items) return { items, dish: twin.dish?.[m.id] || null }; } }
       const pm = picks?.[d]?.[m.id]; if (!pm) return null; const items = balancedFromIds(pm.items, MT, m, ctx); return items ? { items, dish: pm.dish } : null; };
-    const day = planDay(d, ctx, { mode: sh.mode, picker }); made[d] = day;
+    const day = planDay(d, ctx, { mode: mode === "again" ? "replace" : mode, picker }); made[d] = day;
     put("days", d, day); total++;
     decayRecent(ctx); for (const [m, it] of dayItems(day)) { ctx.recent[m + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1; }
   }
   const err = sh.err; closeSheet();
-  const kept = sh.mode === "replace" ? 0 : pre.filled;
+  const kept = mode === "fill" ? pre.filled : 0;
   toast(err || (total === 1 ? `Planned ${relDay(dates[0]).toLowerCase()}` : `Planned ${total} days${sh.pairs ? " · lunch and dinner in pairs" : ""}`) + (kept ? ` · ${kept} meal${kept === 1 ? "" : "s"} left as they were` : ""), () => restoreDays(snap));
 }
 
@@ -6610,7 +6614,7 @@ function weekPlanView() {
   const grid = tall
     ? `<div class="pw tall" style="--m:${M.length}"><div class="pw-dr pw-th"><span></span>${M.map(m => `<span>${esc(m.name)}</span>`).join("")}</div>${days.map(d => `<div class="pw-dr">${dayHead(d)}${M.map(m => cell(d, m)).join("")}</div>`).join("")}</div>`
     : `<div class="pw wide" style="--n:${days.length}"><div class="pw-corner"></div>${days.map(dayHead).join("")}${M.map(m => `<div class="pw-row" data-meal="${m.id}"><div class="pw-m">${esc(m.name)}</div>${days.map(d => cell(d, m)).join("")}</div>`).join("")}</div>`;
-  h += `<div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn primary sm" data-act="pw-autofill">${ic("spark", "sm")}Fill from my habits</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>`;
+  h += `<div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn primary sm" data-act="pw-autofill">${ic("spark", "sm")}Fill from my habits</button><button class="btn soft sm" data-act="pw-plan">${ic("plate", "sm")}Auto-plan week</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button><button class="btn soft sm" data-act="wt-open">${ic("calendar", "sm")}Saved weeks</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>`;
   return h + `<div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>The ⋯ button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
@@ -6686,10 +6690,57 @@ function autoCompleteDays(dates) {
   toast(`Filled ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, () => restoreDays(snap)); return plan.length;
 }
 ACT["pw-autofill"] = () => { const ws = weekStartOf(UI.date); autoCompleteDays([...Array(7)].map((_, i) => addDays(ws, i))); };
+ACT["pw-plan"] = () => { const t = todayISO(), ws = weekStartOf(UI.date), we = addDays(ws, 6); if (we < t) { toast("This week is already over: pick this week or a later one."); return; }
+  const P = plannerPreview([...Array(7)].map((_, i) => addDays(ws, i)).filter(d => d >= t), "fill"); openSheet("planner", { scope: "range", from: ws > t ? ws : t, to: we, mode: P.empty ? "fill" : "again", pantry: true, ...plPrefs() }); };
 ACT["pw-clear-week"] = () => { const ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), n = days.reduce((a, d) => a + dayItems(getDay(d)).length, 0);
   if (!n) { toast("The week is already empty."); return; }
   openSheet("confirm", { title: "Clear the whole week?", text: `Removes the ${n} planned food${n > 1 ? "s" : ""} of ${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}, eaten ones included. You can undo it right after.`, yes: "Clear week", danger: true,
     run: () => { const snap = snapshotDays(days); for (const d of days) if (dayItems(getDay(d)).length) mutateDay(d, day => { day.meals = {}; delete day.dish; }); toast(`Week cleared: ${n} item${n > 1 ? "s" : ""}`, () => restoreDays(snap)); } }); };
+/* ---------- saved weeks: the whole week (Monday to Sunday) under a name, to bring back on any later week ---------- */
+const weekTpls = () => S.settings.weekTpls || [];
+const setWeekTpls = (list, undo) => { const before = S.settings.weekTpls || []; S.settings.weekTpls = list; saveSettings(); if (undo) toast(undo, () => { S.settings.weekTpls = before; saveSettings(); scheduleRender(); }); };
+function weekTplStats(t) { let n = 0, kcal = 0; for (const d of t.days) for (const its of Object.values(d.meals || {})) for (const it of its) { n++; kcal += itemMacros(it).kcal; } return { n, kcal: r0(kcal / 7) }; }
+function saveWeekAs(ws, name) {
+  const days = [...Array(7)].map((_, i) => { const d = getDay(addDays(ws, i)), meals = {};
+    for (const [m, its] of Object.entries(d.meals || {})) { const k = its.filter(it => !it.cheat).map(cloneItem); if (k.length) meals[m] = k; }
+    return { meals, ...(d.dish && Object.keys(d.dish).length ? { dish: clone(d.dish) } : {}) }; });
+  if (!days.some(d => Object.keys(d.meals).length)) { toast("Plan something in this week first."); return false; }
+  const list = weekTpls(), old = list.find(x => x.name.toLowerCase() === name.toLowerCase()), t = { id: old?.id || "wk-" + uid(), name, saved: todayISO(), days };
+  setWeekTpls(old ? list.map(x => x === old ? t : x) : [...list, t]); toast(old ? `Updated «${name}»` : `Saved «${name}»`); return true;
+}
+/* mode "replace": what is planned (not eaten, not a treat) becomes the saved week; "fill": only meals with nothing in them; days already past are left alone */
+function applyWeekTpl(tid, ws, mode) {
+  const t = weekTpls().find(x => x.id === tid); if (!t) return;
+  const today = todayISO(), act = activeMeals().map(m => m.id), dates = [...Array(7)].map((_, i) => addDays(ws, i)), snap = snapshotDays(dates); let placed = 0, missing = 0, past = 0;
+  const ok = it => it.kind === "food" ? !!(getFood(it.ref) || BUILTIN[it.ref]) : it.kind === "recipe" ? !!getRecipe(it.ref) : true;
+  dates.forEach((d, i) => { if (d < today) { past++; return; } const src = t.days[i] || { meals: {} };
+    mutateDay(d, day => {
+      if (mode === "replace") for (const m of act) day.meals[m] = (day.meals[m] || []).filter(it => it.eaten || it.cheat);
+      for (const [m, its] of Object.entries(src.meals || {})) { if (!act.includes(m) || (mode === "fill" && (day.meals[m] || []).length)) continue;
+        const good = its.filter(ok); missing += its.length - good.length; if (!good.length) continue;
+        day.meals[m] = [...(day.meals[m] || []), ...good.map(cloneItem)]; placed += good.length; if (src.dish?.[m]) day.dish = { ...(day.dish || {}), [m]: src.dish[m] }; } }); });
+  toast(placed ? `«${t.name}»: ${placed} item${placed === 1 ? "" : "s"} placed${missing ? ` · ${missing} no longer exist` : ""}${past ? ` · ${past} past day${past === 1 ? "" : "s"} left alone` : ""}` : "Nothing was placed: the meals already have food or the days are past.", () => restoreDays(snap));
+}
+const wtWeeks = () => { const ws = weekStartOf(UI.date), t = weekStartOf(todayISO()); return [...new Set([ws, ...[0, 1, 2, 3].map(k => addDays(t, 7 * k))])].filter(w => w >= t).sort(); };
+SHEETS.weektpl = sh => {
+  const list = weekTpls(), ws = weekStartOf(UI.date), t = todayISO();
+  if (sh.use) { const tpl = list.find(x => x.id === sh.use); if (!tpl) { sh.use = null; } else { const target = sh.target || wtWeeks()[0], weeks = wtWeeks();
+    return { title: tpl.name, body: `<div class="field"><span class="flabel">Bring it to</span><div class="chips">${weeks.map(w => `<button class="chip" data-act="wt-target" data-w="${w}" aria-pressed="${target === w}">${w === weekStartOf(t) ? "This week" : w === addDays(weekStartOf(t), 7) ? "Next week" : "Week of " + fmtDM(w)}</button>`).join("")}</div></div>
+      <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["replace", "Replace what is planned"], ["fill", "Fill empty meals only"]].map(([k, l]) => `<button data-act="wt-mode" data-k="${k}" aria-pressed="${(sh.mode || "replace") === k}">${l}</button>`).join("")}</div><span class="faint" style="font-size:12.5px">Anything already marked as eaten and every treat stay. Days already past are not touched.</span></div>`,
+      foot: `<button class="btn soft" data-act="wt-back">Back</button><button class="btn primary" data-act="wt-apply">Use this week</button>` }; } }
+  const empty = ![...Array(7)].some((_, i) => dayItems(getDay(addDays(ws, i))).length);
+  return { title: "Saved weeks", body: `<div class="field"><label for="wt-name">Save the week of ${fmtDM(ws)} as</label><div class="row" style="gap:8px"><input id="wt-name" class="inp" style="flex:1" placeholder="e.g. Cutting week, Race week" value="${esc(sh.name || "")}" data-in="wt-name" autocomplete="off" maxlength="40"><button class="btn primary" data-act="wt-save" ${empty ? "disabled" : ""}>${ic("check", "sm")}Save</button></div>${empty ? `<span class="faint" style="font-size:12.5px">This week has nothing planned yet.</span>` : ""}</div>
+    ${list.length ? `<div class="card">${list.map(x => { const st = weekTplStats(x); return `<div class="lrow"><span><span class="t">${esc(x.name)}</span><span class="s">${st.n} item${st.n === 1 ? "" : "s"} · about ${fmtN(st.kcal)} kcal a day · saved ${fmtDM(x.saved)}</span></span><button class="btn tonal sm" data-act="wt-use" data-id="${x.id}">Use</button><button class="icon-btn" data-act="wt-del" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">${ic("trash", "sm")}</button></div>`; }).join("")}</div>` : `<div class="faint" style="font-size:13px">No saved weeks yet. Save a week you like and bring it back whole any time.</div>`}`,
+    foot: `<button class="btn primary" data-act="close-sheet">Done</button>` };
+};
+ACT["wt-open"] = () => openSheet("weektpl", { name: "" });
+ACT["wt-save"] = () => { const sh = S_(), name = String(sh.name || "").trim(); if (!name) { toast("Give the week a name."); $("#wt-name")?.focus(); return; } if (saveWeekAs(weekStartOf(UI.date), name)) { sh.name = ""; renderSheet(); } };
+ACT["wt-use"] = el => { const sh = S_(); sh.use = el.dataset.id; sh.target = wtWeeks()[0]; sh.mode = "replace"; renderSheet(); };
+ACT["wt-back"] = () => { S_().use = null; renderSheet(); };
+ACT["wt-target"] = el => { S_().target = el.dataset.w; renderSheet(); };
+ACT["wt-mode"] = el => { S_().mode = el.dataset.k; renderSheet(); };
+ACT["wt-apply"] = () => { const sh = S_(); closeSheet(); applyWeekTpl(sh.use, sh.target || wtWeeks()[0], sh.mode || "replace"); };
+ACT["wt-del"] = el => { const x = weekTpls().find(w => w.id === el.dataset.id); if (!x) return; setWeekTpls(weekTpls().filter(w => w !== x), `Deleted «${x.name}»`); renderSheet(); };
 ACT["mclip-clear"] = () => { UI.mclip = null; scheduleRender(); };
 /* the side library of the week view: foods and recipes to drag into a meal (open/closed kept in UI.pwLib; closed by default) */
 const PW_SEGS = [["recent", "Recent"], ["foods", "Foods"], ["recipes", "Recipes"], ["fav", "Favourites"], ["home", "At home"]];
@@ -15991,6 +16042,7 @@ ACT["check-update"] = async () => {
   setInterval(() => { const t = todayISO(); if (t !== lastToday) { if (UI.date === lastToday) UI.date = t; lastToday = t; scheduleRender(); } }, 60000);
 })();
 /* registered here, after INP is declared (using INP earlier blanks the whole app) */
+INP["wt-name"] = v => { const sh = UI.sheet; if (sh?.type === "weektpl") sh.name = v; };
 INP["pw-lq"] = v => { UI.pwQ = v; const l = $("#pw-ll"); if (l) l.innerHTML = pwLibRows(); };
 /* the weekly plan changes layout when the room for seven columns runs out: redraw when the screen crosses that */
 { let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (document.querySelector(".pw") && !!document.querySelector(".pw.tall") !== pwTall()) scheduleRender(); }, 150); }); }
