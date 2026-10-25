@@ -111,3 +111,21 @@ test("Auto-plan again: with every meal already planned a second run builds a new
   assert.deepEqual(r.saved, ["Cutting week"]); assert.ok(r.n > 0); assert.equal(r.cleared, 0); assert.ok(r.next > 0, "the saved week is brought back whole on another week"); assert.equal(r.gone, 0);
   assert.deepEqual(app.errors, []);
 });
+
+test("a locked meal stays exactly as it is when the week is planned again or a saved week is brought back; the lock shows in the day and the week and goes away with the meal", async () => {
+  const page = await start({ width: 1920, height: 1080 }); await plan(page);
+  const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), d = t > ws ? t : ws, ids = m => dayItems(getDay(d)).filter(([x]) => x === m).map(([, it]) => it.ref + ":" + it.qty).join(",");
+    UI.tab = "plan"; UI.planView = "week"; UI.date = d; render(); await new Promise(x => setTimeout(x, 100));
+    const lunch0 = ids("lunch"); UI.date = d; ACT["meal-menu"]({ dataset: { meal: "lunch" } }); const labels = UI.sheet.items.map(i => i.label); const lockItem = UI.sheet.items.find(i => /^Lock/.test(i.label)); closeSheet(); lockItem.run();
+    const locked = !!getDay(d).lock?.lunch; render(); await new Promise(x => setTimeout(x, 100)); const mark = document.querySelectorAll(".pw-mt .lk").length;
+    ACT["meal-menu"]({ dataset: { meal: "lunch" } }); const l2 = UI.sheet.items.map(i => i.label); closeSheet();
+    const sh = { scope: "range", from: d, to: d, mode: "replace", pantry: true }; UI.sheet = { type: "planner", ...sh }; await runPlanner(); await new Promise(x => setTimeout(x, 150));
+    const lunch1 = ids("lunch"), dinner1 = ids("dinner");
+    const tid = "wk-t"; S.settings.weekTpls = [{ id: tid, name: "T", saved: t, days: [...Array(7)].map(() => ({ meals: { lunch: [{ id: "z", kind: "food", ref: "t-oil", qty: 10, eaten: false }] } })) }];
+    applyWeekTpl(tid, ws, "replace"); const lunch2 = ids("lunch");
+    ACT["meal-menu"]({ dataset: { meal: "lunch" } }); const un = UI.sheet.items.find(i => /^Unlock/.test(i.label)); closeSheet(); un.run(); const unlocked = !getDay(d).lock;
+    return { labels, locked, mark, l2, same: lunch1 === lunch0, same2: lunch2 === lunch0, dinnerChanged: dinner1 !== "", unlocked }; });
+  assert.ok(r.labels.some(l => /^Lock/.test(l))); assert.equal(r.locked, true); assert.ok(r.mark >= 1); assert.ok(r.l2.some(l => /^Unlock/.test(l))); assert.ok(!r.l2.some(l => /Re-plan from scratch|Fill the rest/.test(l)), "no automation offered on a locked meal");
+  assert.equal(r.same, true, "planned again: the locked meal is untouched"); assert.equal(r.same2, true, "saved week: the locked meal is untouched"); assert.equal(r.unlocked, true);
+  assert.deepEqual(app.errors, []);
+});
