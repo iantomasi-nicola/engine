@@ -42,3 +42,15 @@ test("Energy: Day by day starts at yesterday (today is the big number); the BMR 
   assert.ok(r.tiles.some(t => /Harris‑Benedict/.test(t)));
   assert.deepEqual(app.errors, []);
 });
+
+test("Today on PC and 1920: one spacing (12 px) between the KPI tiles, between KPIs and the grid, between the columns and between the cards", async () => {
+  for (const vp of [H.VIEWPORTS.desktop, wide]) {
+    const page = await start(vp);
+    const r = await page.evaluate(async () => { UI.tab = "today"; UI.date = todayISO(); render(); await new Promise(x => setTimeout(x, 300));
+      const g = document.querySelector(".today-glance"), gr = document.querySelector(".today-grid"), a = g.getBoundingClientRect(), b = gr.getBoundingClientRect(), cc = [...gr.children].map(c => c.getBoundingClientRect()), gl = [...g.querySelectorAll(".glance > *")].map(x => x.getBoundingClientRect());
+      const cards = [...gr.querySelectorAll(":scope > .tg-col")].flatMap(c => { const k = [...c.children].map(x => x.getBoundingClientRect()); return k.slice(1).map((r, i) => Math.round(r.top - k[i].bottom)); });
+      return { toGrid: Math.round(b.top - a.bottom), gutter: Math.round(cc[1].left - cc[0].right), tiles: Math.round(gl[1].left - gl[0].right), cards }; });
+    assert.deepEqual([r.toGrid, r.gutter, r.tiles, ...new Set(r.cards)], [12, 12, 12, 12], JSON.stringify(r));
+    await app.close(); app = null;
+  }
+});

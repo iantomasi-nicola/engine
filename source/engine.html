@@ -344,7 +344,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
 .shop-covered{margin-top:8px;font-size:13px}.shop-covered summary{cursor:pointer;color:var(--muted);padding:6px 0}
-.glance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media (min-width:640px){.glance{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.glance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media (min-width:640px){.glance{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .gl-t{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 14px 12px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);min-width:0;text-align:left;color:var(--ink)}
 .gl-h{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);max-width:100%}.gl-h .ic{width:15px;height:15px;flex:none}.gl-h em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .gl-t b{font-family:var(--display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.1;margin-top:4px}.gl-t b i{font-style:normal;font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px;letter-spacing:0}
@@ -352,7 +352,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .gl-bar{display:block;width:100%;height:4px;border-radius:2px;background:var(--surface-3);margin-top:6px;overflow:hidden}.gl-bar i{display:block;height:100%;background:var(--ink);border-radius:2px}.gl-bar.over i{background:var(--warn)}
 .gl-sp{width:100%;height:24px;margin-top:4px}.gl-sp polyline{fill:none;stroke:var(--accent,var(--ink));stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .gl-t.warn b{color:var(--warn)}
-.today-glance{margin-bottom:14px}
+.today-wide{display:flex;flex-direction:column;gap:12px}   /* KPI tiles, grid, columns and cards of Today are all 12px apart */
 .bin-b{flex:0 0 auto!important;display:inline-flex!important;align-items:center;gap:3px;padding-inline:12px!important}.bin-b .bin-n{font-size:11px;font-weight:700}
 .rq-a{display:flex;align-items:center;gap:4px}.rq-a b{min-width:54px;text-align:center;font-size:13.5px}.rq .lrow{padding-top:6px;padding-bottom:6px}
 .ss-race{text-align:right}.ss-race b{display:block;font-size:26px;font-weight:700;line-height:1}.ss-race small{font-size:11.5px;color:var(--muted)}
@@ -1035,9 +1035,9 @@ details.card>summary::-webkit-details-marker{display:none}
 .dh-big{color:var(--hero-ink)}
 .dh-bar{background:rgba(255,255,255,.12)!important}.dh-bar i{background:var(--hero-ink)!important}
 /* today */
-.today-grid{display:flex;flex-direction:column;gap:14px}
-.tg-col{display:flex;flex-direction:column;gap:14px;min-width:0}
-@media (min-width:1180px){.today-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:16px}}
+.today-grid{display:flex;flex-direction:column;gap:12px}
+.tg-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (min-width:1180px){.today-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
 
 
 
@@ -1415,7 +1415,6 @@ body{font-family:var(--body);letter-spacing:.1px}
 
 .lrow.up{grid-template-columns:72px minmax(0,1fr) auto!important;align-items:center}
 .today-grid{gap:12px!important}.tg-col{gap:12px!important}
-@media (min-width:1180px){.today-grid{gap:16px!important}}
 /* sheets */
 .sheet{background:var(--sheet)!important;border-radius:28px 28px 0 0!important}
 @media (min-width:720px){.sheet{border-radius:28px!important}}
@@ -2030,14 +2029,14 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
   .lv-dock{width:min(100%,640px)!important}
 }
 @media (min-width:840px) and (max-width:1023px){
-  .today-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  .today-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   .tm-modes{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 /* expanded: navigation drawer + wide two-column content */
 @media (min-width:1024px){
   .main{max-width:1040px!important}
   .main.wide{max-width:1240px!important}
-  .today-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px!important;align-items:start}
+  .today-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   .tm-wrap{max-width:720px}
   .fab{bottom:32px!important;right:40px!important}
 }
@@ -2486,7 +2485,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 
 #main{gap:16px}
 .section-h{margin-top:8px}
-.today-grid.one{display:flex;flex-direction:column;gap:14px}
+.today-grid.one{display:flex;flex-direction:column;gap:12px}
 .bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;background:var(--md-sc);color:var(--md-on-surface-variant);font-size:13px}
 .bk-due>span{flex:1;min-width:0}
 
@@ -9848,7 +9847,7 @@ VIEWS.today = function () {
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
     // phone: one column in the order you use it: yesterday's gaps and today's ticks, training, food, body, then the rest
     ? `<div class="today-grid one">${glanceHTML()}${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${fuel}${body}${todayCards("b")}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
-    : `<div class="today-glance">${glanceHTML()}</div><div class="today-grid"><div class="tg-col">${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${body}${week}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${next}</div></div>${todayCards("z")}`);
+    : `<div class="today-wide"><div class="today-glance">${glanceHTML()}</div><div class="today-grid"><div class="tg-col">${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${body}${week}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${next}</div></div></div>${todayCards("z")}`);
 };
 /* ================= the week of food in one place: every meal of the seven days on one grid, rows lined up, a tap opens or adds ================= */
 VIEWS.week = function () {
