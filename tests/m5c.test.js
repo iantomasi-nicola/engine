@@ -70,3 +70,55 @@ test("typed foods prefer what is at home: with two rices the one in the pantry c
     return { none, home, tag: /at home/.test(html) }; });
   assert.deepEqual(r.none, ["z-rice-a", "z-rice-b"], "no stock: the shorter name first"); assert.deepEqual(r.home, ["z-rice-b", "z-rice-a"], "in stock: it comes first"); assert.ok(r.tag);
 });
+
+/* Auto-complete (owner's request 26/10): every empty meal of the week gets what you usually have there: the same weekday and meal of the most recent previous week that has it (up to 8 weeks back),
+   else the most common combination for that meal in the last 21 days. Filled meals, past days, treats and eaten flags are left alone; one undo for the whole fill. */
+test("auto-complete fills only the empty meals from the same weekday of the latest earlier week, else the commonest recent combination, never past days, never treats; one undo", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => { const t = todayISO(), ws = addDays(weekStartOf(t), 14), prev = addDays(ws, -7), prev2 = addDays(ws, -14);
+    const it = (id, ref, qty, x) => ({ id, kind: "food", ref, qty, eaten: true, ...(x || {}) });
+    // two weeks back: Monday lunch rice; last week: Monday lunch chicken (the latest wins), Monday dinner a treat, Tuesday snack rice x2 days (commonest)
+    S.days[prev2] = { date: prev2, meals: { lunch: [it("p2", "t-rice", 80)] } };
+    S.days[prev] = { date: prev, meals: { lunch: [it("p1", "t-chicken", 150)], dinner: [it("p3", "t-rice", 100, { cheat: true })] } };
+    for (const k of [-3, -2, -1]) { const d = addDays(ws, k); S.days[d] = { date: d, meals: { snack: [it("s" + k, "t-rice", 60)] } }; }   // the days just before this week: a snack habit
+    const tue = addDays(ws, 1); S.days[ws] = { date: ws, meals: { dinner: [it("mine", "t-chicken", 200, { eaten: false })] } };   // Monday dinner already planned: untouched
+    DATA_V++;
+    const n = autoCompleteDays([...Array(7)].map((_, i) => addDays(ws, i)));
+    const mon = S.days[ws].meals, tu = S.days[tue]?.meals || {};
+    const out = { n, monLunch: (mon.lunch || []).map(x => x.ref + x.qty + x.eaten), monDinner: (mon.dinner || []).map(x => x.id), tuSnack: (tu.snack || []).map(x => x.ref + x.qty), monSnack: (mon.snack || []).map(x => x.ref), tuLunch: (tu.lunch || []).length, treat: JSON.stringify(S.days[ws]).includes("cheat") };
+    toast.undo(); out.undone = !S.days[ws].meals.lunch && S.days[ws].meals.dinner.length === 1;
+    return out; });
+  assert.deepEqual(r.monLunch, ["t-chicken150false"], "the latest earlier Monday lunch, as a plan (not eaten)");
+  assert.deepEqual(r.monDinner, ["mine"], "an already planned meal is not touched");
+  assert.deepEqual(r.tuSnack, ["t-rice60"], "no Tuesday history: the commonest snack of the last days");
+  assert.ok(r.n >= 8, "filled " + r.n); assert.equal(r.treat, false, "a treat is never copied"); assert.ok(r.undone, "one undo restores the whole week");
+  assert.deepEqual(app.errors, []);
+});
+test("the week view has a «Fill from my habits» button, a clipboard chip once something is copied, and a paste button in every cell then", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.mclip = null; render(); await new Promise(x => setTimeout(x, 100));
+    const fill = !!document.querySelector('[data-act="pw-autofill"]'), chip0 = !!document.querySelector(".pw-clip"), paste0 = document.querySelectorAll('[data-act="meal-paste"]').length;
+    copyToClip("meal", todayISO(), "lunch"); render(); await new Promise(x => setTimeout(x, 100));
+    const chip1 = document.querySelector(".pw-clip")?.innerText || "", paste1 = document.querySelectorAll('[data-act="meal-paste"]').length;
+    ACT["mclip-clear"](); render(); await new Promise(x => setTimeout(x, 100)); return { fill, chip0, paste0, chip1, paste1, after: !!document.querySelector(".pw-clip") }; });
+  assert.equal(r.fill, true); assert.equal(r.chip0, false); assert.equal(r.paste0, 0);
+  assert.match(r.chip1, /lunch/i); assert.equal(r.paste1, 21); assert.equal(r.after, false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("the foods and recipes library: closed by default, opens beside (or above) the week, searches, filters by tab, and a dropped row adds the item to that meal with an undo", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.pwLib = false; render(); await new Promise(x => setTimeout(x, 100));
+    const closed = !document.querySelector(".pw-lib"); ACT["pw-lib"](); await new Promise(x => setTimeout(x, 150));
+    const open = !!document.querySelector(".pw-lib"), rows0 = document.querySelectorAll(".pw-lr").length;
+    INP["pw-lq"]("chicken"); const q = [...document.querySelectorAll(".pw-lr b")].map(b => b.textContent.trim());
+    INP["pw-lq"](""); ACT["pw-seg"]({ dataset: { k: "recipes" } }); const rec = [...document.querySelectorAll(".pw-lr")].every(x => x.dataset.t === "recipe") && document.querySelectorAll(".pw-lr").length > 0;
+    S.shop.pantry["t-rice"] = { g: 200 }; DATA_V++; ACT["pw-seg"]({ dataset: { k: "home" } }); const home = [...document.querySelectorAll(".pw-lr")].map(x => x.dataset.ref);
+    const t = addDays(weekStartOf(todayISO()), 2); const n0 = (S.days[t].meals.snack || []).length; dropLib({ t: "food", ref: "t-chicken", qty: 120 }, t, "snack"); const added = S.days[t].meals.snack.at(-1); const n1 = S.days[t].meals.snack.length;
+    toast.undo(); const n2 = (S.days[t].meals.snack || []).length;
+    return { closed, open, rows0, q, rec, home, added: added && [added.kind, added.ref, added.qty, added.eaten], n: [n0, n1, n2] }; });
+  assert.equal(r.closed, true); assert.equal(r.open, true); assert.ok(r.rows0 > 0);
+  assert.ok(r.q.length > 0 && r.q.every(x => /chicken/i.test(x)), "search: " + r.q.join("|")); assert.ok(r.rec, "the Recipes tab shows recipes only");
+  assert.ok(r.home.includes("t-rice"), "At home: " + r.home.join("|")); assert.deepEqual(r.added, ["food", "t-chicken", 120, false]); assert.deepEqual(r.n, [1, 2, 1]);
+  assert.deepEqual(app.errors, []);
+});

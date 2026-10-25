@@ -225,9 +225,20 @@ test("calibration status: reliable when the 95% interval (1.96 SE) is inside +/-
   await profile();
   const a = await ev(async () => { return null; });
   const run2 = sd => run({ days: 60, sd, mode: "v2" }).then(async r => ev(() => { const x = energyAt(addDays(todayISO(), -1)); return { ok: x.calOk, pct: x.calPct, txt: calStatus(x) }; }));
-  const clean = await run2(0.05); assert.equal(clean.ok, true); assert.ok(clean.pct < 1.5, "pct " + clean.pct); assert.match(clean.txt, /^✓ Calibrated/);
-  const noisy = await run2(1.5); assert.equal(noisy.ok, false); assert.ok(noisy.pct > 8, "pct " + noisy.pct); assert.match(noisy.txt, /^Calibrating: the 95% interval is ±/);
+  const clean = await run2(0.05); assert.equal(clean.ok, true); assert.ok(clean.pct < 1.5, "pct " + clean.pct); assert.match(clean.txt, /^✓ Calibrated · \d+% reliable/);
+  const noisy = await run2(1.5); assert.equal(noisy.ok, false); assert.ok(noisy.pct > 8, "pct " + noisy.pct); assert.match(noisy.txt, /^Calibrating · \d+% reliable \(needs 95%\)/);
   const few = await run({ days: 15, mode: "v2" }); const x = await ev(() => calStatus(energyAt(addDays(todayISO(), -1)))); assert.match(x, /needs 3 weeks/);
 });
 
+test("reliability in %: the chance the TDEE is within +/-5 % = 2 Phi(0.05 TDEE / SE) - 1: SE = 5 %/1.96 gives 95 %, SE = 5 % gives 68.3 % (k = 1), SE = 5 %/2.576 gives 99 %; no SE = nothing to say", async () => {
+  const r = await ev(() => ({ a: confWithin(100, 100 / 1.96), b: confWithin(100, 100), c: confWithin(100, 100 / 2.576), d: confWithin(100, 0) }));
+  near(r.a, 95, 0.1); near(r.b, 68.27, 0.1); near(r.c, 99, 0.1); assert.equal(r.d, 100);
+});
+test("a quiet day typed on the watch (75 kcal, no workout) is used as it is; with a workout, a small difference is still ignored (minimum 150)", async () => {
+  await profile();
+  const quiet = await ev(() => { const t = todayISO(), d = addDays(t, -1), m = d.slice(0, 7); S.logm = {}; Object.assign(FIT().energy, { watchMode: "active", minWatchNeat: 150, neatMode: "on" }); FIT().trackStart = addDays(t, -3); S.logm[m] = { days: { [d]: { watch: 75 } } }; DATA_V++; const r = energyAt(d); return { neat: r.neat, src: r.neatSrc }; });
+  assert.deepEqual(quiet, { neat: 75, src: "watch" });
+  const diff = await ev(() => { const t = todayISO(), d = addDays(t, -1), m = d.slice(0, 7); S.logm[m].days[d] = { watch: 700, workouts: [{ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1" }] }; FIT().devices.find(x => x.id === "polar").kcal = "net"; DATA_V++; const r = energyAt(d); FIT().devices.find(x => x.id === "polar").kcal = "gross"; return r.neatSrc; });
+  assert.notEqual(diff, "watch", "700 - 600 = 100 < 150 with a workout: not taken");
+});
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });

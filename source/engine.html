@@ -950,7 +950,9 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
 .pw-cell{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:64px;padding:6px;border-radius:14px;background:var(--surface-2)}.pw-cell.now{background:color-mix(in srgb,var(--accent) 8%,var(--surface-2))}.pw-cell.over{outline:2px dashed var(--accent);outline-offset:-2px}
 .pw-it{display:flex;align-items:flex-start;gap:2px;background:var(--surface);border-radius:10px;padding:5px 4px 5px 8px;min-width:0;cursor:grab}.pw-it.eaten{opacity:.65}.pw-it.eaten .pw-n span{text-decoration:line-through}
 .pw-n{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1;min-width:0;background:none;padding:0;color:var(--ink)}.pw-n span{font-size:12.5px;font-weight:600;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}.pw-n small{font-size:11px;color:var(--muted)}
-.pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-ca{display:flex;align-items:center;gap:2px}.pw-mh{margin-left:auto;display:inline-flex;padding:2px 4px;color:var(--muted);cursor:grab;border-radius:8px;font-size:15px;line-height:1;letter-spacing:-2px}.pw-day.over{outline:2px dashed var(--accent);outline-offset:-2px}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
+.pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-ca{display:flex;align-items:center;gap:2px}.pw-mh{margin-left:auto;display:inline-flex;padding:2px 4px;color:var(--muted);cursor:grab;border-radius:8px;font-size:15px;line-height:1;letter-spacing:-2px}.pw-day.over{outline:2px dashed var(--accent);outline-offset:-2px}.pw-acts{align-items:center;flex-wrap:wrap;gap:8px}.pw-clip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 4px 0 12px;border-radius:16px;background:var(--surface-2);font-size:13px;font-weight:600;color:var(--ink)}.pw-clip button{display:inline-flex;background:none;color:var(--muted);padding:4px;border-radius:50%}.pw-pst{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:5px 4px;border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-size:12px;font-weight:650}.pw-pst .ic{width:16px;height:16px}.pw-libbtn{display:none}.pw-lay.lib{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.pw-mn{min-width:0}.pw-lib{display:flex;flex-direction:column;gap:8px;padding:12px;min-width:0}.pw-lh{display:flex;align-items:center;justify-content:space-between}.pw-lib .chips.scroll{flex-wrap:wrap;overflow:visible}.pw-ll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.pw-lr{flex:none;display:flex;flex-direction:column;gap:1px;max-width:210px;padding:7px 10px;border-radius:12px;background:var(--surface-2);cursor:grab}.pw-lr b{font-size:12.5px;font-weight:600;line-height:1.2}.pw-lr small{font-size:11.5px;color:var(--muted)}
+@media(min-width:820px){.pw-libbtn{display:inline-flex}}
+@media(min-width:1280px){.pw-lay.lib{grid-template-columns:260px minmax(0,1fr);align-items:start}.pw-lib{position:sticky;top:12px;max-height:calc(100vh - 32px)}.pw-ll{flex-direction:column;overflow:auto;overflow-x:hidden}.pw-lr{max-width:none}}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
 .st-pill{display:inline-flex;align-items:center;gap:2px;flex:none;max-width:46%;height:30px;padding:0 6px 0 12px;border-radius:15px;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap}.st-pill .ic{width:18px;height:18px;flex:none}.st-add{gap:8px;flex-wrap:nowrap}html body .fd-st .chip[aria-pressed=true]{background:var(--ink)!important;color:var(--surface)!important;border-color:transparent!important;font-weight:650}.fd-st .chip .ic{width:16px;height:16px;margin-right:3px}.fd-st-s{font-size:12.5px;color:var(--muted)}.fd-st-s b{color:var(--ink)}.st-edit{margin-top:4px}.st-edit>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
 .so-r{border-top:1px solid var(--line)}.so-a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px 8px 8px}.so-a .faint{font-size:12.5px}.st-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:6px 8px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
@@ -2032,6 +2034,7 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 @media (min-width:1440px){
   /* big screens: the page takes the room next to the menu (up to 1640 px, centred beyond that so lines stay readable) */
   .main,.main.wide{max-width:1640px!important;width:100%;margin-inline:auto!important}
+  .main.list{max-width:1120px!important}   /* list views (Progress, Train except the calendar) keep one readable width instead of 1600 px rows */
   /* the side columns grow with the screen instead of staying narrow; forms keep a readable width */
   .plan-grid{grid-template-columns:minmax(0,1fr) minmax(372px,30%)!important}.lv-wrap{grid-template-columns:minmax(0,1fr) minmax(380px,32%)!important}
   .set-2p>:last-child{max-width:980px}
@@ -3883,7 +3886,7 @@ function energySeries() {
         // the daily "active kcal" leaves out resting energy: the workout's share of it is the sensor's figure net of rest (same device, same basis); in total mode the gross figure stays
         return a + (dev && E.watchMode === "active" ? netOfRest(k, w, d, trend) : k); }, 0);
       let neat = null, neatSrc = "watch";
-      if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= E.minWatchNeat) neat = v; }
+      if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= ((L.workouts || []).length || E.watchMode === "total" ? E.minWatchNeat : 1)) neat = v; }   // a figure you typed on a day with no workout is taken as it is (75 is a real quiet day); the minimum only guards a difference (AEE minus workouts) and total mode
       const amb = sess.list.some(w => w.sport && w.sport !== "Rest" && (w.sport === fit.runSport || isWalkSport(w.sport))), stepsD = L.steps > 0 ? +L.steps : 0;
       if (neat != null && stepsD && !amb) baseVals.push([d, neat - STEP_KCAL(trend, stepsD, prof.height)]);
       if (neat == null && stepsD && !amb) { const bv = baseVals.filter(x => x[0] >= addDays(d, -90)).map(x => x[1]); if (bv.length >= 14) { const o = [...bv].sort((a, b) => a - b), h = o.length >> 1, base = Math.max(0, o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2); neat = STEP_KCAL(trend, stepsD, prof.height) + base; neatSrc = "steps"; } }
@@ -3920,20 +3923,23 @@ function energySeries() {
       const target = tdee + phaseKcal(ph, tdee);
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
-      const seNow = E.calManual > 0 || E.calMode === "off" ? null : seKeep, calPct = seNow ? 1.96 * seNow * f / tdee * 100 : null;
-      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      const seNow = E.calManual > 0 || E.calMode === "off" ? null : seKeep, calPct = seNow ? 1.96 * seNow * f / tdee * 100 : null, calConf = seNow ? confWithin((E.calTargetPct || 5) / 100 * tdee, seNow * f) : null;
+      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calConf, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
       order.push(d);
     }
     return { rows, order, start, end };
   });
 }
 /* what today's number rests on: the morning estimate has planned training and a projection of the steps, the evening one the logged training and the whole day's steps */
+/* chance (%) that the TDEE is within +/- width kcal of the truth when its standard error is se: 2 Phi(width / se) - 1 (Abramowitz-Stegun erf); 95 % = the 1.96 SE interval fits inside the width */
+const confWithin = (width, se) => { if (!(se > 0)) return 100; const x = width / se / Math.SQRT2, t = 1 / (1 + 0.3275911 * x), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return clamp(y * 100, 0, 100); };
 /* when is the factor reliable? the 95 % interval of the TDEE (1.96 standard errors of the weight slope, shrunk toward 1) inside +/- calTargetPct (5) of the TDEE. Statistical only: a food log that misses meals is a bias no interval shows */
 function calStatus(r) {
   if (FIT().energy.calManual > 0) return "Calibration: manual factor, nothing is learned";
   if (FIT().energy.calMode === "off") return "Calibration is off";
   if (r.calPct == null) return "Calibrating: needs 3 weeks of weigh-ins and food logged on 70% of the days";
-  return r.calOk ? `✓ Calibrated: the 95% interval is ±${r1(r.calPct)}% of the TDEE` : `Calibrating: the 95% interval is ±${r1(r.calPct)}% (reliable at ±${FIT().energy.calTargetPct || 5}%)`;
+  const T = FIT().energy.calTargetPct || 5;
+  return r.calOk ? `✓ Calibrated · ${r0(r.calConf)}% reliable: the 95% interval is ±${r1(r.calPct)}% of the TDEE` : `Calibrating · ${r0(r.calConf)}% reliable (needs 95%): the 95% interval is ±${r1(r.calPct)}%, aim ±${T}%`;
 }
 function tdeeBasis(r) {
   const sess = r.sess.src === "logged" ? "training logged" : r.sess.src === "mixed" ? "training logged plus what is still planned" : r.sess.list.some(w => w.sport && w.sport !== "Rest") ? "planned training" : "no training";
@@ -4334,7 +4340,7 @@ function render() {
   setHTML($("#bnav"), navHTML(false));
   document.body.classList.toggle("live-mode", UI.tab === "live" || (UI.tab === "timer" && TMR.phase !== "setup"));
   const v = VIEWS[UI.tab] || VIEWS.plan;
-  $("#main").className = "main" + (UI.tab === "plan" || UI.tab === "today" ? " wide" : "");
+  $("#main").className = "main" + (UI.tab === "plan" || UI.tab === "today" ? " wide" : "") + (UI.tab === "progress" || (UI.tab === "train" && UI.trainSeg && UI.trainSeg !== "cal") ? " list" : "");
   const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && !(UI.tab === "timer" && TMR.phase !== "setup");
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
   if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
@@ -4676,11 +4682,13 @@ function proteinChart(rows, w) {
 }
 function splitDonut(p, c, f) {
   const k = [c * 4, p * 4, f * 9]; const tot = k.reduce((a, b) => a + b, 0) || 1;
+  // whole percentages that add up to 100 (largest remainder)
+  const raw = k.map(v => v / tot * 100), pc = raw.map(Math.floor); for (let n = 100 - pc.reduce((a, b) => a + b, 0); n > 0; n--) { const q = raw.map((v, i) => v - pc[i]).reduce((m, v, i, a) => v > a[m] ? i : m, 0); pc[q]++; raw[q] = pc[q]; }
   const cols = ["var(--carb)", "var(--pro)", "var(--fat)"], labs = ["Carbs", "Protein", "Fat"];
   const R = 52, C = 2 * Math.PI * R; let off = 0, g = "";
   k.forEach((v, i) => { const len = v / tot * C; g += `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${cols[i]}" stroke-width="20" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off += len; });
-  return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="130" height="130" role="img" aria-label="Calorie split">${g}<text x="70" y="66" text-anchor="middle" style="fill:var(--ink);font-family:var(--display);font-weight:760;font-size:20px">${fmtN(tot)}</text><text x="70" y="84" text-anchor="middle" style="fill:var(--muted);font-size:10px">kcal / day</text></svg>
-    <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px">${labs.map((l, i) => `<div class="mlabel" style="--c:${cols[i]}"><i></i><b class="num" style="min-width:42px">${r0(k[i] / tot * 100)}%</b><span class="muted">${l}</span></div>`).join("")}</div></div>`;
+  return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="130" height="130" role="img" aria-label="Calorie split">${g}</svg>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px">${labs.map((l, i) => `<div class="mlabel" style="--c:${cols[i]}"><i></i><b class="num" style="min-width:42px">${pc[i]}%</b><span class="muted">${l}</span></div>`).join("")}</div></div>`;
 }
 /* Days without a weigh-in get an estimate: the last weigh-in plus what the energy balance says happened each day (yesterday's intake minus TDEE in kg at your kcal per kg; the phase's planned balance when
    nothing was logged). When a weigh-in comes after a gap the estimates in between are bent to end on it: the difference between the estimate and the scale is spread over the days of the gap in
@@ -4837,7 +4845,7 @@ function smartStrip(date) {
   const inWeek = date >= weekStartOf(today) && date <= addDays(weekStartOf(today), 6) && date >= today;
   const wb = inWeek ? weekBudget() : null;
   const T = targetsFor(date);
-  return `<div class="estrip">${r.factor !== 1 || r.calOk ? `<span>Calibration <b>×${r.factor.toFixed(2)}</b>${r.calOk ? ` ✓ ±${r1(r.calPct)}%` : r.calRel ? ` · ${r.calRel}` : ""}</span>` : ""}${wb ? `<span>Left per day this week <b>${fmtN(wb.leftPerDay)}</b></span>` : ""}${energyWarnings(r, T.c).map(w => `<span style="color:var(--warn)">${w.text}</span>`).join("")}</div>`;
+  return `<div class="estrip">${r.factor !== 1 || r.calConf != null ? `<span>Calibration <b>×${r.factor.toFixed(2)}</b>${r.calConf != null ? ` · ${r0(r.calConf)}%${r.calOk ? " ✓" : ""}` : r.calRel ? ` · ${r.calRel}` : ""}</span>` : ""}${wb ? `<span>Left per day this week <b>${fmtN(wb.leftPerDay)}</b></span>` : ""}${energyWarnings(r, T.c).map(w => `<span style="color:var(--warn)">${w.text}</span>`).join("")}</div>`;
 }
 function readinessDot() {
   const L = loadState(); if (!L.ready) return "";
@@ -6504,6 +6512,7 @@ ACT["day-menu"] = () => {
   const items = [
     { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a treat", icon: "treat", sub: "Pizza night, dinner out… set aside the calories, the plan makes room", run: () => openCheat({ date }) },
+    { label: "Fill empty meals from my habits", icon: "spark", sub: "What you usually have: same weekday last weeks, else your commonest", run: () => autoCompleteDays([date]) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
     ...(has ? [{ label: "Copy this day", icon: "copy", sub: "To the clipboard: paste it on any day or week", run: () => copyToClip("day", date) }] : []),
     ...(UI.mclip ? [{ label: `Paste ${UI.mclip.label} here`, icon: "plus", run: () => pasteClip(date) }] : []),
@@ -6580,9 +6589,10 @@ function weekPlanView() {
   const head = days.map(d => { const day = getDay(d), tot = dayTotals(day), T = targetsFor(d).kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0;
     return `<button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b><span class="pw-kcal">${fmtN(tot.kcal)}<small>/${fmtN(T)}</small></span><i class="pw-bar"><i style="width:${pct}%"></i></i></button>`; }).join("");
   const rows = M.map(m => `<div class="pw-row" data-meal="${m.id}"><div class="pw-m">${esc(m.name)}</div>${days.map(d => { const items = getDay(d).meals[m.id] || [];
-    return `<div class="pw-cell${d === t ? " now" : ""}" data-date="${d}" data-meal="${m.id}">${items.map(it => { const mm = itemMacros(it);
+    return `<div class="pw-cell${d === t ? " now" : ""}" data-date="${d}" data-meal="${m.id}">${UI.mclip ? `<button class="pw-pst" data-act="meal-paste" data-date="${d}" data-meal="${m.id}" aria-label="Paste ${esc(UI.mclip.label)} in ${esc(m.name)} on ${DOW[dow(d)]}">${ic("plus", "sm")}Paste here</button>` : ""}${items.map(it => { const mm = itemMacros(it);
       return `<div class="pw-it${it.eaten ? " eaten" : ""}" draggable="${it.eaten ? "false" : "true"}" data-item="${it.id}" data-date="${d}" data-meal="${m.id}"><button class="pw-n" data-act="pw-edit" data-date="${d}" data-meal="${m.id}" data-id="${it.id}"><span>${esc(itemName(it))}</span><small>${itemBrand(it) ? `<span class="bd">${esc(itemBrand(it))}</span> · ` : ""}${esc(itemQty(it))} · ${fmtN(mm.kcal)}</small></button><button class="pw-o" data-act="pw-item" data-date="${d}" data-meal="${m.id}" data-id="${it.id}" aria-label="Options for ${esc(itemName(it))}">${ic("more", "sm")}</button></div>`; }).join("")}<div class="pw-ca"><button class="pw-add" data-act="pw-add" data-date="${d}" data-meal="${m.id}" aria-label="Add to ${esc(m.name)} on ${DOW[dow(d)]}">${ic("plus", "sm")}</button><button class="pw-add" data-act="pw-cm" data-date="${d}" data-meal="${m.id}" aria-label="${esc(m.name)} on ${DOW[dow(d)]}: copy, paste, recipe, clear">${ic("copy", "sm")}</button>${items.length ? `<span class="pw-mh" draggable="true" data-date="${d}" data-meal="${m.id}" title="Drag the whole meal (Alt = copy)" aria-hidden="true">⋮⋮</span>` : ""}</div></div>`; }).join("")}</div>`).join("");
-  return h + `<div class="pw" style="--n:${days.length}"><div class="pw-corner"></div>${head}${rows}</div><div class="faint" style="font-size:12.5px;padding:8px 2px">Drag an item, a whole meal (the grip in its cell) or a whole day (its header) to another place; hold Alt to copy. The copy button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
+  h += `<div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn primary sm" data-act="pw-autofill">${ic("spark", "sm")}Fill from my habits</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>`;
+  return h + `<div class="pw-lay${UI.pwLib ? " lib" : ""}">${UI.pwLib ? pwLibPanel() : ""}<div class="pw-mn"><div class="pw" style="--n:${days.length}"><div class="pw-corner"></div>${head}${rows}</div></div></div><div class="faint" style="font-size:12.5px;padding:8px 2px">Drag an item, a whole meal (the grip in its cell) or a whole day (its header) to another place; hold Alt to copy. The copy button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
 ACT["pw-nav"] = el => { const d = +el.dataset.d; UI.date = d === 0 ? todayISO() : addDays(UI.date, 7 * d); scheduleRender(); };
@@ -6641,16 +6651,59 @@ function pasteClip(date, mid) {
   mutateDay(date, d => { for (const [m, its] of Object.entries(want)) { if (!(its || []).length) continue; const had = (d.meals[m] || []).length; d.meals[m] = (d.meals[m] || []).concat(its.map(cloneItem)); if (d.dish) delete d.dish[m]; if (!had && c.dish?.[c.scope === "meal" ? c.meal : m]) (d.dish = d.dish || {})[m] = c.dish[c.scope === "meal" ? c.meal : m]; } });
   toast(`Pasted ${c.label} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => restoreDays(snap)); return true;
 }
+/* auto-complete: an empty meal gets what you usually have there. The same weekday and meal of the most recent earlier week that has it (up to 8 weeks back);
+   else the commonest combination for that meal in the last 21 days. Treats and eaten flags are not copied; past days, filled meals and days without history are left alone. */
+function habitItems(date, mid) {
+  const usable = d => mealItemsOf(d, mid).filter(x => !x.cheat);
+  for (let k = 1; k <= 8; k++) { const its = usable(addDays(date, -7 * k)); if (its.length) return its.map(cloneItem); }
+  const cnt = {}; for (let k = 1; k <= 21; k++) { const its = usable(addDays(date, -k)); if (!its.length) continue; const key = its.map(x => x.kind + ":" + x.ref).sort().join("|"); (cnt[key] = cnt[key] || { n: 0, its }).n++; }
+  const best = Object.values(cnt).sort((a, b) => b.n - a.n)[0]; return best ? best.its.map(cloneItem) : null;
+}
+function autoCompleteDays(dates) {
+  const t = todayISO(), M = activeMeals(), days = dates.filter(d => d >= t), snap = snapshotDays(days), plan = [];
+  for (const d of days) for (const m of M) if (!mealItemsOf(d, m.id).length) { const its = habitItems(d, m.id); if (its) plan.push([d, m.id, its]); }
+  if (!plan.length) { toast("Nothing to fill: the empty meals have no history yet."); return 0; }
+  for (const [d, m, its] of plan) mutateDay(d, day => { day.meals[m] = its; });
+  toast(`Filled ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, () => restoreDays(snap)); return plan.length;
+}
+ACT["pw-autofill"] = () => { const ws = weekStartOf(UI.date); autoCompleteDays([...Array(7)].map((_, i) => addDays(ws, i))); };
+ACT["mclip-clear"] = () => { UI.mclip = null; scheduleRender(); };
+/* the side library of the week view: foods and recipes to drag into a meal (open/closed kept in UI.pwLib; closed by default) */
+const PW_SEGS = [["recent", "Recent"], ["foods", "Foods"], ["recipes", "Recipes"], ["fav", "Favourites"], ["home", "At home"]];
+function pwLibList() {
+  const q = (UI.pwQ || "").trim(), seg = UI.pwSeg || "recent", food = f => ({ t: "food", x: f, qty: defaultQty(f) }), rec = r => ({ t: "recipe", x: r, qty: 1 });
+  let list;
+  if (seg === "recent" && !q) list = recentFoods(40).map(r => r.kind === "food" ? (getFood(r.ref) && { t: "food", x: getFood(r.ref), qty: r.qty || defaultQty(getFood(r.ref)) }) : (getRecipe(r.ref) && { t: "recipe", x: getRecipe(r.ref), qty: r.qty || 1 })).filter(Boolean);
+  else if (seg === "home") list = allFoods().filter(f => (S.shop?.pantry?.[f.id]?.g || 0) > 0 && (!q || foodSearch(q, "all").some(o => o.t === "food" && o.x.id === f.id))).map(food);
+  else list = foodSearch(q, seg === "foods" || seg === "recent" ? "all" : seg === "fav" ? "fav" : "recipes").filter(o => seg === "foods" ? o.t === "food" : true).map(o => o.t === "food" ? food(o.x) : rec(o.x));
+  return list.slice(0, 80);
+}
+function pwLibRows() {
+  const L = pwLibList(); if (!L.length) return `<div class="faint" style="font-size:12.5px;padding:6px 2px">Nothing here${UI.pwQ ? " for “" + esc(UI.pwQ) + "”" : " yet"}.</div>`;
+  return L.map(o => { const m = o.t === "food" ? addM(ZERO(), o.x.per, o.qty / 100) : addM(ZERO(), recipePerServing(o.x), o.qty), unit = o.t === "food" ? (o.x.unit || "g") : "serving";
+    return `<div class="pw-lr" draggable="true" data-t="${o.t}" data-ref="${esc(o.x.id)}" data-qty="${o.qty}" title="Drag into a meal"><b>${o.t === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(o.x.name)}</b><small>${(S.shop?.pantry?.[o.x.id]?.g || 0) > 0 ? "at home · " : ""}${fmtQ(o.qty)} ${unit} · ${fmtN(m.kcal)} kcal</small></div>`; }).join("");
+}
+const pwLibPanel = () => `<aside class="pw-lib card" aria-label="Foods and recipes"><div class="pw-lh"><b>Foods &amp; recipes</b><button class="icon-btn" data-act="pw-lib" aria-label="Close">${ic("close", "sm")}</button></div>
+  <input id="pw-lq" class="inp" type="search" placeholder="Search foods and recipes" value="${esc(UI.pwQ || "")}" data-in="pw-lq" autocomplete="off"><div class="chips scroll">${PW_SEGS.map(([k, l]) => `<button class="chip sm" data-act="pw-seg" data-k="${k}" aria-pressed="${(UI.pwSeg || "recent") === k}">${l}</button>`).join("")}</div>
+  <div id="pw-ll" class="pw-ll">${pwLibRows()}</div><div class="faint" style="font-size:12px">Drag a row into a meal. Alt is not needed: it adds.</div></aside>`;
+ACT["pw-lib"] = () => { UI.pwLib = !UI.pwLib; scheduleRender(); };
+ACT["pw-seg"] = el => { UI.pwSeg = el.dataset.k; const l = $("#pw-ll"); $$(".pw-lib [data-act=pw-seg]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === UI.pwSeg))); if (l) l.innerHTML = pwLibRows(); };
+function dropLib(f, date, meal) {
+  if (!f?.ref || !(date && meal)) return false; const it = newItem(f.t, f.ref, +f.qty || (f.t === "recipe" ? 1 : defaultQty(getFood(f.ref))));
+  mutateDay(date, d => { (d.meals[meal] = d.meals[meal] || []).push(it); if (d.dish) delete d.dish[meal]; });
+  toast(`Added ${itemName(it)} to ${mealName(meal)} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => mutateDay(date, d => { d.meals[meal] = (d.meals[meal] || []).filter(x => x.id !== it.id); })); return true;
+}
 ACT["day-copy"] = el => copyToClip("day", el.dataset.date || UI.date);
 ACT["meal-copy"] = el => copyToClip("meal", el.dataset.date || UI.date, el.dataset.meal);
 ACT["day-paste"] = el => pasteClip(el.dataset.date || UI.date);
 ACT["meal-paste"] = el => pasteClip(el.dataset.date || UI.date, el.dataset.meal);
 ACT["pw-cm"] = el => { UI.date = el.dataset.date; ACT["meal-menu"]({ dataset: { meal: el.dataset.meal } }); };
-document.addEventListener("dragstart", e => { const h = e.target.closest?.(".pw-mh, .pw-day[draggable=true]"); if (!h) return; window.__dragKind = h.classList.contains("pw-mh") ? "meal" : "day"; e.dataTransfer.setData("text/plain", JSON.stringify(window.__dragKind === "meal" ? { kind: "meal", date: h.dataset.date, meal: h.dataset.meal } : { kind: "day", date: h.dataset.date })); e.dataTransfer.effectAllowed = "copyMove"; });
+document.addEventListener("dragstart", e => { const r = e.target.closest?.(".pw-lr"); if (r) { window.__dragKind = "lib"; e.dataTransfer.setData("text/plain", JSON.stringify({ kind: "lib", t: r.dataset.t, ref: r.dataset.ref, qty: r.dataset.qty })); e.dataTransfer.effectAllowed = "copy"; return; } const h = e.target.closest?.(".pw-mh, .pw-day[draggable=true]"); if (!h) return; window.__dragKind = h.classList.contains("pw-mh") ? "meal" : "day"; e.dataTransfer.setData("text/plain", JSON.stringify(window.__dragKind === "meal" ? { kind: "meal", date: h.dataset.date, meal: h.dataset.meal } : { kind: "day", date: h.dataset.date })); e.dataTransfer.effectAllowed = "copyMove"; });
 document.addEventListener("dragend", () => { window.__dragKind = null; $$(".pw-cell.over,.pw-day.over").forEach(x => x.classList.remove("over")); });
 document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-day"); $$(".pw-day.over").forEach(x => x !== c && x.classList.remove("over")); if (c && window.__dragKind === "day") { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
 document.addEventListener("drop", e => { const h = e.target.closest?.(".pw-day"), c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over,.pw-day.over").forEach(x => x.classList.remove("over")); let f; try { f = JSON.parse(e.dataTransfer.getData("text/plain")); } catch (x) { return; }
   if (f?.kind === "day" && (h || c)) { e.preventDefault(); moveDay(f.date, (h || c).dataset.date, e.altKey); }
+  else if (f?.kind === "lib" && c) { e.preventDefault(); dropLib(f, c.dataset.date, c.dataset.meal); }
   else if (f?.kind === "meal" && c) { e.preventDefault(); moveMeal(f, { date: c.dataset.date, meal: c.dataset.meal }, e.altKey); } });
 
 /* add sheet */
@@ -7908,7 +7961,7 @@ function trainCalendar() {
   }
   h += `</div><div class="cv-side">${calDayPanel(sel)}${calNextCard(sel)}</div></div>`;
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
-    <div class="faint" style="font-size:12.5px">Tap a day to see it below. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
+    <div class="faint" style="font-size:12.5px">Tap a day to open it. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
 ACT["cal-sel"] = el => { UI.calSel = el.dataset.date; if (UI.calView === "agenda") { UI.calView = "month"; } scheduleRender(); };
 ACT["cal-today"] = () => { UI.calOff = 0; UI.calSel = todayISO(); scheduleRender(); };
@@ -11504,7 +11557,7 @@ function energyView() {
   /* seven-day averages: the day-to-day swings of intake and training make a daily line a saw; the average shows where you are going */
   const roll7 = P => P.map(([d], i) => { const w = P.filter(([e]) => e <= d && e >= addDays(d, -6)); return [d, r0(w.reduce((a, q) => a + q[1], 0) / w.length)]; });
   hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: roll7(pts("tdee")) }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, { name: "Target", color: "var(--faint)", pts: roll7(pts("target")), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
-  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">BMR ${fmtN(x.bmr)} · NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
+  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
   return hh;
 }
 
@@ -15330,8 +15383,8 @@ function glanceHTML() {
   const t = todayISO(), T = targetsFor(t), eat = eatenFor(t), D = typeof dayDeficit === "function" ? dayDeficit(t) : null, L = loadState();
   const left = T.kcal - (eat.kcal || 0), F = fitnessNow(), sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
   const tile = (act, extra, ico, label, v, u, sub, tone, vis) => `<button class="gl-t ${tone || ""}" data-act="${act}" ${extra}><span class="gl-h">${ic(ico, "sm")}<em>${label}</em></span><b>${v}${u ? `<i>${u}</i>` : ""}</b>${sub ? `<span class="gl-s">${sub}</span>` : ""}${vis || ""}</button>`;
-  const pLeft = Math.max(0, T.p - (eat.p || 0)), pct = T.kcal ? clamp((eat.kcal || 0) / T.kcal * 100, 0, 100) : 0;
-  const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", left >= 0 ? fmtN(left) : "+" + fmtN(-left), left >= 0 ? "kcal left" : "kcal over", pLeft > 0 ? `${r0(pLeft)} g protein to go` : "Protein target reached", left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
+  const none = !((eat.kcal || 0) > 0), pLeft = Math.max(0, T.p - (eat.p || 0)), pct = T.kcal ? clamp((eat.kcal || 0) / T.kcal * 100, 0, 100) : 0;
+  const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", none ? "0" : left >= 0 ? fmtN(left) : "+" + fmtN(-left), none ? "kcal eaten" : left >= 0 ? "kcal left" : "kcal over", none ? "" : pLeft > 0 ? `${r0(pLeft)} g protein to go` : "Protein target reached", left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
   const t2 = FEAT("battery") ? (() => { const B = btDay(), [word, lvl] = btState(B);
     return tile("bt-open", `aria-label="Energy battery, ${btPct(B.now)}, ${word}. Open the details"`, "bolt", "Battery", r0(B.now), "%", `${napOn() ? `Napping since ${napOn().at}` : `${word} · ${btPct(B.atBed)} at bedtime`}`, "", `<span class="gl-bar bt-${lvl}"><i style="width:${clamp(B.now, 0, 100)}%"></i></span>`); })()
     : D && !D.none ? tile("tab", 'data-tab="plan"', "trend", D.proj <= 0 ? "Deficit" : "Surplus", sg(D.proj), "kcal", `${D.done ? "so far" : "if you eat the plan"} · cut set ${sg(D.set)}`, "")
@@ -15902,6 +15955,8 @@ ACT["check-update"] = async () => {
   let lastToday = todayISO();
   setInterval(() => { const t = todayISO(); if (t !== lastToday) { if (UI.date === lastToday) UI.date = t; lastToday = t; scheduleRender(); } }, 60000);
 })();
+/* registered here, after INP is declared (using INP earlier blanks the whole app) */
+INP["pw-lq"] = v => { UI.pwQ = v; const l = $("#pw-ll"); if (l) l.innerHTML = pwLibRows(); };
 </script>
 
 </body></html>
