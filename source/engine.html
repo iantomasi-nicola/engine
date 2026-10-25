@@ -765,7 +765,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .set-det summary{cursor:pointer;font-family:var(--display);font-stretch:112%;font-weight:720;font-size:16px;list-style:none;display:flex;justify-content:space-between;align-items:center}
 .set-det summary::-webkit-details-marker{display:none}
 .set-det summary::after{content:"+";font-size:20px;color:var(--muted)}
-.set-det[open] summary::after{content:"–"}.set-det.fx>summary{gap:10px}.set-det.fx>summary b{display:block;font-size:14.5px;font-weight:600;font-family:inherit;font-stretch:100%}.set-det.fx>summary small{display:block;font-size:12.5px;color:var(--muted);font-weight:450;margin-top:2px;font-family:var(--body,inherit);font-stretch:100%}@media(max-width:600px){.grid2>.fld-wide{grid-column:1/-1}}
+.set-det[open] summary::after{content:"–"}.ex .lrow .t,.ex .lrow .s{white-space:normal;overflow:visible;text-overflow:clip}.ex .lrow .s{overflow-wrap:break-word}.set-det.fx>summary{gap:10px}.set-det.fx>summary b{display:block;font-size:14.5px;font-weight:600;font-family:inherit;font-stretch:100%}.set-det.fx>summary small{display:block;font-size:12.5px;color:var(--muted);font-weight:450;margin-top:2px;font-family:var(--body,inherit);font-stretch:100%}@media(max-width:600px){.grid2>.fld-wide{grid-column:1/-1}}
 .set-in{display:flex;flex-direction:column;gap:12px;margin-top:14px}
 details.card>summary{cursor:pointer;list-style:none}
 details.card>summary::-webkit-details-marker{display:none}
@@ -2945,6 +2945,21 @@ function defaultSettings(w = 75, goal = "maintain") {
   };
 }
 const ALGO_START = "2026-10-25";   // first day of the M7b algorithms (calibration v2, net device kcal) for profiles that existed before them
+/* F-11 (approved 26/10): the one list of the formula versions. Each entry is one change of the energy maths with its switch (on) and the setting that holds its first day (from: "" = from the first day, for a profile created after it).
+   A profile saved before an entry existed gets that entry's start, a constant (never "today": a sync or a second device would move it), so the days it already lived keep how they were computed.
+   ALGO_VERSION = the newest entry; energy.algoV records the set a profile was last loaded with. Shown in Settings › How it is calculated. */
+const ALGO = [
+  { v: 1, k: "cal", name: "Calibration v2 · 28 days", ref: "F-06", from: "calV2From", on: E => E.calMode === "v2" && !(E.calManual > 0) },
+  { v: 2, k: "net", name: "Sensor kcal net of rest", ref: "D5b", from: "netFrom", on: E => E.netKcal !== "off" },
+  { v: 3, k: "hr", name: "Heart-rate factor per sensor", ref: "D20", from: "hrFrom", on: E => E.hrLearn !== "off" },
+  { v: 4, k: "neat", name: "NEAT from steps", ref: "D18", from: "neatFrom", on: E => E.neatMode !== "off" },
+  { v: 5, k: "bmr", name: "BMR Auto · Ten Haaf 18–35", ref: "F-01", from: "bmrAutoFrom", on: E => E.bmr === "Auto" },
+  { v: 6, k: "nutr", name: "Missing nutrient is not zero", ref: "F-09", from: "nutrFrom", on: E => E.nutrCoverage !== "off" },
+  { v: 7, k: "one", name: "One source per session", ref: "D7", from: "oneFrom", on: E => E.oneSrc !== "off" }
+].map(a => ({ start: ALGO_START, ...a }));
+const ALGO_VERSION = Math.max(...ALGO.map(a => a.v));
+/* the entries in force on a date: switched on and not before their first day */
+const algoAt = (date, E = FIT().energy) => ALGO.filter(a => a.on(E) && (!E[a.from] || date >= E[a.from]));
 function normalizeSettings(s) {
   const d = defaultSettings();
   const o = { ...d, ...(s || {}) };
@@ -2958,7 +2973,8 @@ function normalizeSettings(s) {
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
-  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom", "bmrAutoFrom", "nutrFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
+  if (s?.fit) for (const a of ALGO) if (s.fit.energy?.[a.from] === undefined) o.fit.energy[a.from] = a.start;
+  o.fit.energy.algoV = ALGO_VERSION;
   // the lean bonus is no part of the published Harris-Benedict equation (F-01): off for a new profile, left on for one saved before the switch so its numbers do not move
   if (s?.fit && s.fit.energy?.hbBonusOn === undefined) o.fit.energy.hbBonusOn = "on";
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
@@ -3549,7 +3565,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", nutrCoverage: "on", nutrFrom: "", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", nutrCoverage: "on", nutrFrom: "", oneSrc: "on", oneFrom: "", algoV: 0, netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3871,11 +3887,16 @@ function hbBonusKcal(bf) { const E = FIT().energy; return E.hbBonusOn === "on" &
 function tenHaafWeight(kg, m, age, female) { return 29.279 + 11.936 * kg + 587.728 * m - 8.129 * age + (female ? 0 : 191.027); }
 /* Ten Haaf & Weijs 2014 (PLoS One, PMID 25275434; 90 recreational athletes of 18-35 y, indirect calorimetry): Harris-Benedict, WHO, Schofield, Mifflin and Owen were under 50 % accurate (within 10 %) in them; Cunningham and the two new equations
    performed equally well. kJ/day = 49.940 kg + 2459.053 m - 34.014 y + 799.257 (male) + 122.502, or 95.272 FFM + 2026.161; 1 kcal = 4.184 kJ. "Auto" = Ten Haaf (weight) from 18 to 35 y, Mifflin outside, and Mifflin before energy.bmrAutoFrom. */
-function bmrOf(kg, bf, age, date) {
-  const E = FIT().energy, prof = FIT().profile, female = prof.sex === "Female"; let m = E.bmr;
+/* the formula bmrOf really uses on a date: Auto resolved by age and bmrAutoFrom, the lean-mass version without a body fat falls back to the weight version */
+function bmrFormula(bf, age, date) {
+  const E = FIT().energy; let m = E.bmr;
   if (m === "Auto") m = E.bmrAutoFrom && date && date < E.bmrAutoFrom ? "Mifflin-St Jeor" : age >= 18 && age <= 35 ? "Ten Haaf (weight)" : "Mifflin-St Jeor";
-  if (m === "Ten Haaf (FFM)" && bf > 0 && bf < 60) return (95.272 * kg * (1 - bf / 100) + 2026.161) / 4.184;
-  if (m === "Ten Haaf (FFM)") m = "Ten Haaf (weight)";
+  if (m === "Ten Haaf (FFM)" && !(bf > 0 && bf < 60)) m = "Ten Haaf (weight)";
+  return ["Harris-Benedict", "Ten Haaf (weight)", "Ten Haaf (FFM)", "MET"].includes(m) ? m : "Mifflin-St Jeor";
+}
+function bmrOf(kg, bf, age, date) {
+  const prof = FIT().profile, female = prof.sex === "Female", m = bmrFormula(bf, age, date);
+  if (m === "Ten Haaf (FFM)") return (95.272 * kg * (1 - bf / 100) + 2026.161) / 4.184;
   if (m === "Harris-Benedict") return hbOriginal(kg, prof.height, age, female) + hbBonusKcal(bf);
   if (m === "Ten Haaf (weight)") return tenHaafWeight(kg, prof.height / 100, age, female);
   if (m === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
@@ -3904,23 +3925,24 @@ function energySeries() {
       const age = ageAt(d);
       const bmr = bmrOf(trend, bf, age, d);
       const sess = sessionsFor(d);
-      const kcals = sess.list.map(w => sessionKcal(w, d, trend).kcal);
+      const ks = sess.list.map(w => sessionKcal(w, d, trend)), kcals = ks.map(k => k.kcal), hows = ks.map(k => k.how);
       const eat = kcals.reduce((a, b) => a + b, 0);
-      // the day's watch total holds everything the watch counted, extra minutes of a session left running included: take out the raw value, not the trimmed one
-      const watchView = (L.workouts || []).reduce((a, w) => { const dev = w.watch > 0 || w.raw?.kcal > 0 || (w.kcal > 0 && fromDevice(w)), k = w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal;
+      // the day's watch total holds everything the watch counted, extra minutes of a session left running included: take out the raw value, not the trimmed one; a second recording of the same session is in it once (D7)
+      const watchView = (L.workouts || []).reduce((a, w) => { if (dupOf(w, d)) return a; const dev = w.watch > 0 || w.raw?.kcal > 0 || (w.kcal > 0 && fromDevice(w)), k = w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal;
         // the daily "active kcal" leaves out resting energy: the workout's share of it is the sensor's figure net of rest (same device, same basis); in total mode the gross figure stays
         return a + (dev && E.watchMode === "active" ? netOfRest(k, w, d, trend) : k); }, 0);
-      let neat = null, neatSrc = "watch";
-      if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= ((L.workouts || []).length || E.watchMode === "total" ? E.minWatchNeat : 1)) neat = v; }   // a figure you typed on a day with no workout is taken as it is (75 is a real quiet day); the minimum only guards a difference (AEE minus workouts) and total mode
+      let neat = null, neatSrc = "watch", nx = null;   // nx: the inputs behind the NEAT, for Settings › How it is calculated
+      if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= ((L.workouts || []).length || E.watchMode === "total" ? E.minWatchNeat : 1)) { neat = v; nx = { watch: +L.watch, mode: E.watchMode, sub: watchView }; } }   // a figure you typed on a day with no workout is taken as it is (75 is a real quiet day); the minimum only guards a difference (AEE minus workouts) and total mode
       const amb = sess.list.some(w => w.sport && w.sport !== "Rest" && (w.sport === fit.runSport || isWalkSport(w.sport))), stepsD = L.steps > 0 ? +L.steps : 0;
       if (neat != null && stepsD && !amb) baseVals.push([d, neat - STEP_KCAL(trend, stepsD, prof.height)]);
-      if (neat == null && stepsD && !amb) { const bv = baseVals.filter(x => x[0] >= addDays(d, -90)).map(x => x[1]); if (bv.length >= 14) { const o = [...bv].sort((a, b) => a - b), h = o.length >> 1, base = Math.max(0, o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2); neat = STEP_KCAL(trend, stepsD, prof.height) + base; neatSrc = "steps"; } }
+      if (neat == null && stepsD && !amb) { const bv = baseVals.filter(x => x[0] >= addDays(d, -90)).map(x => x[1]); if (bv.length >= 14) { const o = [...bv].sort((a, b) => a - b), h = o.length >> 1, base = Math.max(0, o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2); neat = STEP_KCAL(trend, stepsD, prof.height) + base; neatSrc = "steps"; nx = { steps: stepsD, stepK: neat - base, base, n: bv.length }; } }
       if (neat == null && stepsD && !amb && E.neatMode !== "off" && (!E.neatFrom || d >= E.neatFrom)) {
         const med = d === today ? medianOf(stepHist.filter(x => x[0] >= addDays(d, -14)).map(x => x[1])) : null, sd = d === today ? stepsProjected(stepsD, new Date().getHours(), med) : stepsD;
         neat = neatFromSteps(trend, sd, prof.height, E); neatSrc = sd !== stepsD ? "stepsRefProj" : "stepsRef";
+        const stepK = STEP_KCAL(trend, sd, prof.height); nx = { steps: sd, so: stepsD, stepK, base: neat - stepK, ref: E.neatRefSteps || 6540 };
       }
       if (stepsD && !amb) stepHist.push([d, stepsD]);
-      if (neat == null) { const prev = neats.slice(-7); neat = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : E.neat; neatSrc = prev.length ? "avg" : "default"; }
+      if (neat == null) { const prev = neats.slice(-7); neat = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : E.neat; neatSrc = prev.length ? "avg" : "default"; nx = { n: prev.length, amb: amb && stepsD > 0 }; }
       neats.push(neat);
       const tef = E.tef * (bmr + neat + eat);
       const tdeeW = bmr + neat + eat + tef;
@@ -3949,7 +3971,7 @@ function energySeries() {
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
       const seNow = E.calManual > 0 || E.calMode === "off" ? null : seKeep, calPct = seNow ? 1.96 * seNow * f / tdee * 100 : null, calConf = seNow ? confWithin((E.calTargetPct || 5) / 100 * tdee, seNow * f) : null;
-      rows[d] = { d, real, trend, bf, bmr, neat, neatSrc, eat, sess, kcals, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calConf, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      rows[d] = { d, real, trend, bf, age, bmr, bmrF: bmrFormula(bf, age, d), neat, neatSrc, nx, eat, sess, kcals, hows, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calConf, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
       order.push(d);
     }
     return { rows, order, start, end };
@@ -4809,6 +4831,7 @@ VIEWS.settings = function () {
       <div class="field"><span class="flabel">Round portions to</span><div class="seg">${[1, 5, 10].map(k => `<button data-act="step" data-k="${k}" aria-pressed="${st.step === k}">${k} g</button>`).join("")}</div></div>
       <div class="faint" style="font-size:12.5px">The planner learns from what you plan and eat: foods you use often in a meal come back there, favourites (★) and pantry items get priority, and nothing repeats from yesterday.</div>
     </div>`)],
+    ...(FEAT("explain") ? [[25, setGrp("explain", "How it is calculated", "Formulas, inputs and steps behind today's energy", explainHTML())]] : []),
     [50, setGrp("icu", "intervals.icu", icuState().key ? (icuFail() ? "Sync failed" : icuAgo() + " · syncs by itself") : "Not connected", icuSettingsCard())],
     [60, setGrp("live", "Live workouts & timer", "Voice, sounds, gear, weather, cycling, heart-rate sensors", `<div class="set-in">${playerSettings()}</div>${devSettings()}`)],
     [95, setGrp("data", "Data", "Excel export, full backup, setup again", `    <div class="card">
@@ -5555,7 +5578,7 @@ function dayNavHTML(d, go) {
   return `<span class="day-nav"><button class="icon-btn sm" data-act="${go}" data-date="${addDays(d, -1)}" aria-label="Previous day">${ic("chevL")}</button><label class="date-pick"><span>${esc(txt)}</span><input type="date" value="${d}" data-in="day-pick" data-go="${go}" aria-label="Pick a day"></label><button class="icon-btn sm" data-act="${go}" data-date="${addDays(d, 1)}" aria-label="Next day">${ic("chevR")}</button></span>`;
 }
 /* ================= day check-in ================= */
-const sessRow = (w, d, act, list, i) => { const k = sessionKcal(w, d); return `<button class="lrow" data-act="${act}" data-list="${list}" data-i="${i}" data-date="${d}"><span style="min-width:0"><span class="t">${esc(sessionLabel(w))}</span><span class="s">${w.sport === "Rest" ? "Planned rest" : `${fmtN(k.kcal)} kcal · ${{ watch: "watch", device: "watch · intervals.icu", load: "from intervals.icu load", logged: "logged", km: "from km", hr: "from avg HR", own: "your kcal/min", met: "MET estimate", none: "", rest: "" }[k.how]}${w.hr ? ` · HR ${w.hr}` : ""}${w.note ? ` · ${esc(w.note)}` : ""}`}</span></span><span class="end">${ic("edit", "sm")}</span></button>`; };
+const sessRow = (w, d, act, list, i) => { const k = sessionKcal(w, d); return `<button class="lrow" data-act="${act}" data-list="${list}" data-i="${i}" data-date="${d}"><span style="min-width:0"><span class="t">${esc(sessionLabel(w))}</span><span class="s">${w.sport === "Rest" ? "Planned rest" : `${fmtN(k.kcal)} kcal · ${HOW_SHORT[k.how] || ""}${w.hr ? ` · HR ${w.hr}` : ""}${w.note ? ` · ${esc(w.note)}` : ""}`}</span></span><span class="end">${ic("edit", "sm")}</span></button>`; };
 SHEETS.checkin = sh => {
   const d = sh.date, today = todayISO(), L = logGet(d) || {}, r = energyAt(d), plan = plannedFor(d), logged = (L.workouts || []).filter(w => w.sport), its = daySessions(d), pm = icuPlanMode();
   const left = its.filter(x => x.st !== "done"), doneExt = new Set(its.filter(x => x.st === "done" && x.p?.ext).map(x => x.p.ext));
@@ -5736,8 +5759,8 @@ function fitSettings() {
     ${En.bmr === "Harris-Benedict" ? (En.hbBonusOn === "on" ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${fitSel("energy.hbBonusOn", "Lean bonus", hbSel)}${fitIn("energy.hbBonus", "Bonus", "kcal/pt")}${fitIn("energy.hbThr", "Below body fat", "%")}</div>` : fitSel("energy.hbBonusOn", "Lean bonus", hbSel)) : ""}
     ${(a => a >= 18 && a <= 35 && En.bmr !== "Auto" && !/Ten Haaf/.test(En.bmr) ? `<div class="note" role="note">Recreational athletes aged 18–35: in a study of 90 of them (Ten Haaf 2014, PMID 25275434) Mifflin and Harris-Benedict predicted resting energy within 10% in under half of them; Ten Haaf did as well as Cunningham. Choose Auto or Ten Haaf.</div>` : "")(ageAt(todayISO()))}
     ${En.bmr === "Harris-Benedict" ? `<div class="faint" style="font-size:12.5px">Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation.</div>` : /Ten Haaf|Auto/.test(En.bmr) ? `<div class="faint" style="font-size:12.5px">Ten Haaf was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows (Auto then uses Mifflin). The lean-mass version needs your body fat.</div>` : ""}
-    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : "<div></div>"}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}</div>
-    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (6,540 = the US adult mean, NHANES 2005-06); today's steps are projected to the end of the day.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
+    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : fitSel("energy.oneSrc", "One source per session", onOff)}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}${En.kcalPerKgMode === "fixed" ? fitSel("energy.oneSrc", "One source per session", onOff) : ""}</div>
+    <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (6,540 = the US adult mean, NHANES 2005-06); today's steps are projected to the end of the day. Two recordings of the same session (overlapping in time, e.g. watch and armband) count once.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
   h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"], ["off", "Off (factor 1)"]])}${fitSel("energy.warn", "Target warnings", onOff)}${fitIn("energy.calManual", "Manual factor (empty = learns)")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}</div>
     ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}${fitIn("energy.calMinCov", "Min intake share", "%", "pct")}</div>`}
     ${(r => `<div class="faint" style="font-size:12.5px">Now ×${r.factor.toFixed(2)}${r.calRel ? ` · ${r.calRel} reliability` : ""} · formulas ${fmtN(r.tdeeW)} → TDEE ${fmtN(r.tdee)}${r.tdeeSE ? ` ± ${fmtN(r0(r.tdeeSE))}` : ""}${(M => M.measured != null ? ` · measured over 4 weeks ${fmtN(M.measured)}` : "")(modelCheck())}. A manual factor stops the learning; Off uses the formulas as they are.<br><b>${calStatus(energyAt(todayISO()))}</b></div>`)(energyAt(todayISO()))}
@@ -9564,10 +9587,10 @@ function icuSet(o) { S.settings.intervals = { ...(S.settings.intervals || {}), .
 function icuDisconnect() { const { key, bridge, athlete, ...rest } = S.settings.intervals || {}; S.settings.intervals = rest; saveSettings(); toast("Disconnected from intervals.icu"); scheduleRender(); }
 const isIcu = w => String(w?.ext || "").startsWith("icu-");
 /* more of what intervals.icu knows about an activity, kept as read-only facts for the energy model (nothing here changes a number yet):
-   climb (m), average speed (m/s), average power (W), cadence, maximum heart rate and the name of the recording device. Absent = left out, never 0. */
+   climb (m), average speed (m/s), average power (W), cadence, maximum heart rate, the name of the recording device and the local start time (D7: two recordings of one session overlap). Absent = left out, never 0. */
 function icuExtras(x) {
   const pos = v => { v = +v; return isFinite(v) && v > 0 ? v : null; }, pw = pos(x.icu_average_watts ?? x.average_watts), spd = pos(x.average_speed);
-  return wClean({ elev: pos(x.total_elevation_gain) != null ? r0(x.total_elevation_gain) : null, spd: spd != null ? Math.round(spd * 100) / 100 : null, pw: pw != null ? r0(pw) : null, cad: pos(x.average_cadence) != null ? r0(x.average_cadence) : null, hrmax: pos(x.max_heartrate) != null ? r0(x.max_heartrate) : null, devn: x.device_name ? String(x.device_name).slice(0, 40) : null });
+  return wClean({ elev: pos(x.total_elevation_gain) != null ? r0(x.total_elevation_gain) : null, spd: spd != null ? Math.round(spd * 100) / 100 : null, pw: pw != null ? r0(pw) : null, cad: pos(x.average_cadence) != null ? r0(x.average_cadence) : null, hrmax: pos(x.max_heartrate) != null ? r0(x.max_heartrate) : null, devn: x.device_name ? String(x.device_name).slice(0, 40) : null, startAt: /T\d\d:\d\d/.test(x.start_date_local || "") ? String(x.start_date_local).slice(11, 16) : null });
 }
 function icuApplyActivities(acts) {
   const groups = {};
@@ -9587,7 +9610,7 @@ function icuApplyActivities(acts) {
     if (fresh.length && loc.length) {
       const tn = fresh.reduce((a, w) => a + (w.min || 0), 0), tl = loc.reduce((a, i) => a + (lst[i].min || 0), 0);
       if (loc.length === 1 && fresh.length === 1) { const o = lst[loc[0]], w = fresh[0], m = { ...o, ext: w.ext }; for (const f of ["kcal", "hr", "km", "rpe", "min", "int"]) if (!m[f] && w[f] != null) m[f] = w[f]; lst[loc[0]] = wClean(m); fresh = []; }
-      else { const o = lst[loc[0]]; lst[loc[0]] = wClean({ ...o, exts: [...new Set([...(o.exts || []), ...fresh.map(w => w.ext)])], kcal: o.kcal || fresh.reduce((a, w) => a + (w.kcal || 0), 0) || null }); fresh = []; }
+      else { const o = lst[loc[0]]; lst[loc[0]] = wClean({ ...o, exts: [...new Set([...(o.exts || []), ...fresh.map(w => w.ext)])], kcal: o.kcal || oneSrcKcal(fresh) || null }); fresh = []; }
     }
     const next = [...lst, ...fresh]; if (JSON.stringify(next) === before) continue;
     n++; mutateLog(d, day => { day.workouts = next; });
@@ -11594,7 +11617,7 @@ function neatBase(except) {
   return vals.length >= 14 ? { kcal: Math.max(0, r0(medianOf(vals))), n: vals.length } : null;
 }
 function aeeShadow(date, except) {
-  const today = todayISO(), r = energyAt(date), items = sessionsFor(date).list.filter(w => w.sport && w.sport !== "Rest").map(w => { const cands = eatCandidates(w, date); return { w, pick: cands[0] || null, cands }; });
+  const today = todayISO(), r = energyAt(date), items = sessionsFor(date).list.filter(w => w.sport && w.sport !== "Rest" && !dupOf(w, date)).map(w => { const cands = eatCandidates(w, date); return { w, pick: cands[0] || null, cands }; });
   const eat = items.reduce((a, x) => a + (x.pick ? x.pick.kcal : 0), 0), L = logGet(date), steps = L?.steps > 0 ? +L.steps : null, walked = ambulatory(date);
   let observed = null, src = "none", q = null;
   if (steps != null && !walked) { observed = stepKcal(date, steps); src = "steps"; q = "medium"; }
@@ -11643,7 +11666,7 @@ function energyView() {
     <div class="en-bar">${parts.map(([l, v, c]) => `<i style="width:${(v || 0) / tot * 100}%;background:${c}" title="${l}: ${fmtN(v)} kcal"></i>`).join("")}</div>
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
     <div class="stat-grid${r.target !== r.tdee ? " four" : ""}">${r.target !== r.tdee ? kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (phaseKcal(r.phase, r.tdee) ? ` · ${phaseKcal(r.phase, r.tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(r.phase, r.tdee))}` : "")) : ""}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
-  const inTh = age >= 18 && age <= 35, bmrUsed = E.bmr === "Auto" ? (inTh ? "Ten Haaf (weight)" : "Mifflin-St Jeor") : E.bmr, bonus = bmrUsed === "Harris-Benedict" ? hbBonusKcal(bf) : 0;   // the "used today" line only when the lean bonus or the MET shortcut moves the number
+  const inTh = age >= 18 && age <= 35, bmrUsed = r.bmrF, bonus = bmrUsed === "Harris-Benedict" ? hbBonusKcal(bf) : 0;   // the "used today" line only when the lean bonus or the MET shortcut moves the number
   /* the formula in use is named in the heading and its number is the BMR in the legend above: the tiles show the other formulas only */
   const NB = "\u2011", NS = "\u00a0", tiles = [["Mifflin-St Jeor", fmtN(mif), "Mifflin" + NB + "St" + NS + "Jeor", ""], ["Harris-Benedict", fmtN(hb), "Harris" + NB + "Benedict (1918/1919)", ""],
     ["Katch-McArdle", km ? fmtN(km) : "—", "Katch" + NB + "McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))}${NS}kg` : `needs body fat${NS}%`], ["Ten Haaf (weight)", fmtN(th), "Ten" + NS + "Haaf (weight)", inTh ? "athletes 18–35" : "outside 18–35, less certain"]].filter(t => t[0] !== bmrUsed);
@@ -11657,6 +11680,64 @@ function energyView() {
   hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: roll7(pts("tdee")) }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, { name: "Target", color: "var(--faint)", pts: roll7(pts("target")), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
   hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], prev7.map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
   return hh;
+}
+/* ================= Settings › How it is calculated (M7c / D3): today's energy and target step by step =================
+   Nothing is computed here: every figure is read from today's energy row (energySeries), the sessions' figures and their provenance (sessionSource = sessionKcal), the target (targetsFor) and the
+   algorithm list (ALGO). The formula texts write out the coefficients bmrOf uses, with today's inputs. Each figure is shown once. */
+function bmrText(m, r, prof) {
+  const kg = r1(r.trend), cm = prof.height || 175, a = r.age, F = prof.sex === "Female";
+  return {
+    "Mifflin-St Jeor": `10 × ${kg} kg + 6.25 × ${cm} cm − 5 × ${a} y ${F ? "− 161" : "+ 5"}`,
+    "Harris-Benedict": F ? `655.0955 + 9.5634 × ${kg} kg + 1.8496 × ${cm} cm − 4.6756 × ${a} y` : `66.473 + 13.7516 × ${kg} kg + 5.0033 × ${cm} cm − 6.755 × ${a} y`,
+    "Ten Haaf (weight)": `29.279 + 11.936 × ${kg} kg + 587.728 × ${cm / 100} m − 8.129 × ${a} y${F ? "" : " + 191.027"}`,
+    "Ten Haaf (FFM)": `(95.272 × ${r1(r.trend * (1 - r.bf / 100))} kg lean + 2026.161) ÷ 4.184`,
+    "MET": `${kg} kg × 24${F ? " × 0.9" : ""}`
+  }[m];
+}
+function explainHTML() {
+  const t = todayISO(), r = energyAt(t), E = FIT().energy, prof = FIT().profile, L = logGet(t) || {};
+  if (!r) return `<div class="note">Add your profile and a weight to see how the numbers are made.</div>`;
+  const row = (tt, s, v, end) => `<div class="lrow"><span style="min-width:0"><span class="t">${tt}</span>${s ? `<span class="s">${s}</span>` : ""}</span>${end || v != null ? `<span class="end">${end || `<b class="num">${v}</b>`}</span>` : ""}</div>`;
+  const bonus = r.bmrF === "Harris-Benedict" ? hbBonusKcal(r.bf) : 0;
+  let h = row("Resting energy (BMR)", `${esc(r.bmrF)}${E.bmr === "Auto" ? " (Auto)" : ""} · ${bmrText(r.bmrF, r, prof)}${bonus > 0 ? ` + ${fmtN(bonus)} lean bonus` : ""}${prof.dob ? "" : " · age assumed"}`, fmtN(r.bmr));
+  const nx = r.nx || {}, NEAT = {
+    watch: () => nx.mode === "neat" ? "your watch's non-exercise figure" : `watch ${fmtN(nx.watch)} ${nx.mode === "total" ? "total − BMR" : "active"} − ${fmtN(nx.sub)} of workouts`,
+    steps: () => `${fmtN(nx.steps)} steps cost ${fmtN(nx.stepK)} + ${fmtN(nx.base)} the steps don't show (median of ${nx.n} days with your watch figure)`,
+    stepsRef: () => `${fmtN(nx.steps)} steps cost ${fmtN(nx.stepK)} (Ludlow-Weyand walking) + ${fmtN(nx.base)} the steps don't show (default NEAT at ${fmtN(nx.ref)} steps)`,
+    stepsRefProj: () => `${fmtN(nx.so)} steps so far, about ${fmtN(nx.steps)} by tonight: they cost ${fmtN(nx.stepK)} (Ludlow-Weyand walking) + ${fmtN(nx.base)} the steps don't show`,
+    avg: () => `average of the last ${nx.n} days${nx.amb ? " (a run or walk today: its steps are in training)" : ""}`,
+    default: () => nx.amb ? "default NEAT (a run or walk today: its steps are in training)" : "default NEAT: no watch figure and no steps"
+  };
+  h += row("Daily movement (NEAT)", (NEAT[r.neatSrc] || NEAT.default)(), fmtN(r.neat));
+  const planned = i => r.sess.items ? r.sess.items[i]?.st !== "done" : ["dated", "program", "pattern"].includes(r.sess.src);
+  const items = r.sess.list.map((w, i) => ({ w, i, k: r.kcals[i], P: sessionSource(w, t, r.trend) })).filter(x => x.w.sport && x.w.sport !== "Rest");
+  const prov = x => { const P = x.P;
+    if (P.how === "dup") return `same session as ${esc(sessionLabel(P.dup))}${P.dup.startAt ? ` at ${P.dup.startAt}` : ""}: counted there, once`;
+    const what = P.raw != null && P.rest > 0 ? `${esc(P.dev || "sensor")} total ${fmtN(P.raw)} − ${fmtN(P.rest)} resting` : P.raw != null ? `${esc(P.dev || "sensor")}${P.basis === "net" ? " · active kcal" : P.basis === "unknown" ? " · not sure what it counts" : ""}` : HOW_SHORT[P.how] || "";
+    return [what, P.how === "hr" ? `${x.w.hr} bpm` : "", P.devn ? esc(P.devn) : "", planned(x.i) ? `planned${P.from === "intervals.icu calendar" ? " in intervals.icu" : ""}` : P.from].filter(Boolean).join(" · "); };
+  const counted = items.filter(x => x.P.how !== "dup"), each = counted.length > 1 ? items : items.filter(x => x.P.how === "dup");
+  h += row("Training (EAT)", counted.length > 1 ? `sum of the ${counted.length} sessions below, net of resting energy` : counted.length ? `${esc(sessionLabel(counted[0].w))} · ${prov(counted[0])}` : "no training today", fmtN(r.eat));
+  h += each.map(x => row(esc(sessionLabel(x.w)), prov(x), fmtN(x.k))).join("");
+  h += row("Digestion (TEF)", `${r0(E.tef * 100)}% of BMR + NEAT + training`, fmtN(r.tef));
+  if (r.factor !== 1) h += row("Formulas", "BMR + NEAT + training + TEF", fmtN(r.tdeeW)) + row("Calibration", esc(calStatus(r)), `× ${r.factor.toFixed(2)}`) + row("TDEE", "formulas × calibration", fmtN(r.tdee));
+  else h += row("TDEE", `BMR + NEAT + training + TEF · ${esc(calStatus(r))}`, fmtN(r.tdee));
+  const pk = phaseKcal(r.phase, r.tdee), pp = FIT().phaseParams[r.phase.phase] || FIT().phaseParams.Maintenance, mac = `protein ${pp.p} and fat ${pp.f} g per kg of trend weight, carbs the rest`;
+  h += pk ? row("Energy target", `TDEE ${pk > 0 ? "+" : "−"} ${fmtN(Math.abs(pk))} (${esc(r.phase.phase)}) · ${mac}`, fmtN(r.target)) : row("Energy target", `the TDEE (${esc(r.phase.phase)}) · ${mac}`, null);
+  const tg = targetsFor(t).kcal;
+  if (!SMART()) h += row("Today's target", "your targets follow the training type (Settings › Targets): the energy target is used with «Energy balance»", r0(tg) !== r0(r.target) ? fmtN(tg) : null);
+  else if (r0(tg) !== r0(r.target)) h += row("Today's target", "after today's adjustments", fmtN(tg));
+  const on = new Set(algoAt(t).map(a => a.k));
+  const vers = ALGO.map(a => { const from = E[a.from], st = !a.on(E) ? "Off" : on.has(a.k) ? "In use" : "Not yet";
+    return row(esc(a.name), `${a.ref} · ${!a.on(E) ? "switched off" : from ? `${t >= from ? "since" : "starts"} ${fmtDM(from)}` : "from the first day"}`, null, `<span class="pill" style="--c:var(--${st === "In use" ? "good" : st === "Off" ? "muted" : "warn"})">${st}</span>`); }).join("");
+  let nw = 0; for (let i = 0; i < 7; i++) { const x = logGet(addDays(t, -i)); if (x?.weight > 0 && !x.estW) nw++; }
+  const intake = { food: "foods ticked as eaten", manual: "totals typed in the Check-in", est: "an estimate, left out of the calibration" }[r.intake?.src] || "nothing logged today";
+  const src = row("Weight", nw ? `trend of ${nw} weigh-in${nw > 1 ? "s" : ""} in the last 7 days, typed by you` : "no weigh-in in the last 7 days: the last trend or your starting weight", null)
+    + row("Body fat", r.bf != null ? "from your log or profile" : "not set: the lean-mass formulas are not used", null)
+    + row("Steps", L.steps > 0 ? "intervals.icu wellness or the Check-in" : "none today", null)
+    + row("Intake", intake, null)
+    + row("Training", "intervals.icu activities, workouts recorded in Engine and typed ones; what is still planned counts until it is done. Two recordings of one session count once", null)
+    + (devList().length ? row("Sensors", devList().map(x => `${esc(x.name)}: ${x.kcal === "gross" ? "total kcal, resting energy taken out" : x.kcal === "net" ? "active kcal" : "not sure, used as reported"}`).join(" · "), null) : "");
+  return `<div class="card ex">${h}</div><span class="flabel">Algorithm set v${ALGO_VERSION}</span><div class="card ex">${vers}</div><span class="flabel">Where the data come from</span><div class="card ex">${src}</div>`;
 }
 
 /* ================= supplements: what, how much, when; a tick when taken; reminders at the set time ================= */
@@ -12987,11 +13068,14 @@ refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[d
 /* ================= features you can switch off: the app stays simple if you don't need them ================= */
 const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
   ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
-  ["battery", "Energy battery", "Today: how charged you are, drained by the day and training, recharged by sleep and naps"], ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"]];
-const FEAT = k => (S.settings?.feat || {})[k] !== false;
-function featCard() { const F = S.settings.feat || {};
+  ["battery", "Energy battery", "Today: how charged you are, drained by the day and training, recharged by sleep and naps"], ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"],
+  ["explain", "How it is calculated", "Settings: the formulas, inputs and steps behind today's energy and target"]];
+/* every feature is on until you switch it off, except these, off until you switch them on */
+const FEAT_OFF = ["explain"];
+const FEAT = k => { const v = (S.settings?.feat || {})[k]; return v === undefined ? !FEAT_OFF.includes(k) : v !== false; };
+function featCard() {
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
-    ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${F[k] !== false}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
+    ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${FEAT(k)}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
 SETTINGS_CARDS.push({ o: -1, fn: featCard });
 ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !FEAT(k); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
   if (k === "period" && !on && UI.trainSeg === "season") UI.trainSeg = "cal"; if ((k === "goals" && !on && UI.progSeg === "goals") || (k === "journal" && !on && UI.progSeg === "journal")) UI.progSeg = "overview"; saveSettings(); };
@@ -16015,6 +16099,51 @@ CHG["dev-sport"] = (v, el) => { const fit = FIT(); fit.sportDevice = { ...(fit.s
 ACT["dev-add"] = () => { const fit = FIT(); fit.devices = [...devList(), { id: "d" + uid(), name: "New sensor", kind: "wrist", kcal: "unknown" }]; saveSettings(); scheduleRender(); };
 ACT["dev-del"] = el => { const fit = FIT(), id = el.dataset.id, prev = clone([fit.devices, fit.sportDevice]); fit.devices = devList().filter(x => x.id !== id); fit.sportDevice = Object.fromEntries(Object.entries(fit.sportDevice || {}).filter(([, v]) => v !== id)); saveSettings(); scheduleRender(); toast("Sensor removed", () => { fit.devices = prev[0]; fit.sportDevice = prev[1]; saveSettings(); scheduleRender(); }); };
 document.addEventListener("toggle", e => { const el = e.target; if (el.matches?.("details.fd-more")) UI.fdOpen = { ...(UI.fdOpen || {}), [el.dataset.k]: el.open }; }, true);
+/* ================= D7 (approved 26/10): one session, one source =================
+   Two recordings of the same session (two sensors uploading to intervals.icu, a typed copy of a recorded session) never add up. They are the same session when both start times are known,
+   the sport is of the same kind and they overlap for at least half of the shorter one; without both start times nothing is merged (no guessing). Of such a group the one that counts is the one
+   measured by the sensor chosen for the sport (picked on the workout, or the sport's default whose name matches the device intervals.icu reports), then any measured figure, then an estimate;
+   a tie keeps the first recorded. The others count 0 kcal, in the day's energy, in the watch subtraction and in what is learned, and say where they are counted.
+   Off: energy.oneSrc "off"; days before energy.oneFrom count every recording as before. */
+const oneSrcOn = date => { const E = FIT().energy; return E.oneSrc !== "off" && (!E.oneFrom || date >= E.oneFrom); };
+const hm2min = s => { const m = /^(\d{1,2}):(\d{2})/.exec(s || ""); return m ? +m[1] * 60 + +m[2] : null; };
+function sessStart(w, L) { if (w.startAt) return hm2min(w.startAt); const s = w.sid && (L?.wsess || []).find(x => x.id === w.sid)?.start, t = s ? new Date(s) : null; return t && isFinite(t) ? t.getHours() * 60 + t.getMinutes() : null; }
+function sameSession(a, b, L) {
+  if (a === b || !a.sport || !b.sport || sportFam(a.sport) !== sportFam(b.sport)) return false;
+  const sa = sessStart(a, L), sb = sessStart(b, L), ma = parseMinutes(a.min) || 0, mb = parseMinutes(b.min) || 0; if (sa == null || sb == null || !(ma > 0) || !(mb > 0)) return false;
+  return Math.min(sa + ma, sb + mb) - Math.max(sa, sb) >= 0.5 * Math.min(ma, mb);
+}
+const devWord = n => (String(n || "").toLowerCase().match(/[a-z0-9]{3,}/) || [""])[0];
+/* 0 = measured by the sensor chosen for the sport, 1 = measured by another, 2 = no measured figure */
+function srcRank(w) {
+  if (!(w.kcal > 0 || w.watch > 0)) return 2; const own = devById(FIT().sportDevice?.[w.sport]);
+  if (w.dev) return own && w.dev === own.id ? 0 : 1;
+  return own && devWord(own.name) && String(w.devn || "").toLowerCase().includes(devWord(own.name)) ? 0 : 1;
+}
+/* the groups of a list: index of each recording that does not count -> index of the one that does */
+function oneSrcMap(ws, L) {
+  const n = ws.length, root = [...Array(n).keys()], find = i => root[i] === i ? i : (root[i] = find(root[i]));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (sameSession(ws[i], ws[j], L)) root[find(j)] = find(i);
+  const groups = {}; for (let i = 0; i < n; i++) (groups[find(i)] = groups[find(i)] || []).push(i);
+  const out = new Map(); for (const g of Object.values(groups)) { if (g.length < 2) continue; const best = g.reduce((b, i) => srcRank(ws[i]) < srcRank(ws[b]) ? i : b, g[0]); for (const i of g) if (i !== best) out.set(i, best); }
+  return out;
+}
+/* the recording a workout of a day's log is counted in, when it is a second copy of the same session; null otherwise (also for a copy of the workout, e.g. the editor's draft) */
+function dupOf(w, date) {
+  if (!w || !oneSrcOn(date)) return null; const L = logGet(date), ws = L?.workouts || [], i = ws.indexOf(w); if (i < 0) return null;
+  const j = memo("one|" + date, () => oneSrcMap(ws, L)).get(i); return j == null ? null : ws[j];
+}
+/* the import merging several activities into one session you logged by hand: overlapping recordings give their kcal once */
+function oneSrcKcal(ws) { const m = oneSrcOn(todayISO()) ? oneSrcMap(ws, null) : new Map(); return ws.reduce((a, w, i) => a + (m.has(i) ? 0 : +w.kcal || 0), 0); }
+{ const _sk = sessionKcal; sessionKcal = function (w, date, kg) { return dupOf(w, date) ? { kcal: 0, how: "dup" } : _sk(w, date, kg); }; }
+{ const _rk = realKcal; realKcal = function (w, date) { return dupOf(w, date) ? 0 : _rk(w, date); }; }
+/* where the kcal of a session come from (one line, the same words in the Check-in and in Settings › How it is calculated) */
+const HOW_SHORT = { watch: "watch", device: "watch · intervals.icu", trimmed: "trimmed to the real length", load: "from intervals.icu load", logged: "logged", km: "from km", hr: "from avg HR", own: "your kcal/min", met: "MET estimate", dup: "same session, counted once", none: "", rest: "" };
+/* provenance of one session's figure: the engine's number (sessionKcal) with the sensor, what it reports, the value it gave and the resting energy taken out */
+function sessionSource(w, date, kg) {
+  const k = sessionKcal(w, date, kg), dv = devById(devOf(w)), raw = k.how === "device" ? +w.kcal : k.how === "watch" ? +w.watch : null;
+  return { ...k, dev: dv?.name || null, basis: dv?.kcal || null, devn: w.devn || null, raw, rest: raw != null ? raw - k.kcal : 0, from: w.sid ? "Engine" : fromDevice(w) ? "intervals.icu" : isIcu(w) ? "intervals.icu calendar" : "typed", dup: k.how === "dup" ? dupOf(w, date) : null };
+}
 /* the build the page is running (stamped by the build script) and a way to fetch the newest one right now */
 const BUILD = () => document.querySelector('meta[name="engine-build"]')?.content || "";
 const buildLabel = b => /^\d{12}$/.test(b) ? `Build ${b.slice(0, 4)}-${b.slice(4, 6)}-${b.slice(6, 8)} ${b.slice(8, 10)}:${b.slice(10)} UTC` : "Development build";

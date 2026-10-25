@@ -102,7 +102,7 @@ async function icuSyncDirect(opts = {}) {
     const [date, sp] = key.split("|"), dd = day(date); let lst = clone(dd.workouts || []); const before = JSON.stringify(lst);
     const known = new Set(lst.flatMap(o => [o.ext, ...(o.exts || []), ...(o.dups || [])]).filter(Boolean)); let neu = [];
     const wss = Object.fromEntries((dd.wsess || []).map(x => [x.id, x]));
-    const fill = (o, w, keys = ["kcal", "hr", "load", "pev", "km", "elev", "spd", "pw", "cad", "hrmax", "devn"]) => { const m = { ...o }; for (const k of keys) if ((m[k] == null || m[k] === "") && w[k] != null) m[k] = w[k]; return cleanO(m); };
+    const fill = (o, w, keys = ["kcal", "hr", "load", "pev", "km", "elev", "spd", "pw", "cad", "hrmax", "devn", "startAt"]) => { const m = { ...o }; for (const k of keys) if ((m[k] == null || m[k] === "") && w[k] != null) m[k] = w[k]; return cleanO(m); };
     const man = ws.filter(w => w._src === "MANUAL"), dev = ws.filter(w => w._src !== "MANUAL");
     for (const m of (dev.length ? man : [])) { const dv = dev[0]; ws.splice(ws.indexOf(m), 1);
       if (m.note) { dv.note = m.note; dv._ren = true; } if (m.pev && !dv.pev) dv.pev = m.pev; dv._dup = [...(dv._dup || []), m.ext];
@@ -110,16 +110,16 @@ async function icuSyncDirect(opts = {}) {
     for (const w of ws) {
       const xid = w._xid, st = w._start || ""; const ren = w._ren, dup = w._dup; delete w._xid; delete w._start; delete w._src; delete w._ren; delete w._dup;
       if (dup) w.dups = dup; if (ren) lst = lst.map(o => o.ext === w.ext ? { ...o, note: w.note } : o);
-      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, o.sid ? { ...w, wmin: w.min } : w, ["kcal", "hr", "load", "pev", "km", "dups", "wmin", "gearN", "hrz", "pz", "wz", "elev", "spd", "pw", "cad", "hrmax", "devn"]) : o); continue; }
+      if (known.has(w.ext) || lst.some(o => o.ext === w.ext)) { lst = lst.map(o => o.ext === w.ext ? fill(o, o.sid ? { ...w, wmin: w.min } : w, ["kcal", "hr", "load", "pev", "km", "dups", "wmin", "gearN", "hrz", "pz", "wz", "elev", "spd", "pw", "cad", "hrmax", "devn", "startAt"]) : o); continue; }
       let k = xid ? lst.findIndex(o => o.sid === xid) : -1;
       if (k < 0) for (let n = 0; n < lst.length; n++) { const o = lst[n]; if (!o.sid || o.ext || o.sport !== sp) continue;
         try { const A = new Date(st).getTime(), B = new Date(String(wss[o.sid]?.start || "")).getTime(); if (isFinite(A) && isFinite(B) && Math.abs(A - B) > 3 * 3600e3) continue; } catch (e) {} k = n; break; }
-      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, { ...w, wmin: w.min }, ["kcal", "hr", "load", "pev", "km", "wmin", "gearN", "hrz", "pz", "wz", "elev", "spd", "pw", "cad", "hrmax", "devn"]); known.add(w.ext); continue; }
+      if (k >= 0) { lst[k] = fill({ ...lst[k], ext: w.ext }, { ...w, wmin: w.min }, ["kcal", "hr", "load", "pev", "km", "wmin", "gearN", "hrz", "pz", "wz", "elev", "spd", "pw", "cad", "hrmax", "devn", "startAt"]); known.add(w.ext); continue; }
       neu.push(w); }
     const loc = lst.map((o, i) => [o, i]).filter(([o]) => o.sport === sp && !o.ext && !o.sid).map(([, i]) => i);
     if (neu.length && loc.length) {
-      if (loc.length === 1 && neu.length === 1) { const o = lst[loc[0]], w = neu[0], m = { ...o, ext: w.ext }; for (const k of ["kcal", "hr", "km", "rpe", "min", "int", "load", "pev", "gearN", "hrz", "pz", "wz"]) if (!m[k] && w[k] != null) m[k] = w[k]; lst[loc[0]] = cleanO(m); neu = []; }
-      else { const o = lst[loc[0]], m = { ...o, exts: [...new Set([...(o.exts || []), ...neu.map(w => w.ext)])].sort() }; if (!m.kcal) m.kcal = neu.reduce((s, w) => s + (w.kcal || 0), 0) || null; if (!m.load) m.load = neu.reduce((s, w) => s + (w.load || 0), 0) || null; lst[loc[0]] = cleanO(m); neu = []; } }
+      if (loc.length === 1 && neu.length === 1) { const o = lst[loc[0]], w = neu[0], m = { ...o, ext: w.ext }; for (const k of ["kcal", "hr", "km", "rpe", "min", "int", "load", "pev", "gearN", "hrz", "pz", "wz", "devn", "startAt"]) if (!m[k] && w[k] != null) m[k] = w[k]; lst[loc[0]] = cleanO(m); neu = []; }
+      else { const o = lst[loc[0]], m = { ...o, exts: [...new Set([...(o.exts || []), ...neu.map(w => w.ext)])].sort() }; if (!m.kcal) m.kcal = (typeof oneSrcKcal === "function" ? oneSrcKcal(neu) : neu.reduce((s, w) => s + (w.kcal || 0), 0)) || null; if (!m.load) m.load = neu.reduce((s, w) => s + (w.load || 0), 0) || null; lst[loc[0]] = cleanO(m); neu = []; } }
     lst = [...lst, ...neu];
     if (JSON.stringify(lst) !== before) { dd.workouts = lst; res.acts++; } tidy(date); }
   // wellness (fills empty days only)
