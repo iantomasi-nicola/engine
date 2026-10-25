@@ -6790,23 +6790,23 @@ ACT["wt-apply"] = () => { const sh = S_(); closeSheet(); applyWeekTpl(sh.use, sh
 ACT["wt-del"] = el => { const x = weekTpls().find(w => w.id === el.dataset.id); if (!x) return; setWeekTpls(weekTpls().filter(w => w !== x), `Deleted «${x.name}»`); renderSheet(); };
 ACT["mclip-clear"] = () => { UI.mclip = null; scheduleRender(); };
 /* the side library of the week view: foods and recipes to drag into a meal (open/closed kept in UI.pwLib; closed by default) */
-const PW_SEGS = [["recent", "Recent"], ["foods", "Foods"], ["recipes", "Recipes"], ["fav", "Favourites"], ["home", "At home"]];
+const PW_SEGS = [["recent", "Recent"], ["foods", "Foods"], ["recipes", "Recipes"], ["fav", "Favourites"]];
 function pwLibList() {
   const q = (UI.pwQ || "").trim(), seg = UI.pwSeg || "recent", food = f => ({ t: "food", x: f, qty: defaultQty(f) }), rec = r => ({ t: "recipe", x: r, qty: 1 });
   let list;
   if (seg === "recent" && !q) list = recentFoods(40).map(r => r.kind === "food" ? (getFood(r.ref) && { t: "food", x: getFood(r.ref), qty: r.qty || defaultQty(getFood(r.ref)) }) : (getRecipe(r.ref) && { t: "recipe", x: getRecipe(r.ref), qty: r.qty || 1 })).filter(Boolean);
-  else if (seg === "home") list = allFoods().filter(f => (S.shop?.pantry?.[f.id]?.g || 0) > 0 && (!q || foodSearch(q, "all").some(o => o.t === "food" && o.x.id === f.id))).map(food);
   else list = foodSearch(q, seg === "foods" || seg === "recent" ? "all" : seg === "fav" ? "fav" : "recipes").filter(o => seg === "foods" ? o.t === "food" : true).map(o => o.t === "food" ? food(o.x) : rec(o.x));
-  return list.slice(0, 80);
+  return (UI.pwHome ? list.filter(o => foodInPantry(o.x, o.t === "recipe")) : list).slice(0, 80);
 }
 function pwLibRows() {
   const L = pwLibList(); if (!L.length) return `<div class="faint" style="font-size:12.5px;padding:6px 2px">Nothing here${UI.pwQ ? " for “" + esc(UI.pwQ) + "”" : " yet"}.</div>`;
   return L.map(o => { const m = o.t === "food" ? addM(ZERO(), o.x.per, o.qty / 100) : addM(ZERO(), recipePerServing(o.x), o.qty), unit = o.t === "food" ? (o.x.unit || "g") : "serving";
     return `<div class="pw-lr" draggable="true" data-t="${o.t}" data-ref="${esc(o.x.id)}" data-qty="${o.qty}" title="Drag into a meal"><b>${o.t === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(o.x.name)}</b><small>${(S.shop?.pantry?.[o.x.id]?.g || 0) > 0 ? "at home · " : ""}<span class="nw">${fmtQ(o.qty)} ${unit}</span> · <span class="nw">${fmtN(m.kcal)} kcal</span></small></div>`; }).join("");
 }
-const pwLibPanel = () => `<aside class="pw-lib" aria-label="Foods and recipes"><div class="pw-lt"><b>Foods &amp; recipes</b><input id="pw-lq" class="inp" type="search" placeholder="Search" value="${esc(UI.pwQ || "")}" data-in="pw-lq" autocomplete="off"><div class="chips">${PW_SEGS.map(([k, l]) => `<button class="chip sm" data-act="pw-seg" data-k="${k}" aria-pressed="${(UI.pwSeg || "recent") === k}">${l}</button>`).join("")}</div><button class="icon-btn" data-act="pw-lib" aria-label="Close">${ic("close", "sm")}</button></div>
+const pwLibPanel = () => `<aside class="pw-lib" aria-label="Foods and recipes"><div class="pw-lt"><b>Foods &amp; recipes</b><input id="pw-lq" class="inp" type="search" placeholder="Search" value="${esc(UI.pwQ || "")}" data-in="pw-lq" autocomplete="off"><div class="chips">${PW_SEGS.map(([k, l]) => `<button class="chip sm" data-act="pw-seg" data-k="${k}" aria-pressed="${(UI.pwSeg || "recent") === k}">${l}</button>`).join("")}<button class="chip sm" data-act="pw-home" aria-pressed="${!!UI.pwHome}">At home</button></div><button class="icon-btn" data-act="pw-lib" aria-label="Close">${ic("close", "sm")}</button></div>
   <div id="pw-ll" class="pw-ll">${pwLibRows()}</div></aside>`;
 ACT["pw-lib"] = () => { UI.pwLib = !UI.pwLib; scheduleRender(); };
+ACT["pw-home"] = el => { UI.pwHome = !UI.pwHome; const l = $("#pw-ll"); $$(".pw-lib [data-act=pw-home]").forEach(b => b.setAttribute("aria-pressed", String(!!UI.pwHome))); if (l) l.innerHTML = pwLibRows(); };
 ACT["pw-seg"] = el => { UI.pwSeg = el.dataset.k; const l = $("#pw-ll"); $$(".pw-lib [data-act=pw-seg]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === UI.pwSeg))); if (l) l.innerHTML = pwLibRows(); };
 function dropLib(f, date, meal) {
   if (!f?.ref || !(date && meal)) return false; const it = newItem(f.t, f.ref, +f.qty || (f.t === "recipe" ? 1 : defaultQty(getFood(f.ref))));

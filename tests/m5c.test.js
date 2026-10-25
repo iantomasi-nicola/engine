@@ -113,13 +113,15 @@ test("the foods and recipes library: closed by default, opens beside (or above) 
     const open = !!document.querySelector(".pw-lib"), rows0 = document.querySelectorAll(".pw-lr").length;
     INP["pw-lq"]("chicken"); const q = [...document.querySelectorAll(".pw-lr b")].map(b => b.textContent.trim());
     INP["pw-lq"](""); ACT["pw-seg"]({ dataset: { k: "recipes" } }); const rec = [...document.querySelectorAll(".pw-lr")].every(x => x.dataset.t === "recipe") && document.querySelectorAll(".pw-lr").length > 0;
-    S.shop.pantry["t-rice"] = { g: 200 }; DATA_V++; ACT["pw-seg"]({ dataset: { k: "home" } }); const home = [...document.querySelectorAll(".pw-lr")].map(x => x.dataset.ref);
+    S.shop.pantry["t-rice"] = { g: 200 }; DATA_V++; ACT["pw-seg"]({ dataset: { k: "foods" } }); ACT["pw-home"](); const home = [...document.querySelectorAll(".pw-lr")].map(x => x.dataset.ref), homeOn = document.querySelector('[data-act="pw-home"]').getAttribute("aria-pressed");
+    ACT["pw-seg"]({ dataset: { k: "recipes" } }); const homeRec = [...document.querySelectorAll(".pw-lr")].every(x => x.dataset.t === "recipe" && foodInPantry(getRecipe(x.dataset.ref), true)); ACT["pw-home"](); const homeOff = document.querySelector('[data-act="pw-home"]').getAttribute("aria-pressed"), allRec = document.querySelectorAll(".pw-lr").length;
+    ACT["pw-seg"]({ dataset: { k: "foods" } });
     const t = addDays(weekStartOf(todayISO()), 2); const n0 = (S.days[t].meals.snack || []).length; dropLib({ t: "food", ref: "t-chicken", qty: 120 }, t, "snack"); const added = S.days[t].meals.snack.at(-1); const n1 = S.days[t].meals.snack.length;
     toast.undo(); const n2 = (S.days[t].meals.snack || []).length;
-    return { closed, open, rows0, q, rec, home, added: added && [added.kind, added.ref, added.qty, added.eaten], n: [n0, n1, n2] }; });
+    return { closed, open, rows0, q, rec, home, homeOn, homeRec, homeOff, allRec, added: added && [added.kind, added.ref, added.qty, added.eaten], n: [n0, n1, n2] }; });
   assert.equal(r.closed, true); assert.equal(r.open, true); assert.ok(r.rows0 > 0);
   assert.ok(r.q.length > 0 && r.q.every(x => /chicken/i.test(x)), "search: " + r.q.join("|")); assert.ok(r.rec, "the Recipes tab shows recipes only");
-  assert.ok(r.home.includes("t-rice"), "At home: " + r.home.join("|")); assert.deepEqual(r.added, ["food", "t-chicken", 120, false]); assert.deepEqual(r.n, [1, 2, 1]);
+  assert.ok(r.home.includes("t-rice"), "At home: " + r.home.join("|")); assert.equal(r.homeOn, "true"); assert.equal(r.homeOff, "false"); assert.ok(r.homeRec, "At home also filters the recipes tab"); assert.ok(r.allRec > 0); assert.deepEqual(r.added, ["food", "t-chicken", 120, false]); assert.deepEqual(r.n, [1, 2, 1]);
   assert.deepEqual(app.errors, []);
 });
 
