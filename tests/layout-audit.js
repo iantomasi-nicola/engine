@@ -8,12 +8,12 @@ const VPS = { phone: H.VIEWPORTS.phone, tablet: H.VIEWPORTS.tablet, pc: H.VIEWPO
 const SCREENS = [
   ["today", "UI.tab='today'"], ["meals", "UI.tab='plan';UI.fuelTab='plan'"], ["foods", "UI.tab='foods';UI.fuelTab='foods'"], ["shop", "UI.tab='shop';UI.fuelTab='shop'"], ["pantry", "UI.tab='pantry';UI.fuelTab='pantry'"],
   ...["cal", "week", "wk", "fitness", "races", "running", "records"].map(k => ["train-" + k, `UI.tab='train';UI.trainSeg='${k}'`]),
-  ...["overview", "energy", "training", "days", "nutrition", "body", "weeks", "lab", "level"].map(k => ["progress-" + k, `UI.tab='progress';UI.progSeg='${k}'`]),
+  ...["overview", "energy", "training", "days", "nutrition", "body", "weeks", "lab", "level", "goals"].map(k => ["progress-" + k, `UI.tab='progress';UI.progSeg='${k}'`]),
   ["week", "UI.tab='week'"], ["timer", "UI.tab='timer'"],
   ...["look", "targets", "meals", "nutrition", "intervals", "live", "rem", "ai", "acct", "data", "feat"].map(k => ["settings-" + k, `UI.tab='settings';UI.setSel='${k}'`]),
 ];
 const SHEETS_TO_OPEN = [
-  ["sheet-cheat", "openCheat({date:todayISO(),meal:activeMeals()[0].id})"], ["sheet-story", "storyOpen(todayISO(),{sport:strengthSport(),min:40,note:'Pulls'},{min:40,name:'Pulls',sets:[{ex:'Pull-up',reps:[6,6],load:10}]})"],
+  ["sheet-cheat", "openCheat({date:todayISO(),meal:activeMeals()[0].id})"], ["sheet-battery", "openSheet('battery',{})"], ["sheet-story", "storyOpen(todayISO(),{sport:strengthSport(),min:40,note:'Pulls'},{min:40,name:'Pulls',sets:[{ex:'Pull-up',reps:[6,6],load:10}]})"],
   ["sheet-ready-str", "startWorkout({script:'Pull 3x\\n- 6 Pull-up\\n- 8 Ring row',name:'Gear day',sport:strengthSport(),date:todayISO()});UI.tab='live'"],
   ["sheet-ready-run", "WK().live=null;startWorkout({script:'Warm-up\\n- 10m Z1\\n\\nMain 3x\\n- 3m Z4\\n- 2m Z1',name:'Intervals',sport:'Running',date:todayISO()});UI.tab='live'"],
 ];

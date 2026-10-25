@@ -10,10 +10,10 @@ PWA statica per un atleta ibrido (nutrizione, running, calisthenics, forza). Nes
 - Il commit `02f43a9` ("Improve project documentation") **non è documentazione**: modifica 483 righe di `source/engine.html`, **non avvia l'app** (pagina bianca, `ReferenceError` su `INP`, vedi `docs/BASELINE_AND_AUDIT.md`) e l'utente lo scarta con un rollback. **Non considerare implementato nulla che esista solo in `02f43a9`.**
 - Il sito pubblicato (`index.html` in root) corrisponde a `cae350d`, ma non va assunto corretto senza verifica.
 - Sul branch di lavoro `02f43a9` è annullato con un commit di revert (nessun force-push). Altri branch/tag con lavoro precedente (`fix/storage-shopping-m1`, tag `checkpoint/*`) **non fanno parte della baseline**: non usarli senza richiesta esplicita.
-- Il rollback di `origin/main` lo decide l'utente. Non eseguire reset, force-push, merge, push o deploy senza autorizzazione esplicita.
+- Il rollback di `origin/main` lo decide l'utente. Non eseguire reset né force-push; merge, push e deploy solo secondo la routine di pubblicazione autorizzata (vedi «Commit e push»).
 
 ## Layout
-- `source/engine.html`: l'app (HTML + CSS + un unico `<script>`, ~12.6k righe). **È il sorgente da modificare.**
+- `source/engine.html`: l'app (HTML + CSS + un unico `<script>`, ~15k righe). **È il sorgente da modificare.**
 - `source/web/`: runtime web (`shim.js` prima dell'app; `icu-direct.js`, `after.js` dopo; `sw.js`; manifest; config).
 - `source/build-web.js`: assembla e minifica nei file di root (`index.html`, `sw.js`, `manifest.webmanifest`).
 - Root (`index.html`, `sw.js`, …): **artefatti di build** serviti da GitHub Pages. Non modificarli a mano.
@@ -43,7 +43,7 @@ Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commi
 - `OFF_UNREACHABLE` è un latch di sessione: un solo errore di rete disattiva Open Food Facts fino al reload.
 
 ## Commit e push
-Concordato con l'utente: commit atomici e push **frequenti** sul branch di lavoro (`git push -u origin <branch>`), mai su `main` e mai force-push senza autorizzazione. Il backlog (`docs/PRODUCT_REQUIREMENTS.md`) e la roadmap (`docs/ROADMAP.md`) con le cose implementate e da implementare si aggiornano **passo passo**, nello stesso commit della modifica; il resto della documentazione dopo. Rebuild dei file di root e pubblicazione solo su richiesta.
+Concordato con l'utente: commit atomici e push **frequenti** sul branch di lavoro (`git push -u origin <branch>`). L'utente ha poi autorizzato la **pubblicazione frequente su `main`** (push `HEAD:main` dopo suite verde e rebuild root, con riepilogo, dove provare e SHA di rollback); mai force-push, reset o riscrittura della storia senza autorizzazione. Il backlog (`docs/PRODUCT_REQUIREMENTS.md`) e la roadmap (`docs/ROADMAP.md`) con le cose implementate e da implementare si aggiornano **passo passo**, nello stesso commit della modifica; il resto della documentazione dopo. Il rebuild dei file di root segue ogni pubblicazione, in un commit dedicato.
 
 ## Stile visivo (richiesta dell'utente, 24/10/2026)
 Minimale, in pieno stile Material Design (Google, evoluzione recente): superfici tonali, raggi coerenti, nessun bordino/filetto decorativo colorato (es. barra verde a sinistra o contorno sulla cella «oggi»: si usa solo un fondo tenue), ombre e linee ridotte al necessario. Prima di ogni commit visivo: allineamenti e simmetrie su 390/820/1440 px. M14 include la verifica di allineamento e design di tutte le schermate.

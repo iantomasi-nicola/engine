@@ -1,0 +1,19 @@
+# Energy battery (Today › «Energy battery», foglio con i dettagli)
+
+Quanto sei carico adesso, da 0 a 100: **si scarica durante il giorno, si ricarica con la notte e con i pisolini**. Richiesta del 25/10 («batteria biologica come quella di Garmin, precisissima, con studi autorevoli»). Non è una misura: è una stima, e la schermata lo dice. Non cambia nessun target né caloria. Codice: `BT`, `btUp/btDown`, `btPressure`, `btS0`, `btVitals`, `btSessions`, `btCtx`, `btDay`, `batteryCard`, `SHEETS.battery` in `source/engine.html`; test in `tests/m11c.test.js` («M11h battery», valori calcolati a mano). Interruttore: Settings › Features › Energy battery.
+
+## Modello
+`E(t) = 100 × (1 − P(t)) + adjHRV/RHR − F(t)`, limitato a 0–100.
+
+1. **Pressione di sonno P** (processo omeostatico del modello a due processi, Borbély 1982; Daan, Beersma & Borbély 1984). In veglia sale verso 1 con costante di tempo **τ = 18,2 h**: `P = 1 − (1 − P0)·e^(−h/18,2)`; nel sonno (notte o pisolino) scende con **τ = 4,2 h**: `P = P0·e^(−h/4,2)`. Lo stato passa da una notte all'altra (8 giorni di storia): una notte corta si paga nei giorni dopo, una lunga non si «accumula» oltre ciò che il sonno scarica. Le costanti variano da persona a persona (Rusterholz et al. 2010); sono quelle di riferimento, non tarate sull'utente. Notte senza dato: stimata dalla media delle ultime due settimane (o dal target) e **affidabilità bassa**.
+   Esempio (calcolato a mano e nei test): notti di 8 h, sveglia 07:00 → 90,72 % alla sveglia, 68,93 % a mezzogiorno, 37,66 % alle 23:00.
+2. **Recupero (HRV e FC a riposo del mattino)**, contro i tuoi ultimi 28 giorni (servono 7 valori): `z = (ln RMSSD_oggi − media ln) / max(0,04, DS)` (Plews et al. 2013, Buchheit 2014: sotto il solito = meno recuperato); `adjHRV = clamp(7·z, −21, +5)`; FC a riposo sopra il solito: `adjFC = −0,8 × min(10, scarto bpm)`. **Le dimensioni (7 punti per DS, 0,8 per bpm) sono una scelta dell'app, non una formula pubblicata.** Si applicano fino all'ora di andare a letto.
+3. **Allenamento F**: carico (minuti × RPE, `sessionLoad`) rispetto alla sessione usuale `U = max(250, carico settimanale usuale / 5)`: `D = 35·(1 − e^(−carico/(1,5·U)))` punti; cresce linearmente durante la sessione (orario `at`, altrimenti 17:00) e svanisce con `e^(−t/14 h)` dove le ore di sonno contano **2,5 volte**. Contano le sessioni fatte negli ultimi 3 giorni e, per oggi, quelle ancora pianificate (proiezione tratteggiata).
+4. **Pisolino**: minuti (campo «Nap» nel check-in o «I just napped» nel foglio, max 180) all'orario indicato (default 14:00): il sonno del pisolino scarica P con τ = 4,2 h (30 min alle 14:00 → +5,8 punti alle 15:00, +3,7 alle 23:00). Nessuna penalità da inerzia del sonno (Brooks & Lack 2006: da 30 min in su esiste, non modellata).
+5. **Dopo l'ora di dormire** (sveglia − ore dormite): «recharging», P scende con τ = 4,2 h e viene mostrata la stima per la sveglia. **Prima della sveglia abituale** (mezzanotte–sveglia) la giornata è ancora quella precedente.
+
+## Limiti dichiarati
+- Nessun sensore continuo (Garmin usa HRV battito per battito di tutto il giorno e lo stress): qui mancano lo stress diurno e i micro-riposi; l'HRV è un solo valore del mattino.
+- L'orario di sveglia è un'impostazione (Sleep sheet), non misurato.
+- Le costanti τ sono medie di popolazione; il peso di HRV/FC e dell'allenamento è euristico.
+- Non validato contro dati reali dell'utente: prossimo passo utile = confronto con la sensazione soggettiva (diario) e con la Readiness esistente.

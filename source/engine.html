@@ -288,13 +288,17 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .an-t .an-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}.an-t .an-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}.an-t .w b{color:var(--ink)}.an-t .r{opacity:.7}
 .an-d[open]:has(.w)>.an-t>div{grid-template-columns:44px 64px 62px minmax(0,1fr) 62px}.an-n{font-size:12px;line-height:1.45}.an-st{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);padding:6px 0}.an-st .spinner{margin-right:8px}
 .lab-wrap{max-width:820px}.lab-wrap .section-h{margin-top:18px}.lab-wrap .section-h:first-child{margin-top:4px}.lab .an-g{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.lab{display:flex;flex-direction:column;gap:12px;padding:4px 0 18px}.lab-n{font-size:13px}.lab-d{font-size:12px;line-height:1.5}.lab-t{display:flex;flex-direction:column}.lab-t>div{display:grid;grid-template-columns:minmax(0,1.3fr) 1fr 1fr 1fr;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}.lab-t span{color:var(--muted)}.lab-t .hd{border-top:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;padding-bottom:2px}.lab-t b{font-weight:600}.lab-t.rel>div{grid-template-columns:minmax(0,1.3fr) 1fr 1.1fr 56px}
-.lv{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px}.lv-hero{display:flex;flex-direction:column;gap:14px;padding:2px 0 4px}.lv-n{font-family:var(--display);font-size:24px;font-weight:650;line-height:1.15;letter-spacing:-.01em}
-.lv-s{font-size:13px;line-height:1.55;color:var(--muted)}.lv-s b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.lv-d{display:flex;flex-direction:column;gap:10px;padding:12px 0 4px;border-top:1px solid var(--line)}.lv-dh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px}.lv-dh span{color:var(--muted);font-size:13px;text-align:right}
-.lv-bar{position:relative;padding-bottom:22px}.lv-bar.sm{padding-bottom:0}.lv-tr{position:relative;height:8px;border-radius:4px;background:var(--surface-3);overflow:hidden}.lv-bar.sm .lv-tr{height:6px}.lv-tr i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--accent)}.lv-tr u{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--bg)}
-.lv-tk{position:absolute;left:0;right:0;bottom:0;height:14px;font-size:11.5px;color:var(--faint)}.lv-tk span{position:absolute;transform:translateX(-50%);white-space:nowrap}.lv-tk span:first-child{transform:none}.lv-tk span:last-child{transform:translateX(-100%)}.lv-tk .on{color:var(--ink);font-weight:600}
-.lv-t>div{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr)}.lv-t span,.lv-t b{min-width:0;overflow-wrap:anywhere}
-@media(max-width:560px){.lv-t>div{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}.lv-t>div>:nth-child(n+3){grid-column:1/-1;font-size:12px}}
-.lv-t.r3>div{grid-template-columns:64px minmax(0,1fr) auto}.lv-t.r3>div>:nth-child(n+3){grid-column:auto;font-size:13px}.lv-t.r3>div>b{text-align:right}
+.bt{display:flex;flex-direction:column;gap:10px}.bt-row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;color:var(--ink)}.bt-n{display:flex;align-items:baseline;gap:1px;min-width:62px;font-family:var(--display);font-variant-numeric:tabular-nums}.bt-n b{font-size:34px;font-weight:650;line-height:1}.bt-n small{font-size:14px;color:var(--muted)}.bt-n.good b{color:var(--good)}.bt-n.mid b{color:var(--warn)}.bt-n.low b{color:var(--bad)}
+.bt-m{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.bt-m b{font-size:15px}.bt-m small{font-size:12.5px;color:var(--muted)}.bt-svg{display:block;width:100%;height:48px}.bt-svg.big{height:132px}.bt-a{fill:var(--accent-soft);stroke:none}.bt-l{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}.bt-f{fill:none;stroke:var(--faint);stroke-width:2;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}.bt-g{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}.bt-d{fill:var(--accent)}
+.bt-ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-top:4px}.bt-k{grid-template-columns:repeat(2,minmax(0,1fr))}.bt-wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:120px}.bt-wk span{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%;font-size:11px;color:var(--faint)}.bt-wk i{display:block;width:100%;max-width:26px;border-radius:6px 6px 2px 2px;background:var(--accent)}.bt-wk .est i{background:var(--surface-3)}.bt-wk b{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+.lvl{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px}.lvl-hero{display:flex;flex-direction:column;gap:14px;padding:2px 0 4px}.lvl-n{font-family:var(--display);font-size:24px;font-weight:650;line-height:1.15;letter-spacing:-.01em}
+.lvl-s{font-size:13px;line-height:1.55;color:var(--muted)}.lvl-s b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.lvl-d{display:flex;flex-direction:column;gap:10px;padding:12px 0 4px;border-top:1px solid var(--line)}.lvl-dh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px}.lvl-dh span{color:var(--muted);font-size:13px;text-align:right}
+.lvl-bar{position:relative;padding-bottom:22px}.lvl-bar.sm{padding-bottom:0}.lvl-tr{position:relative;height:8px;border-radius:4px;background:var(--surface-3);overflow:hidden}.lvl-bar.sm .lvl-tr{height:6px}.lvl-tr i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--accent)}.lvl-tr u{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--bg)}
+.lvl-tk{position:absolute;left:0;right:0;bottom:0;height:14px;font-size:11.5px;color:var(--faint)}.lvl-tk span{position:absolute;transform:translateX(-50%);white-space:nowrap}.lvl-tk span:first-child{transform:none}.lvl-tk span:last-child{transform:translateX(-100%)}.lvl-tk .on{color:var(--ink);font-weight:600}
+.lvl-t>div{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr)}.lvl-t span,.lvl-t b{min-width:0;overflow-wrap:anywhere}
+@media(max-width:560px){.lvl-t>div{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}.lvl-t>div>:nth-child(n+3){grid-column:1/-1;font-size:12px}}
+.lvl-t.r3>div{grid-template-columns:64px minmax(0,1fr) auto}.lvl-t.r3>div>:nth-child(n+3){grid-column:auto;font-size:13px}.lvl-t.r3>div>b{text-align:right}
+.lvl-ins{margin:0}.lvl-ins li.good::marker{color:var(--good)}.lvl-ins li.work::marker{color:var(--warn)}.lvl-t .miss>*{color:var(--faint)}
 .sc{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-top:1px solid var(--line)}.sc .section-h{margin:0;align-items:baseline}.sc .section-h h2{font-size:18px!important}.sc-l{font-size:13px;color:var(--muted);font-weight:600}
 .sc-top{display:flex;align-items:baseline;gap:8px}.sc-n{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.sc-top small{font-size:13px;color:var(--muted)}
 .sc-parts{display:grid;grid-template-columns:96px minmax(0,1fr) 30px;gap:2px 12px;align-items:center}.sc-p{display:contents}.sc-pn{font-size:13.5px;font-weight:600}.sc-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}.sc-pv{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.sc-p small{grid-column:2 / 4;font-size:12px;color:var(--muted);line-height:1.35;margin-bottom:8px}.sc-p.na .sc-pn,.sc-p.na .sc-pv{color:var(--muted);font-weight:400}
@@ -2085,6 +2089,7 @@ tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .pp-r em{font-style:normal;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
 .pp-r em.up{color:var(--good)}.pp-r em.down{color:var(--bad)}
 .pp-list{display:flex;flex-direction:column;gap:10px}
+.pp-mo{font-size:12px;letter-spacing:.04em;color:var(--faint);padding:8px 2px 0;text-transform:uppercase}.pp-more{align-self:center;margin-top:4px}.pp-pre{margin-top:10px}.pp-rem{display:flex;align-items:center;gap:12px;padding:6px 2px 10px}.pp-rt{display:flex;flex-direction:column;flex:1;min-width:0;font-size:14px}.pp-rt small{font-size:12px}.ck-sel{max-width:170px;flex:0 0 auto}
 .pp-day{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:10px 12px}
 .pp-dh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.pp-dh small{color:var(--muted)}
 .pp-th{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -2109,6 +2114,7 @@ tr.now td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .eo-ph{width:100%;max-height:240px;object-fit:cover;border-radius:14px}
 .eo-res{display:flex;flex-direction:column;gap:6px}
 .gl-list{display:flex;flex-direction:column;gap:10px}
+.gl-by{display:flex;flex-direction:column;gap:12px}.gl-sp{display:grid;grid-template-columns:104px minmax(0,1fr) 64px;gap:12px;align-items:center;font-size:13.5px}.gl-sp .gl-bar{margin:0}.gl-sp b{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}.gl-hist{padding:4px 0}.gl-yr{padding:10px 16px 2px;font-size:12px;letter-spacing:.04em;color:var(--faint)}
 .gl-c{display:flex;flex-direction:column;gap:10px;text-align:left;padding:14px;border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow);color:var(--ink);width:100%}
 section .gl-c{box-shadow:none;background:var(--surface-2);padding:12px}
 .gl-h{display:flex;justify-content:space-between;gap:8px;align-items:center}.gl-h b{font-size:15px}
@@ -5333,7 +5339,7 @@ SHEETS.checkin = sh => {
     const more = [L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : "", L.rhr ? `RHR ${L.rhr}` : "", L.steps ? `${fmtN(L.steps)} steps` : "", logged.length ? `${logged.length} workout${logged.length > 1 ? "s" : ""}` : "", food.kcal ? `${fmtN(food.kcal)} kcal eaten` : ""].filter(Boolean).join(" · ");
     body += `<button class="ci-more" data-act="ci-more" aria-expanded="${!!sh.more}"><span><b>From intervals.icu and your plan</b><small>${esc(more || "Sleep, HRV, resting HR, steps, workouts, intake")}</small></span>${ic(sh.more ? "chevU" : "chevD", "sm")}</button>`;
     if (sh.more) {
-      body += `<div class="ci-in"><div class="grid4">${fld("sleep", "Sleep", "h")}${fld("hrv", "HRV (rMSSD)", "ms")}${fld("rhr", "Resting HR", "bpm")}${fld("steps", "Steps", "steps")}</div>
+      body += `<div class="ci-in"><div class="grid3">${fld("sleep", "Sleep", "h")}${fld("nap", "Nap", "min")}${fld("steps", "Steps", "steps")}</div><div class="grid2">${fld("hrv", "HRV (rMSSD)", "ms")}${fld("rhr", "Resting HR", "bpm")}</div>
         <div class="field"><span class="flabel">${d === today ? "Done today" : "Workouts done"}</span><div class="card">${logged.map((w, i) => sessRow(w, d, "edit-session", "workouts", i)).join("") || `<div class="lrow"><span class="s">${plan.list.length ? `Planned: ${esc(plan.list.map(sessionLabel).join(" + "))}` : "Nothing logged."}</span></div>`}</div>
         <div class="row">${left.length ? `<button class="btn ${logged.length ? "tonal" : "primary"} sm" data-act="done-as-planned" data-date="${d}">${ic("check", "sm")}${logged.length ? `Mark ${left.length > 1 ? "the rest" : esc(shortSport(left[0].w.sport))} done` : "Done as planned"}</button>` : ""}<button class="btn soft sm" data-act="add-session" data-list="workouts" data-date="${d}">${ic("plus", "sm")}Add workout</button></div></div>
         <div class="field"><span class="flabel">Intake</span><div class="note">From your meal plan: <b>${fmtN(food.kcal)} kcal</b> eaten · ${r0(food.c)}C ${r0(food.p)}P ${r0(food.f)}F. Type totals only for days you didn't log foods: they replace the food log in the energy maths.</div>
@@ -11236,7 +11242,7 @@ function checkList() {
   const C = S.settings.reminders?.checks || {}, every = +FIT().run.retest || 42, last = a => a.length ? a.sort().pop() : null;
   return [
     { k: "meas", t: "Measurements", every: +C.measEvery || 28, last: last(Object.keys(S.body.m || {})), what: "Waist, hips, chest, arms and thighs: in the morning, before eating, same tape", act: "open-result", data: 'data-type="measure"', btn: "Measure" },
-    { k: "photo", t: "Progress photos", every: +C.photoEvery || 28, last: last((S.body.photos || []).map(p => p.date)), what: "Front, side and back: same light, distance and time of day", act: "pp-new", data: "", btn: "Take them" },
+    { k: "photo", t: "Progress photos", every: +C.photoEvery || 30, last: last((S.body.photos || []).map(p => p.date)), what: "Front, side and back: same light, distance and time of day", act: "pp-new", data: "", btn: "Take them" },
     { k: "run", t: "Lactate test", every, last: runState().src?.date || null, what: `${FIT().run.testMin || 30}′ test when rested: it recalculates your running zones and paces`, act: "open-result", data: 'data-type="run"', btn: "Log it" },
     { k: "cal", t: "Calisthenics test", every, last: last((S.train.calis || []).map(c => c.date)), what: "Max reps and holds, same order and warm-up as last time, so the results compare", act: "open-result", data: 'data-type="calis"', btn: "Log it" }
   ].map(c => ({ ...c, on: C[c.k] !== false, next: c.last ? addDays(c.last, c.every) : null }));
@@ -11246,7 +11252,7 @@ function checksDue(d = todayISO()) { return checkList().filter(c => c.on && c.ne
 function checksNotice(d) { const L = checksDue(d).filter(c => daysBetween(c.next, d) % 7 === 0); if (!L.length) return null;
   return { title: L.length === 1 ? `${L[0].t} due` : `Check-ups due · ${L.length}`, body: L.map(c => `${c.t}: ${c.what}`).join("\n") }; }
 function checkPrefs() { const t = todayISO(), C = S.settings.reminders?.checks || {};
-  return `<div class="field ck-set"><span class="flabel">Check-ups</span>${checkList().map(c => `<div class="row sw-row ck-row"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="${c.k}" aria-label="${c.t} reminder"></button><span class="ck-t">${c.t}<small class="faint">${!c.last ? "Starts after the first one you log" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${c.k === "meas" || c.k === "photo" ? `<div class="unit-inp ck-n"><input class="inp" inputmode="numeric" value="${c.every}" data-chg="ck-every" data-k="${c.k}" aria-label="${c.t} every how many days"><span>days</span></div>` : `<span class="faint ck-n">every ${c.every} d</span>`}</div>`).join("")}
+  return `<div class="field ck-set"><span class="flabel">Check-ups</span>${checkList().map(c => `<div class="row sw-row ck-row"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="${c.k}" aria-label="${c.t} reminder"></button><span class="ck-t">${c.t}<small class="faint">${!c.last ? "Starts after the first one you log" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${c.k === "meas" || c.k === "photo" ? ckEverySel(c) : `<span class="faint ck-n">every ${c.every} d</span>`}</div>`).join("")}
     <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="ck-at" style="font-size:13px">Check-up reminders at</label><input id="ck-at" class="inp" type="time" value="${esc(C.at || "09:00")}" data-chg="ck-at" style="max-width:130px"></div>
     <small class="faint" style="font-size:12.5px">The two tests follow «Retest every» in Training. The new results update zones, paces and the trends.</small></div>`; }
 const ckSet = o => { const R = S.settings.reminders || {}; S.settings.reminders = { ...R, checks: { ...(R.checks || {}), ...o } }; saveSettings(); };
@@ -11776,22 +11782,34 @@ function bodyAt(date) {
   return { w: L.weight || trendAt(date) || null, trend: trendAt(date), bf, m: md && daysBetween(md, date) <= 21 ? M[md] : null, md };
 }
 function photoDates() { const by = {}; for (const p of PHOTOS()) (by[p.date] = by[p.date] || []).push(p); return Object.keys(by).sort().map(d => ({ d, ps: by[d] })); }
+/* the reminder for the next set of photos: a switch and how often (monthly unless you change it), the same one as in Settings › Reminders */
+const CK_EVERY = [[7, "Every week"], [14, "Every 2 weeks"], [30, "Every month"], [60, "Every 2 months"], [90, "Every 3 months"]];
+const ckEverySel = c => `<select class="inp sm ck-sel" data-chg="ck-every" data-k="${c.k}" aria-label="${c.t} how often">${(CK_EVERY.some(x => x[0] === c.every) ? CK_EVERY : [...CK_EVERY, [c.every, `Every ${c.every} days`]].sort((a, b) => a[0] - b[0])).map(([n, l]) => `<option value="${n}" ${n === c.every ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+function ppRemind() { const c = checkList().find(x => x.k === "photo"), t = todayISO();
+  return `<div class="pp-rem"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="photo" aria-label="Photo reminder"></button><span class="pp-rt">Photo reminder<small class="faint">${!c.on ? "Off" : !c.last ? "Starts after the first set" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${ckEverySel(c)}</div>`; }
+ACT["pp-more"] = () => { UI.ppShow = (UI.ppShow || 6) + 12; scheduleRender(); };
+ACT["pp-preset"] = el => { const pose = UI.ppPose || "front", D = photoDates().filter(x => x.ps.some(p => p.pose === pose)); if (D.length < 2) return; const last = D[D.length - 1].d, k = el.dataset.k;
+  const near = tgt => D.slice(0, -1).reduce((a, x) => Math.abs(daysBetween(x.d, tgt)) < Math.abs(daysBetween(a.d, tgt)) ? x : a).d; UI.ppCmp = { a: k === "first" ? D[0].d : near(addDays(last, k === "1y" ? -365 : -91)), b: last }; scheduleRender(); };
 function photosSection() {
   const D = photoDates(), sel = UI.ppCmp || {}, pose = UI.ppPose || "front";
   const withPose = D.filter(x => x.ps.some(p => p.pose === pose)), a = sel.a && withPose.some(x => x.d === sel.a) ? sel.a : withPose[0]?.d, b = sel.b && withPose.some(x => x.d === sel.b) ? sel.b : withPose[withPose.length - 1]?.d;
-  let h = `<div class="section-h"><h2>Progress photos</h2><button class="link" data-act="pp-new">${ic("camera", "sm")} Add</button></div>${photosSyncHTML()}`;
+  let h = `<div class="section-h"><h2>Progress photos</h2><button class="link" data-act="pp-new">${ic("camera", "sm")} Add</button></div>${photosSyncHTML()}${ppRemind()}`;
   if (!D.length) return h + `<div class="empty slim"><p>Same light, same place, same time of day: front, side and back every 2–4 weeks. Compare any two dates side by side, with weight and measurements.</p><button class="btn tonal" data-act="pp-new">${ic("camera", "sm")}Take the first photos</button></div>`;
   const img = p => p ? `<span class="pp-img"><img data-ph="${p.id}" alt="${esc(POSES.find(x => x[0] === p.pose)?.[1] || "")} ${fmtDM(p.date)}"></span>` : `<span class="pp-img miss"></span>`;
   if (a && b) {
     const pa = D.find(x => x.d === a).ps.find(p => p.pose === pose), pb = D.find(x => x.d === b).ps.find(p => p.pose === pose), A = bodyAt(a), B = bodyAt(b);
     const sites = measureTable().sites.filter(([k]) => A.m?.[k] > 0 && B.m?.[k] > 0 && A.md !== B.md);
     const row = (l, va, vb, u, d = 1, good = -1) => { const dd = va != null && vb != null ? vb - va : null; return `<div class="pp-r"><span>${l}</span><b>${va != null ? (d ? r1(va) : r0(va)) + u : "—"}</b><b>${vb != null ? (d ? r1(vb) : r0(vb)) + u : "—"}</b><em class="${dd == null || Math.abs(dd) < .05 ? "" : dd * good > 0 ? "up" : "down"}">${dd == null ? "" : sgn(dd)}</em></div>`; };
-    h += `<div class="card pad pp-cmp"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="seg sm">${POSES.map(([k, l]) => `<button data-act="pp-pose" data-k="${k}" aria-pressed="${pose === k}">${l}</button>`).join("")}</div><button class="btn soft sm" data-act="pp-share">${ic("image", "sm")}Picture</button></div>
+    h += `<div class="card pad pp-cmp"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="seg sm">${POSES.map(([k, l]) => `<button data-act="pp-pose" data-k="${k}" aria-pressed="${pose === k}">${l}</button>`).join("")}</div><button class="btn soft sm" data-act="pp-share">${ic("image", "sm")}Picture</button></div>${withPose.length > 2 ? `<div class="chips pp-pre">${[["first", "First → latest"], ["3m", "vs 3 months ago"], ["1y", "vs a year ago"]].map(([k, l]) => `<button class="chip sm" data-act="pp-preset" data-k="${k}">${l}</button>`).join("")}</div>` : ""}
       <div class="pp-two"><div><select class="inp sm" data-chg="pp-a" aria-label="First date">${withPose.map(x => `<option value="${x.d}" ${x.d === a ? "selected" : ""}>${fmtDM(x.d)} ${x.d.slice(0, 4)}</option>`).join("")}</select>${img(pa)}</div><div><select class="inp sm" data-chg="pp-b" aria-label="Second date">${withPose.map(x => `<option value="${x.d}" ${x.d === b ? "selected" : ""}>${fmtDM(x.d)} ${x.d.slice(0, 4)}</option>`).join("")}</select>${img(pb)}</div></div>
       <div class="pp-tab"><div class="pp-r head"><span>${daysBetween(a, b)} days</span><b>${fmtDM(a)}</b><b>${fmtDM(b)}</b><em>Δ</em></div>${row("Weight", A.w, B.w, " kg")}${A.trend && B.trend ? row("Trend", A.trend, B.trend, " kg") : ""}${A.bf || B.bf ? row("Body fat", A.bf, B.bf, "%") : ""}${sites.map(([k, l]) => row(l, A.m[k], B.m[k], " cm", 1, /shoulders|chest|arm|calf|thigh|neck/i.test(k) ? 1 : -1)).join("")}</div>
       ${!sites.length ? `<div class="faint" style="font-size:12.5px">Log measurements within 3 weeks of each photo date to see them here.</div>` : ""}</div>`;
   }
-  h += `<div class="pp-list">${[...D].reverse().map(x => `<div class="pp-day"><div class="pp-dh"><b>${fmtDM(x.d)} ${x.d.slice(0, 4)}</b><small>${(w => w ? r1(w) + " kg" : "")(bodyAt(x.d).w)}</small></div><div class="pp-th">${x.ps.map(p => `<button class="pp-t" data-act="pp-open" data-id="${p.id}" aria-label="${esc(p.pose)} ${fmtDM(p.date)}"><span class="pp-img"><img data-ph="${p.id}" alt=""></span><small>${esc(POSES.find(q => q[0] === p.pose)?.[1] || p.pose)}</small></button>`).join("")}</div></div>`).join("")}</div>`;
+  const days = [...D].reverse(), cap = UI.ppShow || 6, shown = days.slice(0, cap), byMonth = D.length > 8; let mo = "", list = "";
+  for (const x of shown) { const m = new Date(x.d + "T12:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+    if (byMonth && m !== mo) { mo = m; list += `<div class="pp-mo">${m}</div>`; }
+    list += `<div class="pp-day"><div class="pp-dh"><b>${fmtDM(x.d)} ${x.d.slice(0, 4)}</b><small>${(w => w ? r1(w) + " kg" : "")(bodyAt(x.d).w)}</small></div><div class="pp-th">${x.ps.map(p => `<button class="pp-t" data-act="pp-open" data-id="${p.id}" aria-label="${esc(p.pose)} ${fmtDM(p.date)}"><span class="pp-img"><img data-ph="${p.id}" alt="" loading="lazy"></span><small>${esc(POSES.find(q => q[0] === p.pose)?.[1] || p.pose)}</small></button>`).join("")}</div></div>`; }
+  h += `<div class="pp-list">${list}</div>${days.length > cap ? `<button class="btn soft pp-more" data-act="pp-more">Show ${Math.min(12, days.length - cap)} older of ${days.length - cap}</button>` : ""}`;
   return h;
 }
 SHEETS.ppnew = sh => ({ title: "Progress photo", body: `<div class="grid2"><div class="field"><label for="pp-date">Day of the photo</label><input id="pp-date" class="inp" type="date" value="${sh.date}" max="${todayISO()}" data-chg="pp-date"></div>
@@ -12143,15 +12161,35 @@ function goalCard(g, big) {
     <div class="gl-k"><span><small>Start</small><b>${goalFmt(g, G.s0)}</b></span><span><small>Now</small><b>${goalFmt(g, G.cur)}</b></span><span><small>Goal</small><b>${g.kind === "run" ? fmtClock(+g.target) : goalFmt(g, G.tv)}</b></span><span><small>${g.due ? "By" : "Progress"}</small><b>${g.due ? fmtDM(g.due) : pct + "%"}</b></span></div>
     ${big && G.s0 != null ? `<div class="gl-ms">${G.ms.map(m => `<span class="${m.hit ? "on" : ""}"><i>${r0(m.f * 100)}%</i><b>${g.kind === "run" ? fmtClock(predictMin(+g.km, m.v) * 60) : goalFmt(g, m.v)}</b><small>${m.hit ? "✓ " + fmtDM(m.hit) : m.fc ? "≈ " + fmtDM(m.fc) : "—"}</small></span>`).join("")}</div>` : ""}</button>`;
 }
-function goalsView() {
-  const L = GOALS(), open = L.filter(g => !goalProg(g).done), done = L.filter(g => goalProg(g).done);
-  let h = `<div class="section-h"><h2>Goals</h2><button class="link" data-act="goal-new">${ic("plus", "sm")} Goal</button></div>`;
-  if (!L.length) return h + `<div class="empty slim"><p>Set the targets that matter: a 10k under 40′, 15 pull-ups, 75 kg. Each one gets milestones at 25, 50 and 75% and a date forecast from your trend.</p><button class="btn tonal" data-act="goal-new">${ic("plus", "sm")}Add a goal</button></div>`;
-  h += `<div class="gl-list">${open.map(g => goalCard(g, true)).join("")}</div>`;
-  if (done.length) h += `<div class="section-h"><h2>Reached</h2></div><div class="gl-list">${done.map(g => goalCard(g)).join("")}</div>`;
-  return h + `<div class="faint" style="font-size:12.5px">Forecast: a straight line through the last 4 months of the goal's data (weight trend, VDOT from your tests and races, calisthenics tests, measurements). Test or measure every few weeks to keep it honest.</div>`;
+/* a goal stays reached once it was: the day it first met its target is saved on it (doneOn) and builds the history, even if the number slips back later */
+const goalReached = g => !!g.doneOn || goalProg(g).done;
+const GOAL_GROUPS = [["Running", g => g.kind === "run"], ["Calisthenics", g => ["reps", "rm", "hold"].includes(g.kind)], ["Body", g => ["weight", "bf", "waist"].includes(g.kind)]];
+function goalsSettle() { let n = 0; for (const g of GOALS()) if (!g.doneOn) { const G = goalProg(g); if (G.done) { g.doneOn = G.ms[3]?.hit || todayISO(); n++; if (daysBetween(g.doneOn, todayISO()) <= 3) setTimeout(() => toast(`Goal reached: ${g.name || goalLabel(g)}`), 400); } } if (n) setTimeout(saveWK, 0); return n; }
+function goalStats() {
+  goalsSettle(); const L = GOALS(), done = L.filter(goalReached).map(g => ({ g, on: g.doneOn || todayISO(), days: g.start ? Math.max(0, daysBetween(g.start, g.doneOn || todayISO())) : null })).sort((a, b) => b.on.localeCompare(a.on)), y = todayISO().slice(0, 4);
+  const days = done.map(x => x.days).filter(x => x != null);
+  return { all: L.length, open: L.length - done.length, done, year: done.filter(x => x.on.slice(0, 4) === y).length, avgDays: days.length ? days.reduce((a, b) => a + b, 0) / days.length : null,
+    by: GOAL_GROUPS.map(([name, f]) => ({ name, total: L.filter(f).length, done: done.filter(x => f(x.g)).length })).filter(x => x.total) };
 }
-function goalsToday() { const L = GOALS().filter(g => !goalProg(g).done).slice(0, 2); if (!L.length) return ""; return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><span class="flabel">Goals</span><button class="link" data-act="goals-open">All</button></div>${L.map(g => goalCard(g)).join("")}</section>`; }
+function goalsSummary(St) {
+  if (!St.done.length && !St.open) return "";
+  const rows = St.by.map(b => `<div class="gl-sp"><span>${b.name}</span><span class="gl-bar"><i style="width:${b.total ? r0(b.done / b.total * 100) : 0}%"></i></span><b>${b.done} of ${b.total}</b></div>`).join("");
+  return `<div class="stat-grid four">${kpi(St.done.length, "reached", St.year ? `${St.year} this year` : "")}${kpi(St.open, "open")}${kpi(St.avgDays != null ? r0(St.avgDays) + " d" : "—", "average time to reach")}${kpi(St.all ? r0(St.done.length / St.all * 100) + "%" : "—", "of all your goals")}</div>${St.by.length > 1 ? `<div class="card pad gl-by">${rows}</div>` : ""}`;
+}
+function goalHistory(St) {
+  if (!St.done.length) return ""; let yr = "", h = `<div class="section-h"><h2>Reached</h2></div><div class="card gl-hist">`;
+  for (const { g, on, days } of St.done) { const G = goalProg(g), v = G.pts.find(p => p[0] === on)?.[1] ?? G.cur, y = on.slice(0, 4);
+    if (y !== yr && St.done.some(x => x.on.slice(0, 4) !== y)) { yr = y; h += `<div class="gl-yr">${y}</div>`; }
+    h += `<button class="lrow" data-act="goal-edit" data-id="${g.id}"><span><span class="t">${esc(g.name || goalLabel(g))}</span><span class="s">${fmtDM(on)} ${y}${days != null ? ` · ${days} day${days === 1 ? "" : "s"}` : ""} · ${goalFmt(g, G.s0)} → ${goalFmt(g, v)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`; }
+  return h + `</div>`;
+}
+function goalsView() {
+  const L = GOALS(), St = goalStats(), open = L.filter(g => !goalReached(g)), head = `<div class="section-h"><h2>Goals</h2><button class="link" data-act="goal-new">${ic("plus", "sm")} Goal</button></div>`;
+  if (!L.length) return head + `<div class="empty slim"><p>Set the targets that matter: a 10k under 40′, 15 pull-ups, 75 kg. Each one gets milestones at 25, 50 and 75% and a date forecast from your trend.</p><button class="btn tonal" data-act="goal-new">${ic("plus", "sm")}Add a goal</button></div>`;
+  const list = open.length ? `<div class="gl-list">${open.map(g => goalCard(g, true)).join("")}</div>` : `<div class="note">Every goal is reached: set the next one.</div>`;
+  return head + goalsSummary(St) + list + goalHistory(St) + `<div class="faint" style="font-size:12.5px">Forecast: a straight line through the last 4 months of the goal's data (weight trend, VDOT from your tests and races, calisthenics tests, measurements). Test or measure every few weeks to keep it honest.</div>`;
+}
+function goalsToday() { goalsSettle(); const L = GOALS().filter(g => !goalReached(g)).slice(0, 2); if (!L.length) return ""; return `<section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><span class="flabel">Goals</span><button class="link" data-act="goals-open">All</button></div>${L.map(g => goalCard(g)).join("")}</section>`; }
 TODAY_CARDS.push({ col: "b", o: 5, fn: goalsToday });
 SHEETS.goal = sh => { const g = sh.draft, ex = goalExs(), isEx = ["reps", "rm", "hold"].includes(g.kind);
   const pv = (() => { try { const G = goalProg({ ...g, target: g.kind === "run" ? parseClock(g.tstr) || 0 : num(g.target), km: num(g.km) }); return G.cur != null ? `Now ${g.kind === "run" ? `${fmtClock(predictMin(num(g.km) || 10, G.cur) * 60)} predicted` : goalFmt(g, G.cur)}${G.eta ? ` · forecast ${fmtDM(G.eta)}` : ""}` : "No data for this yet: log a test or a measurement."; } catch (e) { return ""; } })();
@@ -12396,7 +12434,7 @@ refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[d
 /* ================= features you can switch off: the app stays simple if you don't need them ================= */
 const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
   ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
-  ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"]];
+  ["battery", "Energy battery", "Today: how charged you are, drained by the day and training, recharged by sleep and naps"], ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"]];
 const FEAT = k => (S.settings?.feat || {})[k] !== false;
 function featCard() { const F = S.settings.feat || {};
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
@@ -13624,21 +13662,97 @@ function labView() {
   h += note("Adherence counts only days with food actually logged. Sleep regularity is the spread of the hours; HRV variation (coefficient of variation) rising while the average falls is a tiredness sign.") + `</div>`;
   return `<div class="lab-wrap">${h}</div>`;
 }
+/* ================= Energy battery: how charged you are now, from sleep, naps, HRV, resting heart rate and training =================
+   Docs: docs/BATTERY.md. 100 × (1 − sleep pressure) + a recovery adjustment − training fatigue, on a 0 to 100 scale, drained by the day and recharged by the night and by naps.
+   SLEEP PRESSURE follows the homeostatic process of the two-process model of sleep regulation (Borbély 1982; Daan, Beersma & Borbély 1984): it rises while you are awake
+   towards its ceiling with a time constant of 18.2 h and falls while you sleep (night or nap) with 4.2 h. The state carries from night to night, so a short night is paid back
+   over the next ones and a long one is not banked beyond what sleep can discharge. (Individual constants vary: Rusterholz et al. 2010.)
+   RECOVERY ADJUSTMENT from the morning figures against your own 28 days: ln(RMSSD) in standard deviations (Plews et al. 2013; Buchheit 2014: below your usual = less recovered)
+   and resting heart rate above your usual. The sizes (7 points per SD of HRV, 0.8 per bpm) are this app's choice, not a published formula: it says so on the screen.
+   TRAINING drains by the load (minutes × RPE) of the session as a share of your usual session, up to 35 points, and wears off with a time constant of 14 h where sleeping hours count 2.5 times.
+   Without a sleep figure the night is estimated from the last two weeks and the result is labelled low confidence. Nothing here changes a target or a calorie. */
+const BT = { tw: 18.2, ts: 4.2, tf: 14, sx: 2.5, dmax: 35, napAt: "14:00", sessAt: "17:00", hrvPt: 7, rhrPt: 0.8 };
+const btUp = (S, h) => 1 - (1 - S) * Math.exp(-h / BT.tw), btDown = (S, h) => S * Math.exp(-h / BT.ts);
+const btSleep = d => { const v = +logGet(d)?.sleep; return v > 0 ? clamp(v, 1, 14) : null; };
+function btSleepEst(d) { const a = []; for (let i = 1; i <= 14; i++) { const v = btSleep(addDays(d, -i)); if (v) a.push(v); } return a.length >= 3 ? a.reduce((x, y) => x + y, 0) / a.length : +SLP().target; }
+const btSl = d => btSleep(d) ?? btSleepEst(d);
+function btNap(d) { const L = logGet(d), n = +L?.nap; if (!(n > 0)) return null; const W = hm2h(SLP().wake); return { start: Math.max(W + 1, hm2h(L.napAt || BT.napAt)), h: Math.min(n, 180) / 60 }; }
+/* the pressure at hour t (since midnight) of day d that started the day at S0, naps slept inside it */
+function btPressure(d, S0, t) { const W = hm2h(SLP().wake), n = btNap(d); if (!n || t <= n.start) return btUp(S0, t - W);
+  const S1 = btUp(S0, n.start - W); return t <= n.start + n.h ? btDown(S1, t - n.start) : btUp(btDown(S1, n.h), t - n.start - n.h); }
+function btS0(d) { let S = 0.3; const W = hm2h(SLP().wake); for (let i = 8; i >= 1; i--) { const x = addDays(d, -i), sl = btSl(addDays(x, 1)); S = btDown(btPressure(x, S, W + 24 - sl), sl); } return S; }
+function btVitals(d) { const hv = [], rh = [], L = logGet(d) || {}; for (let i = 1; i <= 28; i++) { const x = logGet(addDays(d, -i)); if (+x?.hrv > 0) hv.push(Math.log(+x.hrv)); if (+x?.rhr > 0) rh.push(+x.rhr); }
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length, o = { hrv: +L.hrv > 0 ? +L.hrv : null, rhr: +L.rhr > 0 ? +L.rhr : null, z: null, dev: null, aH: 0, aR: 0, n: hv.length };
+  if (o.hrv && hv.length >= 7) { const m = mean(hv), sdv = Math.sqrt(hv.reduce((a, x) => a + (x - m) ** 2, 0) / (hv.length - 1)); o.z = (Math.log(o.hrv) - m) / Math.max(0.04, sdv); o.aH = clamp(BT.hrvPt * o.z, -21, 5); }
+  if (o.rhr && rh.length >= 7) { o.dev = o.rhr - mean(rh); o.aR = -clamp(o.dev, 0, 10) * BT.rhrPt; }
+  o.adj = o.aH + o.aR; return o; }
+/* the sessions that tire day d: logged ones of the last three days and, for today, the planned ones still to do */
+function btSessions(d, nowH) {
+  const U = Math.max(250, (loadState().usual || 0) / 5), out = [], W = hm2h(SLP().wake), today = todayISO();
+  const add = (x, w, planned) => { if (!w.sport || w.sport === "Rest") return; const min = +w.min || 45, k = daysBetween(x, d); let st = hm2h(/^\d\d:\d\d$/.test(w.at || "") ? w.at : BT.sessAt), en = st + min / 60;
+    if (x === today && !planned && !/^\d\d:\d\d$/.test(w.at || "") && en > nowH) { en = Math.max(W + 0.5, nowH); st = en - min / 60; }
+    out.push({ k, st, en, D: BT.dmax * (1 - Math.exp(-sessionLoad(w) / (1.5 * U))), planned, name: sessionLabel(w) }); };
+  for (let k = 2; k >= 0; k--) { const x = addDays(d, -k); for (const w of logGet(x)?.workouts || []) add(x, w, false); }
+  if (d === today) for (const it of daySessions(d)) if (it.st === "planned") add(d, it.w, true);
+  return out;
+}
+function btCtx(d, nowAt) {
+  const W = hm2h(SLP().wake), today = nowAt != null || d === todayISO(), nowH = nowAt ?? (d === todayISO() ? hm2h(nowHM()) : 99), S0 = btS0(d), V = btVitals(d), sleepNext = btSl(addDays(d, 1)), bed = W + 24 - sleepNext, ses = btSessions(d, nowH);
+  const asleep = k => k <= 0 ? 0 : Array.from({ length: k }, (_, i) => btSl(addDays(d, -i))).reduce((a, b) => a + b, 0), night = t => clamp(t - bed, 0, sleepNext);
+  const fat = t => ses.reduce((a, s) => { if (s.k === 0 && t < s.st) return a; if (s.k === 0 && t < s.en) return a + s.D * (t - s.st) / (s.en - s.st); const el = (t - s.en) + 24 * s.k + (BT.sx - 1) * (asleep(s.k) + night(t)); return a + s.D * Math.exp(-Math.max(0, el) / BT.tf); }, 0);
+  /* after bedtime the pressure falls with the sleeping time; the recovery adjustment belongs to the morning and is not applied until you wake */
+  const E = t => clamp(100 * (1 - (t <= bed ? btPressure(d, S0, t) : btDown(btPressure(d, S0, bed), night(t)))) + (t <= bed ? V.adj : 0) - fat(t), 0, 100);
+  return { W, bed, today, nowH, S0, V, ses, E, fat, sleep: btSleep(d), sleepNext, nap: btNap(d) };
+}
+function btDay(d = todayISO()) {
+  const h = hm2h(nowHM()), W0 = hm2h(SLP().wake), live = d === todayISO(), before = live && h < W0, base = before ? addDays(d, -1) : d, c = btCtx(base, live ? (before ? h + 24 : h) : null);
+  const cur = live ? clamp(c.nowH, c.W, c.W + 24) : c.bed, sleeping = live && cur > c.bed, end = sleeping ? c.W + 24 : c.bed, series = []; for (let t = c.W; t <= end + 1e-9; t += 0.25) series.push({ h: t, e: c.E(t) });
+  const prev = btCtx(addDays(base, -1)), wake = c.E(c.W), now = c.E(cur), atBed = c.E(c.bed), done = series.filter(p => p.h <= cur + 1e-9);
+  const conf = c.sleep ? (c.V.z != null ? "high" : "medium") : "low";
+  return { ...c, d: base, series, end, cur, sleeping, byWake: sleeping ? c.E(c.W + 24) : null, wake, now, atBed, low: Math.min(...done.map(p => p.e)), charged: wake - prev.E(prev.bed), conf,
+    parts: { pressure: 100 * (1 - (cur <= c.bed ? btPressure(base, c.S0, cur) : btDown(btPressure(base, c.S0, c.bed), clamp(cur - c.bed, 0, c.sleepNext)))), adj: cur <= c.bed ? c.V.adj : 0, fatigue: c.fat(cur) } };
+}
+const btHM = h => { const x = ((h % 24) + 24) % 24; return String(Math.floor(x)).padStart(2, "0") + ":" + String(Math.round((x % 1) * 60) % 60).padStart(2, "0"); };
+const btPct = x => r0(x) + "%";
+function btChart(D, big) {
+  const W = 320, H = big ? 132 : 48, X = h => 3 + (h - D.W) / (D.end - D.W) * (W - 6), Y = e => H - 4 - e / 100 * (H - 8), P = a => a.map((p, i) => `${i ? "L" : "M"}${X(p.h).toFixed(1)} ${Y(p.e).toFixed(1)}`).join(""), past = D.series.filter(p => p.h <= D.cur + 1e-9), fut = D.today ? D.series.filter(p => p.h >= D.cur - 1e-9) : [];
+  const grid = big ? [25, 50, 75].map(v => `<path d="M3 ${Y(v)}H${W - 3}" class="bt-g"/>`).join("") : "";
+  return `<svg class="bt-svg${big ? " big" : ""}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Energy through the day: ${btPct(D.wake)} at wake, ${btPct(D.now)} now, ${btPct(D.atBed)} expected at bedtime">${grid}<path d="${P(past)}L${X(past[past.length - 1].h).toFixed(1)} ${H - 4}L${X(D.W)} ${H - 4}Z" class="bt-a"/><path d="${P(past)}" class="bt-l"/>${fut.length > 1 ? `<path d="${P(fut)}" class="bt-f"/>` : ""}${D.today ? `<circle cx="${X(D.cur).toFixed(1)}" cy="${Y(D.now).toFixed(1)}" r="3.4" class="bt-d"/>` : ""}</svg>${big ? `<div class="bt-ax"><span>${btHM(D.W)}</span><span>${btHM(D.W + (D.end - D.W) / 2)}</span><span>${btHM(D.end)}</span></div>` : ""}`;
+}
+function batteryCard() {
+  if (!FEAT("battery")) return ""; const D = btDay(), lvl = D.now >= 66 ? "good" : D.now >= 33 ? "mid" : "low";
+  return `<section class="card pad bt"><button class="bt-row" data-act="bt-open" aria-label="Energy battery, ${btPct(D.now)}. Open the details"><span class="bt-n ${lvl}"><b>${r0(D.now)}</b><small>%</small></span><span class="bt-m"><b>${D.sleeping ? "Energy battery · recharging" : "Energy battery"}</b><small>${D.sleeping ? `${btPct(D.atBed)} at bedtime · about ${btPct(D.byWake)} by ${btHM(D.W + 24)}` : `${D.conf === "low" ? "Estimate: log last night's sleep · " : `Woke at ${btPct(D.wake)} · `}${btPct(D.atBed)} expected at bedtime`}</small></span>${ic("chevR", "sm")}</button>${btChart(D)}</section>`;
+}
+TODAY_CARDS.push({ col: "b", o: 1.5, fn: batteryCard });
+const btRow = (l, v, s = "") => `<div class="lrow" style="padding:8px 14px"><span><span class="t" style="font-weight:550">${l}</span>${s ? `<span class="s">${s}</span>` : ""}</span><span class="end num">${v}</span></div>`, btSg = x => (x >= 0.5 ? "+" : x <= -0.5 ? "−" : "") + r0(Math.abs(x));
+SHEETS.battery = () => { const D = btDay(), V = D.V, cf = { high: "High: last night's sleep and HRV against your 28 days", medium: "Medium: sleep logged, no HRV baseline yet (needs 7 days of HRV)", low: "Low: no sleep logged for last night, so the night is estimated" }[D.conf];
+  const week = Array.from({ length: 7 }, (_, i) => addDays(todayISO(), -(6 - i))).map(d => ({ d, w: btCtx(d).E(hm2h(SLP().wake)), has: !!btSleep(d) }));
+  return { title: "Energy battery", body: `<div class="an-g bt-k"><div class="an-k"><b>${r0(D.now)}%</b><small>now</small></div><div class="an-k"><b>${r0(D.wake)}%</b><small>at wake${D.charged >= 1 ? ` · +${r0(D.charged)} overnight` : ""}</small></div><div class="an-k"><b>${r0(D.atBed)}%</b><small>${D.sleeping ? "at bedtime" : "expected"} at ${btHM(D.bed)}</small></div><div class="an-k"><b>${r0(D.low)}%</b><small>${D.sleeping ? `about ${btPct(D.byWake)} by wake-up` : "lowest so far"}</small></div></div>
+    <div class="card pad">${btChart(D, true)}<div class="faint" style="font-size:12px">Solid: so far. Dashed: the rest of the day, with the sessions still planned.</div></div>
+    <span class="flabel">What moves it right now</span><div class="card">${btRow("Sleep and time awake", btPct(D.parts.pressure), `${D.sleep ? r1(D.sleep) + " h last night" : "last night estimated at " + r1(btSl(D.d)) + " h"}`)}${btRow("Recovery (HRV, resting HR)", V.n >= 7 && (V.z != null || V.dev != null) ? btSg(V.adj) : "—", V.z != null ? `HRV ${V.z >= 0 ? "+" : "−"}${Math.abs(V.z).toFixed(1)} SD${V.dev != null ? ` · resting HR ${btSg(V.dev)} bpm` : ""}` : "needs 7 days of HRV or resting HR")}${btRow("Training", D.parts.fatigue >= 0.5 ? "−" + r0(D.parts.fatigue) : "0", D.ses.length ? D.ses.map(s => `${esc(s.name)}${s.planned ? " (planned)" : ""}`).join(", ") : "none in the last 3 days")}${btRow("Nap today", D.nap ? `${r0(D.nap.h * 60)} min` : "—", D.nap ? `at ${btHM(D.nap.start)}` : "none logged")}</div>
+    <div class="field"><span class="flabel">I just napped</span><div class="chips">${[10, 20, 30, 60].map(m => `<button class="chip" data-act="bt-nap" data-m="${m}">${m} min</button>`).join("")}${D.nap ? `<button class="chip" data-act="bt-nap" data-m="0">Clear</button>` : ""}</div></div>
+    <span class="flabel">Charge at wake, last 7 days</span><div class="card pad bt-wk">${week.map(x => `<span class="${x.has ? "" : "est"}"><i style="height:${Math.max(4, r0(x.w))}%"></i><small>${new Date(x.d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" }).slice(0, 2)}</small><b>${r0(x.w)}</b></span>`).join("")}</div>
+    <div class="faint" style="font-size:12.5px;line-height:1.5">${cf}. Sleep pressure follows the two-process model (Borbély; Daan et al. 1984); HRV and resting heart rate are read against your own last 28 days (Plews et al. 2013). The sizes of the adjustments are this app's choice, not a published formula, and the number is an estimate, not a measurement.</div>`, foot: `<button class="btn tonal" data-act="close-sheet">Done</button>` }; };
+ACT["bt-open"] = () => openSheet("battery", {});
+ACT["bt-nap"] = el => { const m = +el.dataset.m, d = todayISO(), nowH = hm2h(nowHM()); mutateLog(d, day => { if (!m) { day.nap = null; day.napAt = null; return; } const had = +day.nap > 0 ? +day.nap : 0; day.nap = Math.min(180, had + m); if (!had) day.napAt = btHM(Math.max(0, nowH - m / 60)); });
+  toast(m ? `${m} min nap added` : "Nap removed"); if (UI.sheet) renderSheet(); scheduleRender(); };
 /* ================= Level: where you stand on a hard, fixed scale, and when you reach the next line =================
-   Five lines on one scale: Beginner, Novice, Intermediate, Advanced, Elite (the percentile bands of Running Level and Strength Level: faster or stronger than about
-   5, 20, 50, 80 and 95 % of the people who log results). Below the first line you are a Starter. The position is continuous: 3.0 is exactly the Intermediate line,
-   3.5 is half way to Advanced, and above Elite it keeps counting up to 5.99. Docs: docs/LEVELS.md.
-   RUNNER: the best result of the last 365 days (race, time trial, test, PB) as a 5K-equivalent time (Daniels' VDOT equivalence) against the Running Level 5K
-   lines at age 20 (men 30:38, 26:18, 22:41, 19:46, 17:30; women 37:03, 31:48, 27:19, 23:38, 20:42). No age adjustment: it is the hard version.
-   CALISTHENICS: Strength = 1RM added to the body (e1RM of top sets and RM tests) as % of body weight, weighted pull-up and dip; Endurance = max strict reps of
-   pull-up, dip and push-up; Skills = hold times (handstand, L-sit), lever and planche stages (a stage counts when held 15 s) and muscle-up reps. These lines are the
-   app's own, set at the median of the published scales (Strength Level, Symmetric Strength, Endura, FitnessVolt); women's strength and reps lines are 60 % of men's.
-   Skills have no authoritative scale: rough. Time to the next line: least-squares slope of the level over the last 12 months with its standard error. */
-const LV_NAMES = ["Starter", "Beginner", "Novice", "Intermediate", "Advanced", "Elite"], LV_SHORT = ["Start", "Beg", "Nov", "Int", "Adv", "Elite"];
-const LV_RUN5 = { Male: [1838, 1578, 1361, 1186, 1050], Female: [2223, 1908, 1639, 1418, 1242] };
-const LV_STR = { pull: [0, 15, 34, 63, 100], dip: [3, 25, 50, 85, 125] };
-const LV_REPS = { pull: [1, 6, 13, 22, 30], dip: [3, 10, 20, 31, 43], push: [10, 19, 31, 46, 63] };
-const LV_HOLD = { handstand: [5, 15, 30, 60, 120], lsit: [3, 8, 15, 30, 60] }, LV_MU = [1, 3, 6, 10, 15], LV_STAGE = { tuck: 2, advtuck: 3, straddle: 4, full: 5 };
+   Five lines on one scale: Beginner, Novice, Intermediate, Advanced, Elite. Below the first line you are a Starter. The position is continuous: 3.0 is exactly the
+   Intermediate line, 3.5 half way to Advanced, above Elite it keeps counting to 5.99. HARD SETTING: the published percentile scales (Running Level, Strength Level:
+   5, 20, 50, 80, 95 % of the people who log results) are read one band up, so Beginner = better than 20 %, Novice = 50 %, Intermediate = 80 %, Advanced = 95 %, and
+   Elite = the same step again (about 99 %). Docs: docs/LEVELS.md.
+   RUNNER: best result of the last 365 days as a 5K-equivalent time (Daniels' VDOT) on the Running Level 5K lines at age 20, no age adjustment.
+   CALISTHENICS: Strength = 1RM added to the body (weighted pull-up, dip) as % of body weight on the Strength Level lines (80 kg reference); Endurance = max strict reps
+   (pull-up, dip, push-up); Skills = holds, lever and planche stages (a stage counts at 15 s) and strict muscle-ups. A skill you never logged counts as 0.
+   No authoritative table exists for reps and skills: those lines are the app's own, set from the prerequisites of the skills (10 strict pull-ups before a muscle-up…).
+   Women: strength and reps lines at 60 % of the men's. Time to the next line: least-squares slope of the level over the last 12 months with its standard error. */
+const LV_NAMES = ["Starter", "Beginner", "Novice", "Intermediate", "Advanced", "Elite"], LV_SHORT = ["Start", "Beg", "Nov", "Int", "Adv", "Elite"], LV_PCT = [0, 20, 50, 80, 95, 99];
+const LV_RUN5 = { Male: [1578, 1361, 1186, 1050, 929], Female: [1908, 1639, 1418, 1242, 1088] };           // 5K seconds: percentiles 20, 50, 80, 95 and the same step again
+const LV_STR_KG = { pull: [8, 34, 63, 93, 137], dip: [25, 50, 85, 125, 184] }, LV_STR_REF = 80;           // added 1RM at 80 kg body weight (Strength Level), one band up
+const LV_STR = Object.fromEntries(Object.entries(LV_STR_KG).map(([k, a]) => [k, a.map(x => Math.round(x / LV_STR_REF * 1000) / 10)]));
+const LV_REPS = { pull: [5, 10, 15, 22, 30], dip: [8, 15, 25, 35, 50], push: [20, 35, 50, 70, 90] }, LV_HOLD = { handstand: [10, 20, 40, 75, 120], lsit: [5, 10, 20, 40, 60] }, LV_MU = [1, 3, 5, 10, 15];
+const LV_STAGES = { frontlever: [[/adv\w*\.?\s*-?\s*tuck/i, 2], [/tuck/i, 1], [/straddle|one.?leg|half.?lay|open/i, 3], [/full/i, 4]], planche: [[/adv\w*\.?\s*-?\s*tuck/i, 2], [/tuck/i, 1], [/straddle|one.?leg|half.?lay|open/i, 3.5], [/full/i, 4.5]] };
+const LV_SKILLS = [["handstand", "Handstand"], ["lsit", "L-sit"], ["frontlever", "Front lever"], ["planche", "Planche"], ["muscleup", "Muscle-up"]];
 /* position of v on five ascending lines xs: "lin" for reps and ratios, "log" for holds, "time" for times (faster = higher, xs descending) */
 function lvPos(v, xs, mode = "lin") {
   const f = mode === "time" ? x => -Math.log(Math.max(x, 1e-9)) : mode === "log" ? x => Math.log(Math.max(x, 1e-9)) : x => x, g = f(v), X = xs.map(f);
@@ -13647,31 +13761,40 @@ function lvPos(v, xs, mode = "lin") {
   return 5 + Math.min(0.99, (g - X[4]) / (X[4] - X[3]));
 }
 function lvLabel(p) { const i = Math.min(5, Math.floor(p + 1e-9)), fr = p - i; return i >= 5 ? "Elite" : fr >= 0.15 ? `${LV_NAMES[i]} → ${LV_NAMES[i + 1]} ${r0(fr * 100)}%` : LV_NAMES[i]; }
+/* the share of the people on the published scale you beat: the lines sit at 20, 50, 80, 95 and 99 % */
+const lvPct = p => { const i = Math.min(4, Math.floor(Math.max(0, p))); return Math.min(99, LV_PCT[i] + (LV_PCT[i + 1] - LV_PCT[i]) * Math.min(1, Math.max(0, p) - i)); };
 const lvSexF = () => FIT().profile.sex === "Female" ? 0.6 : 1, lvScale = xs => lvSexF() === 1 ? xs : xs.map(x => x === 0 ? 0 : Math.max(1, Math.round(x * 0.6 * 10) / 10));
 function lvEq5Pos(km, sec, sex = FIT().profile.sex) { const v = vdotOf(km, sec / 60); if (!v) return null; const eq5 = predictMin(5, v) * 60; return { eq5, p: lvPos(eq5, LV_RUN5[sex === "Female" ? "Female" : "Male"], "time") }; }
+const lvBucket = km => km < 7.5 ? "short" : km < 15 ? "10k" : km < 30 ? "half" : "long";
 function lvRunner(asOf = todayISO()) {
   const from = addDays(asOf, -365), L = runEfforts().filter(e => e.d <= asOf && e.d > from && e.km >= 1.5 && e.km <= 43).map(e => ({ ...e, ...lvEq5Pos(e.km, e.sec) })).filter(e => e.eq5);
-  if (!L.length) return null; L.sort((a, b) => a.eq5 - b.eq5);
-  return { p: L[0].p, eq5: L[0].eq5, best: L[0], n: L.length, list: L.slice(0, 5), age: daysBetween(L[0].d, asOf) };
+  if (!L.length) return null; L.sort((a, b) => a.eq5 - b.eq5); const by = {}; for (const e of L) if (!by[lvBucket(e.km)]) by[lvBucket(e.km)] = e;
+  return { p: L[0].p, eq5: L[0].eq5, best: L[0], n: L.length, list: L.slice(0, 5), age: daysBetween(L[0].d, asOf), by, pct: lvPct(L[0].p) };
 }
 const lvEx = n => /muscle/i.test(n) ? "mu" : /pull|chin/i.test(n) ? "pull" : /\bdips?\b/i.test(n) ? "dip" : /push/i.test(n) && !/pike|pseudo|handstand|hspu/i.test(n) ? "push" : null;
+/* a lever or planche hold as a position: the stage you hold sets the level, reached in full at 15 s; the last stage carries on past 15 s */
+function lvStage(kind, ex, val) {
+  const T = LV_STAGES[kind], hit = T.find(([re]) => re.test(ex)) || T.find(([, p]) => p === 1), s = hit[1], i = [...T].sort((a, b) => a[1] - b[1]).findIndex(x => x[1] === s), prev = i > 0 ? [...T].sort((a, b) => a[1] - b[1])[i - 1][1] : 0;
+  return prev + (s - prev) * Math.min(1, val / 15) + (i === T.length - 1 ? Math.min(0.99, Math.max(0, val - 15) / (kind === "planche" ? 20 : 15)) : 0);
+}
 function lvCalis(asOf = todayISO()) {
   const from = addDays(asOf, -365), calis = (S.train.calis || []).filter(c => c.date && c.date <= asOf && c.date > from), f = lvSexF(), best = (o, k, p, rest) => { if (!o[k] || p > o[k].p) o[k] = { k, p, ...rest }; };
   const St = {}, add = (k, d, kg, reps, rir, bw) => { if (!(kg > 0) || !(reps >= 1)) return; const e = e1rm({ date: d, kg, reps, rir, bw }), b = bwAt(d, bw); if (e > 0 && b > 0) best(St, k, e / b * 100, { e, d }); };
   for (const s of S.train.topSets || []) if (s.date && s.date <= asOf && s.date > from) { const k = lvEx(s.ex || ""); if (k === "pull" || k === "dip") add(k, s.date, +s.kg, +s.reps, +s.rir || 0, s.bw); }
   for (const c of calis) { const n = RM_N(c.test), k = lvEx(c.ex || ""); if (n && (k === "pull" || k === "dip")) add(k, c.date, +c.val, n, 0, c.bw); }
-  const sItems = Object.values(St).map(o => { const xs = lvScale(LV_STR[o.k]); return { k: o.k, name: o.k === "pull" ? "Weighted pull-up" : "Weighted dip", v: o.p, text: `+${r1(o.e)} kg · ${r0(o.p)}% of body`, d: o.d, xs, unit: "%", p: lvPos(o.p, xs) }; });
+  const sItems = Object.values(St).map(o => { const xs = lvScale(LV_STR[o.k]); return { a: "S", k: o.k, name: o.k === "pull" ? "Weighted pull-up" : "Weighted dip", v: o.p, text: `+${r1(o.e)} kg · ${r0(o.p)}% of body`, d: o.d, xs, unit: "%", p: lvPos(o.p, xs), real: true }; });
   const Et = {}; for (const c of calis) if (c.test === "Max reps (BW)") { const k = lvEx(c.ex || ""); if ((k === "pull" || k === "dip" || k === "push") && +c.val > 0) best(Et, k, +c.val, { d: c.date }); }
-  const eItems = Object.values(Et).map(o => { const xs = lvScale(LV_REPS[o.k]); return { k: o.k, name: { pull: "Pull-up", dip: "Dip", push: "Push-up" }[o.k], v: o.p, text: `${o.p} reps`, d: o.d, xs, unit: "reps", p: lvPos(o.p, xs) }; });
-  const Kt = {}, sk = (k, name, p, text, d, xs, unit) => best(Kt, k, p, { name, text, d, xs, unit });
+  const eItems = Object.values(Et).map(o => { const xs = lvScale(LV_REPS[o.k]); return { a: "E", k: o.k, name: { pull: "Pull-up", dip: "Dip", push: "Push-up" }[o.k], v: o.p, text: `${o.p} reps`, d: o.d, xs, unit: "reps", p: lvPos(o.p, xs) }; });
+  const Kt = {}, sk = (k, p, text, d, xs, unit) => best(Kt, k, p, { text, d, xs, unit });
   for (const c of calis) { const ex = c.ex || "", val = +c.val; if (!(val > 0)) continue;
     if (c.test === "Hold (s)") {
-      if (/handstand/i.test(ex) && !/push|hspu|walk/i.test(ex)) sk("handstand", "Handstand", lvPos(val, LV_HOLD.handstand, "log"), `${val} s`, c.date, LV_HOLD.handstand, "s");
-      else if (/l-?sit/i.test(ex)) sk("lsit", "L-sit", lvPos(val, LV_HOLD.lsit, "log"), `${val} s`, c.date, LV_HOLD.lsit, "s");
-      else if (/lever/i.test(ex) || /planche/i.test(ex) && !/pseudo|lean|push/i.test(ex)) { const pl = /planche/i.test(ex), st = /adv\w*\.?\s*-?\s*tuck/i.test(ex) ? "advtuck" : /tuck/i.test(ex) ? "tuck" : /straddle|one.?leg|half.?lay|open/i.test(ex) ? "straddle" : /full/i.test(ex) ? "full" : "tuck";
-        sk(pl ? "planche" : "frontlever", pl ? "Planche" : "Front lever", LV_STAGE[st] - 1 + Math.min(1, val / 15) + (st === "full" ? Math.min(0.99, Math.max(0, val - 15) / 30) : 0), `${ex} · ${val} s`, c.date, null, "s"); } }
-    else if (c.test === "Max reps (BW)" && lvEx(ex) === "mu") sk("muscleup", "Muscle-up", lvPos(val, LV_MU), `${val} reps`, c.date, LV_MU, "reps"); }
-  const kItems = Object.values(Kt), avg = a => a.length ? { p: a.reduce((x, y) => x + y.p, 0) / a.length, items: a } : null;
+      if (/handstand/i.test(ex) && !/push|hspu|walk/i.test(ex)) sk("handstand", lvPos(val, LV_HOLD.handstand, "log"), `${val} s`, c.date, LV_HOLD.handstand, "s");
+      else if (/l-?sit/i.test(ex)) sk("lsit", lvPos(val, LV_HOLD.lsit, "log"), `${val} s`, c.date, LV_HOLD.lsit, "s");
+      else if (/lever/i.test(ex)) sk("frontlever", lvStage("frontlever", ex, val), `${ex} · ${val} s`, c.date, null, "s");
+      else if (/planche/i.test(ex) && !/pseudo|lean|push/i.test(ex)) sk("planche", lvStage("planche", ex, val), `${ex} · ${val} s`, c.date, null, "s"); }
+    else if (c.test === "Max reps (BW)" && lvEx(ex) === "mu") sk("muscleup", lvPos(val, LV_MU), `${val} reps`, c.date, LV_MU, "reps"); }
+  const kItems = Object.keys(Kt).length ? LV_SKILLS.map(([k, name]) => Kt[k] ? { a: "K", name, ...Kt[k] } : { a: "K", k, name, p: 0, text: "not logged: counts as 0", missing: true }) : [];
+  const avg = a => a.length ? { p: a.reduce((x, y) => x + y.p, 0) / a.length, items: a } : null;
   const strength = avg(sItems), endurance = avg(eItems), skills = avg(kItems), ds = [strength, endurance, skills].filter(Boolean);
   return { strength, endurance, skills, overall: ds.length ? ds.reduce((a, b) => a + b.p, 0) / ds.length : null, n: ds.length };
 }
@@ -13683,35 +13806,65 @@ function lvEta(pts, p) {
   const next = Math.floor(p + 1e-9) + 1, need = next - p; if (!(b >= 0.01) || need <= 0) return null;
   return { months: need / b, lo: need / (b + se), hi: b - se > 0.005 ? need / (b - se) : Infinity, slope: b, next: LV_NAMES[next], n };
 }
+/* what the level says in words: what is ahead of your level, what is behind, and what to do about it */
+function lvInsights(R, C) {
+  const out = [], add = (k, t) => out.push({ k, t }), m = a => a.reduce((x, y) => x + y.p, 0) / a.length;
+  if (C && C.overall != null) {
+    const SE = [...(C.strength?.items || []), ...(C.endurance?.items || [])], pull = SE.filter(i => i.k === "pull"), push = SE.filter(i => i.k === "dip" || i.k === "push");
+    if (pull.length && push.length) { const d = m(push) - m(pull);
+      if (d >= 0.4) add("work", `You push better than you pull: push ${lvLabel(m(push))}, pull ${lvLabel(m(pull))}. Give pulling the priority: more pull-up and row volume, then front lever work.`);
+      else if (d <= -0.4) add("work", `You pull better than you push: pull ${lvLabel(m(pull))}, push ${lvLabel(m(push))}. Give pushing the priority: dips, push-up variations and pseudo planche work.`); }
+    const s = C.strength?.p, e = C.endurance?.p, k = C.skills?.p;
+    if (s != null && e != null && s - e >= 0.5) add("work", `Your strength (${lvLabel(s)}) is ahead of your endurance (${lvLabel(e)}). Train calisthenics endurance: sets of about 70% of your max reps with short rests, EMOM and ladders, and test the max reps every month.`);
+    else if (s != null && e != null && e - s >= 0.5) add("work", `Your endurance (${lvLabel(e)}) is ahead of your strength (${lvLabel(s)}). Add heavy work: weighted pull-ups and dips for 3 to 6 reps, then test a 1RM.`);
+    if (k != null && Math.max(s ?? -9, e ?? -9) - k >= 0.7) add("work", `Your skills (${lvLabel(k)}) lag behind your strength and endurance. Practise short holds most days: lever and planche progressions, handstand, and strict muscle-up negatives.`);
+    const miss = (C.skills?.items || []).filter(i => i.missing).map(i => i.name); if (miss.length) add("work", `No result yet for ${miss.join(", ")}: they count as 0 in Skills until you log them.`);
+    const real = [...SE, ...(C.skills?.items || [])].filter(i => !i.missing).sort((a, b) => b.p - a.p), top = real[0];
+    if (top && top.p - C.overall >= 0.5) add("good", `Strong point: ${top.name} is ${lvLabel(top.p)}, ${r1(top.p - C.overall)} levels above your overall.`);
+    for (const i of C.strength?.items || []) if (lvPct(i.p) >= 80) add("good", `Your ${i.name.toLowerCase()} is stronger than about ${r0(lvPct(i.p))}% of the lifters who log it (Strength Level).`);
+    if (C.overall >= 4) add("good", `Overall ${lvLabel(C.overall)}: you are in the top ${r0(100 - lvPct(C.overall))}% by this scale.`); }
+  if (R) {
+    const sp = [R.by.short, R.by["10k"]].filter(Boolean).sort((a, b) => b.p - a.p)[0], en = [R.by.half, R.by.long].filter(Boolean).sort((a, b) => b.p - a.p)[0];
+    if (sp && en) { const d = en.p - sp.p;
+      if (d <= -0.4) add("work", `Your long race lags your short ones: ${r1(en.km)} km in ${fmtClock(en.sec)} is only a ${fmtClock(en.eq5)} 5K, against ${fmtClock(sp.eq5)} from ${r1(sp.km)} km. Build endurance: a weekly long run growing to 90 to 120 minutes, and tempo blocks at half-marathon pace.`);
+      else if (d >= 0.4) add("work", `Your endurance is ahead of your speed: ${r1(sp.km)} km in ${fmtClock(sp.sec)} is only a ${fmtClock(sp.eq5)} 5K, against ${fmtClock(en.eq5)} from ${r1(en.km)} km. Add speed: intervals of 3 to 5 minutes at 3K to 5K pace, strides and hill sprints.`); }
+    else if (R.n && !(sp && en)) add("work", "Only one kind of distance logged: add a short race or time trial (3 to 5 km) and a long one (half marathon or more) to see whether speed or endurance is your limit.");
+    try { const ef = labData().ef; if (ef && ef.d != null) { if (ef.d >= 2) add("good", `Aerobic efficiency on easy runs is up ${r1(ef.d)}% on the 6 weeks before: the base work is paying off.`); else if (ef.d <= -2) add("work", `Aerobic efficiency on easy runs is down ${r1(-ef.d)}% on the 6 weeks before: check sleep, fatigue and the share of hard days before adding more.`); } } catch (e) {}
+  }
+  return out;
+}
 /* the level at 12 month ends, to feed lvEta */
-const lvSeries = fn => Array.from({ length: 12 }, (_, i) => ({ d: addDays(todayISO(), -Math.round((11 - i) * 30.4375)), v: null })).map(o => ({ d: o.d, r: fn(o.d) }));
+const lvSeries = fn => Array.from({ length: 12 }, (_, i) => addDays(todayISO(), -Math.round((11 - i) * 30.4375))).map(d => ({ d, r: fn(d) }));
 const lvEtaText = e => { const m = x => x < 24 ? `${Math.max(1, r0(x))} month${Math.max(1, r0(x)) === 1 ? "" : "s"}` : `${r1(x / 12)} years`, a = m(e.lo), b = e.hi === Infinity ? null : m(e.hi);
   return e.months > 60 ? `At your pace of the last year ${e.next} is more than 5 years away.` : `At your pace of the last year (+${e.slope.toFixed(2)} levels a month) ${e.next} is about ${m(e.months)} away${b === null ? `, ${a} or more` : a === b ? "" : `, between ${a} and ${b}`}. Progress slows near your limit: read it as the best case.`; };
 const lvBar = (p, small) => { const pos = Math.max(0, Math.min(5, p)) / 5 * 100;
-  return `<div class="lv-bar${small ? " sm" : ""}" role="img" aria-label="${esc(lvLabel(p))}"><div class="lv-tr"><i style="width:${pos}%"></i>${[1, 2, 3, 4].map(k => `<u style="left:${k * 20}%"></u>`).join("")}</div>${small ? "" : `<div class="lv-tk">${LV_SHORT.map((n, i) => `<span class="${Math.floor(p + 1e-9) === i ? "on" : ""}" style="left:${i * 20}%">${n}</span>`).join("")}</div>`}</div>`; };
+  return `<div class="lvl-bar${small ? " sm" : ""}" role="img" aria-label="${esc(lvLabel(p))}"><div class="lvl-tr"><i style="width:${pos}%"></i>${[1, 2, 3, 4].map(k => `<u style="left:${k * 20}%"></u>`).join("")}</div>${small ? "" : `<div class="lvl-tk">${LV_SHORT.map((n, i) => `<span class="${Math.floor(p + 1e-9) === i ? "on" : ""}" style="left:${i * 20}%">${n}</span>`).join("")}</div>`}</div>`; };
+const lvTips = L => L.length ? `<ul class="wk-tips lvl-ins">${L.map(x => `<li class="${x.k}">${esc(x.t)}</li>`).join("")}</ul>` : "";
 function levelView() {
   const t = todayISO(), R = lvRunner(t), C = lvCalis(t), sex = FIT().profile.sex === "Female" ? "Female" : "Male", need = x => `<div class="faint lab-n">Needs ${x}.</div>`, note = x => `<div class="faint lab-d">${x}</div>`;
-  const eta = (get, p) => { const e = lvEta(lvSeries(get).map(o => ({ d: o.d, p: o.r })), p); return e ? `<div class="lv-s">${lvEtaText(e)}</div>` : `<div class="lv-s faint">${p >= 5 ? "" : "No time estimate yet: it needs results spread over at least 3 months and a clear improvement."}</div>`; };
-  let h = `<div class="section-h"><h2>Runner</h2><button class="link" data-act="open-result" data-type="run">${ic("plus", "sm")} Result</button></div><div class="lv">`;
+  const ins = lvInsights(R, C);
+  const eta = (get, p) => { const e = lvEta(lvSeries(get).map(o => ({ d: o.d, p: o.r })), p); return e ? `<div class="lvl-s">${lvEtaText(e)}</div>` : `<div class="lvl-s faint">${p >= 5 ? "" : "No time estimate yet: it needs results spread over at least 3 months and a clear improvement."}</div>`; };
+  const runIns = ins.filter(i => R && (/long race|endurance is ahead of your speed|Only one kind|Aerobic efficiency/.test(i.t)));
+  let h = `<div class="section-h"><h2>Runner</h2><button class="link" data-act="open-result" data-type="run">${ic("plus", "sm")} Result</button></div><div class="lvl">`;
   if (!R) h += need("a race, time trial, test or personal best of the last 12 months (add one with + Result)");
   else { const i = Math.min(5, Math.floor(R.p)), nx = i < 5 ? LV_RUN5[sex][i] : null;
-    h += `<div class="lv-hero"><b class="lv-n">${lvLabel(R.p)}</b>${lvBar(R.p)}</div><div class="lv-s">5K equivalent <b>${fmtClock(R.eq5)}</b>, from ${r1(R.best.km)} km in ${fmtClock(R.best.sec)} on ${fmtDM(R.best.d)}${R.age > 180 ? `. That is ${R.age} days old: a new result would update it` : ""}.</div>`;
-    h += nx ? `<div class="lv-s">${LV_NAMES[i + 1]} is a 5K equivalent of <b>${fmtClock(nx)}</b>: ${fmtClock(R.eq5 - nx)} faster (${r1((R.eq5 - nx) / R.eq5 * 100)}%).</div>` : `<div class="lv-s">Above the Elite line (${fmtClock(LV_RUN5[sex][4])} for 5K).</div>`;
-    h += eta(d => lvRunner(d)?.p ?? null, R.p);
-    h += `<div class="lab-t lv-t r3">${R.list.map(e => `<div><span>${fmtDM(e.d)}</span><b>${r1(e.km)} km · ${fmtClock(e.sec)}</b><span>5K ≈ ${fmtClock(e.eq5)}</span></div>`).join("")}</div>`;
-    h += note(`Best results of the last 12 months. Other distances are turned into a 5K with Daniels' VDOT equivalence. Lines: Running Level 5K standards at age 20 for ${sex === "Female" ? "women" : "men"}, no age adjustment: the hard version.`); }
-  h += `</div><div class="section-h"><h2>Calisthenics</h2><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Test</button></div><div class="lv">`;
+    h += `<div class="lvl-hero"><b class="lvl-n">${lvLabel(R.p)}</b>${lvBar(R.p)}</div><div class="lvl-s">5K equivalent <b>${fmtClock(R.eq5)}</b>, from ${r1(R.best.km)} km in ${fmtClock(R.best.sec)} on ${fmtDM(R.best.d)}${R.age > 180 ? `. That is ${R.age} days old: a new result would update it` : ""}. Faster than about <b>${r0(R.pct)}%</b> of the runners on Running Level.</div>`;
+    h += nx ? `<div class="lvl-s">${LV_NAMES[i + 1]} is a 5K equivalent of <b>${fmtClock(nx)}</b>: ${fmtClock(R.eq5 - nx)} faster (${r1((R.eq5 - nx) / R.eq5 * 100)}%).</div>` : `<div class="lvl-s">Above the Elite line (${fmtClock(LV_RUN5[sex][4])} for 5K).</div>`;
+    h += eta(d => lvRunner(d)?.p ?? null, R.p) + lvTips(runIns);
+    h += `<div class="lab-t lvl-t r3">${R.list.map(e => `<div><span>${fmtDM(e.d)}</span><b>${r1(e.km)} km · ${fmtClock(e.sec)}</b><span>5K ≈ ${fmtClock(e.eq5)}</span></div>`).join("")}</div>`;
+    h += note(`Best results of the last 12 months. Other distances are turned into a 5K with Daniels' VDOT equivalence. Hard setting: each level needs the next percentile band of Running Level (Beginner = faster than 20%, Intermediate = 80%, Elite about 99%), ${sex === "Female" ? "women's" : "men's"} lines at age 20, no age adjustment.`); }
+  h += `</div><div class="section-h"><h2>Calisthenics</h2><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Test</button></div><div class="lvl">`;
   if (C.overall == null) h += need("a max-reps test, a hold or a weighted top set in the last 12 months (add one with + Test)");
   else { const CS = lvSeries(d => lvCalis(d));
-    h += `<div class="lv-hero"><b class="lv-n">${lvLabel(C.overall)}</b>${lvBar(C.overall)}</div><div class="lv-s">Average of ${C.n} of 3 areas${C.n < 3 ? ": the ones without data are not counted, so log them for the full picture" : ""}.</div>`;
-    h += (() => { const e = lvEta(CS.map(o => ({ d: o.d, p: o.r.overall })), C.overall); return e ? `<div class="lv-s">${lvEtaText(e)}</div>` : ""; })();
-    for (const [key, name, basis, miss] of [["strength", "Strength", "Weighted pull-up and dip: 1RM added to the body, as % of body weight.", "a top set with load (pull-up or dip) or a 1RM/3RM/5RM test"], ["endurance", "Endurance", "Most strict reps in a row: pull-up, dip, push-up.", "a max-reps test for pull-up, dip or push-up"], ["skills", "Skills", "Holds and progressions (a stage counts at 15 s). No official scale exists: rough.", "a hold (handstand, L-sit, front lever, planche) or muscle-up reps"]]) {
-      const D = C[key]; h += `<div class="lv-d"><div class="lv-dh"><b>${name}</b><span>${D ? lvLabel(D.p) : "no data"}</span></div>`;
+    h += `<div class="lvl-hero"><b class="lvl-n">${lvLabel(C.overall)}</b>${lvBar(C.overall)}</div><div class="lvl-s">Average of ${C.n} of 3 areas${C.n < 3 ? ": the ones without data are not counted, so log them for the full picture" : ""}.</div>`;
+    h += (() => { const e = lvEta(CS.map(o => ({ d: o.d, p: o.r.overall })), C.overall); return e ? `<div class="lvl-s">${lvEtaText(e)}</div>` : ""; })() + lvTips(ins.filter(i => !runIns.includes(i)));
+    for (const [key, name, basis, miss] of [["strength", "Strength", "Weighted pull-up and dip: 1RM added to the body, as % of body weight (Strength Level, 80 kg reference, one band up).", "a top set with load (pull-up or dip) or a 1RM/3RM/5RM test"], ["endurance", "Endurance", "Most strict reps in a row: pull-up, dip, push-up. The lines are the app's own: no authoritative table exists.", "a max-reps test for pull-up, dip or push-up"], ["skills", "Skills", "Holds and progressions (a stage counts in full at 15 s). A skill you never logged counts as 0. No official scale exists: rough.", "a hold (handstand, L-sit, front lever, planche) or strict muscle-up reps"]]) {
+      const D = C[key]; h += `<div class="lvl-d"><div class="lvl-dh"><b>${name}</b><span>${D ? lvLabel(D.p) : "no data"}</span></div>`;
       if (!D) h += need(miss); else {
         const e = lvEta(CS.map(o => ({ d: o.d, p: o.r[key]?.p ?? null })), D.p);
-        h += `${lvBar(D.p, true)}<div class="lab-t lv-t">${D.items.map(it => { const k = Math.min(4, Math.floor(it.p)), at = it.xs && it.p < 5 ? `${LV_NAMES[k + 1]} at ${it.unit === "%" ? r0(it.xs[k]) + "%" : it.xs[k] + (it.unit === "s" ? " s" : " reps")}` : ""; return `<div><span>${esc(it.name)}</span><b>${esc(it.text)}</b><span>${lvLabel(it.p)}</span><span>${at}</span></div>`; }).join("")}</div>${e ? `<div class="lv-s">${lvEtaText(e)}</div>` : ""}`; }
+        h += `${lvBar(D.p, true)}<div class="lab-t lvl-t">${D.items.map(it => { const k = Math.min(4, Math.floor(it.p)), at = it.xs && it.p < 5 ? `${LV_NAMES[k + 1]} at ${it.unit === "%" ? r0(it.xs[k]) + "%" : it.xs[k] + (it.unit === "s" ? " s" : " reps")}` : ""; return `<div class="${it.missing ? "miss" : ""}"><span>${esc(it.name)}</span><b>${esc(it.text)}</b><span>${it.missing ? "Starter" : lvLabel(it.p)}</span><span>${at}</span></div>`; }).join("")}</div>${e ? `<div class="lvl-s">${lvEtaText(e)}</div>` : ""}`; }
       h += note(basis) + `</div>`; }
-    h += note("Lines are the median of several published scales (Strength Level, Symmetric Strength, Endura, FitnessVolt) for men; women's lines are 60%. Circuit times have no external scale and are not rated. Level uses your best of the last 12 months."); }
+    h += note("Hard setting: weighted lifts are read one band up on Strength Level (Beginner = stronger than 20% of the lifters who log it, Intermediate = 80%), women's strength and reps lines are 60%. Circuit times have no external scale and are not rated. Level uses your best of the last 12 months."); }
   return `<div class="lab-wrap">${h}</div></div>`;
 }
 /* ================= Workout Score (1-100): from the logged data only, no AI =================

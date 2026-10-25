@@ -85,17 +85,17 @@ test("Shopping on the phone: the title and the dates are whole (not cut by the b
   assert.deepEqual(app.errors, []);
 });
 
-test("L18 check-ups: Reminders lists measurements, photos and the two tests (28/28/42/42 days, starting after the first one), the switches and intervals survive a reload", async () => {
+test("L18 check-ups: Reminders lists measurements, photos and the two tests (28/30/42/42 days, starting after the first one), the switches and intervals survive a reload", async () => {
   app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
   const r = await app.page.evaluate(() => { const L = checkList(), box = document.createElement("div"); box.innerHTML = checkPrefs();
     const rows = [...box.querySelectorAll(".ck-row")].map(e => e.textContent.replace(/\s+/g, " ").trim());
     ACT["ck-toggle"]({ dataset: { k: "photo" } }); CHG["ck-every"]("21", { dataset: { k: "meas" } }); CHG["ck-at"]("07:30");
     return { every: L.map(c => [c.k, c.every, c.on, c.next]), rows }; });
-  assert.deepEqual(r.every, [["meas", 28, true, null], ["photo", 28, true, null], ["run", 42, true, null], ["cal", 42, true, null]]);
+  assert.deepEqual(r.every, [["meas", 28, true, null], ["photo", 30, true, null], ["run", 42, true, null], ["cal", 42, true, null]]);
   assert.equal(r.rows.length, 4); assert.ok(r.rows.every(x => /Starts after the first one you log/.test(x)), r.rows.join(" | "));
   await app.reload();
   const after = await app.page.evaluate(() => ({ L: checkList().map(c => [c.k, c.every, c.on]), at: S.settings.reminders.checks.at, set: (UI.tab = "settings", render(), document.body.innerText.includes("check-ups")) }));
-  assert.deepEqual(after.L, [["meas", 21, true], ["photo", 28, false], ["run", 42, true], ["cal", 42, true]]); assert.equal(after.at, "07:30");
+  assert.deepEqual(after.L, [["meas", 21, true], ["photo", 30, false], ["run", 42, true], ["cal", 42, true]]); assert.equal(after.at, "07:30");
   assert.deepEqual(app.errors, []);
 });
 
@@ -551,14 +551,16 @@ test("PDF recap: a valid A4 PDF (opens in a real reader), real text with the sco
 test("M11h level maths: position on the scale (times in log, reps and ratios linear), names between levels, sex, beyond elite, below beginner — hand-computed", async () => {
   app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
   const r = await app.page.evaluate(() => { const run = (km, mmss, sex = "Male") => { FIT().profile.sex = sex; const [m, s] = mmss.split(":").map(Number); return lvEq5Pos(km, m * 60 + s, sex); };
-    const out = { i: run(5, "22:41"), a: run(5, "20:00"), e: run(5, "17:30"), under: run(5, "16:30"), low: run(5, "35:00"), f: run(5, "27:19", "Female"), fm: run(5, "27:19", "Male"), tenk: run(10, "41:30"),
-      reps: [lvPos(13, LV_REPS.pull, "lin"), lvPos(18, LV_REPS.pull, "lin"), lvPos(0, LV_REPS.pull, "lin")], hold: lvPos(30, LV_HOLD.handstand, "log"), names: [1, 3.0, 3.1, 3.5, 3.9, 5.2, 0.4].map(p => lvLabel(p)) }; FIT().profile.sex = "Male"; return out; });
+    const out = { i: run(5, "22:41"), a: run(5, "20:00"), e: run(5, "17:30"), under: run(5, "16:30"), low: run(5, "30:00"), f: run(5, "27:19", "Female"), fm: run(5, "27:19", "Male"), tenk: run(10, "41:30"),
+      reps: [lvPos(13, LV_REPS.pull, "lin"), lvPos(18, LV_REPS.pull, "lin"), lvPos(0, LV_REPS.pull, "lin")], hold: lvPos(30, LV_HOLD.handstand, "log"), pct: [0, 0.5, 2, 2.5, 3, 5.4].map(lvPct), names: [1, 3.0, 3.1, 3.5, 3.9, 5.2, 0.4].map(p => lvLabel(p)) }; FIT().profile.sex = "Male"; return out; });
   const near = (a, b, t = 0.012) => Math.abs(a - b) <= t;
-  assert.ok(near(r.i.p, 3.0, 0.004), `22:41 is the Intermediate line (${r.i.p})`); assert.ok(near(r.a.p, 3.916, 0.012), `20:00 → 3.916 (${r.a.p}) = 3 + ln(1361/1200) / ln(1361/1186)`); assert.ok(near(r.e.p, 5.0, 0.004), "17:30 is the Elite line");
-  assert.ok(r.under.p > 5 && r.under.p < 6, `beyond elite (${r.under.p})`); assert.ok(r.low.p < 1 && near(r.low.p, 0.126, 0.012), `35:00 is below Beginner (${r.low.p})`);
-  assert.ok(near(r.f.p, 3.0, 0.004), "women's scale: 27:19 is Intermediate"); assert.ok(r.fm.p < 2.0, `the same time on the men's scale is below Novice (${r.fm.p})`);
+  /* hard setting: Running Level lines read one band up, so 22:41 (their median) is only the Novice line = 2.0 */
+  assert.ok(near(r.i.p, 2.0, 0.004), `22:41 is the Novice line (${r.i.p})`); assert.ok(near(r.a.p, 2.915, 0.01), `20:00 → 2.915 = 2 + ln(1361/1200) / ln(1361/1186) (${r.a.p})`); assert.ok(near(r.e.p, 4.0, 0.004), "17:30 is the Advanced line");
+  assert.ok(r.under.p > 4 && r.under.p < 5 && near(r.under.p, 4.481, 0.01), `16:30 → 4.481 (${r.under.p})`); assert.ok(r.low.p < 1 && near(r.low.p, 0.110, 0.01), `30:00 is below Beginner (${r.low.p})`);
+  assert.ok(near(r.f.p, 2.0, 0.004), "women's scale: 27:19 is the Novice line"); assert.ok(r.fm.p < 1 && near(r.fm.p, 0.744, 0.01), `the same time on the men's scale is below Beginner (${r.fm.p})`);
   assert.ok(near(r.tenk.eq5, 1200, 12), `41:30 over 10 km is worth about a 20:00 5K (${r.tenk.eq5})`);
-  assert.deepEqual(r.reps.map(x => Math.round(x * 1000) / 1000), [3, 3.556, 0.0 + r.reps[2]]); assert.ok(r.reps[2] <= 1 && near(r.reps[2], 1 - 1 / 5, 0.001), `0 reps = ${r.reps[2]}`); assert.ok(near(r.hold, 3.0, 0.001));
+  assert.deepEqual(r.reps.map(x => Math.round(x * 1000) / 1000), [2.6, 3.429, 0]); assert.ok(near(r.hold, 2.585, 0.001), `handstand 30 s on 10/20/40/75/120 = ${r.hold}`);
+  assert.deepEqual(r.pct, [0, 10, 50, 65, 80, 99], "the lines sit at the 20th, 50th, 80th, 95th and 99th percentile");
   assert.deepEqual(r.names, ["Beginner", "Intermediate", "Intermediate", "Intermediate → Advanced 50%", "Intermediate → Advanced 90%", "Elite", "Starter → Beginner 40%"]);
   assert.deepEqual(app.errors, []);
 });
@@ -574,12 +576,25 @@ test("M11h level inputs: runner from the best result of the last year (any dista
     return { run: [single(R.p), Math.round(R.eq5), R.best.km, R.n], s: C.strength && { p: single(C.strength.p), m: C.strength.items.map(i => [i.k, single(i.p), Math.round(i.v * 10) / 10]) }, e: C.endurance && { p: single(C.endurance.p), m: C.endurance.items.map(i => [i.k, single(i.p)]) }, k: C.skills && { p: single(C.skills.p), m: C.skills.items.map(i => [i.k, single(i.p)]) }, all: single(C.overall) }; });
   assert.equal(r.run[2], 10); assert.equal(r.run[3], 1, "only the 10 km result counts"); assert.ok(Math.abs(r.run[1] - 1200) <= 12);
   const sp = r.s.m.find(m => m[0] === "pull"), sd = r.s.m.find(m => m[0] === "dip"); assert.deepEqual(r.s.m.length, 2, "squat is not a calisthenics lift here");
-  assert.ok(Math.abs(sp[2] - 60.4) < 0.1 && Math.abs(sp[1] - 3.914) < 0.01, JSON.stringify(sp));                    // e1RM +48.33 kg = 60.4 % of 80 kg: 3 + (60.4 - 34) / (63 - 34)
-  assert.ok(Math.abs(sd[2] - 80) < 0.1 || sd[2] > 70, JSON.stringify(sd)); assert.ok(Math.abs(r.s.p - (sp[1] + sd[1]) / 2) < 0.002);
-  const ep = r.e.m.find(m => m[0] === "pull"), ed = r.e.m.find(m => m[0] === "dip"); assert.equal(ep[1], 3); assert.equal(ed[1], 3); assert.equal(r.e.m.length, 2, "a push-up record older than a year is not counted");
-  const hs = r.k.m.find(m => m[0] === "handstand"), fl = r.k.m.find(m => m[0] === "frontlever"), pl = r.k.m.find(m => m[0] === "planche");
-  assert.equal(hs[1], 3); assert.ok(Math.abs(fl[1] - 2.8) < 0.001, `adv tuck 12 s = 3 - 1 + 12/15 (${fl[1]})`); assert.ok(Math.abs(pl[1] - (4 - 1 + 3 / 15)) < 0.001, "straddle planche 3 s = 3.2");
-  assert.ok(r.k.p > 0 && Math.abs(r.all - (r.s.p + r.e.p + r.k.p) / 3) < 0.002); assert.deepEqual(app.errors, []);
+  assert.ok(Math.abs(sp[2] - 60.4) < 0.1 && Math.abs(sp[1] - 2.494) < 0.01, JSON.stringify(sp));                    // e1RM +48.33 kg = 60.4 % of 80 kg: 2 + (60.4 - 42.5) / (78.75 - 42.5)
+  assert.ok(Math.abs(sd[2] - 75) < 0.1 && Math.abs(sd[1] - 2.286) < 0.01, JSON.stringify(sd)); assert.ok(Math.abs(r.s.p - (sp[1] + sd[1]) / 2) < 0.002);
+  const ep = r.e.m.find(m => m[0] === "pull"), ed = r.e.m.find(m => m[0] === "dip"); assert.equal(ep[1], 2.6, "13 strict pull-ups are only between Novice and Intermediate"); assert.equal(ed[1], 2.5); assert.equal(r.e.m.length, 2, "a push-up record older than a year is not counted");
+  const hs = r.k.m.find(m => m[0] === "handstand"), fl = r.k.m.find(m => m[0] === "frontlever"), pl = r.k.m.find(m => m[0] === "planche"), mu = r.k.m.find(m => m[0] === "muscleup"), ls = r.k.m.find(m => m[0] === "lsit");
+  assert.ok(Math.abs(hs[1] - 2.585) < 0.001); assert.ok(Math.abs(fl[1] - 1.8) < 0.001, `adv tuck 12 s = 1 + (2 - 1) × 12/15 (${fl[1]})`); assert.ok(Math.abs(pl[1] - 2.3) < 0.001, "straddle planche 3 s = 2 + (3.5 - 2) × 3/15");
+  assert.equal(mu[1], 0, "no muscle-up logged counts as 0"); assert.equal(ls[1], 0); assert.equal(r.k.m.length, 5); assert.ok(Math.abs(r.k.p - (2.585 + 1.8 + 2.3) / 5) < 0.002, `skills = mean of the five benchmarks (${r.k.p})`);
+  assert.ok(Math.abs(r.all - (r.s.p + r.e.p + r.k.p) / 3) < 0.002); assert.ok(r.all < 3, "this athlete is not Intermediate"); assert.deepEqual(app.errors, []);
+});
+
+test("M11h insights: push vs pull, strength vs endurance, long vs short running, strong points, hand-built cases", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), L = d => addDays(t, -d), bw = 80; S.body.w = { [L(300)]: bw, [t]: bw }; DATA_V++;
+    S.train.tests = [{ id: "a", date: L(30), kind: "Race", km: 5, sec: 19 * 60 }, { id: "b", date: L(60), kind: "Race", km: 21.0975, sec: 2 * 3600 + 10 * 60 }];
+    S.train.topSets = []; S.train.calis = [{ id: "c1", date: L(10), ex: "Push-up", test: "Max reps (BW)", val: 60, bw }, { id: "c2", date: L(10), ex: "Dip", test: "Max reps (BW)", val: 30, bw }, { id: "c3", date: L(10), ex: "Pull-up", test: "Max reps (BW)", val: 8, bw }];
+    const R = lvRunner(t), C = lvCalis(t), I = lvInsights(R, C); return { I: I.map(i => i.k + ": " + i.t), ep: C.endurance.items.map(i => [i.k, Math.round(i.p * 1000) / 1000]), sp: R.by.short?.p, hp: R.by.half?.p }; });
+  assert.deepEqual(r.ep.sort(), [["dip", 3.5], ["pull", 1.6], ["push", 3.5]].sort(), "dip 30 on 8/15/25/35/50 = 3.5, push-up 60 on 20/35/50/70/90 = 3.5, pull-up 8 on 5/10/15/22/30 = 1.6");
+  assert.ok(r.I.some(x => /^work: You push better than you pull: push Intermediate → Advanced 50%, pull Beginner → Novice 60%/.test(x)), r.I.join("\n"));
+  assert.ok(r.hp < r.sp - 0.4 && r.I.some(x => /^work: Your long race lags your short ones/.test(x)), `half marathon ${r.hp} vs 5K ${r.sp}: ${r.I.join(" | ")}`);
+  assert.ok(r.I.some(x => /^good: Strong point: (Dip|Push-up) is Intermediate → Advanced 50%, 0\.6 levels above your overall/.test(x)), "3.5 against the overall mean of 2.87: " + r.I.join(" | ")); assert.deepEqual(app.errors, []);
 });
 
 test("M11h time to the next level: least-squares slope of the level over the last 12 months with its error; no promise when it is flat, short or going down", async () => {
@@ -601,7 +616,7 @@ test("M11h Level screen: Progress › Level shows runner and the three calisthen
       S.train.calis = [{ id: "c1", date: L(15), ex: "Pull-up", test: "Max reps (BW)", val: 13, bw }, { id: "c3", date: L(10), ex: "Handstand", test: "Hold (s)", val: 30, bw }];
       UI.tab = "progress"; UI.progSeg = "level"; render(); const el = document.querySelector(".lab-wrap"); return { txt: el ? el.textContent : "", sw: document.documentElement.scrollWidth, vw: innerWidth }; });
     assert.ok(/Runner/.test(r.txt) && /Calisthenics/.test(r.txt) && /Strength/.test(r.txt) && /Endurance/.test(r.txt) && /Skills/.test(r.txt), r.txt.slice(0, 200));
-    assert.ok(/5K equivalent/.test(r.txt) && /Advanced is a 5K equivalent of/.test(r.txt), "runner: the next line is named with the time to reach it");
+    assert.ok(/5K equivalent/.test(r.txt) && /Intermediate is a 5K equivalent of/.test(r.txt), "runner: the next line is named with the time to reach it");
     assert.ok(/Weighted pull-up/.test(r.txt) && /Handstand/.test(r.txt) && /Pull-up/.test(r.txt)); assert.ok(r.sw <= r.vw + 1, `no sideways scroll (${r.sw} > ${r.vw})`);
     assert.ok(/pace of the last year/.test(r.txt), "a clear improvement over the year gives a time estimate");
     assert.deepEqual(app.errors, []); await app.close(); app = null;
@@ -609,4 +624,83 @@ test("M11h Level screen: Progress › Level shows runner and the three calisthen
   app = await H.startApp({ dir, seed: { settings: { onboarded: true } }, viewport: H.VIEWPORTS.phone });
   const e = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "level"; render(); return document.querySelector(".lab-wrap").textContent; });
   assert.ok(/Needs a race/.test(e) && /Needs a max-reps test/.test(e), e.slice(0, 200)); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11h Goals page: history that does not forget, counts, by sport ---------- */
+test("M11h goals: the day a goal is reached is kept for good (history, counts, average time, by sport) even if the number slips back", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), L = d => addDays(t, -d), ca = (id, d, ex, test, val) => ({ id, date: d, ex, test, val, bw: 80 });
+    mutateLog(L(40), day => { day.bf = 18; }); mutateLog(L(3), day => { day.bf = 14.5; });
+    S.train.calis = [ca("a", L(80), "Pull-up", "Max reps (BW)", 8), ca("b", L(30), "Pull-up", "Max reps (BW)", 12), ca("c", L(50), "Handstand", "Hold (s)", 20), ca("d", L(5), "Handstand", "Hold (s)", 35), ca("e", L(5), "Dip", "Max reps (BW)", 10)];
+    S.train.goals = [{ id: "g1", kind: "reps", ex: "Pull-up", target: 12, start: L(100), startVal: 6 }, { id: "g2", kind: "hold", ex: "Handstand", target: 30, start: L(60), startVal: 20 }, { id: "g3", kind: "reps", ex: "Dip", target: 30, start: L(10), startVal: 10 }, { id: "g4", kind: "bf", target: 15, start: L(40), startVal: 18 }];
+    DATA_V++; const St = goalStats(), first = S.train.goals.map(g => g.doneOn || null);
+    S.train.calis.push(ca("f", t, "Pull-up", "Max reps (BW)", 5)); DATA_V++;            // the number slips back: it stays reached
+    const St2 = goalStats(); UI.tab = "progress"; UI.progSeg = "goals"; render(); const el = document.querySelector("main") || document.body;
+    return { first, L1: L(30), L2: L(5), L4: L(3), n: [St.done.length, St.open, St.all], by: St.by.map(b => [b.name, b.done, b.total]), avg: St.avgDays, n2: [St2.done.length, St2.open], year: St.done.filter(x => x.on.slice(0, 4) === t.slice(0, 4)).length, txt: el.textContent, sw: document.documentElement.scrollWidth, vw: innerWidth, saved: JSON.stringify(S.train.goals).includes("doneOn") }; });
+  assert.deepEqual(r.first, [r.L1, r.L2, null, r.L4], "g1 12 pull-ups on day −30, g2 handstand 35 s on day −5, g3 not yet, g4 body fat 14.5% on day −3");
+  assert.deepEqual(r.n, [3, 1, 4]); assert.deepEqual(r.by, [["Calisthenics", 2, 3], ["Body", 1, 1]]); assert.ok(Math.abs(r.avg - 54) < 0.01, `average of 70, 55 and 37 days (${r.avg})`);
+  assert.deepEqual(r.n2, [3, 1], "slipping back to 5 pull-ups does not un-reach the goal"); assert.ok(r.saved);
+  assert.ok(/Reached/.test(r.txt) && /2 of 3/.test(r.txt) && /1 of 1/.test(r.txt) && /54 d/.test(r.txt) && /75%/.test(r.txt), r.txt.slice(0, 400)); assert.ok(r.sw <= r.vw + 1); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11h many photos: paged and grouped by month, quick comparisons, the reminder next to them ---------- */
+test("M11h photos: 50 days of photos show 6 at a time grouped by month, 12 more per tap, quick comparisons pick the right dates, the reminder (monthly by default) is switchable and its interval is a choice", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(); S.body.photos = []; for (let i = 0; i < 50; i++) for (const pose of ["front", "side", "back"]) S.body.photos.push({ id: `ph${i}${pose}`, date: addDays(t, -i * 8), pose });
+    DATA_V++; UI.tab = "progress"; UI.progSeg = "body"; UI.ppShow = 0; render();
+    const days = () => document.querySelectorAll(".pp-day").length, months = () => document.querySelectorAll(".pp-mo").length, o = { d0: days(), m0: months(), imgs: document.querySelectorAll(".pp-day img[data-ph]").length, more: document.querySelector(".pp-more")?.textContent };
+    ACT["pp-more"](); render(); o.d1 = days(); ACT["pp-more"](); render(); o.d2 = days();
+    UI.ppPose = "front"; ACT["pp-preset"]({ dataset: { k: "first" } }); o.first = [UI.ppCmp.a, UI.ppCmp.b]; ACT["pp-preset"]({ dataset: { k: "3m" } }); o.m3 = [UI.ppCmp.a, UI.ppCmp.b]; ACT["pp-preset"]({ dataset: { k: "1y" } }); o.y1 = [UI.ppCmp.a, UI.ppCmp.b];
+    o.t = t; o.sel = [...document.querySelectorAll('.ck-sel')].map(e => e.value); o.rem = document.querySelector(".pp-rem")?.textContent.replace(/\s+/g, " ");
+    CHG["ck-every"]("60", { dataset: { k: "photo" } }); o.after = checkList().find(c => c.k === "photo").every; ACT["ck-toggle"]({ dataset: { k: "photo" } }); o.on = checkList().find(c => c.k === "photo").on; return o; });
+  assert.equal(r.d0, 6); assert.ok(r.m0 >= 2, "grouped by month once there are more than 8 days"); assert.equal(r.imgs, 18, "only the shown days load pictures: 6 days × 3 poses"); assert.match(r.more, /Show 12 older of 44/);
+  assert.equal(r.d1, 18); assert.equal(r.d2, 30);
+  const day = n => { const d = new Date(r.t + "T12:00:00"); d.setDate(d.getDate() - n); return d.toLocaleDateString("sv-SE"); };
+  assert.deepEqual(r.first, [day(49 * 8), day(0)]); assert.deepEqual(r.m3, [day(88), day(0)], "91 days back: the day 88 is the closest set (11 × 8)"); assert.deepEqual(r.y1, [day(368), day(0)], "365 days back: the day 368 (46 × 8) is closest, 360 is 5 away and 368 is 3");
+  assert.ok(/Next|Due|Starts/.test(r.rem), r.rem); assert.equal(r.after, 60); assert.equal(r.on, false); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11h Energy battery: two-process sleep pressure + recovery adjustment − training fatigue; every number below was computed separately by hand ---------- */
+const BT_SET = (extra = "") => `const t = todayISO(); S.settings.sleep = { target: 7.5, wake: "07:00" }; for (let i = -1; i <= 40; i++) mutateLog(addDays(t, -i), d => { d.sleep = 8; d.hrv = null; d.rhr = null; d.nap = null; d.napAt = null; d.workouts = []; d.planned = []; }); ${extra}; DATA_V++;`;
+test("M11h battery maths: steady 8 h nights give 90.72 at wake, 68.93 at noon and 37.66 at bedtime; one short night, a month of 5 h nights and a nap follow the two-process model", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(`(() => { ${BT_SET()}
+    const e = (d = t) => { const c = btCtx(d); return [c.E(7), c.E(12), c.E(15), c.E(23)].map(x => Math.round(x * 100) / 100); }, steady = e(), night = [btCtx(t).E(27), btCtx(t).E(31)];
+    mutateLog(t, d => { d.sleep = 5; }); DATA_V++; const one = btCtx(t).E(7);
+    for (let i = -1; i <= 40; i++) mutateLog(addDays(t, -i), d => { d.sleep = 5; }); DATA_V++; const five = btCtx(t).E(7), fiveBed = btCtx(t).bed;
+    for (let i = -1; i <= 40; i++) mutateLog(addDays(t, -i), d => { d.sleep = 8; }); mutateLog(t, d => { d.nap = 30; d.napAt = "14:00"; }); DATA_V++; const nap = e();
+    return { steady, night, one, five, fiveBed, nap }; })()`);
+  const near = (a, b, t = 0.02) => assert.ok(Math.abs(a - b) <= t, `${a} vs ${b}`);
+  near(r.steady[0], 90.72); near(r.steady[1], 68.93); near(r.steady[3], 37.66); near(r.steady[2], 58.45, 0.02);
+  near(r.night[0], 75.95, 0.02); near(r.night[1], 90.72, 0.02);   // asleep from 23:00: pressure 0.6234 × e^(−4/4.2) after 4 h, × e^(−8/4.2) after 8 h = the morning figure
+  near(r.one, 79.30, 0.02);                                   // yesterday awake 19 h, then a 5 h night: S = 0.2070
+  near(r.five, 77.94, 0.02); near(r.fiveBed, 26);              // fixed point of 5 h nights: S = 0.2206; bed = 07:00 + 24 − 5 = 02:00 → 26 h
+  near(r.nap[2], 64.26, 0.02); near(r.nap[3], 41.40, 0.02);    // 30 min nap at 14:00: +5.8 at 15:00 and +3.7 at bedtime
+  assert.ok(r.five < r.steady[0] - 12, "a month of short nights leaves you much less charged at wake"); assert.deepEqual(app.errors, []);
+});
+test("M11h battery adjustments: HRV against your own 28 days (7 points per SD), resting HR above usual (0.8 per bpm), yesterday's session wears off, today's session drains while it runs, a planned one is projected", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(`(() => { ${BT_SET("for (let i = 1; i <= 28; i++) mutateLog(addDays(t, -i), d => { d.hrv = i % 2 ? 58 : 62; d.rhr = 50; }); mutateLog(t, d => { d.hrv = 56; d.rhr = 56; })")}
+    const v = btVitals(t), c = btCtx(t), a = { z: v.z, aH: v.aH, aR: v.aR, wake: c.E(7) };
+    mutateLog(t, d => { d.hrv = null; d.rhr = null; }); mutateLog(addDays(t, -1), d => { d.workouts = [{ sport: "Running", min: 60, rpe: 6, at: "17:00" }]; }); DATA_V++; const y = btCtx(t); a.fatY = y.fat(7); a.D = y.ses[0].D;
+    mutateLog(addDays(t, -1), d => { d.workouts = []; }); mutateLog(t, d => { d.workouts = [{ sport: "Running", min: 60, rpe: 6, at: "08:00" }]; }); DATA_V++; const s = btCtx(t); a.ramp = [s.fat(8), s.fat(8.5), s.fat(9), s.fat(11)];
+    mutateLog(t, d => { d.workouts = []; d.planned = [{ sport: "Running", min: 60, rpe: 6, at: "19:00" }]; }); DATA_V++; const p = btCtx(t); a.plan = [p.ses.length, p.ses[0]?.planned, p.fat(23), p.E(23)];
+    return a; })()`);
+  const near = (a, b, t = 0.02) => assert.ok(Math.abs(a - b) <= t, `${a} vs ${b}`);
+  near(r.z, -1.711, 0.005); near(r.aH, -11.976, 0.02); near(r.aR, -4.8); near(r.wake, 73.94, 0.02);
+  near(r.D, 21.60, 0.01); near(r.fatY, 3.62, 0.01);            // load 360 vs a usual session of 250: 35 × (1 − e^(−360/375)); 25 effective hours later (11 awake + 8 asleep × 2.5 + …) × e^(−25/14)
+  near(r.ramp[0], 0, 0.001); near(r.ramp[1], 10.80, 0.01); near(r.ramp[2], 21.60, 0.01); near(r.ramp[3], 21.60 * Math.exp(-2 / 14), 0.01);
+  assert.equal(r.plan[0], 1); assert.equal(r.plan[1], true); near(r.plan[2], 21.60 * Math.exp(-3 / 14), 0.01);        // planned 19:00–20:00, bedtime 23:00
+  assert.deepEqual(app.errors, []);
+});
+test("M11h battery screen: the card on Today, the sheet with the day, what moves it and the last 7 days; 'I just napped' adds a nap; the feature switch hides the card; fits phone and PC", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: SC_SEED(), viewport: vp });
+    const r = await app.page.evaluate(`(() => { ${BT_SET()} UI.tab = "today"; render(); const o = { card: !!document.querySelector(".bt"), txt: document.querySelector(".bt")?.textContent || "", sw: document.documentElement.scrollWidth, vw: innerWidth };
+      ACT["bt-open"](); o.sheet = document.querySelector(".sheet")?.textContent || ""; ACT["bt-nap"]({ dataset: { m: "20" } }); o.nap = [logGet(t).nap, logGet(t).napAt]; ACT["bt-nap"]({ dataset: { m: "10" } }); o.nap2 = logGet(t).nap; ACT["bt-nap"]({ dataset: { m: "0" } }); o.nap3 = logGet(t).nap;
+      closeSheet(); S.settings.feat = { ...(S.settings.feat || {}), battery: false }; render(); o.off = !!document.querySelector(".bt"); return o; })()`);
+    assert.ok(r.card && /Energy battery/.test(r.txt) && /at bedtime/.test(r.txt), r.txt); assert.ok(/What moves it right now/.test(r.sheet) && /Charge at wake, last 7 days/.test(r.sheet) && /I just napped/.test(r.sheet) && /two-process model/.test(r.sheet));
+    assert.equal(r.nap[0], 20); assert.match(r.nap[1], /^\d\d:\d\d$/); assert.equal(r.nap2, 30, "naps add up"); assert.ok(!(r.nap3 > 0), "Clear removes the nap"); assert.equal(r.off, false); assert.ok(r.sw <= r.vw + 1);
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
 });
