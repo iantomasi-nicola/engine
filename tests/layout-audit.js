@@ -8,7 +8,7 @@ const VPS = { phone: H.VIEWPORTS.phone, tablet: H.VIEWPORTS.tablet, pc: H.VIEWPO
 const SCREENS = [
   ["today", "UI.tab='today'"], ["meals", "UI.tab='plan';UI.fuelTab='plan'"], ["foods", "UI.tab='foods';UI.fuelTab='foods'"], ["shop", "UI.tab='shop';UI.fuelTab='shop'"], ["pantry", "UI.tab='pantry';UI.fuelTab='pantry'"],
   ...["cal", "week", "wk", "fitness", "races", "running", "records"].map(k => ["train-" + k, `UI.tab='train';UI.trainSeg='${k}'`]),
-  ...["overview", "energy", "training", "days", "nutrition", "body", "weeks"].map(k => ["progress-" + k, `UI.tab='progress';UI.progSeg='${k}'`]),
+  ...["overview", "energy", "training", "days", "nutrition", "body", "weeks", "lab", "level"].map(k => ["progress-" + k, `UI.tab='progress';UI.progSeg='${k}'`]),
   ["week", "UI.tab='week'"], ["timer", "UI.tab='timer'"],
   ...["look", "targets", "meals", "nutrition", "intervals", "live", "rem", "ai", "acct", "data", "feat"].map(k => ["settings-" + k, `UI.tab='settings';UI.setSel='${k}'`]),
 ];

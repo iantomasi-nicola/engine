@@ -4,7 +4,7 @@ Documento per un'altra IA (o persona) che continua da dove si è fermata la sess
 
 ## 1. Stato
 - Branch di lavoro attuale: `claude/admiring-noether-c3f97r` (prima `claude/adoring-pasteur-grk6ez`). Pubblicato su `main` per ogni milestone finita (l'utente ha autorizzato: `git push origin claude/adoring-pasteur-grk6ez:main` dopo il push del branch, indicando sempre lo SHA di rollback). Ultimo rilascio prima di questo documento: **d304cf8** (rollback `c7f5fa0`).
-- Milestone fatte: M1–M6, M8, M8b, M9, M10a–M10e, M11a, M11b, **M11c** (L15, L18, L90–L94). Suite completa: 353 test (`cd tests && npm run verify`), tutti verdi all'ultimo giro. Baseline storica: `cae350d` (vedi AGENTS.md; `02f43a9` è scartato).
+- Milestone fatte: M1–M6, M8, M8b, M9, M10a–M10e, M11a, M11b, M11c–**M11h** (fino a L116: score severo, Lab, foto cloud, PDF, Level). Suite completa: 353 test (`cd tests && npm run verify`), tutti verdi all'ultimo giro. Baseline storica: `cae350d` (vedi AGENTS.md; `02f43a9` è scartato).
 - **L'utente ha chiesto di NON proseguire con le milestone senza suo via libera esplicito** (ultimo messaggio). Prima di cominciare qualsiasi milestone: presentare cosa/perché/benefici/complessità/rischi/criteri e attendere l'approvazione (regola 6 di AGENTS.md).
 
 ## 2. Prossimi passi (in ordine suggerito, ognuno da far approvare)

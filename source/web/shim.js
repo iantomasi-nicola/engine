@@ -121,7 +121,7 @@
   const user = { id: async () => E.uid, me: async () => ({ id: E.uid, name: E.email || "", email: E.email }), isOwner: () => true, canEdit: () => true, can: () => true, profiles: async () => ({}), search: async () => [] };
 
   /* ---------- downloads: a normal browser download ---------- */
-  const downloads = { save: async ({ filename, data, mimeType }) => { const ext = (String(filename).match(/\.(\w+)$/) || [])[1]?.toLowerCase(), types = { json: "application/json", ics: "text/calendar", csv: "text/csv", png: "image/png", jpg: "image/jpeg", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", py: "text/x-python" };
+  const downloads = { save: async ({ filename, data, mimeType }) => { const ext = (String(filename).match(/\.(\w+)$/) || [])[1]?.toLowerCase(), types = { json: "application/json", ics: "text/calendar", csv: "text/csv", png: "image/png", jpg: "image/jpeg", pdf: "application/pdf", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", py: "text/x-python" };
     const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType || types[ext] || "text/plain" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename || "download"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); return { status: "saved" }; } };
 

@@ -393,7 +393,7 @@ test("M11f photos on every device: photos taken before signing in or offline are
     const sb = { storage: { from: () => ({ upload: async (p, b) => { log.push(p); if (fail) return { error: { message: fail } }; store.set(p, b); return { error: null }; }, download: async p => store.has(p) ? { data: store.get(p), error: null } : { data: null, error: { message: "not found" } }, remove: async ps => { ps.forEach(p => store.delete(p)); return { error: null }; } }) } };
     const blob = new Blob(["jpegdata"], { type: "image/jpeg" }); await IDB.put("ph-a", blob); await IDB.put("ph-b", blob);
     S.body.photos = [{ id: "ph-a", date: t, pose: "front" }, { id: "ph-b", date: t, pose: "side" }]; DATA_V++;
-    const html = () => { UI.tab = "progress"; UI.progSeg = "body"; render(); return document.querySelector(".pp-sync")?.innerText.replace(/\s+/g, " ") || ""; };
+    const html = () => { UI.tab = "progress"; UI.progSeg = "body"; render(); return document.querySelector(".pp-sync")?.textContent.replace(/\s+/g, " ") || ""; };
     const out = { signedOut: html(), status0: photosStatus() };
     window.ENGINE.sb = sb; window.ENGINE.uid = "u1";
     fail = "Bucket not found"; await photosSync(); out.err = [html(), photosStatus().pending, PH_SYNC.err];
@@ -402,7 +402,7 @@ test("M11f photos on every device: photos taken before signing in or offline are
     await IDB.del("ph-a"); delete PH_URL["ph-a"]; const b = await photoBlob(S.body.photos[0]); out.dl = [!!b, !!(await IDB.get("ph-a"))];
     return out; });
   assert.match(r.signedOut, /only on this device/i); assert.match(r.signedOut, /Sign in/); assert.equal(r.status0.signed, false); assert.equal(r.status0.pending, 2);
-  assert.equal(r.err[1], 2); assert.match(r.err[0], /cloud folder/i); assert.match(r.err[0], /schema\.sql/); assert.match(r.err[2], /Bucket not found/);
+  assert.equal(r.err[1], 2); assert.match(r.err[0], /cloud folder/i); assert.match(r.err[0], /SQL Editor/); assert.match(r.err[0], /Copy the SQL/); assert.match(r.err[0], /Bucket not found/); assert.match(r.err[2], /Bucket not found/);
   assert.deepEqual(r.up[1], ["u1/ph-a.jpg", "u1/ph-b.jpg"]); assert.deepEqual(r.up[2], ["u1/ph-a.jpg", "u1/ph-b.jpg"]); assert.equal(r.again, 0, "nothing to upload twice"); assert.match(r.synced, /all your devices/i);
   assert.deepEqual(r.dl, [true, true], "the other device downloads it and keeps a copy"); assert.deepEqual(app.errors, []);
 });
@@ -513,4 +513,100 @@ test("M11g Lab on screen: Progress › Lab has the sections, each says what it n
       return { heads, needs: /needs|Needs/.test(txt), over: document.documentElement.scrollWidth > innerWidth + 1, tab: !!document.querySelector('[data-act="prog-seg"][data-k="lab"]') }; });
     assert.ok(r.tab); assert.deepEqual(r.heads.slice(0, 5), ["Training load", "Running", "Strength", "Body", "Food and recovery"]); assert.ok(r.needs, "empty sections say what they need"); assert.equal(r.over, false); assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
+});
+
+test("photos: when the cloud folder is missing the section explains the fix in three steps, shows the real error, and «Copy the SQL» puts the folder setup on the clipboard", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { await IDB.put("ph-q", new Blob(["x"], { type: "image/jpeg" })); S.body.photos = [{ id: "ph-q", date: todayISO(), pose: "front" }]; DATA_V++;
+    window.ENGINE.sb = { storage: { from: () => ({ upload: async () => ({ error: { message: "new row violates row-level security policy" } }), download: async () => ({ data: null }) }) } }; window.ENGINE.uid = "u7"; await photosSync();
+    UI.tab = "progress"; UI.progSeg = "body"; render(); let copied = ""; Object.defineProperty(navigator, "clipboard", { value: { writeText: async t => { copied = t; } }, configurable: true });
+    const box = document.querySelector(".pp-sync"), txt = box?.innerText.replace(/\s+/g, " ") || ""; ACT["pp-sql"](); await new Promise(r => setTimeout(r, 200)); return { txt: box?.textContent.replace(/\s+/g, " "), btn: !!box?.querySelector('[data-act="pp-sql"]'), copied };
+  });
+  assert.match(r.txt, /not set up/); assert.match(r.txt, /SQL Editor/); assert.match(r.txt, /row-level security/); assert.ok(r.btn);
+  assert.match(r.copied, /insert into storage\.buckets .*'progress'/); assert.equal((r.copied.match(/create policy/g) || []).length, 4); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- PDF recap ---------- */
+const { spawnSync } = require("child_process"), fs = require("fs"), os = require("os"), path = require("path");
+const pdfText = (b64) => { const f = path.join(os.tmpdir(), `engine-pdf-${process.pid}-${Date.now()}.pdf`); fs.writeFileSync(f, Buffer.from(b64, "base64")); const r = spawnSync("pdftotext", ["-layout", f, "-"], { encoding: "utf8" }), info = spawnSync("pdfinfo", [f], { encoding: "utf8" }); fs.unlinkSync(f); return { ok: r.status === 0, text: r.stdout || "", err: r.stderr || "", pages: +((info.stdout || "").match(/Pages:\s+(\d+)/) || [])[1] || 0 }; };
+test("PDF recap: a valid A4 PDF (opens in a real reader), real text with the score, parts, analysis, splits; a strength session lists its sets; every «PDF recap» button saves a .pdf", async () => {
+  if (spawnSync("pdftotext", ["-v"]).error) return;      // no PDF reader on this machine: the check is skipped, not passed silently
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(async () => { FIT().run.lthrManual = 170; DATA_V++; const t = todayISO(), sp = FIT().runSport, st = strengthSport();
+    const an = { v: 1, sec: 3012, el: 3140, m: 10020, hr: 152.4, hx: 171, up: 64, dn: 61, len: 1000, rem: [20, 6], best: { k1: 281, m1: 455.2, k5: 1471, k10: 3012 }, ef: 1.32, cost: 764, dec: 4.8, h: [300, 303], z: [220, 1300, 1100, 392, 0, 0, 0], spl: Array.from({ length: 10 }, (_, i) => [312 - i * 2, 141 + i * 2, 5]), laps: [["W", 240, 960, 172, 4], ["R", 120, 300, 130, 2.5], ["W", 240, 950, 173, 3.96]] };
+    mutateLog(t, d => { d.workouts = [{ sport: sp, min: 50, km: 10, hr: 152, rpe: 6, int: "Moderate", sid: "r1", note: "Steady 10k – ré", ext: "icu-a-1" }, { sport: st, min: 40, rpe: 8, int: "Hard", sid: "s1", note: "Pulls" }]; d.planned = [{ sport: sp, min: 50, int: "Moderate", note: "Steady 10k – ré" }];
+      d.wsess = [{ id: "r1", name: "Steady 10k", min: 50, rpe: 6, an, note: "Felt good (really)" }, { id: "s1", name: "Pulls", min: 40, rpe: 8, plan: { u: 4, r: 24 }, pb: ["Pull-up 8 reps"], sets: [1, 2, 3, 4].map(i => ({ ex: "Pull-up", round: i, rounds: 4, reps: [6], load: 10, rir: 2 })) }]; }); DATA_V++;
+    const b64 = async blob => { const buf = new Uint8Array(await blob.arrayBuffer()); let s = ""; for (const x of buf) s += String.fromCharCode(x); return btoa(s); };
+    const run = await b64(workoutPdf(t, logGet(t).workouts[0])), str = await b64(workoutPdf(t, logGet(t).workouts[1]));
+    let saved = null; Sync.downloads = { save: async o => { saved = [o.filename, o.data.type, o.data.size]; return { status: "saved" }; } }; await ACT["wo-pdf"]({ dataset: { date: t, wi: "0" } });
+    return { run, str, saved, w: pdfWidth("Hello", 10), latin: pdfLatin("a − b · c × d ≈ é “x” …") }; });
+  const A = pdfText(r.run), B = pdfText(r.str);
+  assert.ok(A.ok, A.err); assert.ok(A.pages >= 1); for (const x of ["ENGINE", "Steady 10k", "Score", "Execution", "Intensity", "Reps", "Analysis of the recording", "Best efforts", "Time in heart-rate zones", "Intervals", "splits", "4:41", "5:01 /km", "Felt good"]) assert.ok(A.text.includes(x), `run PDF has «${x}»`);
+  assert.ok(B.ok, B.err); for (const x of ["Pulls", "Sets", "Pull-up", "6+6".slice(0, 1), "@ +10 kg", "RIR 2", "Personal bests", "Pull-up 8 reps", "Completion"]) assert.ok(B.text.includes(x), `strength PDF has «${x}»`);
+  assert.equal(r.saved[0].startsWith("engine-"), true); assert.match(r.saved[0], /\.pdf$/); assert.equal(r.saved[1], "application/pdf"); assert.ok(r.saved[2] > 1500);
+  assert.ok(Math.abs(r.w - 22.78) < 0.01, "text width from the font table"); assert.equal(r.latin, "a - b \xB7 c \xD7 d ~ \xE9 \x93x\x94 \x85"); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11h Level: where you stand on a hard fixed scale, and when you reach the next one ---------- */
+test("M11h level maths: position on the scale (times in log, reps and ratios linear), names between levels, sex, beyond elite, below beginner — hand-computed", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const run = (km, mmss, sex = "Male") => { FIT().profile.sex = sex; const [m, s] = mmss.split(":").map(Number); return lvEq5Pos(km, m * 60 + s, sex); };
+    const out = { i: run(5, "22:41"), a: run(5, "20:00"), e: run(5, "17:30"), under: run(5, "16:30"), low: run(5, "35:00"), f: run(5, "27:19", "Female"), fm: run(5, "27:19", "Male"), tenk: run(10, "41:30"),
+      reps: [lvPos(13, LV_REPS.pull, "lin"), lvPos(18, LV_REPS.pull, "lin"), lvPos(0, LV_REPS.pull, "lin")], hold: lvPos(30, LV_HOLD.handstand, "log"), names: [1, 3.0, 3.1, 3.5, 3.9, 5.2, 0.4].map(p => lvLabel(p)) }; FIT().profile.sex = "Male"; return out; });
+  const near = (a, b, t = 0.012) => Math.abs(a - b) <= t;
+  assert.ok(near(r.i.p, 3.0, 0.004), `22:41 is the Intermediate line (${r.i.p})`); assert.ok(near(r.a.p, 3.916, 0.012), `20:00 → 3.916 (${r.a.p}) = 3 + ln(1361/1200) / ln(1361/1186)`); assert.ok(near(r.e.p, 5.0, 0.004), "17:30 is the Elite line");
+  assert.ok(r.under.p > 5 && r.under.p < 6, `beyond elite (${r.under.p})`); assert.ok(r.low.p < 1 && near(r.low.p, 0.126, 0.012), `35:00 is below Beginner (${r.low.p})`);
+  assert.ok(near(r.f.p, 3.0, 0.004), "women's scale: 27:19 is Intermediate"); assert.ok(r.fm.p < 2.0, `the same time on the men's scale is below Novice (${r.fm.p})`);
+  assert.ok(near(r.tenk.eq5, 1200, 12), `41:30 over 10 km is worth about a 20:00 5K (${r.tenk.eq5})`);
+  assert.deepEqual(r.reps.map(x => Math.round(x * 1000) / 1000), [3, 3.556, 0.0 + r.reps[2]]); assert.ok(r.reps[2] <= 1 && near(r.reps[2], 1 - 1 / 5, 0.001), `0 reps = ${r.reps[2]}`); assert.ok(near(r.hold, 3.0, 0.001));
+  assert.deepEqual(r.names, ["Beginner", "Intermediate", "Intermediate", "Intermediate → Advanced 50%", "Intermediate → Advanced 90%", "Elite", "Starter → Beginner 40%"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("M11h level inputs: runner from the best result of the last year (any distance, 5K-equivalent); calisthenics Strength from weighted pull-up and dip 1RM as % of body weight, Endurance from max reps, Skills from holds and lever stages — each discipline averages what it has", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), L = d => addDays(t, -d), bw = 80; S.body.w = { [L(300)]: bw, [L(30)]: bw, [t]: bw }; DATA_V++;
+    S.train.tests = [{ id: "t1", date: L(40), kind: "Race", km: 10, sec: 41 * 60 + 30 }, { id: "t2", date: L(500), kind: "Race", km: 5, sec: 16 * 60 }];       // the 16:00 5K is older than a year: not counted
+    S.train.topSets = [{ date: L(20), ex: "Weighted pull-up", kg: 30, reps: 5, rir: 0, bw }, { date: L(25), ex: "Dip", kg: 40, reps: 5, rir: 0, bw }, { date: L(30), ex: "Squat", kg: 100, reps: 5, rir: 0, bw }];
+    S.train.calis = [{ id: "c1", date: L(15), ex: "Pull-up", test: "Max reps (BW)", val: 13, bw }, { id: "c2", date: L(15), ex: "Dip", test: "Max reps (BW)", val: 20, bw }, { id: "c3", date: L(10), ex: "Handstand", test: "Hold (s)", val: 30, bw },
+      { id: "c4", date: L(10), ex: "Adv tuck front lever", test: "Hold (s)", val: 12, bw }, { id: "c5", date: L(10), ex: "Front lever", test: "Hold (s)", val: 6, bw }, { id: "c6", date: L(10), ex: "Straddle planche", test: "Hold (s)", val: 3, bw }, { id: "c7", date: L(500), ex: "Push-up", test: "Max reps (BW)", val: 60, bw }];
+    const R = lvRunner(t), C = lvCalis(t), single = x => Math.round(x * 1000) / 1000;
+    return { run: [single(R.p), Math.round(R.eq5), R.best.km, R.n], s: C.strength && { p: single(C.strength.p), m: C.strength.items.map(i => [i.k, single(i.p), Math.round(i.v * 10) / 10]) }, e: C.endurance && { p: single(C.endurance.p), m: C.endurance.items.map(i => [i.k, single(i.p)]) }, k: C.skills && { p: single(C.skills.p), m: C.skills.items.map(i => [i.k, single(i.p)]) }, all: single(C.overall) }; });
+  assert.equal(r.run[2], 10); assert.equal(r.run[3], 1, "only the 10 km result counts"); assert.ok(Math.abs(r.run[1] - 1200) <= 12);
+  const sp = r.s.m.find(m => m[0] === "pull"), sd = r.s.m.find(m => m[0] === "dip"); assert.deepEqual(r.s.m.length, 2, "squat is not a calisthenics lift here");
+  assert.ok(Math.abs(sp[2] - 60.4) < 0.1 && Math.abs(sp[1] - 3.914) < 0.01, JSON.stringify(sp));                    // e1RM +48.33 kg = 60.4 % of 80 kg: 3 + (60.4 - 34) / (63 - 34)
+  assert.ok(Math.abs(sd[2] - 80) < 0.1 || sd[2] > 70, JSON.stringify(sd)); assert.ok(Math.abs(r.s.p - (sp[1] + sd[1]) / 2) < 0.002);
+  const ep = r.e.m.find(m => m[0] === "pull"), ed = r.e.m.find(m => m[0] === "dip"); assert.equal(ep[1], 3); assert.equal(ed[1], 3); assert.equal(r.e.m.length, 2, "a push-up record older than a year is not counted");
+  const hs = r.k.m.find(m => m[0] === "handstand"), fl = r.k.m.find(m => m[0] === "frontlever"), pl = r.k.m.find(m => m[0] === "planche");
+  assert.equal(hs[1], 3); assert.ok(Math.abs(fl[1] - 2.8) < 0.001, `adv tuck 12 s = 3 - 1 + 12/15 (${fl[1]})`); assert.ok(Math.abs(pl[1] - (4 - 1 + 3 / 15)) < 0.001, "straddle planche 3 s = 3.2");
+  assert.ok(r.k.p > 0 && Math.abs(r.all - (r.s.p + r.e.p + r.k.p) / 3) < 0.002); assert.deepEqual(app.errors, []);
+});
+
+test("M11h time to the next level: least-squares slope of the level over the last 12 months with its error; no promise when it is flat, short or going down", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), pts = (a) => a.map((p, i) => ({ d: addDays(t, -(a.length - 1 - i) * 30), p }));
+    return { up: lvEta(pts([2.0, 2.1, 2.2, 2.3, 2.4]), 2.4), flat: lvEta(pts([2.4, 2.4, 2.41, 2.4, 2.4]), 2.4), down: lvEta(pts([2.8, 2.6, 2.5, 2.4, 2.3]), 2.3), short: lvEta(pts([2.0, 2.2, 2.4]), 2.4), noisy: lvEta(pts([2.0, 2.5, 2.1, 2.6, 2.2, 2.7]), 2.7), elite: lvEta(pts([5.1, 5.2, 5.3, 5.4]), 5.4) }; });
+  assert.ok(r.up && Math.abs(r.up.months - 5.9) < 0.15 && r.up.lo < r.up.months && r.up.hi > r.up.months && r.up.next === "Advanced" || r.up.next === "Intermediate", JSON.stringify(r.up));
+  assert.equal(r.up.next, "Intermediate", "from 2.4 the next line is 3 = Intermediate"); assert.ok(Math.abs(r.up.slope - 0.1015) < 0.002);
+  assert.equal(r.flat, null); assert.equal(r.down, null); assert.equal(r.short, null); assert.ok(r.noisy === null || r.noisy.hi > 2 * r.noisy.months || r.noisy.hi === Infinity, "a noisy history gives a wide range, not a precise date"); assert.equal(r.elite, null, "nothing above elite");
+  assert.deepEqual(app.errors, []);
+});
+
+test("M11h Level screen: Progress › Level shows runner and the three calisthenics areas with the next line and the time estimate; empty user sees what is needed; no sideways scroll", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: SC_SEED(), viewport: vp });
+    const r = await app.page.evaluate(() => { const t = todayISO(), L = d => addDays(t, -d), bw = 80; S.body.w = { [L(300)]: bw, [t]: bw }; DATA_V++;
+      S.train.tests = [{ id: "a", date: L(300), kind: "Race", km: 10, sec: 46 * 60 }, { id: "b", date: L(150), kind: "Race", km: 10, sec: 44 * 60 }, { id: "c", date: L(20), kind: "Race", km: 10, sec: 41 * 60 + 30 }];
+      S.train.topSets = [{ date: L(20), ex: "Weighted pull-up", kg: 30, reps: 5, rir: 0, bw }];
+      S.train.calis = [{ id: "c1", date: L(15), ex: "Pull-up", test: "Max reps (BW)", val: 13, bw }, { id: "c3", date: L(10), ex: "Handstand", test: "Hold (s)", val: 30, bw }];
+      UI.tab = "progress"; UI.progSeg = "level"; render(); const el = document.querySelector(".lab-wrap"); return { txt: el ? el.textContent : "", sw: document.documentElement.scrollWidth, vw: innerWidth }; });
+    assert.ok(/Runner/.test(r.txt) && /Calisthenics/.test(r.txt) && /Strength/.test(r.txt) && /Endurance/.test(r.txt) && /Skills/.test(r.txt), r.txt.slice(0, 200));
+    assert.ok(/5K equivalent/.test(r.txt) && /Advanced is a 5K equivalent of/.test(r.txt), "runner: the next line is named with the time to reach it");
+    assert.ok(/Weighted pull-up/.test(r.txt) && /Handstand/.test(r.txt) && /Pull-up/.test(r.txt)); assert.ok(r.sw <= r.vw + 1, `no sideways scroll (${r.sw} > ${r.vw})`);
+    assert.ok(/pace of the last year/.test(r.txt), "a clear improvement over the year gives a time estimate");
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+  app = await H.startApp({ dir, seed: { settings: { onboarded: true } }, viewport: H.VIEWPORTS.phone });
+  const e = await app.page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "level"; render(); return document.querySelector(".lab-wrap").textContent; });
+  assert.ok(/Needs a race/.test(e) && /Needs a max-reps test/.test(e), e.slice(0, 200)); assert.deepEqual(app.errors, []);
 });
