@@ -155,7 +155,7 @@ test("a locked meal stays exactly as it is when the week is planned again or a s
   const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), d = t > ws ? t : ws, ids = m => dayItems(getDay(d)).filter(([x]) => x === m).map(([, it]) => it.ref + ":" + it.qty).join(",");
     UI.tab = "plan"; UI.planView = "week"; UI.date = d; render(); await new Promise(x => setTimeout(x, 100));
     const lunch0 = ids("lunch"); UI.date = d; ACT["meal-menu"]({ dataset: { meal: "lunch" } }); const labels = UI.sheet.items.map(i => i.label); const lockItem = UI.sheet.items.find(i => /^Lock/.test(i.label)); closeSheet(); lockItem.run();
-    const locked = !!getDay(d).lock?.lunch; render(); await new Promise(x => setTimeout(x, 100)); const mark = document.querySelectorAll(".pw-mt .lk").length;
+    const locked = !!getDay(d).lock?.lunch; render(); await new Promise(x => setTimeout(x, 100)); const mark = document.querySelectorAll(".pw-ca .lk").length;
     ACT["meal-menu"]({ dataset: { meal: "lunch" } }); const l2 = UI.sheet.items.map(i => i.label); closeSheet();
     const sh = { scope: "range", from: d, to: d, mode: "replace", pantry: true }; UI.sheet = { type: "planner", ...sh }; await runPlanner(); await new Promise(x => setTimeout(x, 150));
     const lunch1 = ids("lunch"), dinner1 = ids("dinner");
