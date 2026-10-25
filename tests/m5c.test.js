@@ -123,7 +123,7 @@ test("the foods and recipes library: closed by default, opens beside (or above) 
   assert.deepEqual(app.errors, []);
 });
 
-test("each filled day has its own copy and clear buttons and the week has «Clear week» (with a confirmation and an undo); an empty day has no tools", async () => {
+test("each filled day has its own copy and clear buttons and the week has «Clear week» (with a confirmation and an undo); an emptied day loses its copy and clear tools", async () => {
   const page = await start(); await plan(page);
   const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.mclip = null; render(); await new Promise(x => setTimeout(x, 100));
     const ws = weekStartOf(todayISO()), q = a => document.querySelectorAll(a).length, cnt = d => dayItems(getDay(d)).length;

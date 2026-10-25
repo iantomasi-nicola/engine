@@ -66,19 +66,31 @@ test("on a narrow window the meals of a day stack under each other, each one wit
   assert.equal(r.stack, true, "all the meals do not fit side by side on a tablet"); assert.ok(r.labels >= 3, "the meal name sits in every meal when the header row is gone"); assert.equal(r.over, false);
 });
 
-test("an empty meal offers «Usual» (what you usually have there): one click fills it, one undo takes it back; a day tool fills all its empty meals; past days and locked meals offer nothing", async () => {
+test("an empty meal offers «Usual» (what you usually have there): one click fills it, one undo takes it back; the day tool appears only where something can be filled; past days and locked meals offer nothing", async () => {
   const page = await start(H.VIEWPORTS.desktop); await plan(page);
-  const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); const t = todayISO(), ws = weekStartOf(t), next = addDays(ws, 7), nm = addDays(next, 1);
-    S.days[nm] = { date: nm, meals: {} }; DATA_V++; render(); await new Promise(x => setTimeout(x, 100));
-    UI.date = next; render(); await new Promise(x => setTimeout(x, 100));
-    const us = [...document.querySelectorAll('[data-act="pw-usual"]')].length, fills = document.querySelectorAll('[data-act="day-fill"]').length;
-    const before = (getDay(next).meals.lunch || []).length; ACT["pw-usual"]({ dataset: { date: next, meal: "lunch" } }); const after = (getDay(next).meals.lunch || []).length; toast.undo(); const undone = (getDay(next).meals.lunch || []).length;
-    ACT["day-fill"]({ dataset: { date: nm } }); const day = dayItems(getDay(nm)).length; toast.undo();
-    UI.date = ws; render(); await new Promise(x => setTimeout(x, 100)); const pastUsual = [...document.querySelectorAll('.pw-dr:not(.pw-th)')].slice(0, dow(t)).some(r => r.querySelector('[data-act="pw-usual"]'));
-    return { us, fills, before, after, undone, day, pastUsual }; });
-  assert.ok(r.us >= 1, "an empty future meal with history offers Usual"); assert.ok(r.fills >= 1, "a day with empty meals offers the fill tool"); assert.equal(r.before, 0); assert.ok(r.after >= 1, "Usual fills the meal"); assert.equal(r.undone, 0, "undo");
-  assert.ok(r.day >= 1, "the day tool fills the empty meals"); assert.equal(r.pastUsual, false, "days already past offer no Usual");
+  const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), next = addDays(ws, 7), nm = addDays(next, 1), nl = addDays(next, 2), wait = () => new Promise(x => setTimeout(x, 100));
+    S.days[nm] = { date: nm, meals: {} }; S.days[nl] = { date: nl, meals: { dinner: [], lunch: [] }, lock: { lunch: true } }; DATA_V++;
+    UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = next; render(); await wait();
+    const cellHas = (d, m, sel) => !!document.querySelector(`.pw-cell[data-date="${d}"][data-meal="${m}"] ${sel}`), dayHas = (d, sel) => !!document.querySelector(`.pw-dh .pw-dt [data-act="${sel}"][data-date="${d}"]`);
+    const out = { us: document.querySelectorAll('[data-act="pw-usual"]').length, lockedUsual: cellHas(nl, "lunch", '[data-act="pw-usual"]'), lockedDinnerUsual: cellHas(nl, "dinner", '[data-act="pw-usual"]'), fill: dayHas(nm, "day-fill")};
+    const before = (getDay(next).meals.lunch || []).length; ACT["pw-usual"]({ dataset: { date: next, meal: "lunch" } }); out.before = before; out.after = (getDay(next).meals.lunch || []).length; toast.undo(); out.undone = (getDay(next).meals.lunch || []).length;
+    ACT["day-fill"]({ dataset: { date: nm } }); out.day = dayItems(getDay(nm)).length; toast.undo();
+    UI.date = ws; render(); await wait(); const rows = [...document.querySelectorAll(".pw-dr:not(.pw-th)")]; out.pastDays = rows.filter((_, i) => addDays(ws, i) < t).length; out.pastUsual = rows.filter((_, i) => addDays(ws, i) < t).some(r => r.querySelector('[data-act="pw-usual"],[data-act="day-fill"]'));
+    S.days = {}; DATA_V++; UI.date = next; render(); await wait(); out.noHistory = document.querySelectorAll('[data-act="day-fill"],[data-act="pw-usual"]').length;
+    return out; });
+  assert.ok(r.us >= 1, "an empty future meal with history offers Usual"); assert.equal(r.lockedUsual, false, "a locked meal offers nothing"); assert.equal(r.fill, true, "a day with empty meals that have history offers the fill tool"); assert.equal(r.noHistory, 0, "no history, no shortcut");
+  assert.equal(r.before, 0); assert.ok(r.after >= 1, "Usual fills the meal"); assert.equal(r.undone, 0, "undo");
+  assert.ok(r.day >= 1, "the day tool fills the empty meals"); if (r.pastDays) assert.equal(r.pastUsual, false, "days already past offer no Usual");
   assert.deepEqual(app.errors, []);
+});
+
+test("each day shows its kcal bar (warning colour above the target, with the same tolerance as the rest of the app) and a bar for every macro against its target", async () => {
+  const page = await start(H.VIEWPORTS.desktop); await plan(page);
+  const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), a = ws, b = addDays(ws, 1); UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = t;
+    const T = targetsFor(a).kcal; S.days[a] = { date: a, meals: { lunch: [{ id: "big", kind: "food", ref: "t-rice", qty: Math.ceil(T / 3.5 * 1.2), eaten: false }] } }; S.days[b] = { date: b, meals: { lunch: [{ id: "small", kind: "food", ref: "t-rice", qty: 20, eaten: false }] } }; DATA_V++; render(); await new Promise(x => setTimeout(x, 100));
+    const row = d => document.querySelector(`.pw-day[data-date="${d}"]`), over = d => row(d).querySelector(".pw-bar").classList.contains("over"), mb = d => [...row(d).querySelectorAll(".pw-mb > span")].map(x => parseFloat(x.style.width));
+    return { overBig: over(a), overSmall: over(b), mbs: mb(a).length, w: mb(b).every(x => x >= 0 && x <= 100) }; });
+  assert.equal(r.overBig, true); assert.equal(r.overSmall, false); assert.equal(r.mbs, 3, "carbs, protein and fat each have a bar"); assert.equal(r.w, true);
 });
 
 test("move, copy and duplicate from the item menu, each with undo; an eaten item can't be moved", async () => {
