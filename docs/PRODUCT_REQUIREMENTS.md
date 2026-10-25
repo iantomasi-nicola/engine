@@ -108,10 +108,10 @@ Stato misurato sulla baseline `cae350d` (dettagli ed evidenze in `BASELINE_AND_A
 | H1 | Esercizi personalizzati in libreria, indipendenti dal workout | Should | M | – | Mancante | Compaiono nel parser degli script |
 | H2 | Statistiche forza/endurance con filtri 1/2/4/6/12 settimane | Should | M | – | **Fatto (24/10)** (L81) | Totali coerenti con i log |
 | H3 | Predizione 1RM corpo libero/zavorra/palestra, BW vs carico | Should | M | ENG-02 | Parziale | Formule documentate e testate, incertezza |
-| H4 | Workout Score 1–100 (forza, calisthenics endurance, running), deterministico | Could | XL | H5, ENG-02 | Mancante | Sottopunteggi riproducibili; nessun punteggio da LLM |
-| H5 | Score running per fasi/passo/zone/cadenza/contesto; sessione facile non penalizzata | Could | L | H4 | Mancante | Test su sessioni facili/intervalli |
-| H6 | Sottopunteggi, positivi, criticità, suggerimenti | Could | M | H4 | Mancante | Testo da regole |
-| H7 | Ricalcolo valutazione dopo la registrazione | Could | S | H4 | Mancante | Idempotente |
+| H4 | Workout Score 1–100 (forza, calisthenics endurance, running), deterministico | Could | XL | H5, ENG-02 | Mancante | **Fatto (25/10, M11e)**: forza/calisthenics e corsa/resistenza, vedi `docs/WORKOUT_SCORE.md` |
+| H5 | Score running per fasi/passo/zone/cadenza/contesto; sessione facile non penalizzata | Could | L | H4 | Mancante | **Parziale (25/10)**: esecuzione, intensità (FC vs intento, facile non penalizzata), pacing, sforzo; mancano cadenza, fasi a intervalli, contesto |
+| H6 | Sottopunteggi, positivi, criticità, suggerimenti | Could | M | H4 | Mancante | **Fatto (25/10, M11e)**: sottopunteggi, punti positivi, criticità, suggerimenti da regole |
+| H7 | Ricalcolo valutazione dopo la registrazione | Could | S | H4 | Mancante | **Fatto (25/10, M11e)**: il punteggio è calcolato, mai salvato: idempotente per costruzione |
 | H8 | Recovery prediction individuale; domande nel check-in; incertezza | Could | L | D1, H4 | Parziale | Adattiva, mostra confidenza |
 | H9 | Free Workout: suggerimenti per sport/carico/piano/recupero/tempo; salvare nel piano | Should | M | H8 | Parziale | Salvataggio senza avvio |
 | H10 | Workout a parole → script strutturato modificabile e verificabile | Should | M | – | **Verificato (M8b)**: «Import a workout» (testo o foto) già presente; il parser del player controlla i passi, il testo è modificabile, niente è pianificato senza «Plan»/«Start now»; test aggiunto | Parser valida prima del salvataggio |

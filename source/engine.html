@@ -280,6 +280,11 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .yd2{border-left:4px solid var(--warn)}.yd2 .td-ov .ic,.rm .td-ov .ic{width:16px;height:16px}.yd-sum{font-size:13px;color:var(--muted);margin-top:-6px}
 .yd-r2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}.yd-i{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}.yd-i .ic{width:16px;height:16px}
 .yd-l{font-size:14px;font-weight:600;min-width:64px;max-width:40%}.yd-f{display:flex;align-items:center;gap:8px;margin-left:auto}.yd-f .yd-in{max-width:120px}.yd-x{flex:1;font-size:12.5px;min-width:0}.yd-a{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}.yd-ch{flex:1;justify-content:flex-end}
+.sc{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-top:1px solid var(--line)}.sc .section-h{margin:0;align-items:baseline}.sc .section-h h2{font-size:18px!important}.sc-l{font-size:13px;color:var(--muted);font-weight:600}
+.sc-top{display:flex;align-items:baseline;gap:8px}.sc-n{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.sc-top small{font-size:13px;color:var(--muted)}
+.sc-parts{display:grid;grid-template-columns:96px minmax(0,1fr) 30px;gap:2px 12px;align-items:center}.sc-p{display:contents}.sc-pn{font-size:13.5px;font-weight:600}.sc-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}.sc-pv{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.sc-p small{grid-column:2 / 4;font-size:12px;color:var(--muted);line-height:1.35;margin-bottom:8px}.sc-p.na .sc-pn,.sc-p.na .sc-pv{color:var(--muted);font-weight:400}
+.sc-t{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}.sc-t li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:14px;line-height:1.4}.sc-t .ic{width:18px;height:18px;margin-top:1px}.sc-t .g .ic{color:var(--good)}.sc-t .b .ic{color:var(--warn)}.sc-t .t .ic{color:var(--muted)}
+.sc-how>summary{cursor:pointer;font-size:13px;color:var(--muted)}.sc-how p{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
 .inst{display:flex;flex-direction:column;gap:10px}.inst .section-h{margin:0}.inst .section-h h2{font-size:17px!important}.inst-n{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}.inst-s{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.45}.inst-s li::marker{color:var(--muted);font-weight:600}
 .rm-l{display:flex;flex-direction:column}
 .rm-r{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-align:left;color:var(--ink);min-width:0;width:100%}.rm-l>.rm-r:first-child{border-top:0}
@@ -8627,9 +8632,11 @@ ACT["lv-torec"] = () => { const L = LV(); L.toRecords = L.toRecords === false; s
 ACT["lv-toicu"] = () => { const L = LV(); L.toIcu = L.toIcu !== true; saveWK(); scheduleRender(); };
 ACT["sum-rir"] = el => { const L = LV(), name = el.dataset.ex; const ti = [...L.tasks.keys()].reverse().find(i => L.tasks[i].t === "set" && L.res[i]?.done && L.tasks[i].exs.some(e => e.name === name)); if (ti == null) return;
   const t = L.tasks[ti], xi = t.exs.findIndex(e => e.name === name), x = L.res[ti].ex[xi]; x.rir = x.rir == null ? 2 : x.rir >= 5 ? 0 : x.rir + 1; saveWK(); scheduleRender(); };
+/* what was planned, saved with the session so the score can compare: set exercises, and their reps where they are counted in reps */
+const planSummary = L => { let u = 0, r = 0; for (const t of L.tasks || []) if (t.t === "set") { u += t.exs.length; r += t.exs.reduce((a, e) => a + (+e.reps || 0), 0); } return u ? { u, r } : null; };
 ACT["lv-save"] = () => {
   const L = LV(), R = liveResults(L), int = L.rpe >= 8 ? "Hard" : L.rpe >= 5 ? "Moderate" : "Light";
-  const rec = wClean({ id: L.id, name: L.name, tplId: L.tplId, prog: L.prog, week: L.week, start: L.started, min: L.minutes, rpe: L.rpe, note: L.note || null, sets: R.sets, amrap: R.amrap, emom: R.emom, other: R.other, run: R.run.length ? R.run : null, km: L.auto ? L.km : null, script: L.free ? L.script || null : null });
+  const rec = wClean({ id: L.id, name: L.name, tplId: L.tplId, prog: L.prog, week: L.week, start: L.started, min: L.minutes, rpe: L.rpe, note: L.note || null, plan: planSummary(L), sets: R.sets, amrap: R.amrap, emom: R.emom, other: R.other, run: R.run.length ? R.run : null, km: L.auto ? L.km : null, script: L.free ? L.script || null : null });
   const snap = pbSnap();
   mutateLog(L.date, day => { day.wsess = [...(day.wsess || []).filter(x => x.id !== L.id), rec]; day.workouts = [...(day.workouts || []).filter(w => w.sid !== L.id), wClean({ sport: L.sport, min: L.minutes, km: L.auto ? L.km : null, int, rpe: L.rpe, sid: L.id, note: L.name, tpl: L.tplId })]; });
   if (L.toRecords !== false) { const T = S.train, best = {}; for (const s of R.sets) if ((+s.load || 0) > 0 && setReps(s) > 0) { const e = { date: L.date, ex: s.ex, kg: +s.load, reps: setReps(s), rir: s.rir || 0 }; if (!best[s.ex] || e.kg * (1 + e.reps / 30) > best[s.ex].kg * (1 + best[s.ex].reps / 30)) best[s.ex] = e; }
@@ -8641,7 +8648,8 @@ ACT["lv-save"] = () => {
     for (const [ex, v] of Object.entries(hd)) if (v > (snap.hold[ex] || 0)) sug.push({ k: "hold", ex, val: v, pb: (snap.hold[ex] || 0) > 0 }); }
   DATA_V++; const pb = [...pbDiff(snap), ...sug.filter(x => x.pb).map(x => x.k === "reps" ? `${x.ex} ${x.val} reps` : `${x.ex} hold ${x.val}s`)];
   if (pb.length || sug.length) mutateLog(L.date, day => { day.wsess = (day.wsess || []).map(x => x.id === L.id ? { ...x, ...(pb.length ? { pb } : {}), ...(sug.length ? { rec: sug } : {}) } : x); });
-  toast(`Saved · ${L.minutes} min · RPE ${L.rpe}${pb.length ? " · PB: " + pb.join(", ") : ""}${sug.length ? " · open it to add to the records" : ""}`); scheduleRender();
+  const sc = (() => { try { return workoutScore(L.date, (logGet(L.date)?.workouts || []).find(x => x.sid === L.id)); } catch (e) { return null; } })();
+  toast(`Saved · ${L.minutes} min · RPE ${L.rpe}${sc ? ` · score ${sc.score}` : ""}${pb.length ? " · PB: " + pb.join(", ") : ""}${sug.length ? " · open it to add to the records" : ""}`); scheduleRender();
   if (typeof icuKick === "function") icuKick("workout finished", "soon");
 };
 /* swipe between steps on the live card */
@@ -13449,6 +13457,60 @@ ACT["wo-skip"] = el => { const d = el.dataset.date, k = el.dataset.k; closeSheet
   toast(`Skipped${SMART() && Math.abs(dk) >= 5 ? ` · target ${d === todayISO() ? "today" : fmtDM(d)} ${fmtN(targetsFor(d).kcal)} kcal (${dk > 0 ? "+" : "−"}${fmtN(Math.abs(dk))})` : ""}`, () => { skipSet(d, k, false); scheduleRender(); }); scheduleRender(); };
 /* a missed session: the nearest day this week with nothing planned; a hard or long one also keeps a day away from another hard or long session, and not today when readiness is low */
 const isKeySession = w => (w.int || sessionIntensity(w)) === "Hard" || (+w.min || 0) >= 75;
+/* ================= Workout Score (1-100): from the logged data only, no AI =================
+   Strength: Completion 35 (sets and reps done against the plan saved with the session), Progress 30 (best set against the last time the same
+   exercise was done: holding the level = 70, +5 % = 100, -5 % = 40), Effort 20 (RPE; 7-9 best), Volume 15 (reps against the usual for the same workout).
+   Endurance: Execution 40 (time against the planned time), Intensity 30 (average HR against what the session was meant to be: an easy run that
+   stays easy scores full), Pacing 20 (steadiness of the splits), Effort 10 (RPE against the intent). Other sports: Execution and Effort.
+   A part without data is left out and the rest are re-weighted; with less than 45 of 100 weight there is no score. These are the app's own rules, not
+   a published index. The same data always gives the same score (it is computed, never stored). */
+const scClamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v));
+function scorePrev(ex, date) { const ds = allLogDates().filter(d => d < date).reverse().slice(0, 120);
+  for (const d of ds) { const x = (logGet(d)?.wsess || []).find(q => (q.sets || []).some(z => z.ex === ex)); if (x) return { d, s: x }; } return null; }
+const scBest = (s, ex, date) => Math.max(0, ...(s.sets || []).filter(z => z.ex === ex).map(z => e1rm({ date, kg: +z.load || 0, reps: setReps(z) / Math.max(1, (z.reps || []).length || 1), rir: z.rir || 0 })));
+function workoutScore(date, w) {
+  if (!w || !w.sport || w.sport === "Rest") return null;
+  const L = logGet(date) || {}, sess = w.sid ? (L.wsess || []).find(x => x.id === w.sid) : null, plan = daySessions(date).find(x => x.st === "done" && x.w === w)?.p || null;
+  const parts = [], pos = [], neg = [], tips = [], add = (k, name, wt, pts, note) => parts.push({ k, name, w: wt, pts: pts == null ? null : scClamp(pts), note: note || "" });
+  const intent = plan?.int || w.int || sessionIntensity(w), rpe = +(sess?.rpe || w.rpe) || null, minPlan = +plan?.min || 0, minDone = +(sess?.min || w.min) || 0;
+  const effort = (lo, hi) => rpe == null ? null : rpe >= lo && rpe <= hi ? 100 : 100 - 20 * (rpe < lo ? lo - rpe : rpe - hi);
+  if (isStrength(w.sport)) {
+    const sets = sess?.sets || [], pl = sess?.plan;
+    const doneU = sets.length, doneR = sets.reduce((a, z) => a + setReps(z), 0);
+    add("completion", "Completion", 35, pl?.u ? 100 * (pl.r > 0 ? 0.6 * Math.min(1, doneU / pl.u) + 0.4 * Math.min(1, doneR / pl.r) : Math.min(1, doneU / pl.u)) : null, pl?.u ? `${doneU} of ${pl.u} sets${pl.r > 0 ? `, ${r0(doneR)} of ${pl.r} reps` : ""}` : "No plan saved with this session");
+    const ex = [...new Set(sets.map(z => z.ex))], pr = [];
+    for (const e of ex) { const pv = scorePrev(e, date); if (!pv) continue; const a = scBest(sess, e, date), b = scBest(pv.s, e, pv.d); if (b > 0 && a > 0) pr.push({ e, r: a / b }); }
+    add("progress", "Progress", 30, pr.length ? pr.reduce((a, x) => a + scClamp(70 + (x.r - 1) * 600, 35, 100), 0) / pr.length : null, pr.length ? pr.map(x => `${x.e} ${x.r >= 1 ? "+" : "−"}${r0(Math.abs(x.r - 1) * 100)}%`).join(" · ") : "Nothing to compare with yet");
+    for (const x of pr) { if (x.r >= 1.03) pos.push(`${x.e} up ${r0((x.r - 1) * 100)}% on last time`); else if (x.r <= 0.95) neg.push(`${x.e} down ${r0((1 - x.r) * 100)}% on last time`); }
+    add("effort", "Effort", 20, effort(7, 9) == null ? null : rpe === 10 ? 85 : rpe === 6 ? 85 : rpe === 5 ? 70 : rpe <= 4 ? 55 : 100, rpe ? `RPE ${rpe}` : "No RPE");
+    const prevT = w.tpl || sess?.tplId; let vol = null;
+    if (prevT && doneR > 0) { const V = allLogDates().filter(d => d < date).reverse().flatMap(d => (logGet(d)?.wsess || []).filter(x => x.tplId === prevT)).slice(0, 4).map(x => (x.sets || []).reduce((a, z) => a + setReps(z), 0)).filter(v => v > 0);
+      if (V.length) { const q = doneR / (V.reduce((a, b) => a + b, 0) / V.length); vol = q >= 0.85 && q <= 1.2 ? 100 : q < 0.85 ? 100 - (0.85 - q) * 200 : 100 - (q - 1.2) * 50; add("volume", "Volume", 15, Math.max(50, vol), `${r0(q * 100)}% of your usual`); } }
+    if (vol == null) add("volume", "Volume", 15, null, "No earlier session of this workout");
+  } else {
+    const q = minPlan > 0 && minDone > 0 ? minDone / minPlan : null;
+    add("execution", "Execution", 40, q == null ? null : q >= 0.9 && q <= 1.15 ? 100 : q < 0.9 ? Math.max(40, 100 - (0.9 - q) * 150) : Math.max(60, 100 - (q - 1.15) * 80), q == null ? "No planned time to compare" : `${r0(minDone)} of ${r0(minPlan)} min`);
+    const z = ENDUR(w.sport) ? runState().zones : [], hr = +w.hr || 0, z2 = z[1]?.to, z3 = z[2]?.to, z1 = z[0]?.to; let ip = null, inote = "No heart rate";
+    if (hr > 0 && z2 && z3) { ip = intent === "Light" ? (hr <= z2 ? 100 : Math.max(30, 100 - (hr - z2) * 3)) : intent === "Hard" ? (hr >= z3 - 5 ? 100 : Math.max(40, 100 - (z3 - 5 - hr) * 2.5)) : (hr >= z1 - 10 && hr <= z3 + 5 ? 100 : hr > z3 + 5 ? Math.max(30, 100 - (hr - z3 - 5) * 3) : Math.max(70, 100 - (z1 - 10 - hr) * 1.5)); inote = `${r0(hr)} bpm for a ${intent.toLowerCase()} session`; }
+    add("intensity", "Intensity", 30, ip, inote);
+    const sp = (sess?.gps?.splits || []).filter(p => p.sec > 0).map(p => p.sec / (p.len || 1)); let pc = null;
+    if (sp.length >= 3 && intent !== "Hard") { const m = sp.reduce((a, b) => a + b, 0) / sp.length, cv = Math.sqrt(sp.reduce((a, b) => a + (b - m) ** 2, 0) / sp.length) / m * 100; pc = scClamp(100 - (cv - 4) * 6.67, 40, 100); add("pacing", "Pacing", 20, pc, `splits vary ${r1(cv)}%`); }
+    else add("pacing", "Pacing", 20, null, intent === "Hard" ? "Intervals: not judged" : "Needs 3 or more splits");
+    add("effort", "Effort", 10, intent === "Light" ? effort(1, 4) : intent === "Hard" ? effort(7, 9) : effort(5, 7), rpe ? `RPE ${rpe}` : "No RPE");
+  }
+  const have = parts.filter(p => p.pts != null), W = have.reduce((a, p) => a + p.w, 0); if (W < 45) return null;
+  const score = Math.max(1, Math.min(100, Math.round(have.reduce((a, p) => a + p.w * p.pts, 0) / W)));
+  const T = { completion: ["You did what was planned", "You stopped short of the plan", "Drop a set rather than the reps of every set; adjust the plan to the day"], execution: ["Time as planned", "Time far from the plan", "Plan the minutes you really have"], intensity: ["Intensity as intended", "Intensity off: heart rate not matching the intent", "Keep easy runs below Zone 2 (slow down, walk if needed); hard ones need a proper warm-up"], pacing: ["Even pacing", "Uneven pacing", "Start slower and hold the same split for the first half"], effort: ["Effort fitted the session", "Effort did not fit the session", "Rate the effort right after; an easy run should feel 3-4, a key session 7-9"], volume: ["Volume in line with your usual", "Volume far from your usual", "Keep the same number of sets for two sessions before changing"], progress: ["Moving forward on your lifts", "Going backwards on your lifts", "Repeat the same load next time and add reps first"] };
+  for (const p of have) { const t = T[p.k]; if (!t) continue; if (p.pts >= 90 && p.k !== "progress") pos.push(t[0]); else if (p.pts < 60) { if (p.k !== "progress") neg.push(t[1] + (p.note ? ` (${p.note})` : "")); tips.push(t[2]); } }
+  return { score, parts, pos: [...new Set(pos)].slice(0, 3), neg: [...new Set(neg)].slice(0, 3), tips: [...new Set(tips)].slice(0, 2), label: score >= 85 ? "Excellent" : score >= 70 ? "Solid" : score >= 55 ? "Fair" : "Off plan" };
+}
+function scoreSection(date, w) { const S_ = workoutScore(date, w); if (!S_) return "";
+  return `<section class="sc" aria-label="Workout score"><div class="section-h"><h2>Score</h2><span class="sc-l">${S_.label}</span></div>
+    <div class="sc-top"><b class="sc-n">${S_.score}</b><small>out of 100</small></div>
+    <div class="sc-parts">${S_.parts.map(p => `<div class="sc-p${p.pts == null ? " na" : ""}"><span class="sc-pn">${esc(p.name)}</span><span class="sc-bar"><i style="width:${p.pts == null ? 0 : r0(p.pts)}%"></i></span><span class="sc-pv">${p.pts == null ? "—" : r0(p.pts)}</span><small>${esc(p.note)}</small></div>`).join("")}</div>
+    ${S_.pos.length || S_.neg.length || S_.tips.length ? `<ul class="sc-t">${S_.pos.map(x => `<li class="g">${ic("check", "sm")}${esc(x)}</li>`).join("")}${S_.neg.map(x => `<li class="b">${ic("flag", "sm")}${esc(x)}</li>`).join("")}${S_.tips.map(x => `<li class="t">${ic("spark", "sm")}${esc(x)}</li>`).join("")}</ul>` : ""}
+    <details class="sc-how"><summary>How it is calculated</summary><p>${isStrength(w.sport) ? "Completion 35 · Progress 30 · Effort 20 · Volume 15." : ENDUR(w.sport) ? "Execution 40 · Intensity 30 · Pacing 20 · Effort 10." : "Execution 40 · Effort 10."} A part with no data is left out and the others count for more. Holding last time's level is 70; an easy session kept easy scores full. The score is computed from what you logged, never by AI, and never changes your plan.</p></details></section>`; }
+{ const _woS = SHEETS.wo; SHEETS.wo = sh => { const def = _woS(sh), R = sh.r; if (R.logged && R.w) def.body = def.body.replace("<!--wo-post-->", scoreSection(R.date, R.w) + "<!--wo-post-->"); return def; }; }
 /* ================= install the app: steps for the browser you are in =================
    Chrome (and the Chromium browsers that use Google's install service) make a real app: it opens without the address bar and a long press on
    the icon shows the shortcuts. Brave on Android cannot make that app, so it only gets a plain home-screen shortcut: the guide says so and points to Chrome. */

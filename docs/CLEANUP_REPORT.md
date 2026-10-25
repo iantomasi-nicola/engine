@@ -302,3 +302,9 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 ### M11d, seconda parte (25/10/2026)
 **Verificato:** `tests/m11c.test.js` (calcolo a mano per 80 kg del pre-allenamento con e senza pasti nella finestra, icone esistenti, guida all'installazione per browser). **Unificato:** tre testi diversi sul pre-allenamento (riga Reminders, nota della card, consiglio del coach) ora vengono da `preFuel()`; il consiglio del coach non ripete la parte «prima» quando il promemoria è acceso. **Corretto:** test `stock-model` che dipendeva dal giorno della settimana (falliva solo di domenica). **Aperto:** formula pre-allenamento da approvare; valori «durante» oltre 2,5 h da verificare sul testo.
 
+## M11e Workout Score (25/10/2026)
+**Verificato:** `tests/m11c.test.js` (3 test: forza con completamento/progresso/sforzo/volume e somma pesata, corsa facile non penalizzata vs dura, pacing e tempo, assenza di dati, idempotenza, sezione a schermo su 3 viewport senza testo tagliato, piano salvato con la sessione). Regole in `docs/WORKOUT_SCORE.md`.
+**Aggiunto/unificato:** `workoutScore()` unico per forza, corsa e altri sport; `planSummary(L)` salvato in `wsess[].plan` (opzionale: le sessioni vecchie senza piano perdono solo la parte Completion); sezione `.sc` flat nella scheda dell'allenamento; punteggio nel messaggio di salvataggio. Nessun codice sostituito.
+**Compatibilità:** `wsess[].plan` opzionale; nessun dato esistente cambia.
+**Aperto:** pesi e soglie sono scelte dell'app, da tarare con dati reali; H5 completo (cadenza, intervalli per fase, contesto) e un colpo d'occhio nello storico (punteggio nelle righe) non fatti.
+

@@ -318,3 +318,60 @@ test("install guide: the right steps for each browser (Brave on Android says it 
   assert.equal(r.ff.kind, "firefox"); assert.equal(r.ios.kind, "ios"); assert.ok(r.ios.steps.some(x => /Add to Home Screen/.test(x))); assert.equal(r.edge.kind, "desktop"); assert.match(r.edge.title, /Edge/);
   assert.equal(r.done.kind, "installed"); assert.match(r.done.note, /Check-in/); assert.ok(r.card); assert.deepEqual(app.errors, []);
 });
+
+/* ---------- M11e: Workout Score (1-100), deterministic, from the logged data only ---------- */
+const SC_SEED = () => { const s = F.seed({ withPlan: false }); return s; };
+test("M11e score, strength: completion vs the plan, progress against last time, effort and volume; sub-scores add up by their weights; no data → no score", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), p = addDays(t, -7), sp = strengthSport();
+    const sets = (load, reps, n) => Array.from({ length: n }, (_, i) => ({ ex: "Pull-up", round: i + 1, rounds: n, reps: [reps], load, rir: 2 }));
+    mutateLog(p, d => { d.wsess = [{ id: "s0", name: "Pulls", tplId: "tp", min: 40, rpe: 7, sets: sets(10, 6, 4), plan: { u: 4, r: 24 } }]; d.workouts = [{ sport: sp, min: 40, sid: "s0", note: "Pulls", rpe: 7, int: "Moderate", tpl: "tp" }]; });
+    const mk = (id, load, reps, n, rpe, plan, min = 40) => { mutateLog(t, d => { d.wsess = [{ id, name: "Pulls", tplId: "tp", min, rpe, sets: sets(load, reps, n), plan }]; d.workouts = [{ sport: sp, min, sid: id, note: "Pulls", rpe, int: "Moderate", tpl: "tp" }]; }); DATA_V++; return workoutScore(t, logGet(t).workouts[0]); };
+    const better = mk("s1", 12.5, 6, 4, 8, { u: 4, r: 24 });          // heavier, all done, RPE 8
+    const same = mk("s2", 10, 6, 4, 8, { u: 4, r: 24 });                // same as last time
+    const worse = mk("s3", 7.5, 5, 2, 10, { u: 4, r: 24 });             // lighter, half done, RPE 10
+    const noPlan = mk("s4", 10, 6, 4, 7, null);
+    const again = workoutScore(t, logGet(t).workouts[0]);
+    mutateLog(addDays(t, -30), d => { d.workouts = [{ sport: sp, min: 30 }]; }); DATA_V++; const none = workoutScore(addDays(t, -30), logGet(addDays(t, -30)).workouts[0]);
+    const sum = x => Math.round(x.parts.filter(p => p.pts != null).reduce((a, p) => a + p.w * p.pts, 0) / x.parts.filter(p => p.pts != null).reduce((a, p) => a + p.w, 0));
+    const P = x => Object.fromEntries(x.parts.map(p => [p.k, p.pts == null ? null : Math.round(p.pts)]));
+    return { better: [better.score, P(better), sum(better)], same: [same.score, P(same)], worse: [worse.score, P(worse)], noPlan: P(noPlan), idem: JSON.stringify(noPlan) === JSON.stringify(again), none, texts: { pos: better.pos, neg: worse.neg, tips: worse.tips } }; });
+  assert.deepEqual(r.better[1].completion, 100); assert.equal(r.better[1].progress, 100, "+25% on the lift"); assert.equal(r.better[1].effort, 100); assert.equal(r.better[2], r.better[0], "the score is the weighted mean of the sub-scores");
+  assert.equal(r.same[1].progress, 70, "holding last time's level is a solid 70"); assert.ok(r.better[0] > r.same[0] && r.same[0] > r.worse[0], `${r.better[0]} > ${r.same[0]} > ${r.worse[0]}`);
+  assert.ok(r.worse[1].completion <= 55 && r.worse[1].effort <= 85 && r.worse[1].progress < 50, JSON.stringify(r.worse[1]));
+  assert.equal(r.noPlan.completion, null, "no plan, no completion score; the others still count"); assert.ok(r.idem, "same data, same result"); assert.equal(r.none, null, "a bare log entry has nothing to judge");
+  assert.ok(r.texts.pos.some(x => /Pull-up/.test(x)), JSON.stringify(r.texts.pos)); assert.ok(r.texts.neg.length >= 2 && r.texts.tips.length >= 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("M11e score, running: an easy run that stayed easy is NOT penalised; the same run at hard effort is; pacing from the splits; a plan to compare for time", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { FIT().run.lthrManual = 170; DATA_V++; const t = todayISO(), z = runState().zones; const z1 = z[1].to, z3 = z[2].to;
+    const run = (o, planned) => { mutateLog(t, d => { d.workouts = [{ sport: FIT().runSport, min: 45, km: 8, sid: "r1", note: "Easy run", ...o }]; d.planned = planned ? [{ sport: FIT().runSport, min: 45, int: "Light", note: "Easy run" }] : []; d.wsess = [{ id: "r1", name: "Easy run", min: o.min || 45, rpe: o.rpe || null, gps: { km: 8, sec: 2700, splits: o.splits || [] } }]; }); DATA_V++; return workoutScore(t, logGet(t).workouts[0]); };
+    const even = Array.from({ length: 8 }, (_, i) => ({ km: i + 1, sec: 337 + (i % 2), len: 1 })), ragged = [300, 400, 330, 420, 310, 410, 300, 450].map((sec, i) => ({ km: i + 1, sec, len: 1 }));
+    const easy = run({ hr: z1 - 8, rpe: 3, int: "Light", splits: even }, true), hard = run({ hr: z3 + 12, rpe: 9, int: "Hard", splits: even }, true), uneven = run({ hr: z1 - 8, rpe: 3, int: "Light", splits: ragged }, true), short = run({ hr: z1 - 8, rpe: 3, int: "Light", min: 20, splits: even }, true);
+    const P = x => Object.fromEntries(x.parts.map(p => [p.k, p.pts == null ? null : Math.round(p.pts)]));
+    return { easy: [easy.score, P(easy)], hard: [hard.score, P(hard)], uneven: P(uneven), short: P(short), easyPos: easy.pos, hardNeg: hard.neg }; });
+  assert.ok(r.easy[0] >= 90, `an easy run kept easy scores ${r.easy[0]}`); assert.equal(r.easy[1].intensity, 100); assert.equal(r.easy[1].pacing, 100); assert.equal(r.easy[1].execution, 100);
+  assert.ok(r.hard[0] < r.easy[0] - 15, `${r.hard[0]} vs ${r.easy[0]}`); assert.ok(r.hard[1].intensity < 60 && r.hard[1].effort <= 70, JSON.stringify(r.hard[1]));
+  assert.ok(r.uneven.pacing < 80, "uneven splits lose points"); assert.ok(r.short.execution < 70, "20 of 45 planned minutes");
+  assert.ok(r.easyPos.length >= 1 && r.hardNeg.some(x => /intensity|heart|easy/i.test(x)), JSON.stringify(r.hardNeg)); assert.deepEqual(app.errors, []);
+});
+
+test("M11e score on screen: the workout sheet of a logged session has a flat «Score» section (number, one row per sub-score, what went well, what to fix, how it is calculated) on phone, tablet and PC; a new session saves its plan and shows the score in the toast", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop]) {
+    app = await H.startApp({ dir, seed: SC_SEED(), viewport: vp });
+    const r = await app.page.evaluate(async () => { const t = todayISO(), sp = strengthSport();
+      startWorkout({ script: "Pull 3x\n- 6 Pull-up +10kg\n- 8 Ring row", name: "Pulls", sport: sp, date: t }); ACT["lv-begin"](); const L = LV(); L.tasks.forEach((tk, i) => { if (tk.t === "set") { L.res[i] = L.res[i] || {}; } });
+      return { plan: planSummary(L), sets: L.tasks.filter(x => x.t === "set").length }; });
+    assert.ok(r.plan && r.plan.u === r.sets && r.plan.r === 3 * (6 + 8), JSON.stringify(r));
+    const s = await app.page.evaluate(async () => { const t = todayISO(), sp = strengthSport();
+      mutateLog(t, d => { d.wsess = [{ id: "z1", name: "Pulls", min: 40, rpe: 8, plan: { u: 4, r: 24 }, sets: [1, 2, 3, 4].map(i => ({ ex: "Pull-up", round: i, rounds: 4, reps: [6], load: 10, rir: 2 })) }]; d.workouts = [{ sport: sp, min: 40, sid: "z1", note: "Pulls", rpe: 8, int: "Hard" }]; }); DATA_V++; UI.tab = "today"; render();
+      openSheet("wo", { r: woResolve({ dataset: { date: t, i: "0" } }) }); await new Promise(r => setTimeout(r, 300));
+      const sec = document.querySelector(".sheet .sc"), cs = sec && getComputedStyle(sec);
+      return { has: !!sec, n: +sec?.querySelector(".sc-n")?.textContent, rows: sec?.querySelectorAll(".sc-p").length, shadow: cs?.boxShadow, how: !!sec?.querySelector(".sc-how"), over: document.documentElement.scrollWidth > innerWidth + 1,
+        cut: [...(sec?.querySelectorAll(".sc-pn, .sc-p small, .sc-t li") || [])].filter(e => e.scrollWidth > e.clientWidth + 1).length }; });
+    assert.ok(s.has && s.n >= 60 && s.n <= 100, JSON.stringify(s)); assert.equal(s.rows, 4); assert.equal(s.shadow, "none", "flat, not a card"); assert.ok(s.how); assert.equal(s.over, false); assert.equal(s.cut, 0);
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+});
