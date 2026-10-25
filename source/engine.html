@@ -338,7 +338,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rm-w{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .rm-t.done .rm-c{background:var(--good);border-color:var(--good);color:#fff}.rm-t.done .rm-x{opacity:.7}
 .rm-t.late .rm-c{border-color:var(--warn)}.rm-t.late .rm-w{color:var(--warn);font-weight:600}
-.rm-r>.btn{grid-column:3 / 5;justify-self:end}
+.rm-r>.btn{grid-column:3 / 5;justify-self:end}.rm-b{grid-column:3 / 5;justify-self:end;display:flex;align-items:center;gap:4px}
 .pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:30px;height:30px;min-width:30px;background:var(--v-fill,var(--surface2))}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
@@ -7525,6 +7525,8 @@ function recapView() {
   // streaks
   const st = (lab, [cur, best], icn, c) => `<div class="streak" style="--c:var(--${c})"><span class="streak-ic">${ic(icn, "sm")}</span><span><b class="num">${cur}</b> <small>day${cur === 1 ? "" : "s"}</small><em>${lab}</em><small class="faint">best ${best}</small></span></div>`;
   h += `<div class="streaks">${st("logging streak", D.streaks.log, "check", "good")}${st("weigh-in streak", D.streaks.weigh, "chart", "accent")}${st("protein on target", D.streaks.prot, "bolt", "pro")}</div>`;
+  // recovery and body: the same rows as the weekly and monthly report, over the whole period of the recap (periodExtras is declared further down; it runs at render time)
+  h += extrasHTML(memo("recapx", () => periodExtras({ a: D.first }, today)));
   // weight journey
   h += `<div class="section-h"><h2>Weight journey</h2><span class="legend"><span><i style="background:var(--faint);height:6px;width:6px;border-radius:50%"></i>Weigh-in</span><span><i style="background:var(--accent)"></i>Trend</span>${goalW != null ? `<span><i style="background:var(--good)"></i>Goal</span>` : ""}</span></div><div class="card pad">${journeyChart(D, goalW)}</div>`;
   // consistency heatmaps
@@ -14145,14 +14147,29 @@ function raceSection() {
     <li class="faint">From the official regulation, rev. 5 of 30/09/2026. The cut circuits of the other categories are in a separate official document: write them in Settings › Training to get them here.</li></ul></details>`;
   return h;
 }
-/* what to do next, from your own times: where the Fire Set stands against the place you want, the slowest station, the muscle-ups. The season box edits or resets the season */
+/* Should you try the next category? The regulation (rev. 5, §3) gives the blocks, the one 6:00 limit and the strict muscle-ups; the two thresholds below are the APP'S OWN HEURISTICS, not from the regulation:
+   RACE_NEXT_FRAC: the next block, projected at your current seconds per rep, must end under this share of the limit (blocks 2 and 3 are harder per rep than block 1, so the margin is kept wide).
+   RACE_NEXT_MU: the strict muscle-ups you must have logged before trying Intermediate (block 2 holds 1) and Pro (blocks 2 and 3 hold 3 in all; the weighted one is not tested by the app). */
+const RACE_NEXT_FRAC = 0.85, RACE_NEXT_MU = [1, 3];
+function raceNext(name, fb, mu, cap = 360) {
+  const k = RACE_CATS.findIndex((c, i) => name === RACE_FS(i)); if (k < 0 || k >= RACE_CATS.length - 1 || !(fb > 0) || !(cap > 0)) return null;
+  const rep = n => RACE_BLK.slice(0, n + 1).flat().reduce((a, x) => a + x[0], 0), cur = rep(k), nxt = rep(k + 1), extra = nxt - cur, pace = fb / cur, add = pace * extra, proj = fb + add, need = RACE_NEXT_MU[k], mx = RACE_NEXT_FRAC * cap * cur / nxt;
+  const fits = proj <= RACE_NEXT_FRAC * cap, muOk = mu >= need, nm = RACE_CATS[k + 1], pl = n => `${n} strict muscle-up${n === 1 ? "" : "s"}`;
+  const base = `Trying ${nm}? Your ${RACE_CATS[k]} block leaves ${fmtClock(cap - fb)} under the limit; block ${k + 2} adds ${extra} reps, about ${fmtClock(add)} at your ${r1(pace)} s/rep: ${fmtClock(proj)} in all.`;
+  const tail = fits && muOk ? `Worth a try as a test run: under ${r0(RACE_NEXT_FRAC * 100)}% of the limit, with ${pl(mu)} logged.`
+    : fits ? `The pace would allow it: the muscle-up is the limit. The next block needs ${pl(need)} and you have ${mu} logged: test your max under Records › Calisthenics tests.`
+    : `Not yet: the next block would end too close to the limit. Take about ${fmtClock(fb - mx)} off the ${RACE_CATS[k]} block first${muOk ? "" : `, and log ${pl(need)} (you have ${mu})`}.`;
+  return { text: `${base} ${tail}`, fits, muOk, next: nm, proj, add, pace, extra, need, mx };
+}
+/* what to do next, from your own times: where the Fire Set stands against the place you want, the next category, the slowest station, the muscle-ups. The season box edits or resets the season */
 function raceAdvice(fb, cb, tgt, sp, mu, R, SS) {
-  const q = raceSeason(), a = [];
+  const q = raceSeason(), a = [], F = raceSel().fire, nx = raceNext(F.name, fb, mu, F.cap || 360);
   if (fb == null) a.push("No Fire Set time in this season yet: run the stage from «Stage: Fire Set + Cut» above, or use «Add your time».");
   else if (tgt && tgt.fire != null) a.push(`Your Fire Set is ${fmtT(Math.abs(fb - tgt.fire))} ${fb > tgt.fire ? "slower" : "faster"} than the Fire Set of place ${R.places} (${fmtT(tgt.fire)}).`);
   else if (R.places) a.push("Paste a stage table to see what the place you want takes.");
+  if (nx) a.push(nx.text);
   if (sp) a.push(`Slowest on your last Fire Set: ${sp.ex.slice(0, 2).map(x => `${esc(x.name)} ${r1(x.per)} s/rep`).join(", ")}. Train it in clusters (2 to 3 reps, 10 s rest).`);
-  if (!mu) a.push("Blocks 2 and 3 start with a muscle-up: log your max strict muscle-ups under Calisthenics tests to track it.");
+  if (!mu && !nx) a.push("Blocks 2 and 3 start with a muscle-up: log your max strict muscle-ups under Calisthenics tests to track it.");
   a.push("Two Fire Set sessions a week at race effort with 4 to 5′ rest, and test your max reps every 4 to 6 weeks.");
   return `<div class="card pad rk"><span class="flabel">Advice</span><ul class="wk-tips">${a.map(x => `<li>${x}</li>`).join("")}</ul>
     <details class="rk-paste"><summary class="lrow"><span class="t">Season settings</span></summary><div class="grid2" style="margin-top:8px"><div class="field"><label for="rk-sn">Name</label><input id="rk-sn" class="inp" value="${esc(q.name)}" data-chg="race-season-name"></div><div class="field"><label for="rk-ss">My times count from</label><input id="rk-ss" type="date" class="inp" value="${esc(q.start || "")}" data-chg="race-season-start"></div></div>
@@ -14576,6 +14593,7 @@ function workoutPdf(date, w) {
   if (sess?.sets?.length) { H2("Sets"); const by = {}; for (const s of sess.sets) (by[s.ex] = by[s.ex] || []).push(s);
     for (const [ex, ss] of Object.entries(by)) { need(18); d.text(M, y, ex, { size: 10.5, bold: true, color: ink }); y -= 14; const txt = ss.map(s => `${(s.reps || []).join("+") || (s.hold ? s.hold.join("s+") + "s" : "")}${+s.load ? ` @ +${fmtKg(s.load)} kg` : ""}${s.rir != null ? ` (RIR ${s.rir})` : ""}`).join("   ·   "); P(txt, { size: 9.5, color: mut, x: M + 10 }); y -= 3; } }
   if (sess?.pb?.length) { H2("Personal bests"); sess.pb.forEach(x => P("*  " + x, { size: 10 })); }
+  { const rows = extrasRows(periodExtras({ a: date }, date)); if (rows.length) { H2("Recovery and body"); for (const [l, v, sub] of rows) { need(16); d.text(M, y, l, { size: 10, bold: true, color: ink }); d.text(M + 170, y, v, { size: 10, bold: true, color: ink }); d.text(M + 230, y, pdfFit(sub, W - 230, 8.5), { size: 8.5, color: mut }); y -= 16; } } }
   if (sess?.note) { H2("Notes"); P(sess.note, { size: 10 }); }
   y -= 14; need(20); P(`Made by Engine on ${fmtLong(todayISO())}. Scores and analysis are computed from your own data on your device.`, { size: 8, color: mut });
   return d.finish();
@@ -14754,15 +14772,17 @@ function suggestFor(date = todayISO()) {
     else if (pct > 5) why.push(`form +${r0(pct)}%: fresh`);
     if (load3 > r.ctl * 3.2 && pct >= -30) why.push("heavy last 3 days");
     if (Ls.ratio > 1.4) why.push(`load ${Ls.ratio.toFixed(1)}× your usual week`);
+    const sore = domsOf(date), legMx = Math.max(0, ...sore.filter(r => ["quads", "ham", "glutes", "calves"].includes(r[0])).map(r => r[1]));   // DOMS from the Journal: strongly sore legs mean rest, moderately sore ones an easy day
+    if (sore.length) why.push(`${sore.map(r => DOMS_AREAS.find(x => x[0] === r[0])[1].toLowerCase()).join(", ")} sore`);
     if (hardY) why.push("hard session yesterday"); if (hardT) why.push("hard session planned tomorrow");
     if (race && dRace >= 0 && dRace <= 14) why.push(`${esc(race.name)} in ${dRace} day${dRace === 1 ? "" : "s"}`);
     const add = (k, x, note) => out.push({ ...x, sport: x.sport || run, key: k, note });
     if (race && dRace === 0) return { list: [], why: "Race day: no extra training." };
     if (race && dRace === 1) add("shake", SG_RUN.shake, "Day before the race: wake the legs, nothing more.");
     else if (race && dRace <= 3) { const tired = ready === "red" || pct < -25; if (tired) add("rest", SG_RUN.rest, "Tired with the race close: rest wins."); add("sharp", SG_RUN.sharp, "Keep the speed, drop the volume."); if (!tired) add("rest", SG_RUN.rest, "Or rest if the legs feel heavy."); }
-    else if (ready === "red" || pct < -30 || Ls.ratio > 1.5) { add("rest", SG_RUN.rest, "Recovery first: fitness grows while you rest."); add("rec", SG_RUN.rec(25), "Only if you feel good: very easy."); }
-    else if (hardY || hardT || pct < -20 || load3 > r.ctl * 3.2 || (race && dRace <= 10)) {
-      add("easy", SG_RUN.easy(race && dRace <= 10 ? Math.min(easyM, 40) : easyM), hardT ? "Easy today so tomorrow's session goes well." : "Aerobic volume without adding fatigue.");
+    else if (ready === "red" || pct < -30 || Ls.ratio > 1.5 || legMx >= 3) { add("rest", SG_RUN.rest, legMx >= 3 ? "Legs strongly sore: rest or mobility." : "Recovery first: fitness grows while you rest."); add("rec", SG_RUN.rec(25), "Only if you feel good: very easy."); }
+    else if (hardY || hardT || pct < -20 || load3 > r.ctl * 3.2 || (race && dRace <= 10) || legMx >= 2) {
+      add("easy", SG_RUN.easy(race && dRace <= 10 ? Math.min(easyM, 40) : easyM), legMx >= 2 && !hardY && !hardT ? "Legs sore: keep it easy and short." : hardT ? "Easy today so tomorrow's session goes well." : "Aerobic volume without adding fatigue.");
       const t = calTpl(); if (t) add("cal", t, "Strength keeps you robust: no impact on the legs' recovery."); }
     else {
       const q = hiShare != null && hiShare < .1 ? SG_RUN.thr : SG_RUN.vo2;
@@ -14919,6 +14939,14 @@ ACT["pa-step"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.foo
 /* ================= Reminders of the day, on Today: what is waiting, by time =================
    Supplements to tick (each at its time), the check-ups that are due, supplements running low. One card, rows by time; it is
    not shown at all when nothing is waiting. Each row is a reminder() entry, so other reminders only add a row. */
+/* the morning after a Hard session or one of 75 minutes or more (the app's own rule): one quiet question, "Sore anywhere?", until you answer, say No or note a sore area in the Journal */
+const DOMS_ASK_MIN = 75;
+function domsAsk(date = todayISO()) {
+  if (date !== todayISO() || !FEAT("journal") || logGet(date)?.dq || domsOf(date).length) return null;
+  const hit = daySessions(addDays(date, -1)).find(x => x.st === "done" && (sessionIntensity(x.w) === "Hard" || +x.w.min >= DOMS_ASK_MIN)); return hit ? hit.w : null;
+}
+ACT["doms-ask"] = () => { mutateLog(todayISO(), day => { day.dq = true; }); ACT["jr-open"]({ dataset: {} }); };
+ACT["doms-no"] = () => { mutateLog(todayISO(), day => { day.dq = true; }); scheduleRender(); };
 function todayReminders(date = todayISO()) {
   const now = nowHM(), isToday = date === todayISO(), out = [];
   for (const s of suppSlots(date)) { const tk = suppTaken(date, s.k), late = isToday && !tk && s.t <= now;
@@ -14927,6 +14955,7 @@ function todayReminders(date = todayISO()) {
   const low = SUPPS().filter(x => x.on !== false && x.stock != null && x.stock !== "" && +x.stock <= Math.max(3, (x.times?.length || 1) * 3));
   if (low.length && suppSlots(date).length) out.push({ kind: "low", t: null, title: "Running low", small: low.map(x => `${x.name} (${x.stock})`).join(", "), act: "supp-shop", data: "", btn: "Add to shopping", icon: "jar" });
   if (isToday) out.push(...preSessionRows(date, now));
+  const sore = domsAsk(date); if (sore) out.push({ kind: "doms", t: null, title: "Sore anywhere?", small: `${sore.note || sore.sport}, ${sessionIntensity(sore) === "Hard" ? "hard" : `${r0(sore.min)} min`}, yesterday`, act: "doms-ask", data: "", btn: "Journal", alt: ["doms-no", "No"], icon: "fitness" });
   return out.sort((a, b) => (a.t == null) - (b.t == null) || String(a.t).localeCompare(String(b.t)));
 }
 function remindersCard(date = todayISO()) {
@@ -14935,7 +14964,7 @@ function remindersCard(date = todayISO()) {
   return `<section class="td-card rm" aria-label="Reminders"><div class="td-ov"><span>${ic("bell", "sm")}Reminders</span><span>${todo ? `${todo} to do` : "All done"}</span></div>
     <div class="rm-l">${vis.map(x => x.kind === "supp"
       ? `<button class="rm-r rm-t ${x.done ? "done" : x.late ? "late" : ""}" data-act="supp-tick" data-k="${esc(x.k)}" data-date="${date}" aria-pressed="${x.done}"><span class="rm-c">${ic("check", "sm")}</span><span class="rm-x"><b>${esc(x.title)}</b>${x.small ? `<small>${esc(x.small)}</small>` : ""}</span><span class="rm-w">${esc(x.when)}</span></button>`
-      : `<div class="rm-r ${x.kind === "check" ? "ck-due" : ""} ${x.tone || ""}"><span class="rm-c ico">${ic(x.icon || "bell", "sm")}</span><span class="rm-x"><b>${esc(x.title)}</b><small>${esc(x.small)}</small></span>${x.t ? `<span class="rm-w">${esc(x.t)}</span>` : ""}${x.act ? `<button class="btn soft sm" data-act="${x.act}" ${x.data || ""}>${x.btn}</button>` : ""}</div>`).join("")}</div>${L.length > 4 ? `<button class="link rm-more" data-act="rm-all">${fold ? `Show all ${L.length}` : "Show less"}</button>` : ""}</section>`;
+      : `<div class="rm-r ${x.kind === "check" ? "ck-due" : ""} ${x.tone || ""}"><span class="rm-c ico">${ic(x.icon || "bell", "sm")}</span><span class="rm-x"><b>${esc(x.title)}</b><small>${esc(x.small)}</small></span>${x.t ? `<span class="rm-w">${esc(x.t)}</span>` : ""}${x.act ? (b => x.alt ? `<span class="rm-b"><button class="btn text sm" data-act="${x.alt[0]}">${x.alt[1]}</button>${b}</span>` : b)(`<button class="btn soft sm" data-act="${x.act}" ${x.data || ""}>${x.btn}</button>`) : ""}</div>`).join("")}</div>${L.length > 4 ? `<button class="link rm-more" data-act="rm-all">${fold ? `Show all ${L.length}` : "Show less"}</button>` : ""}</section>`;
 }
 ACT["rm-all"] = () => { UI.rmAll = !UI.rmAll; scheduleRender(); };
 /* yesterday: weight, supplements, food, sessions that were never logged */
@@ -15208,7 +15237,7 @@ function periodExtras(P, end) {
   const sl = days.map(d => +logGet(d)?.sleep).filter(v => v > 0), tgt = +SLP().target;
   if (sl.length) out.sleep = { avg: sl.reduce((a, b) => a + b, 0) / sl.length, n: sl.length, owed: sl.reduce((a, v) => a + Math.max(0, tgt - v), 0), tgt, short: sl.filter(v => v < 6.5).length };
   let nap = 0, nn = 0; for (const d of days) { const L = logGet(d) || {}; for (const x of L.naps || []) { nap += +x.min || 0; nn++; } if (!L.naps && +L.nap > 0) { nap += +L.nap; nn++; } } if (nn) out.nap = { min: nap, n: nn };
-  const bt = []; for (const d of days) if (d <= todayISO() && +logGet(d)?.sleep > 0) { try { bt.push(btDay(d).wake); } catch (e) {} } if (bt.length) out.battery = bt.reduce((a, b) => a + b, 0) / bt.length;
+  const bt = []; for (const d of days) if (d <= todayISO() && +logGet(d)?.sleep > 0) { try { bt.push(btDay(d).wake); } catch (e) {} } if (bt.length) { out.battery = bt.reduce((a, b) => a + b, 0) / bt.length; out.btN = bt.length; }
   const ar = {}; let dd = 0; for (const d of days) { const D = domsOf(d); if (D.length) dd++; for (const [k, v] of D) ar[k] = (ar[k] || 0) + v; }
   if (dd) out.doms = { days: dd, top: Object.entries(ar).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => DOMS_AREAS.find(x => x[0] === k)[1]) };
   const f = days.map(d => jrOf(d)?.f).filter(v => v >= 1 && v <= 5); if (f.length) out.feel = f.reduce((a, b) => a + b, 0) / f.length;
@@ -15217,16 +15246,21 @@ function periodExtras(P, end) {
   const fs = raceSel().fire.name, fb = (S.train.circuitLog || []).filter(c => c.circuit === fs && c.date >= P.a && c.date <= end && c.sec > 0).map(c => c.sec); if (fb.length) out.fire = { name: fs, best: Math.min(...fb), n: fb.length };
   return out;
 }
-function extrasHTML(X) {
-  const row = (l, v, sub = "") => tcRow(l, v, sub), rows = [];
-  if (X.sleep) rows.push(row("Sleep", `${r1(X.sleep.avg)} h`, `${X.sleep.n} nights · need ${r1(X.sleep.tgt)} h · ${X.sleep.owed > 0.5 ? `${r1(X.sleep.owed)} h owed` : "no debt"}${X.sleep.short ? ` · ${X.sleep.short} under 6.5 h` : ""}`));
-  if (X.nap) rows.push(row("Naps", `${X.nap.n}`, `${r0(X.nap.min)} min in all`));
-  if (X.battery != null) rows.push(row("Energy battery at wake", `${r0(X.battery)}%`, "average of the nights logged"));
-  if (X.feel != null) rows.push(row("Training feel", `${r1(X.feel)} / 5`, "from the Journal"));
-  if (X.doms) rows.push(row("Sore days", `${X.doms.days}`, `most: ${X.doms.top.join(", ").toLowerCase()}`));
-  if (X.lean) rows.push(row("Lean mass", `${r1(X.lean.now)} kg`, `± ${r1(X.lean.se)} kg${X.lean.d != null ? ` · ${sgn(X.lean.d, 1)} kg in the period` : ""}`));
-  if (X.fire) rows.push(row(X.fire.name, fmtClock(X.fire.best), `best of ${X.fire.n} run${X.fire.n > 1 ? "s" : ""}`));
-  if (X.est) rows.push(row("Weight estimated", `${X.est} day${X.est > 1 ? "s" : ""}`, "no weigh-in: from your intake, bent to the next one"));
+/* the rows of "Recovery and body", as [label, value, detail]: the weekly and monthly report, the All-time recap and the PDF of a workout all read this one list */
+function extrasRows(X) {
+  const rows = [], row = (l, v, sub = "") => rows.push([l, v, sub]);
+  // a debt of sleep only means something over a few weeks: for a long period (the All-time recap) the nights and the average are shown, not a sum of hours owed
+  if (X.sleep) row("Sleep", `${r1(X.sleep.avg)} h`, `${X.sleep.n} night${X.sleep.n === 1 ? "" : "s"} · need ${r1(X.sleep.tgt)} h${X.sleep.n <= 31 ? ` · ${X.sleep.owed > 0.5 ? `${r1(X.sleep.owed)} h owed` : "no debt"}` : ""}${X.sleep.short ? ` · ${X.sleep.short} under 6.5 h` : ""}`);
+  if (X.nap) row("Naps", `${X.nap.n}`, `${r0(X.nap.min)} min in all`);
+  if (X.battery != null) row("Energy battery at wake", `${r0(X.battery)}%`, X.btN === 1 ? "that morning" : "average of the nights logged");
+  if (X.feel != null) row("Training feel", `${r1(X.feel)} / 5`, "from the Journal");
+  if (X.doms) row("Sore days", `${X.doms.days}`, `most: ${X.doms.top.join(", ").toLowerCase()}`);
+  if (X.lean) row("Lean mass", `${r1(X.lean.now)} kg`, `± ${r1(X.lean.se)} kg${X.lean.d != null ? ` · ${sgn(X.lean.d, 1)} kg in the period` : ""}`);
+  if (X.fire) row(X.fire.name, fmtClock(X.fire.best), `best of ${X.fire.n} run${X.fire.n > 1 ? "s" : ""}`);
+  if (X.est) row("Weight estimated", `${X.est} day${X.est > 1 ? "s" : ""}`, "no weigh-in: from your intake, bent to the next one");
+  return rows;
+}
+function extrasHTML(X) { const rows = extrasRows(X).map(r => tcRow(...r));
   return rows.length ? `<div class="section-h"><h2>Recovery and body</h2></div><div class="card">${rows.join("")}</div>` : "";
 }
 { const _rv2 = reportsView; reportsView = function () { const h = _rv2(), kind = UI.dashSeg === "month" ? "month" : "week", P = periodOf(kind, UI.repOff || 0), R = periodStats(P); if (!R.days) return h;
