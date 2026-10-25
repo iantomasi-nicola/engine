@@ -45,7 +45,7 @@ Metodo: confronto riga per riga del **testo originale** del primo prompt (sezion
 | Richiesta | Stato | Note |
 |---|---|---|
 | Documento nutrizione/«libro» come riferimento | Fatto (documentato) | `NUTRITION_SPEC.md`; le formule restano da approvare una a una |
-| Dispositivo FC per sport (Amazfit/Polar), predefinito per sport | Fatto D5a / **D5b da fare** | D5b = uso nel calcolo kcal (M7b) |
+| Dispositivo FC per sport (Amazfit/Polar), predefinito per sport | Fatto D5a e **D5b (M7b-2a, 26/10, L158)** | D5b = uso nel calcolo kcal; pubblicato nel commit che segue `6de4659` |
 | Filtri Foods «solo i necessari e utili» | Fatto | M4c/M5b; aggiunto «Drinks» su tua richiesta |
 | M7a dati sicuri e D5a | Fatto | |
 | Pubblicare `main` | Fatto a ogni milestone | ultimo: ba3bed4 |
@@ -128,7 +128,7 @@ Controllo di tutti i messaggi dell'utente dall'inizio della sessione (gli ID son
 | Massa magra in kg precisa; avviso se cala troppo nel cut | Fatto | L136, `BODY_COMPOSITION.md` |
 | Records: modifica/elimina, come registrare il best del Fire Set, importa ranking, dove sono i consigli, sezioni compatte | Fatto | L137, L138 |
 | Calorie in base al dispositivo (polso contro fascia) | **Milestone** M7b (D20/D20b): nessun moltiplicatore da letteratura, va appreso dai dati | D20b |
-| Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **M7b-1 fatta il 26/10** (D8 calibrazione v2, D11 avvisi, D17 data di attivazione; non ancora pubblicata); **Milestone** M7b per il resto (Opus 5.5 high) | `NUTRITION_AUDIT.md`, L154, L155 |
+| Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **M7b-1 pubblicata il 26/10** (`6de4659`; D8 calibrazione v2, D11 avvisi, D17 data di attivazione) e **M7b-2a/D5b fatta** (L158); **Milestone** M7b per il resto (Opus 5.5 high) | `NUTRITION_AUDIT.md`, L154, L155 |
 | Migliorare tutti i report con i dati nuovi | Fatto per settimana/mese/testo copiato, riepilogo «All-time» e PDF del workout (M11m); un PDF del report settimanale/mensile non esiste | L148, L152 |
 | Micronutrienti con AI | **Milestone** M7e | L16 |
 | Scambio pranzo↔cena | Fatto (Fuel › Meals › ⋯ in alto a destra › «Swap lunch and dinner», visibile se il giorno ha cibi) | C5 |

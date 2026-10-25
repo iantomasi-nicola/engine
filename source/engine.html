@@ -2931,7 +2931,7 @@ function defaultSettings(w = 75, goal = "maintain") {
     avoid: [], cuisines: ["Italian", "Mediterranean"], variety: 2, step: 5, onboarded: false
   };
 }
-const CAL_V2_START = "2026-10-25";   // first day of calibration v2 for profiles that existed before it (M7b-1)
+const ALGO_START = "2026-10-25";   // first day of the M7b algorithms (calibration v2, net device kcal) for profiles that existed before them
 function normalizeSettings(s) {
   const d = defaultSettings();
   const o = { ...d, ...(s || {}) };
@@ -2944,7 +2944,8 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
-  if (s?.fit && s.fit.energy?.calV2From === undefined) o.fit.energy.calV2From = CAL_V2_START;
+  if (s?.fit && s.fit.energy?.calV2From === undefined) o.fit.energy.calV2From = ALGO_START;
+  if (s?.fit && s.fit.energy?.netFrom === undefined) o.fit.energy.netFrom = ALGO_START;
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
   for (const k of DOWK) if (!Array.isArray(o.fit.pattern[k])) o.fit.pattern[k] = [];
   return o;
@@ -3518,7 +3519,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, hbBonus: 27.5, hbThr: 16, minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", netKcal: "on", netFrom: "", calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3644,7 +3645,13 @@ function ageAt(date) { const dob = FIT().profile.dob; if (!dob) return 30; retur
 const INTS = ["Light", "Moderate", "Hard"];
 /* real kcal = measured by a watch: typed in, recorded in intervals.icu, or imported from the workbook */
 const fromDevice = w => w.src === "intervals" || /^icu-a-/.test(w.ext || "") || (w.exts || []).length > 0;
-function realKcal(w, date) { if (w.watch > 0) return +w.watch; if (w.kcal > 0 && (fromDevice(w) || (FIT().learn.realBefore && date < FIT().learn.realBefore))) return +w.kcal; return 0; }
+/* D5b (approved 26/10): the kcal a sensor reports are gross when its device is declared so in Settings; the model wants them net of resting energy, which the BMR already holds. Net or unknown basis, typed values and the switch off are left as they are; days before netFrom keep the gross value, except in the learned rates, which are always net (a mix would teach nothing). */
+function netOfRest(kc, w, date, kg, learn) {
+  const E = FIT().energy, min = parseMinutes(w.min) || 0;
+  if (E.netKcal === "off" || (!learn && E.netFrom && date < E.netFrom) || !(min > 0) || devById(devOf(w))?.kcal !== "gross") return kc;
+  return Math.max(0, r0(kc - bmrOf(kg || trendNow(), FIT().profile.bf, ageAt(date)) / 1440 * min));
+}
+function realKcal(w, date) { if (w.watch > 0) return netOfRest(+w.watch, w, date, 0, true); if (w.kcal > 0 && fromDevice(w)) return netOfRest(+w.kcal, w, date, 0, true); if (w.kcal > 0 && FIT().learn.realBefore && date < FIT().learn.realBefore) return +w.kcal; return 0; }
 /* learned kcal/min by sport and intensity from sessions with real kcal (watch), else the MET table */
 function learnedRates() {
   return memo("rates", () => {
@@ -3695,8 +3702,8 @@ function keytel(hr, kg, age, sex) {
 /* kcal of one session: watch value first, then distance (runs), then heart rate, then your own kcal/min */
 function sessionKcal(w, date, kgOverride) {
   if (!w || !w.sport || w.sport === "Rest") return { kcal: 0, how: "rest" };
-  if (w.kcal > 0) return { kcal: +w.kcal, how: fromDevice(w) ? "device" : "logged" };
-  if (w.watch > 0) return { kcal: +w.watch, how: "watch" };
+  if (w.kcal > 0) return fromDevice(w) ? { kcal: netOfRest(+w.kcal, w, date, kgOverride), how: "device" } : { kcal: +w.kcal, how: "logged" };
+  if (w.watch > 0) return { kcal: netOfRest(+w.watch, w, date, kgOverride), how: "watch" };
   const fit = FIT(), rates = learnedRates()[w.sport] || learnedRates()[fit.sports[0]?.name] || { Moderate: 5 };
   const kg = kgOverride || trendAt(date);
   if (w.load > 0 && w.min > 0 && rates.reg && !(w.km > 0 && w.sport === fit.runSport && fromDevice(w))) { const g = rates.reg; return { kcal: r0(w.min * clamp(g.a + g.b * w.load / w.min, g.lo * 0.9, g.hi * 1.1)), how: "load" }; }
@@ -3799,6 +3806,13 @@ function calibV2(rows, d, E) {
   const band = E.calBand || 0.2, target = clamp(1 + w * (raw - 1), 1 - band, 1 + band);
   return { raw, target, u, w, n, nI, nDays, dataTdee, rel: u <= 0.03 && n >= 14 ? "high" : u <= 0.06 ? "medium" : "low" };
 }
+/* resting energy by the formula chosen in Settings (kg, body fat %, years) */
+function bmrOf(kg, bf, age) {
+  const E = FIT().energy, prof = FIT().profile;
+  if (E.bmr === "Harris-Benedict") return (prof.sex === "Female" ? 655.1 + 9.563 * kg + 1.85 * prof.height - 4.676 * age : 66.5 + 13.75 * kg + 5.003 * prof.height - 6.775 * age) + (bf != null && bf < E.hbThr ? (E.hbThr - bf) * E.hbBonus : 0);
+  if (E.bmr === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
+  return 10 * kg + 6.25 * prof.height - 5 * age + (prof.sex === "Female" ? -161 : 5);
+}
 function energySeries() {
   return memo("energy", () => {
     const fit = FIT(), E = fit.energy, prof = fit.profile, today = todayISO();
@@ -3816,10 +3830,7 @@ function energySeries() {
       const ws = wins.filter(x => x != null); if (ws.length) trend = ws.reduce((a, b) => a + b, 0) / ws.length;
       if (L.bf > 0) bf = +L.bf;
       const age = ageAt(d);
-      let bmr;
-      if (E.bmr === "Harris-Benedict") bmr = (prof.sex === "Female" ? 655.1 + 9.563 * trend + 1.85 * prof.height - 4.676 * age : 66.5 + 13.75 * trend + 5.003 * prof.height - 6.775 * age) + (bf != null && bf < E.hbThr ? (E.hbThr - bf) * E.hbBonus : 0);
-      else if (E.bmr === "MET") bmr = (prof.sex === "Female" ? 0.9 : 1) * trend * 24;
-      else bmr = 10 * trend + 6.25 * prof.height - 5 * age + (prof.sex === "Female" ? -161 : 5);
+      const bmr = bmrOf(trend, bf, age);
       const sess = sessionsFor(d);
       const kcals = sess.list.map(w => sessionKcal(w, d, trend).kcal);
       const eat = kcals.reduce((a, b) => a + b, 0);
@@ -5616,7 +5627,7 @@ function fitSettings() {
     <div class="faint" style="font-size:12.5px">Cut = negative (−500 = 500 kcal deficit), bulk = positive. Maintenance with 0 kcal can take a slight deficit as a % of TDEE (0–15%, e.g. 5% ≈ −120 kcal); a kcal number there wins. Add a row to change calories: past days keep the target they had.${f.phases.map(p => p.phase === "Cut" && p.kcal >= 0 ? " ⚠ A cut needs a negative number." : "").join("")}</div>`, true);
   h += grp("Phase rules · grams per kg", tbl(["Phase", "Protein g/kg", "Fat g/kg", "Min carbs g/kg", "Weekly change min %", "max %"], ["Cut", "Bulk", "Maintenance"].map(p => `<tr><td><b>${p}</b></td>${["p", "f", "cmin"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${f.phaseParams[p][k]}" data-fit="phaseParams.${p}.${k}" data-t="num"></td>`).join("")}${["wmin", "wmax"].map(k => `<td><input id="pp-${p}-${k}" class="inp sm-inp" inputmode="decimal" value="${r1(f.phaseParams[p][k] * 100 * 10) / 10}" data-fit="phaseParams.${p}.${k}" data-t="pct"></td>`).join("")}</tr>`)) + `<div class="faint" style="font-size:12.5px">Protein and fat = g/kg × trend weight; carbs fill the rest. Cut: protein 1.7–2.5, fat 0.7–0.8, lose 0.5–1% per week. Bulk: +10–15% calories, carbs ≥ 4 g/kg. Maintenance: protein 1.4–2, carbs 4–5+.</div>`);
   h += grp("Energy model", `<div class="grid2">${fitSel("energy.bmr", "BMR formula", [["Mifflin-St Jeor", "Mifflin-St Jeor"], ["Harris-Benedict", "Harris-Benedict"], ["MET", "MET (kg × 24)"]])}${fitSel("energy.watchMode", "Your watch's daily number", [["active", "Active kcal (incl. workouts)"], ["neat", "NEAT only (excl. workouts)"], ["total", "Total kcal (BMR + activity)"]])}
-    ${fitIn("energy.neat", "Default NEAT", "kcal")}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitIn("energy.kcalPerKg", "kcal per kg of weight", "kcal")}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitIn("energy.hbBonus", "Harris-Benedict lean bonus", "kcal/pt")}${fitIn("energy.hbThr", "…below body fat", "%")}</div>
+    ${fitIn("energy.neat", "Default NEAT", "kcal")}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitIn("energy.kcalPerKg", "kcal per kg of weight", "kcal")}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitIn("energy.hbBonus", "Harris-Benedict lean bonus", "kcal/pt")}${fitIn("energy.hbThr", "…below body fat", "%")}${fitSel("energy.netKcal", "Sensor kcal net of rest", [["on", "On"], ["off", "Off"]])}${fitIn("energy.netFrom", "…from (empty = always)", "", "date")}</div>
     <div class="flabel" style="margin-top:6px">Calibration on your real weight trend</div><div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"]])}${fitSel("energy.warn", "Target warnings", [["on", "On"], ["off", "Off"]])}</div>
     <div class="grid4">${fitIn("energy.calV2From", "v2 starts on", "", "date")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}</div>
     <div class="grid4">${fitIn("energy.calMinIntake", "Legacy: days with intake")}${fitIn("energy.calMinWeigh", "Legacy: weigh-ins")}${fitIn("energy.calLo", "Legacy: factor min")}${fitIn("energy.calHi", "Legacy: factor max")}</div>
@@ -13688,7 +13699,7 @@ function ovCheck(w, date, any) {
 /* Engine's own clock wins on live sessions; inflated sessions stay out of the learning */
 { const _rk = realKcal; realKcal = function (w, date) { return w.raw || ovCheck(w, date, true) ? 0 : _rk(w, date); }; }
 { const _sk = sessionKcal; sessionKcal = function (w, date, kg) {
-  const o = w && w.kcal > 0 ? ovCheck(w, date) : null; if (o?.kind === "app") return { kcal: o.kcalTo, how: "trimmed" };
+  const o = w && w.kcal > 0 ? ovCheck(w, date) : null; if (o?.kind === "app") return { kcal: netOfRest(o.kcalTo, w, date, kg), how: "trimmed" };
   // rides: your own kcal per km once there are enough of them
   if (w && !(w.kcal > 0) && !(w.watch > 0) && !(w.hr > 0) && w.km > 0 && sportFam(w.sport) === "ride") { const k = rideKm(); if (k.src === "own") return { kcal: r0(w.km * k.rate), how: "km" }; }
   return _sk(w, date, kg); }; }
@@ -13753,7 +13764,7 @@ function accuracyHTML() {
     return `<div class="lrow"><span style="min-width:0"><span class="t">${esc(sp.name)}</span><span class="s" style="white-space:normal">${own ? `your watch · ${x.n} session${x.n > 1 ? "s" : ""}` : `MET table${x.n ? ` · ${x.n} of ${fit.learn.minSessions} sessions` : ""}`}${km}${st[sp.name]?.pace && ENDUR(sp.name) ? ` · ${fmtPace(st[sp.name].pace)}/km` : ""}</span></span><b class="num">${r1(x.Moderate)}<small class="faint"> kcal/min</small></b></div>`; });
   const rk = rideKm(); if (rk.src === "own") rows.push(`<div class="lrow"><span><span class="t">Cycling per km</span><span class="s">your watch · ${fmtN(rk.km)} km</span></span><b class="num">${r1(rk.rate)}<small class="faint"> kcal/km</small></b></div>`);
   h += `<div class="section-h"><h2>What Engine learned from your watch</h2></div><div class="card">${rows.join("") || `<div class="lrow"><span class="s">No sessions with watch kcal yet: MET tables in use.</span></div>`}</div>
-    <div class="faint" style="font-size:12.5px">Last ${fit.learn.window} days. Sessions where the watch kept running are left out. Planned sessions use these rates.</div>`;
+    <div class="faint" style="font-size:12.5px">Last ${fit.learn.window} days. Sessions where the watch kept running are left out. Planned sessions use these rates. Rates and session energy are net of resting energy when the sensor's device is set to count it (Settings › Energy model › Sensor kcal net of rest).</div>`;
   return h;
 }
 /* ================= weather at training time (Open-Meteo: free, no key) ================= */

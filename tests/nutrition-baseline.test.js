@@ -50,9 +50,9 @@ test("KNOWN (D9): with no date of birth the app silently computes with age 30 (a
   assert.deepEqual(r, { age: 30, height: 175, startWeight: 75 });
 });
 
-test("EAT: a device kcal value is used as it is (no gross→net conversion), a planned session uses net MET (D7 context)", async () => {
+test("EAT (legacy basis, D5b off): a device kcal value is used as it is (no gross→net conversion), a planned session uses net MET (D7 context)", async () => {
   await profile();
-  const r = await ev(() => { const t = todayISO(), kg = 80;
+  const r = await ev(() => { const t = todayISO(), kg = 80; FIT().energy.netKcal = "off"; DATA_V++;
     const dev = sessionKcal({ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1" }, t, kg);
     const met = sessionKcal({ sport: "Cycling", min: 60, int: "Moderate" }, t, kg);
     return { dev, metKcal: met.kcal, metHow: met.how, expectedNet: (7 * FIT().intMult.Moderate - 1) * kg };

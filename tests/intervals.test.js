@@ -14,10 +14,11 @@ test("the import keeps climb, speed, power, cadence, max HR and the device name 
   const r = await page.evaluate(async ([setup, today]) => {
     eval(setup); await icuSyncDirect();
     const w = logGet(today).workouts[0]; const kcal = sessionKcal(w, today);
-    return { w, kcal, calls: __calls };
+    const pr = FIT().profile; return { w, kcal, calls: __calls, mifflin: 10 * trendAt(today) + 6.25 * pr.height - 5 * ageAt(today) + (pr.sex === "Female" ? -161 : 5) };
   }, [fake([act]), t]);
   assert.deepEqual([r.w.elev, r.w.spd, r.w.cad, r.w.hrmax, r.w.devn], [85, 2.67, 84, 171, "Amazfit GTR 4"]); assert.equal(r.w.pw, undefined);
-  assert.equal(r.w.kcal, 620); assert.deepEqual(r.kcal, { kcal: 620, how: "device" }, "the energy figure is unchanged");
+  assert.equal(r.w.kcal, 620);   // the imported figure is kept as the sensor gave it
+  assert.deepEqual(r.kcal, { kcal: Math.round(620 - r.mifflin / 1440 * 50), how: "device" }, "the energy figure is the sensor's, net of 50 minutes of resting energy (D5b: Polar is declared gross)");
 });
 
 test("a later sync without those fields does not erase them, and an activity with none gets none", async () => {

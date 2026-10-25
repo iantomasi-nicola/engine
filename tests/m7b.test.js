@@ -87,6 +87,8 @@ test("algorithm version (F-11): a saved profile from before gets the fixed v2 st
       kept = normalizeSettings({ fit: { energy: { calV2From: "2026-01-01" } } }).fit.energy, fresh = normalizeSettings({}).fit.energy, noEnergy = normalizeSettings({ fit: { profile: { sex: "Male" } } }).fit.energy;
     return { a: a.calV2From, mode: a.calMode, again: again.calV2From, kept: kept.calV2From, fresh: fresh.calV2From, noEnergy: noEnergy.calV2From, warn: a.warn }; });
   assert.deepEqual(r, { a: "2026-10-25", mode: "v2", again: "2026-10-25", kept: "2026-01-01", fresh: "", noEnergy: "2026-10-25", warn: "on" });
+  const n = await ev(() => { const a = normalizeSettings({ fit: { energy: { bmr: "x" } } }).fit.energy, f = normalizeSettings({}).fit.energy; return { a: [a.netKcal, a.netFrom], f: [f.netKcal, f.netFrom] }; });
+  assert.deepEqual(n, { a: ["on", "2026-10-25"], f: ["on", ""] });
 });
 
 test("switching from legacy to v2 in the middle of a series moves the factor by no more than one step at the boundary", async () => {
@@ -107,5 +109,31 @@ test("warnings can be switched off, and an empty weekly limit falls back to 100 
   const z = await run({ days: 90, mode: "v2", slope: 0.1 * base.I / 7000, intake: base.I }); await ev(() => { FIT().energy.calWeekKcal = 100; });
   assert.ok(Math.abs(z.f[z.f.length - 1] - 1) > 0.05, "the factor still moves with the limit emptied");
 });
+
+/* D5b (approved 26/10): the kcal a sensor reports are gross when its device says so; the energy model wants them net of resting energy, which the BMR already holds.
+   80 kg, 180 cm, 30 y male: BMR 1780 kcal/day = 1.2361 kcal/min, so a 60-minute session of 600 kcal is 600 - 74.17 = 525.83 net (526). */
+const sess = (extra = {}) => ({ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1", ...extra });
+const kcalOf = (w, o = {}) => ev(([w, o]) => { const E = FIT().energy; Object.assign(E, { netKcal: "on", netFrom: "" }, o.energy || {}); if (o.devKcal) FIT().devices.find(x => x.id === (o.dev || "polar")).kcal = o.devKcal; DATA_V++; const r = sessionKcal(w, o.date || todayISO(), 80); FIT().devices.forEach(x => { x.kcal = "gross"; }); return r; }, [w, o]);
+
+test("D5b: a device session whose sensor reports gross kcal counts net of resting energy (600 kcal in 60 min -> 526)", async () => {
+  await profile();
+  assert.deepEqual(await kcalOf(sess()), { kcal: 526, how: "device" });
+});
+test("D5b: net or unknown sensors, typed values, the off switch and days before the start date are used as they are", async () => {
+  await profile();
+  assert.equal((await kcalOf(sess(), { devKcal: "net" })).kcal, 600);
+  assert.equal((await kcalOf(sess(), { devKcal: "unknown" })).kcal, 600);
+  assert.equal((await kcalOf(sess({ src: undefined, ext: undefined }))).kcal, 600);          // typed by hand, not from a device
+  assert.equal((await kcalOf(sess(), { energy: { netKcal: "off" } })).kcal, 600);
+  assert.equal((await kcalOf(sess(), { energy: { netFrom: "2999-01-01" } })).kcal, 600);
+  assert.equal((await kcalOf(sess(), { energy: { netFrom: "2000-01-01" } })).kcal, 526);
+});
+test("D5b: the rates learned from device sessions are net too, so a planned session is not counted twice (10 kcal/min gross -> 8.76 net)", async () => {
+  await profile();
+  const r = await ev(() => { const t = todayISO(); S.logm = {}; for (let i = 1; i <= 5; i++) { const d = addDays(t, -i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-" + i, int: "Moderate" }] }; }
+    const out = {}; for (const v of ["on", "off"]) { FIT().energy.netKcal = v; FIT().energy.netFrom = ""; DATA_V++; out[v] = learnedRates().Running.Moderate; } FIT().energy.netKcal = "on"; S.logm = {}; DATA_V++; return out; });
+  near(r.off, 10, 0.001); near(r.on, 10 - 1780 / 1440, 0.01);   // each session is rounded to whole kcal (526), hence 0.01
+});
+function near(a, b, e) { assert.ok(Math.abs(a - b) <= e, `${a} vs ${b}`); }
 
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });
