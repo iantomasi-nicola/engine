@@ -27,7 +27,7 @@ const SHEETS_TO_OPEN = [["checkin", { date: "T", live: true }], ["journal", { da
 test("hostile text in foods, recipes, plan, list, pantry, training, notes and the Journal never becomes markup on any screen (phone and desktop)", async () => {
   for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
     const page = await start(vp); await page.evaluate(PLANT());
-    const base = await page.evaluate(() => document.querySelectorAll("script:not([src])").length);
+    const base = await page.evaluate(() => document.querySelectorAll("[onerror],[onload],[onclick],[onfocus],script:not([src])").length);
     const control = await page.evaluate(async P => { const d = document.createElement("div"); d.innerHTML = P; document.body.appendChild(d); await new Promise(r => setTimeout(r, 50)); const seen = document.querySelectorAll("[onerror]").length > 0; d.remove(); window.__xss = 0; return seen; }, PAY);
     assert.equal(control, true, "the detector sees a real injection (positive control)");
     const bad = await page.evaluate(async ([tabs, sheets, base]) => {
