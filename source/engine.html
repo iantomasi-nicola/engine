@@ -4671,6 +4671,16 @@ function topFoods(dates, basis) {
 function chartW(half) { /* the width the chart really has (page next to the menu, minus padding), at most 1040 so the drawing is never stretched: text keeps its size */ const full = clamp(innerWidth - (innerWidth >= 1024 ? 288 : innerWidth >= 600 ? 96 : 0) - 64, 280, 1040); return half && innerWidth >= 560 ? Math.floor((full - 14) / 2) : full; }
 /* every how many columns a date label fits (about 52 px each: «14 Sept» is 40 px at 10.5 px), so neighbours never touch */
 const xStep = colW => Math.max(1, Math.ceil(52 / Math.max(1, colW)));
+/* the y-axis values of every chart: multiples of a round step (1, 2 or 5 × 10^k) inside lo..hi, about n intervals, whole numbers only when `whole`; at least three unless the range is tiny */
+function axisTicks(lo, hi, n = 4, whole) {
+  if (!(hi > lo)) return [lo];
+  const raw = (hi - lo) / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p * (1 - 1e-9);
+  let step = (m <= 1.5 ? 1 : m <= 3 ? 2 : m <= 7 ? 5 : 10) * p; if (whole) step = Math.max(1, step);
+  const out = []; for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9; k++) out.push(+(k * step).toFixed(10));
+  if (out.length < 3 && !whole && n < 16) return axisTicks(lo, hi, n * 2, whole);
+  return out.length ? out : [lo, hi];
+}
+const axisGrid = (ticks, y, x1, x2, fmt) => ticks.map(v => `<line class="gl" x1="${x1}" x2="${x2}" y1="${y(v)}" y2="${y(v)}"/><text x="${x1 - 6}" y="${y(v) + 3.5}" text-anchor="end">${fmt(v)}</text>`).join("");
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
@@ -4737,8 +4747,7 @@ function weightChart(ws) {
   const vs = ws.map(w => +w[1]); const lo = Math.floor(Math.min(...vs, ...est.map(e => e.kg)) - 0.5), hi = Math.ceil(Math.max(...vs, ...est.map(e => e.kg)) + 0.5);
   const x = s => L + (W - L - R) * (parseISO(s).getTime() - t0) / span;
   const y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1));
-  let g = ""; const step = Math.max(1, Math.ceil((hi - lo) / 4));
-  for (let v = lo; v <= hi; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => v);
   const ma = vs.map((_, i) => { const s = vs.slice(Math.max(0, i - 6), i + 1); return s.reduce((a, b) => a + b, 0) / s.length; });
   g += `<path d="${ws.map((w, i) => (i ? "L" : "M") + x(w[0]) + " " + y(ma[i])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
   ws.forEach((w, i) => g += `<circle cx="${x(w[0])}" cy="${y(vs[i])}" r="${i === n - 1 && !est.length ? 4.5 : 2.6}" fill="${i === n - 1 && !est.length ? "var(--accent)" : "var(--faint)"}"><title>${fmtDM(w[0])}: ${vs[i]} kg</title></circle>`);
@@ -4942,7 +4951,7 @@ function minutesChart() {
   const used = sports.filter(sp => weeks.some(w => w.m[sp]));
   const W = chartW(), H = 190, L = 34, R = 6, Tp = 8, B = 22; const mx = niceMax(Math.max(60, ...weeks.map(w => Object.values(w.m).reduce((a, b) => a + b, 0))));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx); const bw = (W - L - R) / 8, barW = bw * 0.6; let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, r0);
   weeks.forEach((w, i) => { let acc = 0; const x = L + i * bw + (bw - barW) / 2;
     used.forEach((sp, j) => { const v = w.m[sp] || 0; if (!v) return; g += `<rect x="${x}" y="${y(acc + v)}" width="${barW}" height="${y(acc) - y(acc + v)}" fill="var(--${SPORT_COLORS[j % 7]})"><title>${sp}: ${r0(v)} min</title></rect>`; acc += v; });
     if (i % xStep(bw) === 0) g += `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${fmtDM(w.s)}</text>`; });
@@ -4983,8 +4992,7 @@ function vdotChart(rs) {
   const pts = rs.T.filter(t => t.vdot).map(t => [t.date, t.vdot]); if (pts.length < 2) return `<div class="faint" style="font-size:13px">Log two tests or races to see the trend.</div>`;
   const W = chartW(true), H = 170, L = 32, R = 10, Tp = 10, B = 22; const t0 = parseISO(pts[0][0]).getTime(), t1 = parseISO(pts[pts.length - 1][0]).getTime() || t0 + 1;
   const lo = Math.floor(Math.min(...pts.map(p => p[1])) - 1), hi = Math.ceil(Math.max(...pts.map(p => p[1])) + 1);
-  const x = d => L + (W - L - R) * (parseISO(d).getTime() - t0) / Math.max(1, t1 - t0), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
-  for (let v = lo; v <= hi; v += Math.max(1, Math.ceil((hi - lo) / 4))) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  const x = d => L + (W - L - R) * (parseISO(d).getTime() - t0) / Math.max(1, t1 - t0), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => v);
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(p[0]) + " " + y(p[1])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>`;
   pts.forEach((p, i) => g += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="var(--accent)"><title>${fmtDM(p[0])}: ${r1(p[1])}</title></circle>`);
   g += `<text x="${L}" y="${H - 6}">${fmtDM(pts[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(pts[pts.length - 1][0])}</text>`;
@@ -5007,7 +5015,7 @@ function kmChart() {
   for (let k = 7; k >= 0; k--) { const s = addDays(ws0, -7 * k); wk.push([s, weekKm(s), kmGoalFor(s)]); }
   const W = chartW(true), H = 170, L = 30, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(10, ...wk.map(w => Math.max(w[1], w[2] * 1.15))));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx), bw = (W - L - R) / 8; let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, r0);
   wk.forEach(([s, km, goal], i) => { const x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${y(km)}" width="${bw * 0.6}" height="${y(0) - y(km)}" rx="3" fill="${goal > 0 && km >= goal ? "var(--good)" : "var(--fat)"}"><title>${fmtDM(s)}: ${r1(km)} km${goal ? ` · goal ${r1(goal)}` : ""}</title></rect>`;
     if (goal > 0) g += `<line x1="${L + i * bw + 2}" x2="${L + (i + 1) * bw - 2}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
     if (i % xStep(bw) === 0) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
@@ -5059,8 +5067,8 @@ function changeChart() {
   for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
   if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs logged food and weigh‑ins.</div>`;
   const W = chartW(true), H = 170, L = 34, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), lo = Math.min(-0.5, ...all), hi = Math.max(0.5, ...all);
-  const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
-  [lo, hi].forEach(v => g += `<text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r1(v)}</text>`);
+  const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
+  g += axisGrid(axisTicks(lo, hi, 3), y, L, W - R, r1);
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.e)).join(" ")}" fill="none" stroke="var(--carb)" stroke-width="2.2" stroke-dasharray="5 4"/>`;
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.a)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected and actual weight change">${g}</svg><div class="legend"><span><i style="background:var(--carb)"></i>From intake</span><span><i style="background:var(--accent)"></i>Trend weight</span></div>`;
@@ -5084,8 +5092,9 @@ function weekBalanceHTML() {
 }
 function balanceChart() {
   const W8 = weeklyTable().slice(-8); if (!W8.some(w => w.balance)) return `<div class="faint">No week with logged food yet.</div>`;
-  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.max(500, ...vals.map(Math.abs));
-  const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length; let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/><text x="${L - 5}" y="${y(mx) + 8}" text-anchor="end">+${r1(mx / 1000)}k</text><text x="${L - 5}" y="${y(-mx)}" text-anchor="end">−${r1(mx / 1000)}k</text>`;
+  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.ceil(Math.max(500, ...vals.map(Math.abs)) / 250) * 250;
+  const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length;
+  let g = axisGrid(axisTicks(-mx, mx, 4, true), y, L, W - R, v => (v < 0 ? "−" : v > 0 ? "+" : "") + (Math.abs(v) >= 1000 ? Math.abs(v) / 1000 + "k" : Math.abs(v)));
   W8.forEach((w, i) => { const v = w.balance || 0, x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${Math.min(y(v), y(0))}" width="${bw * 0.6}" height="${Math.abs(y(v) - y(0))}" rx="2" fill="var(--${v < 0 ? "fat" : "pro"})"><title>${fmtDM(w.ws)}: ${fmtN(v)} kcal</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly energy balance">${g}</svg><div class="faint" style="font-size:12px">Intake minus TDEE over logged days</div>`;
 }
@@ -7870,8 +7879,7 @@ function journeyChart(D, goalW) {
   const s = D.s, ds = D.dates.slice(D.dates.indexOf(D.first)); if (ds.length < 2) return `<div class="faint">Needs a few days of data.</div>`;
   const pts = ds.map(d => s.rows[d]); const vals = pts.flatMap(r => [r.trend, r.real].filter(v => v)); if (goalW != null) vals.push(goalW);
   const W = chartW(), H = 220, L = 36, R = 10, Tp = 12, B = 24, lo = Math.floor(Math.min(...vals) - 0.5), hi = Math.ceil(Math.max(...vals) + 0.5), n = ds.length - 1;
-  const x = i => L + (W - L - R) * i / n, y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1)); let g = "";
-  const stp = Math.max(1, Math.ceil((hi - lo) / 5)); for (let v = lo; v <= hi; v += stp) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  const x = i => L + (W - L - R) * i / n, y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1)); let g = axisGrid(axisTicks(lo, hi, 5, true), y, L, W - R, v => v);
   if (goalW != null) g += `<line x1="${L}" x2="${W - R}" y1="${y(goalW)}" y2="${y(goalW)}" stroke="var(--good)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
   const line = pts.map((r, i) => r.trend ? (i && pts[i - 1].trend ? "L" : "M") + x(i).toFixed(1) + " " + y(r.trend).toFixed(1) : "").join(" ");
   g += `<path d="${line} L${x(n)} ${H - B} L${x(0)} ${H - B} Z" fill="var(--accent)" opacity=".08"/>`;
@@ -7886,7 +7894,7 @@ function weeklyIntakeChart() {
   const Wk = weeklyTable().filter(w => w.avgI).slice(-12); if (!Wk.length) return `<div class="faint">Log food for a week to see this.</div>`;
   const W = chartW(), H = 190, L = 40, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(...Wk.map(w => Math.max(w.avgI, w.avgTarget || 0))) * 1.05), bw = (W - L - R) / Wk.length;
   const y = v => Tp + (H - Tp - B) * (1 - v / mx); let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${fmtN(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, fmtN);
   Wk.forEach((w, i) => { const x0 = L + i * bw, cx = x0 + bw / 2, bwid = Math.min(26, bw * 0.6), dev = w.avgTarget ? (w.avgI - w.avgTarget) / w.avgTarget : 0;
     g += `<rect x="${cx - bwid / 2}" y="${y(w.avgI)}" width="${bwid}" height="${y(0) - y(w.avgI)}" rx="4" fill="var(--accent)" opacity="${w.inProgress ? .45 : Math.abs(dev) <= 0.1 ? 1 : .7}"><title>Week of ${fmtDM(w.ws)}: ${fmtN(w.avgI)} kcal a day vs ${fmtN(w.avgTarget || 0)} target</title></rect>`;
     if (w.avgTarget) g += `<line x1="${cx - bwid / 2 - 4}" x2="${cx + bwid / 2 + 4}" y1="${y(w.avgTarget)}" y2="${y(w.avgTarget)}" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>`;
@@ -7936,12 +7944,12 @@ function pmcChart(days = 120) {
   const x = i => L + (W - L - Rr) * i / n, y = v => Tp + (mid - Tp) * (1 - v / mx), yl = v => mid - (mid - Tp) * 0.45 * v / lmx;
   const fy = v => mid + 10 + (H - B - mid - 10) * (0.5 - v / (2 * fr));
   let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - Rr, r0);
   // load bars
   const bw = Math.max(1, (W - L - Rr) / (n + 1) * 0.7);
   R.forEach((r, i) => { if (r.tl > 0) g += `<rect x="${x(i) - bw / 2}" y="${yl(r.tl)}" width="${bw}" height="${mid - yl(r.tl)}" fill="var(--faint)" opacity="${r.fut ? .25 : .45}"><title>${fmtDM(ds[i])}: load ${r0(r.tl)}</title></rect>`; });
   // form band
-  g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${fy(0)}" y2="${fy(0)}"/><text x="${W - Rr + 5}" y="${fy(0) + 3.5}">0</text><text x="${W - Rr + 5}" y="${fy(-fr * .8) + 3.5}">−${r0(fr * .8)}</text>`;
+  g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${fy(0)}" y2="${fy(0)}"/>${axisTicks(-fr, fr, 4, true).filter(v => Math.abs(v) < fr * .92).map(v => `<text x="${W - Rr + 5}" y="${fy(v) + 3.5}">${v < 0 ? "−" : v > 0 ? "+" : ""}${Math.abs(v)}</text>`).join("")}`;
   for (const [lo, hi, c] of [[-30, -10, "accent"], [5, 25, "good"]]) { const pl = v => fy(v / 100 * (F.now?.ctl || 40)); g += `<rect x="${L}" width="${W - L - Rr}" y="${pl(hi)}" height="${Math.max(0, pl(lo) - pl(hi))}" fill="var(--${c})" opacity=".09"/>`; }
   const path = (key, from, to, fn) => R.slice(from, to + 1).map((r, j) => (j ? "L" : "M") + x(from + j).toFixed(1) + " " + fn(r[key]).toFixed(1)).join(" ");
   const line = (key, c, fn, w) => `<path d="${path(key, 0, ti, fn)}" fill="none" stroke="var(--${c})" stroke-width="${w}" stroke-linejoin="round"/><path d="${path(key, ti, n, fn)}" fill="none" stroke="var(--${c})" stroke-width="${w}" stroke-dasharray="4 4" opacity=".75"/>`;
@@ -11471,7 +11479,7 @@ function seriesChart(series, o = {}) {
   const vs = pts.map(p => p[1]); let lo = Math.min(...vs), hi = Math.max(...vs); const pad = Math.max((hi - lo) * 0.12, Math.abs(hi) * 0.03, o.minPad || 0.5); lo -= pad; hi += pad; if (o.zero && lo > 0) lo = 0;
   const x = d => L + (W - L - R) * (span ? daysBetween(d0, d) / span : 0.5), y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   let g = "";
-  for (let i = 0; i <= 3; i++) { const v = lo + (hi - lo) * i / 3; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${(o.fmt || r1)(v)}</text>`; }
+  g += axisGrid(axisTicks(lo, hi, 3, o.int), y, L, W - R, o.fmt || r1);
   const ticks = span < 1 ? [d0] : span < 2 ? [d0, d1] : [d0, addDays(d0, Math.round(span / 2)), d1];
   ticks.forEach((d, i) => { g += `<text x="${x(d)}" y="${H - 7}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : i === ticks.length - 1 && ticks.length > 1 ? "end" : "middle"}">${fmtDM(d)}</text>`; });
   for (const s of series) { if (!s.pts.length) continue; const P = [...s.pts].sort((a, b) => a[0].localeCompare(b[0]));

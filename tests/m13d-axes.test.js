@@ -1,0 +1,60 @@
+/* M13d, residual defects 1-3: round y-axis ticks on every chart, one grid for the calculator fields, the calendar's wide layout. Synthetic data only. */
+const test = require("node:test"), assert = require("node:assert/strict"), H = require("./lib/harness"), F = require("./fixtures/synthetic");
+let dir, app;
+test.before(async () => { dir = H.build(H.tmp("m13d-axes-build")); });
+test.afterEach(async () => { await app?.close(); app = null; });
+const start = async viewport => { app = await H.startApp({ dir, seed: F.seed({ withPlan: true }), viewport }); return app.page; };
+const wide = { width: 1920, height: 1080 };
+
+test("axisTicks: round values (1, 2, 5 x 10^k) inside the range, equally spaced, never repeated", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const r = await page.evaluate(() => ({
+    // 2241..2379, about 4 intervals: raw step 34.5 -> mantissa 3.45 -> 5 x 10 = 50; first multiple of 50 above 2241 is 2250, last below 2379 is 2350
+    kcal: axisTicks(2241, 2379, 4),
+    // 0..10 whole numbers: raw 2.5 -> mantissa 2.5 -> 2: 0,2,4,6,8,10
+    ten: axisTicks(0, 10, 4, true),
+    // 0..2.5 whole numbers: raw .625 -> .5, but whole numbers only -> step 1: 0,1,2
+    small: axisTicks(0, 2.5, 4, true),
+    // -0.5..0.5, 3 intervals: raw .333 -> mantissa 3.33 -> 5 x .1 = .5: -.5, 0, .5 (no float noise)
+    sym: axisTicks(-0.5, 0.5, 3),
+    // 0..1 in tenths: 0, .1, ... 1 with no 0.30000000000000004
+    tenths: axisTicks(0, 1, 10),
+    // 70.2..70.9: raw .175 -> mantissa 1.75 -> 2 x .1 = .2: 70.2, 70.4, 70.6, 70.8
+    kg: axisTicks(70.2, 70.9, 4),
+    flat: axisTicks(5, 5, 4), none: axisTicks(3.2, 3.8, 4, true) }));
+  assert.deepEqual(r.kcal, [2250, 2300, 2350]); assert.deepEqual(r.ten, [0, 2, 4, 6, 8, 10]); assert.deepEqual(r.small, [0, 1, 2]);
+  assert.deepEqual(r.sym, [-0.5, 0, 0.5]); assert.deepEqual(r.tenths, [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]); assert.deepEqual(r.kg, [70.2, 70.4, 70.6, 70.8]);
+  assert.deepEqual(r.flat, [5]); assert.deepEqual(r.none, [3.2, 3.8]);
+  assert.deepEqual(app.errors, []);
+});
+
+/* every chart: the y labels are whole steps, equally spaced on screen and in value, and none repeats */
+test("Energy and the other charts: y labels are unique, equally spaced and round", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
+    const page = await start(vp);
+    const r = await page.evaluate(() => {
+      const num = s => { const m = /^([+−-])?([\d.,]+)(k)?$/.exec(s.trim()); if (!m) return NaN; const v = parseFloat(m[2].replace(/,/g, "")) * (m[3] ? 1000 : 1); return m[1] === "−" || m[1] === "-" ? -v : v; };
+      const axis = html => { const d = document.createElement("div"); d.innerHTML = html; const out = [];
+        for (const svg of d.querySelectorAll("svg.chart")) { const gl = [...svg.querySelectorAll("line.gl")].map(l => +l.getAttribute("y1")), tx = [...svg.querySelectorAll("text[text-anchor=end]")].filter(t => +t.getAttribute("x") < 60 && /^[+−-]?[\d.,]+k?$/.test(t.textContent.trim()));
+          out.push(tx.map(t => ({ s: t.textContent.trim(), v: num(t.textContent), y: +t.getAttribute("y") })).concat([])); }
+        return out; };
+      const t = todayISO(), mk = t.slice(0, 7); S.logm[mk] = S.logm[mk] || { month: mk, days: {} };
+      const series = [
+        [[t, 2241], [addDays(t, -3), 2379]], [[t, 2310], [addDays(t, -3), 2310]], [[t, 70.2], [addDays(t, -3), 70.9]], [[t, 1], [addDays(t, -9), 4]], [[t, 12], [addDays(t, -9), 14]]];
+      const sc = series.map(p => axis(seriesChart([{ name: "a", color: "red", pts: p }], { fmt: v => fmtN(r0(v)), l: 48, minPad: 50 }))[0]);
+      const sc1 = axis(seriesChart([{ name: "a", color: "red", pts: series[2] }], { fmt: v => r1(v) }))[0];
+      const sc2 = axis(seriesChart([{ name: "a", color: "red", pts: series[3] }], { fmt: v => v.toFixed(2), minPad: .02 }))[0];
+      const sc3 = axis(seriesChart([{ name: "a", color: "red", pts: series[4] }], { half: true, h: 160, fmt: v => r0(v), minPad: 1, int: true }))[0];
+      UI.tab = "progress"; UI.progSeg = "overview"; render();
+      const ov = [...document.querySelectorAll("#main svg.chart")].map(s => axis(s.outerHTML)[0]);
+      return { sc, sc1, sc2, sc3, ov };
+    });
+    const check = (name, ax) => { if (!ax || ax.length < 2) return; const vs = ax.map(a => a.v), labs = ax.map(a => a.s); assert.equal(new Set(labs).size, labs.length, name + " repeats " + JSON.stringify(labs));
+      const d = vs[1] - vs[0]; vs.forEach((v, i) => i && assert.ok(Math.abs(v - vs[i - 1] - d) < 1e-6 * Math.max(1, Math.abs(d)), name + " not equally spaced " + JSON.stringify(labs)));
+      const ys = ax.map(a => a.y), dy = ys[1] - ys[0]; ys.forEach((y, i) => i && assert.ok(Math.abs(y - ys[i - 1] - dy) < 0.6, name + " labels not on an even grid " + JSON.stringify(ys)));
+      const m = Math.abs(d), p = Math.pow(10, Math.floor(Math.log10(m))), mant = Math.round(m / p * 1000) / 1000; assert.ok([1, 2, 5, 10].includes(mant), name + " step " + d + " is not 1, 2 or 5 x 10^k"); };
+    r.sc.forEach((a, i) => { assert.ok(a && a.length >= 3 && a.length <= 6, "seriesChart " + i + ": " + JSON.stringify(a)); check("seriesChart " + i, a); });
+    check("kg", r.sc1); check("ratio", r.sc2); check("reps", r.sc3); r.ov.forEach((a, i) => check("overview " + i, a));
+    await app.close(); app = null;
+  }
+});
