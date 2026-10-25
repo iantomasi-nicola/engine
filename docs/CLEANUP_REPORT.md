@@ -334,3 +334,8 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 **Compatibilità:** `goals[].doneOn` opzionale (assente = calcolato come prima); `logm[].nap/napAt` opzionali; nessuna migrazione.
 **Aperto:** batteria non validata su dati reali (solo un valore HRV/FC al mattino, nessuno stress diurno); linee di ripetizioni e skill del Level sono dell'app (nessuna tabella autorevole); il rapporto Strength Level è letto a 80 kg di riferimento; il PDF e l'analisi intervals.icu non provati dal vivo (milestone precedenti).
 
+## M11j Race circuits, batteria in evidenza, calcolatori (25/10/2026)
+**Verificato:** `tests/m11c.test.js` — race: preset → stazioni (6 e 7, 50 e 65 rep), clock e voce a ogni tocco, undo, split [12, 29, 11, 48, 12, 13] e tempo 125 s salvato come tempo del circuito, ranking (posizione 2 di 5, tempo del 2° posto, gap −5 s, piano di split ×130/125, s/rep per esercizio); calcolatori (sei formule di 100 kg × 5 calcolate a mano, media 115,79, pull-up zavorrata con peso corporeo, carichi per rep, passo 4:09/km, Riegel e VDOT); battery card nuova. Screenshot 390/820/1440 guardati; `layout-audit` copre foglio calcolatori e schermata race.
+**Aggiunto:** `race*`, task `race`, `raceSection`, `ACT["lv-step"…]`, `calc*`, `SHEETS.calc`, prefissi CSS `rce-`/`rk-`. **Corretto:** collisione con la classe esistente `.rc` (scontrino): il race usa `.rce`. **Sostituito:** la riga compatta della batteria con l'anello (stesso `ACT["bt-open"]`).
+**Aperto:** il PDF del ranking non è arrivato: nessuna soglia di qualificazione inventata; regolamento 2026-27 (fase zavorrata) non verificato; eventuale conteggio automatico delle ripetizioni (L27) non fatto.
+
