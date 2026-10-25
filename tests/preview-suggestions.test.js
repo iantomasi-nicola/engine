@@ -91,3 +91,18 @@ test("the number on the Pantry tab says what it counts: amber for use-soon, red 
     return { a, both: { cls: both.className, label: both.getAttribute("aria-label"), n: both.innerText }, same: Math.max(...btns) - Math.min(...btns) < 2 }; });
   assert.deepEqual(r.a, { cls: "tab-dot soon", label: "1 to use soon", title: "1 to use soon" }); assert.deepEqual(r.both, { cls: "tab-dot", label: "1 expired · 1 to use soon", n: "2" }); assert.equal(r.same, true);
 });
+
+test("L167: a load or a ring length changed in the workout (a suggestion, a +/- in the run, a typed value) is written with its exact value into the script of the intervals.icu event, and nothing is written when the workout does not come from intervals.icu", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => { const t = todayISO(), plan = () => (logGet(t)?.planned || [])[0] || {};
+    const L = LV(); L.ext = "icu-77"; L.planDate = t; mutateLog(t, x => { x.planned = [{ ext: "icu-77", sport: "WeightTraining", script: L.script }]; });
+    ACT["sg-toggle"]({ dataset: { id: "p:pull up" } }); ACT["sg-apply"](); const s1 = plan().script, d1 = plan().dirty;
+    ACT["lv-begin"](); const [, t0] = LR(); const xi = t0.exs.findIndex(e => /pull-up/i.test(e.name));
+    ACT["lv-load"]({ dataset: { x: String(xi), d: "0.5" } }); const s2 = plan().script;
+    CHG["lv-load-set"]("15.25", { dataset: { x: String(xi) } }); const s3 = plan().script;
+    liveRingEdit(LV(), t0, xi, "42.5 cm"); const s4 = plan().script, ring = /rings 42\.5cm/.test(s4);
+    const L2 = LV(); L2.ext = null; const before = plan().script; ACT["lv-load"]({ dataset: { x: String(xi), d: "1" } });
+    return { s1, d1, s2, s3, s4, ring, same: plan().script === before }; });
+  assert.match(r.s1, /- 6 Pull-up \+12kg/); assert.equal(r.d1, true, "marked to be sent"); assert.match(r.s2, /Pull-up \+12\.5kg/); assert.match(r.s3, /Pull-up \+15\.25kg/); assert.equal(r.ring, true); assert.equal(r.same, true, "a workout that is not from intervals.icu writes nothing");
+  assert.deepEqual(app.errors, []);
+});
