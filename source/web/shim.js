@@ -2,7 +2,7 @@
    (db, user, downloads, sample) using Supabase, the browser and an optional free AI key. */
 (function () {
   const CFG = window.ENGINE_CONFIG || {};
-  const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
   const sb = CFG.supabaseUrl && CFG.supabaseKey && window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "engine-auth", detectSessionInUrl: true } }) : null;
   const E = window.ENGINE = { sb, LS, uid: null, email: null, mode: "local", cloud: !!sb };
   const T = "engine_docs";
@@ -42,18 +42,48 @@
       // offline with an expired token: keep using the account saved on this device, it refreshes once back online
       if (!s && (err || !navigator.onLine)) { try { const st = JSON.parse(localStorage.getItem("engine-auth") || "null"), u = st?.user || st?.currentSession?.user; if (u?.id) s = { user: u }; } catch (e) {} }
       if (!s && !LS.get("engine.localOnly", false)) s = await E.loginScreen();
-      if (s) { E.uid = s.user.id; E.email = s.user.email; E.mode = "cloud"; }
+      if (s) { E.uid = s.user.id; E.email = s.user.email; E.mode = "cloud"; queue = loadQ(E.uid); qPaths = new Set(queue.map(q => q.path)); }
       return E.uid;
     })();
     return authP;
   }
-  E.signOut = async () => { try { await sb?.auth.signOut(); } catch (e) {} LS.set("engine.localOnly", true); location.reload(); };
+  /* what is still waiting is sent first (a few seconds at most); what can't go stays in this account's own queue on this device */
+  E.signOut = async () => { try { await Promise.race([flushQ(), new Promise(r => setTimeout(r, 4000))]); } catch (e) {} persistQ(); try { await sb?.auth.signOut(); } catch (e) {} LS.set("engine.localOnly", true); location.reload(); };
   E.signIn = async () => { const s = await E.loginScreen({ cancel: true }); if (s) { LS.del("engine.localOnly"); location.reload(); } };
 
-  /* ---------- db: a small Firestore-like layer over one Supabase table, with an offline write queue ---------- */
-  let cache = new Map(), loaded = false, loadP = null, chan = null;
+  /* ---------- db: a small Firestore-like layer over one Supabase table, with an offline write queue ----------
+     Each account has its own queue (engine.q.<uid>) and its own copy on this device (engine.snap.<uid>).
+     A document the app can merge comes with the copy it was edited from (`base`): right before sending, it is merged
+     with what the server holds now (E.merge, given by the app), so two devices that edited it both keep their changes. */
+  let cache = new Map(), loaded = false, loadP = null, loading = false, chan = null, loadedAt = 0;
   const docL = new Map(), colL = new Map();
-  let queue = LS.get("engine.q", []);
+  let queue = [], qPaths = new Set();
+  const st = { online: null, storageFull: false, lastError: "" };
+  E.status = () => { let blocked = 0; for (const q of queue) if (q.bad) blocked++; return { online: st.online, pending: queue.length - blocked, blocked, storageFull: st.storageFull, lastError: st.lastError, loadedAt }; };
+  const emit = () => { try { E.onStatus?.(E.status()); } catch (e) {} };
+  const sent = p => { try { E.onSent?.(p); } catch (e) {} };
+  const errText = e => String(e?.message || e || "").slice(0, 160);
+  /* deep equality that ignores key order (the server's jsonb does not keep it) */
+  const same = (a, b) => { if (a === b) return true; if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
+    const ka = Object.keys(a); if (ka.length !== Object.keys(b).length) return false; for (const k of ka) if (!Object.prototype.hasOwnProperty.call(b, k) || !same(a[k], b[k])) return false; return true; };
+  const snapKeys = () => { try { return Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) { return []; } };
+  /* this account's queue; the single queue of older versions is taken over only when this device holds no other account's data.
+     A change the server refused (bad) is tried again once in every session. */
+  function loadQ(uid) {
+    const own = LS.get("engine.q." + uid, null); if (Array.isArray(own)) return own.map(q => ({ ...q, bad: false }));
+    const legacy = LS.get("engine.q", null), snaps = snapKeys();
+    if (Array.isArray(legacy) && (snaps.includes("engine.snap." + uid) || !snaps.length)) { LS.set("engine.q." + uid, legacy); LS.del("engine.q"); return legacy; }
+    return [];
+  }
+  let qT = 0;
+  function persistQ() { clearTimeout(qT); qT = 0; if (!E.uid) return;
+    const ok = LS.set("engine.q." + E.uid, queue);
+    if (ok === st.storageFull) { st.storageFull = !ok; emit(); } }
+  const saveQ = () => { if (!qT) qT = setTimeout(persistQ, 250); };
+  /* changes made on this device while it was signed out of account uid: kept in that account's queue for its next sign-in */
+  E.stash = (uid, items) => { const k = "engine.q." + uid, q = LS.get(k, []), snap = new Map(LS.get("engine.snap." + uid, [])), out = q.filter(x => !items.some(y => y.path === x.path));
+    for (const x of items) { const old = q.find(y => y.path === x.path); out.push(x.op === "del" ? { op: "del", path: x.path, data: null } : { op: "set", path: x.path, data: x.data, ...(x.mb ? { mb: true, base: old?.mb ? old.base : snap.get(x.path) } : {}) }); }
+    return LS.set(k, out); };
   const rel = p => p.split("/").slice(3).join("/");
   const collOf = p => { const a = p.split("/"); return a.length > 1 ? a.slice(0, -1).join("/") : ""; };
   const snapDoc = (p, fc) => ({ id: p.split("/").pop(), exists: cache.has(p), data: () => cache.get(p), metadata: { fromCache: !!fc } });
@@ -61,61 +91,94 @@
   const snapCol = (c, w, fc) => { const docs = []; for (const [p, d] of cache) if (collOf(p) === c && test(d, w)) docs.push({ id: p.split("/").pop(), data: () => d }); return { docs, size: docs.length, empty: !docs.length, metadata: { fromCache: !!fc } }; };
   function notify(p) { for (const cb of docL.get(p) || []) try { cb(snapDoc(p)); } catch (e) { console.warn(e); } const c = collOf(p); for (const l of colL.get(c) || []) try { l.cb(snapCol(c, l.w)); } catch (e) { console.warn(e); } }
   const errs = new Set(); const fail = e => { for (const f of errs) try { f(e); } catch (x) {} };
-  /* a copy of everything on this device: the app opens and works with no network, then catches up */
+  /* a copy on this device: the app opens and works with no network, then catches up. Days older than the app reads (180) stay in the account only */
   const snapKey = () => "engine.snap." + E.uid;
-  let snapT = 0; const saveSnap = () => { clearTimeout(snapT); snapT = setTimeout(() => { if (E.uid && loaded) try { localStorage.setItem(snapKey(), JSON.stringify([...cache])); } catch (e) {} }, 1200); };
+  let snapT = 0; const saveSnap = () => { clearTimeout(snapT); snapT = setTimeout(() => { if (!E.uid || !loaded) return; const since = new Date(Date.now() - 182 * 864e5).toISOString().slice(0, 10);
+    try { localStorage.setItem(snapKey(), JSON.stringify([...cache].filter(([p]) => !(p.startsWith("lib/days/") && p.slice(9) < since)))); } catch (e) {} }, 1200); };
   function apply(out, fromCache) {
     for (const q of queue) q.op === "del" ? out.delete(q.path) : out.set(q.path, q.data);
     cache = out; loaded = true;
     for (const p of docL.keys()) for (const cb of docL.get(p)) cb(snapDoc(p, fromCache));
     for (const [c, ls] of colL) for (const l of ls) l.cb(snapCol(c, l.w, fromCache));
   }
+  /* pages by path (keyset): stable when rows change between two pages, and complete whatever page size the project allows */
   async function loadAll() {
-    const out = new Map(); let from = 0;
-    for (;;) { const { data, error } = await sb.from(T).select("path,data").range(from, from + 999); if (error) throw error; for (const r of data) out.set(r.path, r.data); if (data.length < 1000) break; from += 1000; }
-    apply(out, false); saveSnap(); E.online = true;
+    const out = new Map(); let last = null;
+    for (;;) { let q = sb.from(T).select("path,data").order("path").limit(1000); if (last !== null) q = q.gt("path", last);
+      const { data, error } = await q; if (error) throw error; if (!data?.length) break;
+      for (const r of data) out.set(r.path, r.data); last = data[data.length - 1].path; }
+    apply(out, false); loadedAt = Date.now(); st.online = true; saveSnap(); emit();
     live();
   }
   function ensureLoad() {
     if (loadP) return loadP;
     if (!loaded && E.uid) { try { const raw = localStorage.getItem(snapKey()); if (raw) apply(new Map(JSON.parse(raw)), true); } catch (e) {} }
-    loadP = loadAll().catch(e => { loadP = null; E.online = false; if (!loaded) fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); });
+    loading = true;
+    loadP = loadAll().catch(e => { loadP = null; st.online = false; st.lastError = errText(e); emit(); if (!loaded) fail({ code: "unavailable", message: errText(e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); }).finally(() => { loading = false; });
     return loadP;
   }
+  /* back in the foreground or online: read the account again (live updates missed while asleep are not replayed) */
+  function refresh(force) { if (!E.uid || !sb || !loaded || loading || (!force && Date.now() - loadedAt < 10000)) return; loadP = null; ensureLoad(); }
   function live() {
     if (chan || !E.uid) return;
     chan = sb.channel("engine-" + E.uid).on("postgres_changes", { event: "*", schema: "public", table: T, filter: "user_id=eq." + E.uid }, p => {
-      if (queue.some(q => q.path === (p.new?.path || p.old?.path))) return; // our own write still on its way
+      if (qPaths.has(p.new?.path || p.old?.path)) return; // a change of ours not sent yet: it is merged with the server's copy when it goes
       if (p.eventType === "DELETE") { if (!p.old?.path || !cache.has(p.old.path)) return; cache.delete(p.old.path); notify(p.old.path); return; }
-      const r = p.new; if (!r?.path) return; if (JSON.stringify(cache.get(r.path)) === JSON.stringify(r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
+      const r = p.new; if (!r?.path) return; if (same(cache.get(r.path), r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
     }).subscribe();
   }
-  let flushing = false;
+  /* a refusal that a retry can't fix (too large, not allowed, invalid): the change is set aside and the rest goes on */
+  const permanent = r => { const s = r?.status || 0; return s >= 400 && s < 500 && ![401, 408, 429].includes(s); };
+  let flushing = false, retryT = 0;
   async function flushQ() {
-    if (flushing || !queue.length || !E.uid) return; flushing = true;
-    try { while (queue.length) { const q = queue[0];
-        const r = q.op === "del" ? await sb.from(T).delete().eq("user_id", E.uid).eq("path", q.path) : await sb.from(T).upsert({ user_id: E.uid, path: q.path, data: q.data, updated_at: new Date().toISOString() });
-        if (r.error) throw r.error; queue.shift(); LS.set("engine.q", queue); } }
-    catch (e) { fail({ code: "unavailable", message: String(e?.message || e) }); setTimeout(flushQ, 8000); }
+    if (flushing || !E.uid || !sb) return; flushing = true;
+    try {
+      for (;;) {
+        const q = queue.find(x => !x.bad); if (!q) break;
+        let data = q.data, r = null;
+        if (q.op === "del") r = await sb.from(T).delete().eq("user_id", E.uid).eq("path", q.path);
+        else {
+          if (q.mb && E.merge) { const g = await sb.from(T).select("data").eq("user_id", E.uid).eq("path", q.path).maybeSingle();
+            if (g.error) r = g; else if (g.data && !same(g.data.data, q.base)) data = E.merge(q.path, q.base, q.data, g.data.data); }
+          if (!r) r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
+        }
+        if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
+        st.online = true;
+        const i = queue.indexOf(q);   // -1: a newer edit of the same document replaced it meanwhile, and goes next
+        if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path); }
+        saveQ(); emit();
+      }
+    } catch (e) { st.online = false; st.lastError = errText(e); emit(); clearTimeout(retryT); retryT = setTimeout(flushQ, 8000); }
     finally { flushing = false; }
   }
-  addEventListener("online", () => { flushQ(); if (!E.online) { loadP = null; ensureLoad(); } });
-  function write(p, op, data) { if (op === "del") cache.delete(p); else cache.set(p, data); queue = queue.filter(q => q.path !== p); queue.push({ op, path: p, data: op === "del" ? null : data }); LS.set("engine.q", queue); notify(p); saveSnap(); flushQ(); return Promise.resolve(); }
+  addEventListener("online", () => { st.online = null; emit(); flushQ(); refresh(true); });
+  addEventListener("offline", () => { st.online = false; emit(); });
+  addEventListener("pagehide", persistQ);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) persistQ(); else { flushQ(); refresh(); } });
+  function write(p, op, data, opts) {
+    const has = qPaths.has(p);
+    if (op !== "del" && !has && cache.has(p) && same(cache.get(p), data)) { sent(p); return Promise.resolve(); }   // the account already has exactly this
+    const old = has ? queue.find(q => q.path === p) : null, q = { op, path: p, data: op === "del" ? null : data };
+    if (op !== "del" && opts && "base" in opts) { q.mb = true; q.base = old?.mb ? old.base : opts.base; }   // the oldest copy this edit started from
+    if (op === "del") cache.delete(p); else cache.set(p, data);
+    if (has) queue = queue.filter(x => x.path !== p);
+    queue.push(q); qPaths.add(p); saveQ(); saveSnap(); emit(); flushQ(); return Promise.resolve();
+  }
   function docRef(full) { const p = rel(full);
     return { id: p.split("/").pop(), path: full,
-      onSnapshot(cb, err) { (docL.get(p) || docL.set(p, new Set()).get(p)).add(cb); if (err) errs.add(err); if (loaded) cb(snapDoc(p)); else ensureLoad(); return () => docL.get(p)?.delete(cb); },
+      onSnapshot(cb, err) { (docL.get(p) || docL.set(p, new Set()).get(p)).add(cb); if (err) errs.add(err); if (loaded) cb(snapDoc(p, !loadedAt)); else ensureLoad(); return () => docL.get(p)?.delete(cb); },
       async get() { await ensureLoad(); return snapDoc(p); },
-      set(data) { return write(p, "set", JSON.parse(JSON.stringify(data))); },
+      set(data, opts) { return write(p, "set", JSON.parse(JSON.stringify(data)), opts); },
       update(data) { return write(p, "set", { ...(cache.get(p) || {}), ...JSON.parse(JSON.stringify(data)) }); },
       delete() { return write(p, "del"); },
       collection(n) { return colRef(full + "/" + n); } }; }
   function colRef(full, w) { const c = rel(full);
     return { path: full, doc: id => docRef(full + "/" + id), where: (f, op, v) => colRef(full, [f, op, v]),
-      onSnapshot(cb, err) { const l = { cb, w }; (colL.get(c) || colL.set(c, new Set()).get(c)).add(l); if (err) errs.add(err); if (loaded) cb(snapCol(c, w)); else ensureLoad(); return () => colL.get(c)?.delete(l); },
+      onSnapshot(cb, err) { const l = { cb, w }; (colL.get(c) || colL.set(c, new Set()).get(c)).add(l); if (err) errs.add(err); if (loaded) cb(snapCol(c, w, !loadedAt)); else ensureLoad(); return () => colL.get(c)?.delete(l); },
       async get() { await ensureLoad(); return snapCol(c, w); } }; }
   const db = { doc: docRef, collection: p => colRef(p) };
-  E.pending = () => queue.length;
-  E.flush = flushQ;
+  E.pending = () => E.status().pending;
+  E.flush = flushQ; E.persist = persistQ;
 
   /* ---------- user ---------- */
   const user = { id: async () => E.uid, me: async () => ({ id: E.uid, name: E.email || "", email: E.email }), isOwner: () => true, canEdit: () => true, can: () => true, profiles: async () => ({}), search: async () => [] };
