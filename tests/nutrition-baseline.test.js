@@ -32,17 +32,17 @@ test("BMR: Mifflin-St Jeor in the app is the rounded form (1780 kcal for 80 kg, 
   const b = await ev(() => energyAt(todayISO()).bmr); near(b, 1780, 0.001);
 });
 
-test("KNOWN (D10): Harris-Benedict in the app uses rounded coefficients (male age term 6.775, original 6.755): -0.755 kcal vs the original", async () => {
+test("D10 (F-01, done in m7b-bmr.test.js): Harris-Benedict in the app now uses the original 1918/1919 coefficients: no difference from the published equation", async () => {
   await profile(); const t = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; DATA_V++; return energyAt(todayISO()).bmr; });
-  near(t, 66.5 + 13.75 * 80 + 5.003 * 180 - 6.775 * 30, 0.001); near(t - ref.harrisBenedictMale(80, 180, 30), -0.755, 0.001);
+  near(t - ref.harrisBenedictMale(80, 180, 30), 0, 0.001);
   const f = await ev(() => { FIT().profile.sex = "Female"; FIT().profile.startWeight = 55; FIT().profile.height = 165; DATA_V++; return energyAt(todayISO()).bmr; });
-  near(f - ref.harrisBenedictFemale(55, 165, 30), 0.0365, 0.001);   // the female form is right to 0.04 kcal; the book's -1.16 age term is NOT in the app
+  near(f - ref.harrisBenedictFemale(55, 165, 30), 0, 0.001);   // the book's -1.16 age term is NOT in the app
   await ev(() => { FIT().energy.bmr = "Mifflin-St Jeor"; });
 });
 
-test("KNOWN (D10): Harris-Benedict adds a body-fat bonus of 27.5 kcal per point under 16 % (not part of the published equation)", async () => {
-  await profile({ bf: 10 }); const r = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; DATA_V++; const withBonus = energyAt(todayISO()).bmr; FIT().profile.bf = 20; DATA_V++; const none = energyAt(todayISO()).bmr; FIT().energy.bmr = "Mifflin-St Jeor"; return { withBonus, none }; });
-  near(r.withBonus - r.none, (16 - 10) * 27.5, 0.001);
+test("D10 (F-01): the body-fat bonus of 27.5 kcal per point under 16 % (not part of the published equation) is counted only when its switch is on", async () => {
+  await profile({ bf: 10 }); const r = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; FIT().energy.hbBonusOn = "on"; DATA_V++; const withBonus = energyAt(todayISO()).bmr; FIT().energy.hbBonusOn = "off"; DATA_V++; const off = energyAt(todayISO()).bmr; FIT().profile.bf = 20; FIT().energy.hbBonusOn = "on"; DATA_V++; const none = energyAt(todayISO()).bmr; FIT().energy.bmr = "Mifflin-St Jeor"; FIT().energy.hbBonusOn = "off"; return { withBonus, off, none }; });
+  near(r.withBonus - r.none, (16 - 10) * 27.5, 0.001); near(r.off, r.none, 0.001);
 });
 
 test("KNOWN (D9): with no date of birth the app silently computes with age 30 (and height 175 / weight 75 defaults)", async () => {

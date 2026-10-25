@@ -405,3 +405,8 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Eliminato**: nessun codice morto introdotto.
 - **Aperto**: `eatCandidates` (AEE in ombra) continua a usare il fattore globale (è la stima indipendente); la correzione appresa «da peso e bilancio» (non solo da kcal di riferimento) non è fatta perché richiede dati reali; nessun moltiplicatore polso-contro-fascia dalla letteratura.
 
+### M7b-2b · F-01 BMR (26/10)
+- **Verificato**: `tests/m7b-bmr.test.js` (12 test, valori a mano nei commenti: HB 1864.545 e 1345.9985, Ten Haaf 1989.2264, bordi di età 18/35/36/60, bonus, migrazione, Settings, ricarica) e `nutrition-baseline.test.js` (i due test KNOWN D10 aggiornati di proposito); `layout-audit.js`: nessun problema.
+- **Aggiornato**: `bmrOf` usa `hbOriginal`, `hbBonusKcal`, `tenHaafWeight`; `energyView` usa le stesse funzioni (4 tile affiancati; riga «Used today» solo con bonus o MET); `normalizeSettings` imposta `hbBonusOn` ("on" per i profili salvati prima).
+- **Eliminato**: le formule HB arrotondate duplicate in `bmrOf` e `energyView`, il tile «used today» e il ramo Katch-McArdle irraggiungibile di `inUse`.
+- **Aperto**: coefficienti Ten Haaf non verificati su un testo primario in questo ambiente; Cunningham/Ten Haaf-FFM; la scelta della formula cambia la serie passata (F-11).
