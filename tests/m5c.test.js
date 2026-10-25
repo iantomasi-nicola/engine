@@ -94,10 +94,10 @@ test("auto-complete fills only the empty meals from the same weekday of the late
   assert.ok(r.n >= 8, "filled " + r.n); assert.equal(r.treat, false, "a treat is never copied"); assert.ok(r.undone, "one undo restores the whole week");
   assert.deepEqual(app.errors, []);
 });
-test("the week view has a «Fill from my habits» button, a clipboard chip once something is copied, and a paste button in every cell then", async () => {
+test("the week view has one «Auto-plan week» button (habits or targets inside), a clipboard chip once something is copied, and a paste button in every cell then", async () => {
   const page = await start(); await plan(page);
   const r = await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.mclip = null; render(); await new Promise(x => setTimeout(x, 100));
-    const fill = !!document.querySelector('[data-act="pw-autofill"]'), chip0 = !!document.querySelector(".pw-clip"), paste0 = document.querySelectorAll('[data-act="meal-paste"]').length;
+    const fill = !!document.querySelector('[data-act="pw-plan"]'), chip0 = !!document.querySelector(".pw-clip"), paste0 = document.querySelectorAll('[data-act="meal-paste"]').length;
     copyToClip("meal", todayISO(), "lunch"); render(); await new Promise(x => setTimeout(x, 100));
     const chip1 = document.querySelector(".pw-clip")?.innerText || "", paste1 = document.querySelectorAll('[data-act="meal-paste"]').length;
     ACT["mclip-clear"](); render(); await new Promise(x => setTimeout(x, 100)); return { fill, chip0, paste0, chip1, paste1, after: !!document.querySelector(".pw-clip") }; });
@@ -136,5 +136,21 @@ test("each filled day has its own copy and clear buttons and the week has «Clea
     return { tools, clears, weekBtn, clip, afterDay, others, toolsAfter, sheet, weekLeft }; });
   assert.equal(r.tools, 7); assert.equal(r.clears, 7); assert.equal(r.weekBtn, 1); assert.equal(r.clip, "day"); assert.equal(r.afterDay, 0); assert.equal(r.others, 3); assert.equal(r.toolsAfter, 6, "the emptied day loses its tools");
   assert.equal(r.sheet, "confirm"); assert.equal(r.weekLeft, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("one Auto-plan sheet plans from your habits or from your targets: with habits it fills the gaps (or starts fresh) from what you usually have, with no calculation, and keeps what is locked", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), d = addDays(t, 2);
+    const first = () => dayItems(getDay(d)).map(([m, it]) => m + "|" + it.ref + ":" + it.qty).sort().join(",");
+    for (let k = 1; k <= 3; k++) { const past = addDays(d, -7 * k); S.days[past] = { date: past, meals: { lunch: [{ id: "h" + k, kind: "food", ref: "t-rice", qty: 90, eaten: true }], dinner: [{ id: "g" + k, kind: "food", ref: "t-chicken", qty: 200, eaten: true }] } }; }
+    S.days[d] = { date: d, meals: { lunch: [{ id: "keep", kind: "food", ref: "t-oil", qty: 10, eaten: false }], dinner: [{ id: "x", kind: "food", ref: "t-oil", qty: 5, eaten: false }] }, lock: { lunch: true } }; DATA_V++;
+    UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = d; render(); await new Promise(x => setTimeout(x, 100));
+    const buttons = [...document.querySelectorAll(".pw-acts [data-act]")].map(b => b.dataset.act);
+    openSheet("planner", { scope: "range", from: d, to: d, mode: "replace", pantry: true, how: "habits" }); const sheetHow = !!document.querySelector('[data-act="pl-how"]'), noAgain = !document.querySelector('[data-act="pl-mode"][data-k="again"]'), noPairs = !document.querySelector('[data-act="pl-toggle"][data-k="pairs"]');
+    await runPlanner(); await new Promise(x => setTimeout(x, 150)); const after = first();
+    return { buttons, sheetHow, noAgain, noPairs, after, saved: S.settings.planPrefs?.how }; });
+  assert.ok(r.buttons.includes("pw-plan")); assert.ok(!r.buttons.includes("pw-autofill")); assert.equal(r.sheetHow, true); assert.equal(r.noAgain, true); assert.equal(r.noPairs, true);
+  assert.match(r.after, /lunch\|t-oil:10/, "the locked meal is untouched"); assert.match(r.after, /dinner\|t-chicken:200/, "dinner starts fresh from the habit"); assert.equal(r.saved, "habits");
   assert.deepEqual(app.errors, []);
 });

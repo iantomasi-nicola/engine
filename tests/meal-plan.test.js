@@ -129,3 +129,26 @@ test("a locked meal stays exactly as it is when the week is planned again or a s
   assert.equal(r.same, true, "planned again: the locked meal is untouched"); assert.equal(r.same2, true, "saved week: the locked meal is untouched"); assert.equal(r.unlocked, true);
   assert.deepEqual(app.errors, []);
 });
+
+test("Describe a meal: the foods at home go to the AI first (with what is left), expired ones do not, and the answer shows which rows come from the pantry", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(async () => { const t = todayISO(); S.shop = S.shop || {}; S.shop.pantry = { "t-rice": { g: 500 }, "t-chicken": { g: 300, exp: addDays(t, -2) } };
+    let prompt = ""; const old = Sync.sample; Sync.sample = { json: async p => { prompt = p; return { items: [{ id: "t-rice", grams: 120 }, { id: "t-chicken", grams: 150 }] }; } };
+    UI.sheet = { type: "describe", date: t, meal: "lunch", text: "rice and chicken" }; await runDescribe(); const html = document.querySelector(".sheet")?.innerText || ""; Sync.sample = old;
+    const line = (prompt.match(/Food at home right now[^\n]*/) || [""])[0]; return { line, rows: UI.sheet?.items?.length || 0, tag: /at home/i.test(html) }; });
+  assert.match(r.line, /t-rice \(500 g\)/); assert.doesNotMatch(r.line, /t-chicken/); assert.equal(r.rows, 2); assert.equal(r.tag, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("auto-plan never puts the same main protein at lunch and at dinner of one day (as a food or inside a recipe); the rule gives way only when nothing else fits", async () => {
+  const page = await start(); await plan(page);
+  const r = await page.evaluate(() => { const t = addDays(todayISO(), 1), prot = it => { const out = new Set(); const add = id => { const f = getFood(id) || BUILTIN[id]; if (f?.role === "P") out.add(id); };
+      if (it.kind === "food") add(it.ref); else { const rc = getRecipe(it.ref); for (const i of rc?.ingredients || []) add(i.food); } return out; };
+    let clashes = 0, days = 0; const seen = [];
+    for (let k = 0; k < 40; k++) { const ctx = plannerContext(); const day = planDay(t, ctx, { mode: "replace" }); days++;
+      const L = new Set((day.meals.lunch || []).flatMap(it => [...prot(it)])), D = (day.meals.dinner || []).flatMap(it => [...prot(it)]);
+      const hit = D.filter(x => L.has(x)); if (hit.length) { clashes++; seen.push(hit.join(",")); } }
+    return { clashes, days, seen: seen.slice(0, 3) }; });
+  assert.equal(r.clashes, 0, "same main protein twice in a day: " + r.seen.join(" | "));
+  assert.deepEqual(app.errors, []);
+});

@@ -3356,7 +3356,10 @@ function planMeal(meal, T, ctx, keep = []) {
     if (!ms.includes(kind)) continue;
     (pools[f.role] = pools[f.role] || []).push(f);
   }
-  const recPool = kind === "s" && T.kcal < 250 ? [] : ctx.recipes.filter(r => (r.meals || ["m"]).includes(kind));
+  /* the same main protein (tofu, chicken…) twice in one day, as a food or inside a recipe, only when nothing else fits */
+  const dupP = f => f.role === "P" && ctx.dayUsed?.has(f.id), recDup = r => ctx.dayUsed?.has("rec:" + r.id) || (r.ingredients || []).some(i => getFood(i.food)?.role === "P" && ctx.dayUsed?.has(i.food));
+  let recPool = kind === "s" && T.kcal < 250 ? [] : ctx.recipes.filter(r => (r.meals || ["m"]).includes(kind));
+  { const fresh = recPool.filter(r => !recDup(r)); if (fresh.length) recPool = fresh; }
   let best = null;
   for (let trial = 0; trial < 42; trial++) {
     const vars = []; const used = new Set(keep.map(k => k.ref));
@@ -3379,8 +3382,9 @@ function planMeal(meal, T, ctx, keep = []) {
     for (const slot of slots) {
       if (slot.roles.some(r => keepRoles.has(r))) continue;
       if (slot.opt && Math.random() > slot.opt) continue;
-      const cand = [];
-      for (const r of slot.roles) for (const f of pools[r] || []) if (!used.has(f.id)) cand.push({ x: f, s: scoreFood(ctx, f, meal.id) });
+      let cand = [];
+      for (const r of slot.roles) for (const f of pools[r] || []) if (!used.has(f.id) && !dupP(f)) cand.push({ x: f, s: scoreFood(ctx, f, meal.id) });
+      if (!cand.length) for (const r of slot.roles) for (const f of pools[r] || []) if (!used.has(f.id)) cand.push({ x: f, s: scoreFood(ctx, f, meal.id) });
       cand.sort((a, b) => b.s - a.s);
       const pk = weightedPick(cand); if (!pk) continue;
       const f = pk.x; used.add(f.id);
@@ -3410,6 +3414,8 @@ function planDay(date, ctx, { mode = "fill", meals = null, picker = null } = {})
   for (const [mid, items] of Object.entries(day.meals)) if (!act.find(m => m.id === mid) || items.length) addM(fixed, mealTotals(items));
   const rem = { p: Math.max(0, T.p - fixed.p), c: Math.max(0, T.c - fixed.c), f: Math.max(0, T.f - fixed.f), kcal: Math.max(0, T.kcal - fixed.kcal) };
   const newIds = new Set();
+  const noteUsed = it => { if (it.kind === "food") ctx.dayUsed.add(it.ref); else { ctx.dayUsed.add("rec:" + it.ref); const r = getRecipe(it.ref); if (r) for (const ing of r.ingredients || []) ctx.dayUsed.add(ing.food); } };
+  ctx.dayUsed = new Set(); for (const [, it] of dayItems(day)) noteUsed(it);
   const toPlan = meals ? act : act.filter(m => !(day.meals[m.id] || []).length);
   const shareSum = toPlan.reduce((a, m) => a + mealShare(m.id), 0) || 1;
   for (const m of toPlan) {
@@ -3431,7 +3437,7 @@ function planDay(date, ctx, { mode = "fill", meals = null, picker = null } = {})
     if (!items) items = planMeal(m, MT, ctx, keep);
     if (items) {
       day.meals[m.id] = keep.concat(items);
-      for (const it of items) newIds.add(it.id);
+      for (const it of items) { newIds.add(it.id); noteUsed(it); }
       for (const it of items) {
         ctx.recent[m.id + "|" + it.ref] = 1; ctx.recent["*|" + it.ref] = (ctx.recent["*|" + it.ref] || 0) + 1;
         if (it.kind === "food") { ctx.week[it.ref] = (ctx.week[it.ref] || 0) + 1; if (ctx.pUse) ctx.pUse[it.ref] = (ctx.pUse[it.ref] || 0) + it.qty; }
@@ -5421,22 +5427,24 @@ function plannerPreview(dates, mode) {
   return { filled, empty, replaced };
 }
 SHEETS.planner = sh => {
-  const dates = plannerDates(sh), days = dates.length, P = plannerPreview(dates, sh.mode), t = todayISO(), mode = plannerMode(sh, P);
+  const dates = plannerDates(sh), days = dates.length, P = plannerPreview(dates, sh.mode), t = todayISO(), how = sh.how === "habits" ? "habits" : "targets", mode = how === "habits" ? (sh.mode === "replace" ? "replace" : "fill") : plannerMode(sh, P);
   const range = days > 1 ? `${fmtDM(dates[0])} – ${fmtDM(dates[days - 1])}` : fmtDM(dates[0]);
   return {
     title: "Auto-plan",
     body: `<div class="field"><span class="flabel">What to plan</span><div class="seg fill pl-seg" role="group" aria-label="What to plan">${[["day", relDay(UI.date)], ["week", "7 days"], ["next", "Next week"], ["range", "Custom"]].map(([k, l]) => `<button data-act="pl-scope" data-k="${k}" aria-pressed="${sh.scope === k}">${esc(l)}</button>`).join("")}</div>
         ${sh.scope === "range" ? `<div class="grid2"><div class="field"><label for="pl-from">From</label><input id="pl-from" type="date" class="inp" min="${t}" value="${dates[0]}" data-chg="pl-from"></div><div class="field"><label for="pl-to">To</label><input id="pl-to" type="date" class="inp" min="${dates[0]}" value="${dates[days - 1]}" data-chg="pl-to"></div></div>` : ""}
         <span class="faint" style="font-size:12.5px">${days} day${days === 1 ? "" : "s"} · ${range}${sh.scope === "range" && sh.to && daysBetween(dates[0], sh.to) + 1 > PL_MAX ? ` (at most ${PL_MAX} at a time)` : ""}</span></div>
-      <div class="field"><span class="flabel">Existing meals</span><div class="seg">${[["fill", "Fill the gaps"], ["again", "New plan"], ["replace", "Start fresh"]].map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}</div>
+      <div class="field"><span class="flabel">Plan from</span><div class="seg" role="group" aria-label="Plan from">${[["habits", "My habits"], ["targets", "My targets"]].map(([k, l]) => `<button data-act="pl-how" data-k="${k}" aria-pressed="${how === k}">${l}</button>`).join("")}</div>
+        <span class="faint" style="font-size:12.5px">${how === "habits" ? "Each meal gets what you usually have there: the same weekday and meal in the last weeks, else your commonest combination, with the portions you used. No calculation." : "New meals are built and the portions calculated to hit each day's targets, with your habits as a guide."}</span></div>
+      <div class="field"><span class="flabel">Existing meals</span><div class="seg">${(how === "habits" ? [["fill", "Fill the gaps"], ["replace", "Start fresh"]] : [["fill", "Fill the gaps"], ["again", "New plan"], ["replace", "Start fresh"]]).map(([k, l]) => `<button data-act="pl-mode" data-k="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}</div>
         <span class="faint" style="font-size:12.5px">${mode === "again" ? `${P.replaced ? `<b>${P.replaced}</b> planned item${P.replaced === 1 ? "" : "s"} will be replaced by a plan that avoids what each meal has now.` : "Nothing planned to replace."} ${!sh.mode || sh.mode === "fill" ? "Every meal already has food, so this builds a new plan. " : ""}Eaten food and treats stay.` : mode === "replace" ? `${P.replaced ? `<b>${P.replaced}</b> planned item${P.replaced === 1 ? "" : "s"} will be replaced.` : "Nothing planned to replace."} Anything already marked as eaten stays.` : `${P.filled ? `<b>${P.filled}</b> meal${P.filled === 1 ? "" : "s"} already ${P.filled === 1 ? "has" : "have"} food and stay${P.filled === 1 ? "s" : ""} exactly as ${P.filled === 1 ? "it is" : "they are"}; ` : ""}<b>${P.empty}</b> empty meal${P.empty === 1 ? "" : "s"} get${P.empty === 1 ? "s" : ""} planned to cover what's left.`}</span></div>
-      <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Food at home goes into the plan first, the closest to its use-by date first. Expired food is left out.</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
+      ${how === "habits" ? "" : `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Use up the pantry first</span><span class="s">Food at home goes into the plan first, the closest to its use-by date first. Expired food is left out.</span></span><button class="switch" role="switch" aria-checked="${sh.pantry}" data-act="pl-toggle" data-k="pantry" aria-label="Use pantry first"></button></div>
       <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Cook once, eat twice</span><span class="s">Lunch and dinner repeat over pairs of days: lunch day 1 = lunch day 2, dinner day 1 = dinner day 2. Portions still follow each day's target.</span></span><button class="switch" role="switch" aria-checked="${!!sh.pairs}" data-act="pl-toggle" data-k="pairs" aria-label="Cook once, eat twice"></button></div>
-      ${AIF("plan") ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dishes chosen by the AI</span><span class="s">The AI builds real dishes from your habits and foods, in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.useAI}" data-act="pl-toggle" data-k="useAI" aria-label="Dishes chosen by the AI"></button></div>` : ""}
-      <div class="note">Targets come from each day's training type. Portions are rounded to ${S.settings.step} g and whole pieces, so days land close to target rather than to the gram.</div>
+      ${AIF("plan") ? `<div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Dishes chosen by the AI</span><span class="s">The AI builds real dishes from your habits and foods, in your cuisines (${esc(S.settings.cuisines.join(", ") || "any")}); portions are still calculated here to hit your macros. Slower.</span></span><button class="switch" role="switch" aria-checked="${sh.useAI}" data-act="pl-toggle" data-k="useAI" aria-label="Dishes chosen by the AI"></button></div>` : ""}`}
+      ${how === "habits" ? "" : `<div class="note">Targets come from each day's training type. Portions are rounded to ${S.settings.step} g and whole pieces, so days land close to target rather than to the gram.</div>`}
       ${sh.busy ? `<div class="result"><span class="spinner"></span><span>${esc(sh.busy)}</span></div>` : ""}
       ${sh.err ? `<div class="note" style="color:var(--bad)">${esc(sh.err)}</div>` : ""}`,
-    foot: `<button class="btn primary" data-act="pl-run" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Plan ${days === 1 ? "the day" : days === 2 ? "2 days" : days + " days"}</button>`
+    foot: `<button class="btn primary" data-act="pl-run" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}${how === "habits" ? "Fill from my habits" : `Plan ${days === 1 ? "the day" : days === 2 ? "2 days" : days + " days"}`}</button>`
   };
 };
 
@@ -6287,37 +6295,11 @@ SHEETS.describe = sh => ({
   body: `${mealChips(sh.meal)}
     <div class="field"><label for="ds-text">What did you eat or plan to eat?</label><textarea id="ds-text" class="inp" data-in="ds" placeholder="e.g. a plate of carbonara, a side salad with oil and a glass of red wine">${esc(sh.text || "")}</textarea></div>
     ${sh.busy ? `<div class="result"><span class="spinner"></span><span>AI is working out the portions…</span></div>` : ""}
-    ${sh.items ? `<div class="card">${sh.items.map((it, i) => { const m = it.food ? addM(ZERO(), it.food.per, it.g / 100) : ZERO(); return `<div class="lrow" style="grid-template-columns:auto minmax(0,1fr) 92px"><button class="chk" data-act="ds-toggle" data-i="${i}" aria-pressed="${it.on}" aria-label="Include ${esc(it.name)}" style="${it.on ? "" : "opacity:.5"}"><span style="${it.on ? "background:var(--ink);border-color:var(--ink)" : ""}">${it.on ? ic("check") : ""}</span></button><span style="min-width:0"><span class="t">${esc(it.name)} ${it.isNew ? '<span class="tag ai">New</span>' : ""}</span><span class="s">${fmtN(m.kcal)} kcal · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.f)}F</span></span><div class="unit-inp"><input id="ds-g-${i}" class="inp" inputmode="decimal" value="${it.g}" data-in="ds-g" data-i="${i}" style="min-height:38px" aria-label="Amount"><span>${it.food?.unit || "g"}</span></div></div>`; }).join("")}</div>
+    ${sh.items ? `<div class="card">${sh.items.map((it, i) => { const m = it.food ? addM(ZERO(), it.food.per, it.g / 100) : ZERO(); return `<div class="lrow" style="grid-template-columns:auto minmax(0,1fr) 92px"><button class="chk" data-act="ds-toggle" data-i="${i}" aria-pressed="${it.on}" aria-label="Include ${esc(it.name)}" style="${it.on ? "" : "opacity:.5"}"><span style="${it.on ? "background:var(--ink);border-color:var(--ink)" : ""}">${it.on ? ic("check") : ""}</span></button><span style="min-width:0"><span class="t">${esc(it.name)} ${it.isNew ? '<span class="tag ai">New</span>' : (S.shop?.pantry?.[it.food?.id]?.g || 0) > 0 ? '<span class="tag">At home</span>' : ""}</span><span class="s">${fmtN(m.kcal)} kcal · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.f)}F</span></span><div class="unit-inp"><input id="ds-g-${i}" class="inp" inputmode="decimal" value="${it.g}" data-in="ds-g" data-i="${i}" style="min-height:38px" aria-label="Amount"><span>${it.food?.unit || "g"}</span></div></div>`; }).join("")}</div>
     <div class="faint" style="font-size:12.5px">Amounts are the AI's estimates. New foods are saved to your library with estimated values you can edit.</div>` : ""}`,
   foot: sh.items ? `<button class="btn soft" data-act="ds-run">Ask again</button><button class="btn primary" data-act="ds-add">Add ${sh.items.filter(x => x.on).length} items</button>`
     : `<button class="btn primary" data-act="ds-run" ${sh.busy ? "disabled" : ""}>${ic("spark", "sm")}Work it out</button>`
 });
-async function runDescribe() {
-  const sh = UI.sheet; const text = (sh.text || "").trim(); if (!text) { toast("Describe the meal first."); return; }
-  sh.busy = true; sh.items = null; renderSheet();
-  const foods = allFoods().map(f => `${f.id} | ${f.name}${f.brand ? " (" + f.brand + ")" : ""} | ${r0(f.per.kcal)}`).join("\n");
-  const prompt = `Turn this meal description into food items with amounts in grams (ml for drinks).
-Description: """${text.slice(0, 1500)}"""
-Known foods (id | name | kcal per 100):
-${foods}
-Rules: break dishes into their main ingredients when a known food fits (e.g. carbonara = pasta, eggs, guanciale, pecorino). Use a known id when it is a reasonable match. Estimate realistic Italian home portions unless the description says otherwise. For an ingredient with no match, set "id" to null, give a short English "name" and typical nutrition per 100 g.
-Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "grams": number, "per100": {"kcal": number, "protein": number, "carbs": number, "fat": number} or null}]}`;
-  try {
-    const j = await Sync.sample.json(prompt);
-    if (UI.sheet !== sh) return;
-    sh.items = (j?.items || []).filter(x => x && x.grams > 0).slice(0, 15).map(x => {
-      const f = x.id && getFood(x.id);
-      if (f) return { on: true, name: f.name, g: r0(x.grams), food: f };
-      const p = x.per100 || {};
-      const per = { kcal: r0(num(p.kcal)), p: r1(num(p.protein)), c: r1(num(p.carbs)), f: r1(num(p.fat)), fib: 0 };
-      const { role, meals } = guessRoleMeals(per, "pantry", x.name || "");
-      return { on: true, name: x.name || "Food", g: r0(x.grams), isNew: true, food: { id: "ai-" + uid(), name: x.name || "Food", brand: "", unit: "g", per, servings: [], pack: 0, cat: "other", role, meals, source: "ai", orig: clone(per) } };
-    });
-    if (!sh.items.length) { sh.items = null; toast("AI didn't find any foods in that description."); }
-  } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
-  sh.busy = false; if (UI.sheet === sh) renderSheet();
-}
-
 async function aiPicks(dates, meals, twinOf = {}) {
   const foods = allFoods().filter(f => f.per && f.role && dietOK(f) && !f.noPlan);
   const recs = allRecipes().filter(r => recipeOK(r) && !r.noPlan);
@@ -6335,7 +6317,7 @@ ${habitLines(meals)}
 ${pairs ? "They cook once and eat twice: every lunch and dinner you choose is eaten again the next day, so pick dishes that keep well (no fried or crispy things, no raw fish), and make lunch and dinner of the same day clearly different.\n" : ""}
 Cuisines they like: ${S.settings.cuisines.join(", ") || "any"}. Diet restrictions: ${diet}. Never use: ${S.settings.avoid.join(", ") || "nothing"}.
 Food at home, most urgent first (plan the urgent ones in the first days, in amounts that use them up): ${pantry.join("; ") || "none"}.
-Vary the main protein from day to day and avoid repeating yesterday's dish. Make each meal a coherent, real dish with a short name (e.g. "Pasta with tuna and cherry tomatoes").
+Vary the main protein from day to day and avoid repeating yesterday's dish; never the same main protein (e.g. tofu, chicken) at lunch and at dinner of the same day, not even inside a recipe. Make each meal a coherent, real dish with a short name (e.g. "Pasta with tuna and cherry tomatoes").
 Every lunch and dinner MUST have one main protein (role P), one carb (role C) and one vegetable (role V), optionally olive oil or cheese (3-5 ids), or one recipe plus a vegetable side. Breakfast: a carb (C) plus a protein or dairy (P or D), optionally fruit (2-4 ids). Snacks: 1-2 ids, a protein or dairy when the day is high in protein. Each day must be able to reach its kcal target with normal portions: no meal made only of fat or only of vegetables.
 Days and meals:
 ${dayLines}
@@ -6363,7 +6345,9 @@ function quickPlan(date) {
 async function runPlanner() {
   const sh = UI.sheet;
   rememberPlannerPrefs(sh);
-  const dates = plannerDates(sh), pre = plannerPreview(dates, sh.mode), meals = activeMeals(), mode = plannerMode(sh, pre);
+  const dates = plannerDates(sh), pre = plannerPreview(dates, sh.mode), meals = activeMeals();
+  if (sh.how === "habits") { closeSheet(); autoCompleteDays(dates, { replace: sh.mode === "replace" }); return; }
+  const mode = plannerMode(sh, pre);
   // with pairs, the second day of each pair eats the first day's lunch and dinner
   const twinOf = {}; if (sh.pairs) for (const [a, b] of pairDates(dates)) if (b) twinOf[b] = a;
   let picks = null;
@@ -6499,7 +6483,7 @@ ACT.undo = () => { const u = toast.undo; $("#toast").innerHTML = ""; toast.undo 
 
 /* plan */
 ACT["open-training"] = el => openSheet("training", el.dataset.sched ? { sched: el.dataset.sched, live: true } : { date: el.dataset.date || UI.date, live: true });
-const plPrefs = () => ({ pairs: !!S.settings.planPrefs?.pairs, useAI: !!S.settings.planPrefs?.ai });
+const plPrefs = () => ({ pairs: !!S.settings.planPrefs?.pairs, useAI: !!S.settings.planPrefs?.ai, how: S.settings.planPrefs?.how === "habits" ? "habits" : "targets" });
 ACT["open-planner"] = () => openSheet("planner", { scope: "day", mode: "fill", pantry: true, ...plPrefs() });
 ACT["plan-pantry"] = () => { UI.tab = "plan"; UI.date = todayISO(); scheduleRender(); openSheet("planner", { scope: "week", mode: "fill", pantry: true, ...plPrefs() }); };
 ACT["quick-plan"] = () => quickPlan(UI.date);
@@ -6527,7 +6511,6 @@ ACT["day-menu"] = () => {
   const items = [
     { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a treat", icon: "treat", sub: "Pizza night, dinner out… set aside the calories, the plan makes room", run: () => openCheat({ date }) },
-    { label: "Fill empty meals from my habits", icon: "spark", sub: "What you usually have: same weekday last weeks, else your commonest", run: () => autoCompleteDays([date]) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
     ...(has ? [{ label: "Copy this day", icon: "copy", sub: "To the clipboard: paste it on any day or week", run: () => copyToClip("day", date) }] : []),
     ...(UI.mclip ? [{ label: `Paste ${UI.mclip.label} here`, icon: "plus", run: () => pasteClip(date) }] : []),
@@ -6616,7 +6599,7 @@ function weekPlanView() {
   const grid = tall
     ? `<div class="pw tall" style="--m:${M.length}"><div class="pw-dr pw-th"><span></span>${M.map(m => `<span>${esc(m.name)}</span>`).join("")}</div>${days.map(d => `<div class="pw-dr">${dayHead(d)}${M.map(m => cell(d, m)).join("")}</div>`).join("")}</div>`
     : `<div class="pw wide" style="--n:${days.length}"><div class="pw-corner"></div>${days.map(dayHead).join("")}${M.map(m => `<div class="pw-row" data-meal="${m.id}"><div class="pw-m">${esc(m.name)}</div>${days.map(d => cell(d, m)).join("")}</div>`).join("")}</div>`;
-  h += `<div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn primary sm" data-act="pw-autofill">${ic("spark", "sm")}Fill from my habits</button><button class="btn soft sm" data-act="pw-plan">${ic("plate", "sm")}Auto-plan week</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button><button class="btn soft sm" data-act="wt-open">${ic("calendar", "sm")}Saved weeks</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>`;
+  h += `<div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn soft sm" data-act="pw-plan">${ic("plate", "sm")}Auto-plan week</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button><button class="btn soft sm" data-act="wt-open">${ic("calendar", "sm")}Saved weeks</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>`;
   return h + `<div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>The ⋯ button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
@@ -6684,16 +6667,15 @@ function habitItems(date, mid) {
   const cnt = {}; for (let k = 1; k <= 21; k++) { const its = usable(addDays(date, -k)); if (!its.length) continue; const key = its.map(x => x.kind + ":" + x.ref).sort().join("|"); (cnt[key] = cnt[key] || { n: 0, its }).n++; }
   const best = Object.values(cnt).sort((a, b) => b.n - a.n)[0]; return best ? best.its.map(cloneItem) : null;
 }
-function autoCompleteDays(dates) {
+function autoCompleteDays(dates, { replace = false } = {}) {
   const t = todayISO(), M = activeMeals(), days = dates.filter(d => d >= t), snap = snapshotDays(days), plan = [];
-  for (const d of days) for (const m of M) if (!mealItemsOf(d, m.id).length) { const its = habitItems(d, m.id); if (its) plan.push([d, m.id, its]); }
-  if (!plan.length) { toast("Nothing to fill: the empty meals have no history yet."); return 0; }
-  for (const [d, m, its] of plan) mutateDay(d, day => { day.meals[m] = its; });
-  toast(`Filled ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, () => restoreDays(snap)); return plan.length;
+  for (const d of days) for (const m of M) { if (getDay(d).lock?.[m.id] || (!replace && mealItemsOf(d, m.id).length)) continue; const its = habitItems(d, m.id); if (its) plan.push([d, m.id, its]); }
+  if (!plan.length) { toast("Nothing to fill: those meals have no history yet."); return 0; }
+  for (const [d, m, its] of plan) mutateDay(d, day => { day.meals[m] = [...(replace ? (day.meals[m] || []).filter(it => it.eaten || it.cheat) : []), ...its]; if (replace && day.dish) delete day.dish[m]; });
+  toast(`${replace ? "Replaced" : "Filled"} ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, () => restoreDays(snap)); return plan.length;
 }
-ACT["pw-autofill"] = () => { const ws = weekStartOf(UI.date); autoCompleteDays([...Array(7)].map((_, i) => addDays(ws, i))); };
 ACT["pw-plan"] = () => { const t = todayISO(), ws = weekStartOf(UI.date), we = addDays(ws, 6); if (we < t) { toast("This week is already over: pick this week or a later one."); return; }
-  const P = plannerPreview([...Array(7)].map((_, i) => addDays(ws, i)).filter(d => d >= t), "fill"); openSheet("planner", { scope: "range", from: ws > t ? ws : t, to: we, mode: P.empty ? "fill" : "again", pantry: true, ...plPrefs() }); };
+  const P = plannerPreview([...Array(7)].map((_, i) => addDays(ws, i)).filter(d => d >= t), "fill"); openSheet("planner", { scope: "range", from: ws > t ? ws : t, to: we, mode: P.empty ? "fill" : plPrefs().how === "habits" ? "replace" : "again", pantry: true, ...plPrefs() }); };
 ACT["pw-clear-week"] = () => { const ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), n = days.reduce((a, d) => a + dayItems(getDay(d)).length, 0);
   if (!n) { toast("The week is already empty."); return; }
   openSheet("confirm", { title: "Clear the whole week?", text: `Removes the ${n} planned food${n > 1 ? "s" : ""} of ${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}, eaten ones included. You can undo it right after.`, yes: "Clear week", danger: true,
@@ -7004,6 +6986,7 @@ ACT["tr-override"] = () => { const sh = S_(); const T = targetsFor(sh.date); mut
 
 /* planner sheet */
 ACT["pl-scope"] = el => { const sh = S_(); sh.scope = el.dataset.k; if (sh.scope === "range") { sh.from = sh.from || UI.date; sh.to = sh.to || addDays(sh.from, 6); } renderSheet(); };
+ACT["pl-how"] = el => { const sh = S_(); sh.how = el.dataset.k; if (sh.how === "habits" && sh.mode === "again") sh.mode = "fill"; renderSheet(); };
 ACT["pl-mode"] = el => { S_().mode = el.dataset.k; renderSheet(); };
 ACT["pl-toggle"] = el => { const sh = S_(); sh[el.dataset.k] = !sh[el.dataset.k]; renderSheet(); };
 ACT["pl-run"] = () => runPlanner();
@@ -10839,7 +10822,7 @@ function habitLines(meals) {
   }
   return lines.join("\n") || "no history yet";
 }
-function rememberPlannerPrefs(sh) { const p = { pairs: !!sh.pairs, ai: !!sh.useAI }; if (JSON.stringify(S.settings.planPrefs || {}) !== JSON.stringify(p)) { S.settings.planPrefs = p; saveSettings(); } }
+function rememberPlannerPrefs(sh) { const p = { pairs: !!sh.pairs, ai: !!sh.useAI, how: sh.how === "habits" ? "habits" : "targets" }; if (JSON.stringify(S.settings.planPrefs || {}) !== JSON.stringify(p)) { S.settings.planPrefs = p; saveSettings(); } }
 
 /* ================= Pro nutrients: fibre, sugars, fats, salt and the main micronutrients ================= */
 const proOn = () => !!S.settings?.pro?.on;
@@ -13499,14 +13482,16 @@ function snapPreferUsual(items, U) {
     if (y > 1 && snapCooked(from) && !snapCooked(u.f.name)) g = it.g / y; else if (y > 1 && !snapCooked(from) && snapCooked(u.f.name) && snapDry(from)) g = it.g * y;
     return { ...it, name: u.f.name, food: u.f, isNew: false, g: r0(g), usual: true }; });
 }
-runDescribe = async function () {
+async function runDescribe() {
   const sh = UI.sheet, text = (sh.text || "").trim(); if (!text && !sh.photo) { toast("Take a photo or describe the meal."); return; }
   sh.busy = true; sh.items = null; renderSheet();
+  const tdy = todayISO(), home = Object.entries(S.shop.pantry || {}).filter(([id, p]) => p.g > 0 && getFood(id) && !(p.exp && p.exp < tdy)).map(([id, p]) => `${id} (${r0(p.g)} g)`);
   const U = usualFoods(), foods = U.slice(0, 260).map(({ f, n }) => `${n ? "* " : ""}${f.id} | ${f.name}${f.brand ? " (" + f.brand + ")" : ""} | ${r0(f.per.kcal)}`).join("\n");
   const prompt = `Turn this meal into food items with amounts in grams (ml for drinks).${sh.photo ? " The photo shows the plate: judge the portions from it." : ""}${text ? `\nDescription: """${text.slice(0, 1500)}"""` : ""}
 Their foods (id | name | kcal per 100). Lines starting with * are foods they actually eat, most used first:
 ${foods}
-Rules: break dishes into their main ingredients (carbonara = pasta, eggs, guanciale, pecorino). When an ingredient is one of the * foods, ALWAYS use that id, even if another food also fits (e.g. "rice" = their usual rice). If that food is dry or raw (rice, pasta, legumes) and the dish is cooked, give the dry weight (cooked rice ≈ 2.7× dry, pasta ≈ 2.2×). Otherwise use a reasonable known id. Realistic Italian home portions unless the photo or text says otherwise; count oil and sauces. For an ingredient with no match, set "id" to null, give a short "name" and typical nutrition per 100 g.
+Food at home right now (id and grams left): ${home.join("; ") || "none"}.
+Rules: when an ingredient matches a food at home, use ITS id and keep the amount within what is left; break dishes into their main ingredients (carbonara = pasta, eggs, guanciale, pecorino). When an ingredient is one of the * foods, ALWAYS use that id, even if another food also fits (e.g. "rice" = their usual rice). If that food is dry or raw (rice, pasta, legumes) and the dish is cooked, give the dry weight (cooked rice ≈ 2.7× dry, pasta ≈ 2.2×). Otherwise use a reasonable known id. Realistic Italian home portions unless the photo or text says otherwise; count oil and sauces. For an ingredient with no match, set "id" to null, give a short "name" and typical nutrition per 100 g.
 Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "grams": number, "per100": {"kcal": number, "protein": number, "carbs": number, "fat": number} or null}]}`;
   try {
     const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : {}); if (UI.sheet !== sh) return;
@@ -13518,7 +13503,7 @@ Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "gr
     if (!sh.items.length) { sh.items = null; toast("No foods came back: say a bit more, or try another photo."); }
   } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
   sh.busy = false; if (UI.sheet === sh) renderSheet();
-};
+}
 const _describeSheet = SHEETS.describe;
 SHEETS.describe = sh => { const o = _describeSheet(sh), img = !!Sync.sampleImages;
   o.title = "Photo or description";
