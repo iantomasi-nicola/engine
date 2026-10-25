@@ -950,7 +950,7 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
 .pw-cell{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:64px;padding:6px;border-radius:14px;background:var(--surface-2)}.pw-cell.now{background:color-mix(in srgb,var(--accent) 8%,var(--surface-2))}.pw-cell.over{outline:2px dashed var(--accent);outline-offset:-2px}
 .pw-it{display:flex;align-items:flex-start;gap:2px;background:var(--surface);border-radius:10px;padding:5px 4px 5px 8px;min-width:0;cursor:grab}.pw-it.eaten{opacity:.65}.pw-it.eaten .pw-n span{text-decoration:line-through}
 .pw-n{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1;min-width:0;background:none;padding:0;color:var(--ink)}.pw-n span{font-size:12.5px;font-weight:600;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}.pw-n small{font-size:11px;color:var(--muted)}
-.pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
+.pw-o{background:none;padding:2px;color:var(--muted);border-radius:8px;flex:none}.pw-ca{display:flex;align-items:center;gap:2px}.pw-mh{margin-left:auto;display:inline-flex;padding:2px 4px;color:var(--muted);cursor:grab;border-radius:8px;font-size:15px;line-height:1;letter-spacing:-2px}.pw-day.over{outline:2px dashed var(--accent);outline-offset:-2px}.pw-add{align-self:flex-start;background:none;color:var(--muted);padding:2px 6px;border-radius:8px}
 .st-pill{display:inline-flex;align-items:center;gap:2px;flex:none;max-width:46%;height:30px;padding:0 6px 0 12px;border-radius:15px;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap}.st-pill .ic{width:18px;height:18px;flex:none}.st-add{gap:8px;flex-wrap:nowrap}html body .fd-st .chip[aria-pressed=true]{background:var(--ink)!important;color:var(--surface)!important;border-color:transparent!important;font-weight:650}.fd-st .chip .ic{width:16px;height:16px;margin-right:3px}.fd-st-s{font-size:12.5px;color:var(--muted)}.fd-st-s b{color:var(--ink)}.st-edit{margin-top:4px}.st-edit>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}.shop-other{margin-top:10px}.shop-other>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 4px}
 .so-r{border-top:1px solid var(--line)}.so-a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px 8px 8px}.so-a .faint{font-size:12.5px}.st-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:6px 8px}
 .hm-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin:6px 0 0 16px}
@@ -4503,7 +4503,7 @@ function foodSearch(q, seg, flt) {
   if (seg === "all" || seg === "recipes" || seg === "fav") recs = allRecipes().filter(r => seg === "fav" ? r.fav : true);
   const out = [];
   const nq = norm(q).trim();
-  for (const f of foods) { const s = q ? matchScore(foodKeys(f), q) + (nq && (norm(f.name).startsWith(nq) || norm(f.alias || ALIAS_IT[f.id] || "").startsWith(nq)) ? 1.5 : 0) : 1; if (s) out.push({ t: "food", x: f, s: s + (f.fav ? 0.5 : 0) + (f.source !== "builtin" ? 0.3 : 0) }); }
+  for (const f of foods) { const s = q ? matchScore(foodKeys(f), q) + (nq && (norm(f.name).startsWith(nq) || norm(f.alias || ALIAS_IT[f.id] || "").startsWith(nq)) ? 1.5 : 0) : 1; if (s) out.push({ t: "food", x: f, s: s + (f.fav ? 0.5 : 0) + (f.source !== "builtin" ? 0.3 : 0) + (q && (S.shop?.pantry?.[f.id]?.g || 0) > 0 ? 0.8 : 0) }); }   // what is at home comes first when you type
   for (const r of recs) { const s = q ? matchScore(r.name, q) : 1; if (s) out.push({ t: "recipe", x: r, s: s + 0.4 + (r.fav ? 0.5 : 0) }); }
   out.sort((a, b) => b.s - a.s || a.x.name.localeCompare(b.x.name));
   if (foodFilterOn(flt)) return out.filter(o => foodPasses(o, flt));
@@ -5195,7 +5195,7 @@ let addRowsFor = sh => {
   const q = (sh.q || "").trim(), seg = sh.seg || "recent"; sh._multi = null; sh._typedQty = false;
   const row = (kind, x, qty, sub) => `<div class="lrow add-r"><button data-act="pick" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" style="text-align:left;min-width:0"><span class="t">${kind === "recipe" ? ic("recipe", "sm") + " " : ""}${x.fav ? "★ " : ""}${esc(x.name)} ${kind === "food" ? sourceTag(x) : ""}</span><span class="s">${sub}</span></button>
     <span class="end"><button class="plus-btn" data-act="quick-add" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" aria-label="Add ${esc(x.name)} now">${ic("plus")}</button></span></div>`;
-  const foodRow = (f, qty) => { qty = qty || defaultQty(f); const m = addM(ZERO(), f.per, qty / 100); return row("food", f, qty, `${bdHTML(f)}${servingMatch(f, qty) || fmtQ(qty) + " " + (f.unit || "g")} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
+  const foodRow = (f, qty) => { qty = qty || defaultQty(f); const m = addM(ZERO(), f.per, qty / 100); return row("food", f, qty, `${bdHTML(f)}${(S.shop?.pantry?.[f.id]?.g || 0) > 0 ? "at home · " : ""}${servingMatch(f, qty) || fmtQ(qty) + " " + (f.unit || "g")} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
   const recRow = (r, qty) => { qty = qty || 1; const m = addM(ZERO(), recipePerServing(r), qty); return row("recipe", r, qty, `${fmtQ(qty)} serving${qty === 1 ? "" : "s"} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
   if (q) {
     const multi = parseMulti(q);
@@ -6505,6 +6505,8 @@ ACT["day-menu"] = () => {
     { label: "Plan this day automatically", icon: "spark", run: () => openSheet("planner", { scope: "day", mode: has ? "fill" : "replace", pantry: true, ...plPrefs() }) },
     { label: "Plan a treat", icon: "treat", sub: "Pizza night, dinner out… set aside the calories, the plan makes room", run: () => openCheat({ date }) },
     { label: "Copy this day to…", icon: "copy", run: () => openSheet("copy", { scope: "day", targets: [], mode: "add" }) },
+    ...(has ? [{ label: "Copy this day", icon: "copy", sub: "To the clipboard: paste it on any day or week", run: () => copyToClip("day", date) }] : []),
+    ...(UI.mclip ? [{ label: `Paste ${UI.mclip.label} here`, icon: "plus", run: () => pasteClip(date) }] : []),
     ...(activeMeals().some(m => m.id === "lunch") && activeMeals().some(m => m.id === "dinner") && has ? [{ label: "Swap lunch and dinner", icon: "swap", sub: "Everything in them trades places", run: () => swapMeals(date, "lunch", "dinner") }] : []),
     { label: "Share the day as a picture", icon: "image", run: () => ACT["plan-share"]({ dataset: { date } }) },
     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
@@ -6517,6 +6519,7 @@ ACT["day-menu"] = () => {
 ACT["meal-menu"] = el => {
   const mid = el.dataset.meal, items = getDay(UI.date).meals[mid] || [];
   const list = [
+    ...(UI.mclip ? [{ label: `Paste ${UI.mclip.label} here`, icon: "plus", run: () => pasteClip(UI.date, mid) }] : []),
     { label: "Plan a treat", icon: "treat", sub: "Set aside about how many calories; decide what later. The plan makes room", run: () => openCheat({ date: UI.date, meal: mid }) },
     { label: items.length ? "Fill the rest of this meal" : "Plan this meal", icon: "spark", sub: "Uses this meal's share of the day's targets", run: () => {
       const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
@@ -6527,6 +6530,7 @@ ACT["meal-menu"] = el => {
         const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
         const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } },
       { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
+      { label: `Copy ${mealName(mid).toLowerCase()}`, icon: "copy", sub: "To the clipboard: paste it on any meal", run: () => copyToClip("meal", UI.date, mid) },
       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
       { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }) },
       { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => mutateDay(UI.date, d => { delete d.meals[mid]; if (d.dish) delete d.dish[mid]; }, { undo: `${mealName(mid)} cleared` }) }] : [])
@@ -6574,11 +6578,11 @@ function weekPlanView() {
   let h = `<header class="top plan-top">${fuelNav()}<div class="top-row"><div style="min-width:0"><div class="top-title">${ws <= t && t < addDays(ws, 7) ? "This week" : `Week of ${fmtDM(ws)}`}</div><div class="top-sub">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</div></div>
     <div class="row top-acts"><button class="icon-btn" data-act="pw-nav" data-d="-1" aria-label="Previous week">${ic("chevL")}</button>${ws <= t && t < addDays(ws, 7) ? "" : `<button class="btn soft sm" data-act="pw-nav" data-d="0">Today</button>`}<button class="icon-btn" data-act="pw-nav" data-d="1" aria-label="Next week">${ic("chevR")}</button><button class="icon-btn" data-act="plan-view" data-k="day" aria-label="Day view" title="Day view">${ic("list")}</button>${shopBtn()}</div></div></header>`;
   const head = days.map(d => { const day = getDay(d), tot = dayTotals(day), T = targetsFor(d).kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0;
-    return `<button class="pw-day${d === t ? " now" : ""}" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b><span class="pw-kcal">${fmtN(tot.kcal)}<small>/${fmtN(T)}</small></span><i class="pw-bar"><i style="width:${pct}%"></i></i></button>`; }).join("");
+    return `<button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b><span class="pw-kcal">${fmtN(tot.kcal)}<small>/${fmtN(T)}</small></span><i class="pw-bar"><i style="width:${pct}%"></i></i></button>`; }).join("");
   const rows = M.map(m => `<div class="pw-row" data-meal="${m.id}"><div class="pw-m">${esc(m.name)}</div>${days.map(d => { const items = getDay(d).meals[m.id] || [];
     return `<div class="pw-cell${d === t ? " now" : ""}" data-date="${d}" data-meal="${m.id}">${items.map(it => { const mm = itemMacros(it);
-      return `<div class="pw-it${it.eaten ? " eaten" : ""}" draggable="${it.eaten ? "false" : "true"}" data-item="${it.id}" data-date="${d}" data-meal="${m.id}"><button class="pw-n" data-act="pw-edit" data-date="${d}" data-meal="${m.id}" data-id="${it.id}"><span>${esc(itemName(it))}</span><small>${itemBrand(it) ? `<span class="bd">${esc(itemBrand(it))}</span> · ` : ""}${esc(itemQty(it))} · ${fmtN(mm.kcal)}</small></button><button class="pw-o" data-act="pw-item" data-date="${d}" data-meal="${m.id}" data-id="${it.id}" aria-label="Options for ${esc(itemName(it))}">${ic("more", "sm")}</button></div>`; }).join("")}<button class="pw-add" data-act="pw-add" data-date="${d}" data-meal="${m.id}" aria-label="Add to ${esc(m.name)} on ${DOW[dow(d)]}">${ic("plus", "sm")}</button></div>`; }).join("")}</div>`).join("");
-  return h + `<div class="pw" style="--n:${days.length}"><div class="pw-corner"></div>${head}${rows}</div><div class="faint" style="font-size:12.5px;padding:8px 2px">Drag an item to another day (hold Alt to copy), or use its menu.</div>`;
+      return `<div class="pw-it${it.eaten ? " eaten" : ""}" draggable="${it.eaten ? "false" : "true"}" data-item="${it.id}" data-date="${d}" data-meal="${m.id}"><button class="pw-n" data-act="pw-edit" data-date="${d}" data-meal="${m.id}" data-id="${it.id}"><span>${esc(itemName(it))}</span><small>${itemBrand(it) ? `<span class="bd">${esc(itemBrand(it))}</span> · ` : ""}${esc(itemQty(it))} · ${fmtN(mm.kcal)}</small></button><button class="pw-o" data-act="pw-item" data-date="${d}" data-meal="${m.id}" data-id="${it.id}" aria-label="Options for ${esc(itemName(it))}">${ic("more", "sm")}</button></div>`; }).join("")}<div class="pw-ca"><button class="pw-add" data-act="pw-add" data-date="${d}" data-meal="${m.id}" aria-label="Add to ${esc(m.name)} on ${DOW[dow(d)]}">${ic("plus", "sm")}</button><button class="pw-add" data-act="pw-cm" data-date="${d}" data-meal="${m.id}" aria-label="${esc(m.name)} on ${DOW[dow(d)]}: copy, paste, recipe, clear">${ic("copy", "sm")}</button>${items.length ? `<span class="pw-mh" draggable="true" data-date="${d}" data-meal="${m.id}" title="Drag the whole meal (Alt = copy)" aria-hidden="true">⋮⋮</span>` : ""}</div></div>`; }).join("")}</div>`).join("");
+  return h + `<div class="pw" style="--n:${days.length}"><div class="pw-corner"></div>${head}${rows}</div><div class="faint" style="font-size:12.5px;padding:8px 2px">Drag an item, a whole meal (the grip in its cell) or a whole day (its header) to another place; hold Alt to copy. The copy button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
 ACT["pw-nav"] = el => { const d = +el.dataset.d; UI.date = d === 0 ? todayISO() : addDays(UI.date, 7 * d); scheduleRender(); };
@@ -6609,6 +6613,45 @@ ACT["pw-del"] = () => { const sh = S_(), it = (getDay(sh.date).meals[sh.meal] ||
 document.addEventListener("dragstart", e => { const it = e.target.closest?.(".pw-it"); if (!it || it.getAttribute("draggable") !== "true") return; e.dataTransfer.setData("text/plain", JSON.stringify({ date: it.dataset.date, meal: it.dataset.meal, id: it.dataset.item })); e.dataTransfer.effectAllowed = "copyMove"; });
 document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x !== c && x.classList.remove("over")); if (c) { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
 document.addEventListener("drop", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x.classList.remove("over")); if (!c) return; e.preventDefault(); let f; try { f = JSON.parse(e.dataTransfer.getData("text/plain")); } catch (x) { return; } if (f?.id) moveItem(f, { date: c.dataset.date, meal: c.dataset.meal }, e.altKey); });
+/* ===== M5c: whole meals and whole days: move, copy, paste, drag (drag = move, Alt = copy, like a single item) ===== */
+const mealItemsOf = (date, mid) => S.days[date]?.meals?.[mid] || [];
+function cloneItem(it) { const x = clone(it); x.id = uid(); x.eaten = false; delete x.took; delete x.snap; delete x.cheat; delete x.out; return x; }
+/* pairs = [[fromMeal, toMeal], ...] on from.date -> to.date; eaten items never move (they happened), copies take everything */
+function transferMeals(from, to, pairs, copy, what) {
+  const src = S.days[from]?.meals || {}, pick = pairs.map(([fm, tm]) => ({ fm, tm, its: (src[fm] || []).filter(x => copy || !x.eaten) })).filter(o => o.its.length);
+  if (!pick.length || (!copy && from === to && pick.every(o => o.fm === o.tm))) return false;
+  const snap = snapshotDays([...new Set([from, to])]), dishes = { ...(S.days[from]?.dish || {}) }, made = pick.map(o => ({ ...o, ids: new Set(o.its.map(x => x.id)), cl: o.its.map(cloneItem) }));
+  if (!copy) mutateDay(from, d => { for (const o of made) { d.meals[o.fm] = (d.meals[o.fm] || []).filter(x => !o.ids.has(x.id)); if (d.dish) delete d.dish[o.fm]; } });
+  mutateDay(to, d => { for (const o of made) { const had = (d.meals[o.tm] || []).length; d.meals[o.tm] = (d.meals[o.tm] || []).concat(o.cl); if (d.dish) delete d.dish[o.tm]; if (!had && dishes[o.fm]) (d.dish = d.dish || {})[o.tm] = dishes[o.fm]; } });
+  toast(`${copy ? "Copied" : "Moved"} ${what} to ${DOW[dow(to)]} ${fmtDM(to)}`, () => restoreDays(snap)); return true;
+}
+const moveMeal = (from, to, copy = false) => transferMeals(from.date, to.date, [[from.meal, to.meal]], copy, mealName(from.meal).toLowerCase());
+const moveDay = (from, to, copy = false) => transferMeals(from, to, Object.keys(S.days[from]?.meals || {}).map(m => [m, m]), copy, "the day");
+/* the clipboard: a day or a meal copied once, pasted on as many days and meals as you like (it adds, nothing is replaced) */
+function copyToClip(scope, date, mid) {
+  const day = S.days[date], its = scope === "meal" ? { [mid]: mealItemsOf(date, mid) } : Object.fromEntries(Object.entries(day?.meals || {}).filter(([, v]) => v.length));
+  if (!Object.values(its).some(v => v.length)) { toast("Nothing to copy there yet."); return false; }
+  UI.mclip = { scope, meal: mid, items: clone(its), dish: clone(day?.dish || {}), label: scope === "meal" ? `${mealName(mid).toLowerCase()} of ${fmtDM(date)}` : `the day of ${fmtDM(date)}` };
+  toast(`Copied ${UI.mclip.label}: paste it on any day or meal`); return true;
+}
+function pasteClip(date, mid) {
+  const c = UI.mclip; if (!c) { toast("Copy a day or a meal first."); return false; }
+  const want = c.scope === "meal" ? { [mid || c.meal]: c.items[c.meal] } : mid ? { [mid]: c.items[mid] || [] } : c.items, snap = snapshotDays([date]);
+  const n = Object.values(want).reduce((a, v) => a + (v || []).length, 0); if (!n) { toast("That meal is empty in the copied day."); return false; }
+  mutateDay(date, d => { for (const [m, its] of Object.entries(want)) { if (!(its || []).length) continue; const had = (d.meals[m] || []).length; d.meals[m] = (d.meals[m] || []).concat(its.map(cloneItem)); if (d.dish) delete d.dish[m]; if (!had && c.dish?.[c.scope === "meal" ? c.meal : m]) (d.dish = d.dish || {})[m] = c.dish[c.scope === "meal" ? c.meal : m]; } });
+  toast(`Pasted ${c.label} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => restoreDays(snap)); return true;
+}
+ACT["day-copy"] = el => copyToClip("day", el.dataset.date || UI.date);
+ACT["meal-copy"] = el => copyToClip("meal", el.dataset.date || UI.date, el.dataset.meal);
+ACT["day-paste"] = el => pasteClip(el.dataset.date || UI.date);
+ACT["meal-paste"] = el => pasteClip(el.dataset.date || UI.date, el.dataset.meal);
+ACT["pw-cm"] = el => { UI.date = el.dataset.date; ACT["meal-menu"]({ dataset: { meal: el.dataset.meal } }); };
+document.addEventListener("dragstart", e => { const h = e.target.closest?.(".pw-mh, .pw-day[draggable=true]"); if (!h) return; window.__dragKind = h.classList.contains("pw-mh") ? "meal" : "day"; e.dataTransfer.setData("text/plain", JSON.stringify(window.__dragKind === "meal" ? { kind: "meal", date: h.dataset.date, meal: h.dataset.meal } : { kind: "day", date: h.dataset.date })); e.dataTransfer.effectAllowed = "copyMove"; });
+document.addEventListener("dragend", () => { window.__dragKind = null; $$(".pw-cell.over,.pw-day.over").forEach(x => x.classList.remove("over")); });
+document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-day"); $$(".pw-day.over").forEach(x => x !== c && x.classList.remove("over")); if (c && window.__dragKind === "day") { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
+document.addEventListener("drop", e => { const h = e.target.closest?.(".pw-day"), c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over,.pw-day.over").forEach(x => x.classList.remove("over")); let f; try { f = JSON.parse(e.dataTransfer.getData("text/plain")); } catch (x) { return; }
+  if (f?.kind === "day" && (h || c)) { e.preventDefault(); moveDay(f.date, (h || c).dataset.date, e.altKey); }
+  else if (f?.kind === "meal" && c) { e.preventDefault(); moveMeal(f, { date: c.dataset.date, meal: c.dataset.meal }, e.altKey); } });
 
 /* add sheet */
 ACT["sheet-meal"] = el => { S_().meal = el.dataset.meal; renderSheet(); };
