@@ -205,11 +205,11 @@ test("#18 Form: «—» while fitness (CTL) is under 10, the percentage once it 
   await reset();
   const r = await ev(() => {
     const t = todayISO(); __put(addDays(t, -3), { workouts: [{ sport: "Running", min: 60, load: 150 }] }); DATA_V++;
-    const a = fitnessNow(); UI.tab = "today"; render(); const tile = [...document.querySelectorAll("#main *")].find(x => x.children.length === 0 && x.textContent.trim() === "Form")?.closest("button,a,section,div")?.parentElement?.innerText || "";
+    const a = fitnessNow(); UI.tab = "today"; render(); const tile = [...document.querySelectorAll("#main .gl-t")].find(x => x.querySelector("em")?.textContent === "Form")?.querySelector("b")?.innerText ?? "missing";
     for (let i = 4; i <= 90; i++) __put(addDays(t, -i), { workouts: [{ sport: "Running", min: 60, load: 80 }] }); DATA_V++;
     const b = fitnessNow(); return { ctlA: a.ctl, pctA: a.pct, zoneA: a.zone, tile, ctlB: b.ctl, pctB: b.pct, sumA: null };
   });
-  assert.ok(r.ctlA < 10); assert.equal(r.pctA, null); assert.equal(r.zoneA, null); assert.doesNotMatch(r.tile, /%|NaN/);
+  assert.ok(r.ctlA < 10); assert.equal(r.pctA, null); assert.equal(r.zoneA, null); assert.equal(r.tile, "—");
   assert.ok(r.ctlB >= 10); assert.equal(typeof r.pctB, "number");
 });
 
