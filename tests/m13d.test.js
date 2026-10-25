@@ -54,3 +54,18 @@ test("Today on PC and 1920: one spacing (12 px) between the KPI tiles, between K
     await app.close(); app = null;
   }
 });
+
+test("Overview: no «• -» pill when a value is missing; the two charts show an empty state instead of a flat line, and a chart when there is data; the logging streak is a tile of the intake grid", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const r = await page.evaluate(() => { const box = h => { const d = document.createElement("div"); d.innerHTML = h; return d; };
+    UI.tab = "progress"; UI.progSeg = "overview"; render(); const ov = document.getElementById("main"), pills = [...ov.querySelectorAll(".pill")].map(p => p.textContent), rows = [...ov.querySelectorAll(".lrow")].filter(l => /Rate of change/.test(l.textContent)).length;
+    const empty = { change: /<svg/.test(changeChart()), bal: /<svg/.test(balanceChart()) };
+    const t = todayISO(); for (let i = 0; i < 30; i++) { const d = addDays(t, -i), mk = d.slice(0, 7); S.logm[mk] = S.logm[mk] || { month: mk, days: {} }; S.logm[mk].days[d] = { weight: 80 + i * 0.1 }; } FIT().trackStart = addDays(t, -40); DATA_V++;
+    const full = { change: /<svg/.test(changeChart()) };
+    const st = box(VIEWS.stats(true)), g = st.querySelector(".stat-grid"), tiles = g ? [...g.querySelectorAll(".stat")].map(x => x.textContent) : [];
+    return { pills, rows, empty, full, grid: g?.className, tiles, text: st.textContent }; });
+  assert.ok(r.rows >= 1 && !r.pills.includes("-"), JSON.stringify(r.pills));
+  assert.deepEqual(r.empty, { change: false, bal: false }); assert.equal(r.full.change, true);
+  assert.match(r.grid, /four/); assert.equal(r.tiles.length, 4); assert.match(r.tiles[3], /logging streak/); assert.doesNotMatch(r.text, /Logging streak:/);
+  assert.deepEqual(app.errors, []);
+});

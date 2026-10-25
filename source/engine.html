@@ -4621,10 +4621,10 @@ VIEWS.stats = function (embedded) {
     <div class="st-ctl" style="padding:${embedded ? "0" : "10px 0 12px"}"><div class="seg sm">${[[7, "7 days"], [30, "30 days"], [90, "90 days"]].map(([k, l]) => `<button data-act="stats-range" data-n="${k}" aria-pressed="${n === k}">${l}</button>`).join("")}</div>
     <div class="seg sm">${[["eaten", "Eaten"], ["planned", "Planned"]].map(([k, l]) => `<button data-act="stats-basis" data-b="${k}" aria-pressed="${basis === k}">${l}</button>`).join("")}</div></div>${embedded ? "" : "</header>"}`;
   if (!has.length) return h + `<div class="empty"><h3>No ${basis} days in this range</h3><p>${basis === "eaten" ? "Tick the circle next to each food once you've eaten it. Your trends appear here." : "Plan a few days and your trends appear here."}</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Go to plan</button></div></div>`;
-  h += `<div class="stat-grid">
+  h += `<div class="stat-grid four">
     <div class="stat"><b>${fmtN(avg("kcal"))}</b><small>avg kcal · ${r0(avg("kcal") / (avgT("kcal") || 1) * 100)}% of target</small></div>
     <div class="stat"><b>${(avg("p") / w).toFixed(1)}</b><small>g protein per kg</small></div>
-    <div class="stat"><b>${onTarget}/${has.length}</b><small>days within ±10%</small></div></div>`;
+    <div class="stat"><b>${onTarget}/${has.length}</b><small>days within ±10%</small></div>${kpi(streak, "logging streak", `day${streak === 1 ? "" : "s"} with food eaten`)}</div>`;
   h += `<div class="section-h"><h2>Calories vs target</h2><span class="faint" style="font-size:12.5px">${basis === "eaten" ? "eaten" : "planned"} per day</span></div><div class="card pad">${kcalChart(rows)}</div>`;
   h += `<div class="section-h"><h2>Average macros vs target</h2></div><div class="card pad">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"], ["Fibre", "fib", "good"]].map(([l, k, c]) => {
     const a = avg(k), t = k === "fib" ? 30 : avgT(k); const pct = a / (t || 1) * 100;
@@ -4633,7 +4633,6 @@ VIEWS.stats = function (embedded) {
   h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Where calories come from</h2></div><div class="card pad">${splitDonut(avg("p"), avg("c"), avg("f"))}</div></div>
     <div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Protein by day</h2></div><div class="card pad">${proteinChart(rows, w)}</div></div></div>`;
   h += topFoods(dates, basis);
-  h += `<div class="faint" style="font-size:12px">Logging streak: ${streak} day${streak === 1 ? "" : "s"} in a row with something marked as eaten.</div>`;
   return h;
 };
 function weightCard() {
@@ -5032,7 +5031,7 @@ function overviewView() {
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
   h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "watch-based")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
   const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
-  h += `<div class="section-h"><h2>How am I doing · last 7 days</h2><span class="faint" style="font-size:12px">${esc(C.summary)}</span></div><div class="card">${C.ind.map(i => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${i.k}</span><span class="s" style="white-space:normal">${esc(i.d)}</span></span><span class="end">${pill(i.st)}</span></div>`).join("")}</div>`;
+  h += `<div class="section-h"><h2>How am I doing · last 7 days</h2><span class="faint" style="font-size:12px">${esc(C.summary)}</span></div><div class="card">${C.ind.map(i => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${i.k}</span><span class="s" style="white-space:normal">${esc(i.d)}</span></span><span class="end">${i.st === "-" ? "" : pill(i.st)}</span></div>`).join("")}</div>`;
   h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Expected vs actual change</h2></div><div class="card pad">${changeChart()}</div></div><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Weekly balance</h2></div><div class="card pad">${balanceChart()}</div></div></div>`;
   if (C.brk) h += `<div class="${C.weeksIn >= E.dietBreakWeeks && C.phase.phase === "Cut" ? "note accent" : "note"}">${esc(C.brk)}</div>`;
   return h;
@@ -5040,7 +5039,7 @@ function overviewView() {
 function changeChart() {
   const s = energySeries(), today = todayISO(), base = s.rows[addDays(today, -30)] || s.rows[s.start]; const pts = []; let cum = 0;
   for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
-  if (pts.length < 2) return `<div class="faint">Needs a few days of data.</div>`;
+  if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs a few days of logged food and weigh-ins.</div>`;
   const W = chartW(true), H = 170, L = 34, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), lo = Math.min(-0.5, ...all), hi = Math.max(0.5, ...all);
   const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
   [lo, hi].forEach(v => g += `<text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r1(v)}</text>`);
@@ -5066,7 +5065,7 @@ function weekBalanceHTML() {
       <svg class="chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Energy balance by day, ${fmtDM(W.ws)} to ${fmtDM(addDays(W.ws, 6))}">${g}</svg></div>`;
 }
 function balanceChart() {
-  const W8 = weeklyTable().slice(-8); if (!W8.length) return `<div class="faint">No weeks yet.</div>`;
+  const W8 = weeklyTable().slice(-8); if (!W8.some(w => w.balance)) return `<div class="faint">No week with logged food yet.</div>`;
   const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.max(500, ...vals.map(Math.abs));
   const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length; let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/><text x="${L - 5}" y="${y(mx) + 8}" text-anchor="end">+${r1(mx / 1000)}k</text><text x="${L - 5}" y="${y(-mx)}" text-anchor="end">−${r1(mx / 1000)}k</text>`;
   W8.forEach((w, i) => { const v = w.balance || 0, x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${Math.min(y(v), y(0))}" width="${bw * 0.6}" height="${Math.abs(y(v) - y(0))}" rx="2" fill="var(--${v < 0 ? "fat" : "pro"})"><title>${fmtDM(w.ws)}: ${fmtN(v)} kcal</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
