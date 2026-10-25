@@ -373,3 +373,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Aggiornato**: `JR_KEYS` con `f`, `JR_MERGE` (include `d`) in unione e firma del Journal; `sgBuild` (suggerimenti) con i blocchi doloranti; `kcalChart` (asse tondo, una legenda); `weightChart`; `reportsView`/`reportText` (scheda Recovery and body).
 - **Eliminato**: la seconda definizione di `clean0` che avevo aggiunto (collideva); legenda duplicata di «Calories vs target».
 - **Aperto**: M7b (formule); correzione per dispositivo da dati propri (D20b); la stima del sonno non impara dai dati; la ricetta da link non funziona sui siti senza CORS (serve una funzione Supabase come proxy: non fatto, richiede un'autorizzazione tua).
+
+## Revisione grafica 1 (25/10/2026)
+- **Verificato**: `tests/design-fixes.test.js` (scritto prima del fix: pillole sul margine di 16 px e consiglio proteine identico a ogni render), suite completa, `layout-audit.js` chiaro e scuro, screenshot 390/820/1440 prima e dopo.
+- **Eliminato**: il secondo `scrollLeft` (centratura sbagliata) in `render`: resta un solo posto, il wrapper di `afterRender` che tiene la pillola attiva a 16 px dal bordo; il filetto tratteggiato di `.add-row`; l'anello «oggi» di `.td-d.now` e la lineetta di `.day-pill.today::after`; `.aee-shadow summary` (colonna con chevron fuori asse); la chip Check-in di Today quando la card Check-in è visibile (stessa azione due volte); la regola `@media (max-width:380px)` della barra azioni di Meals (assorbita).
+- **Aggiornato**: `proteinPick` senza jitter casuale e con spareggio per nome; `tipHTML` condiviso da Coach (Meals) e «Coming up» (Today); righe `lrow` in `details.rk-paste` con chevron; `.rec-sec` tra i contenitori con card annidate tonali; stringhe di Progress › Energy e Days (nessun calcolo toccato); `trainCalendar` con colonna destra `cv-side` (giorno aperto + prossime sessioni, solo da 1100 px).
+- **Aperto**: vedi T6 e T7 in `docs/PRODUCT_REQUIREMENTS.md`.
