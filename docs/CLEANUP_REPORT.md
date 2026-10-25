@@ -299,3 +299,6 @@ Durante M0 un comando `sed` ha cancellato per errore il corpo dello script: da a
 **Compatibilità:** `S.settings.reminders.pre` opzionale (default 2 h, dure o lunghe, con quantità, Today + notifica); l'elemento `items[].ph` e il vecchio nome «Cheat meal» restano leggibili (ora mostrati come «Treat»); le scorciatoie vecchie «Weigh in» e «Timer» non sono più nel manifest ma i loro gestori `?a=` restano.
 **Aperto:** le notifiche pre-allenamento con l'app chiusa richiedono le notifiche push configurate (come gli integratori); «Move to» propone solo giorni della settimana corrente.
 
+### M11d, seconda parte (25/10/2026)
+**Verificato:** `tests/m11c.test.js` (calcolo a mano per 80 kg del pre-allenamento con e senza pasti nella finestra, icone esistenti, guida all'installazione per browser). **Unificato:** tre testi diversi sul pre-allenamento (riga Reminders, nota della card, consiglio del coach) ora vengono da `preFuel()`; il consiglio del coach non ripete la parte «prima» quando il promemoria è acceso. **Corretto:** test `stock-model` che dipendeva dal giorno della settimana (falliva solo di domenica). **Aperto:** formula pre-allenamento da approvare; valori «durante» oltre 2,5 h da verificare sul testo.
+

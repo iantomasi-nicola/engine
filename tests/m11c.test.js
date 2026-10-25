@@ -222,7 +222,7 @@ test("M11d app-icon shortcuts: Check-in, Add food, Free workout and Shopping lis
 const PRE_SEED = () => { const s = F.seed(); return s; };
 test("M11d before a session: a Reminders row at the chosen lead time for hard or long sessions, with the usual carb amounts or just a nudge; easy sessions only when asked; gone once it starts or is done", async () => {
   app = await H.startApp({ dir, seed: PRE_SEED(), viewport: H.VIEWPORTS.phone });
-  const r = await app.page.evaluate(() => { const t = todayISO(); mutateLog(t, d => { d.planned = [{ sport: "Running", min: 60, int: "Hard", note: "Intervals", at: "18:00" }, { sport: strengthSport(), min: 40, int: "Light", note: "Easy pulls", at: "20:00" }]; }); DATA_V++;
+  const r = await app.page.evaluate(() => { const t = todayISO(); mutateLog(t, d => { d.planned = [{ sport: "Running", min: 80, int: "Hard", note: "Intervals", at: "18:00" }, { sport: strengthSport(), min: 40, int: "Light", note: "Easy pulls", at: "20:00" }]; }); DATA_V++;
     const rows = (o, now = "12:00") => { S.settings.reminders = { ...(S.settings.reminders || {}), pre: o }; DATA_V++; return preSessionRows(t, now).map(x => [x.t, x.title, x.small]); };
     return { dflt: rows({}), l90: rows({ lead: 90 }), all: rows({ which: "all" }), nudge: rows({ detail: "nudge" }), off: rows({ on: false }), started: (rows({ which: "all" }), preSessionRows(t, "18:05").length), before: preSessionRows(t, "17:30").length, key: (rows({}), preSessionRows(t, "12:00").length), kg: Math.round(energyAt(t).trend || 80) }; });
   assert.equal(r.dflt.length, 1); assert.deepEqual(r.dflt[0].slice(0, 2), ["16:00", "Eat before Intervals"]); assert.match(r.dflt[0][2], /\d+–\d+ g carbs/); assert.match(r.dflt[0][2], /18:00/);
@@ -273,4 +273,48 @@ test("M11d Settings › Reminders: the option rows keep their labels whole on ph
       box.remove(); return { bad, lefts: [...new Set(rows.map(x => x[0]))].length, rights: [...new Set(rows.map(x => x[1]))].length }; });
     assert.deepEqual(r.bad, [], `${vp.width}: cut labels ${r.bad}`); assert.equal(r.lefts, 1); assert.equal(r.rights, 1); assert.deepEqual(app.errors, []); await app.close(); app = null;
   }
+});
+
+test("M11d pre-session fuel is calibrated (ACSM/AND/DC 2016: 1–4 g/kg carbohydrate 1–4 h before an effort over 60 min): hand-computed for 80 kg, kcal = 4 per g, tuned by the meals already planned in the window", async () => {
+  app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const t = todayISO(), kg = Math.round(energyAt(t).trend);
+    const w = (o = {}) => ({ sport: "Running", min: 90, int: "Hard", note: "Long", at: "18:00", ...o });
+    const f = (lead, o) => preFuel(w(o), t, kg, lead);
+    const out = { kg, l60: f(60), l90: f(90), l120: f(120), l180: f(180), l240: f(240), short: f(120, { min: 60 }), easyLong: f(120, { int: "Light", min: 100 }) };
+    mutateLog(t, d => { d.workouts = []; });
+    S.days[t] = { date: t, meals: { l: [{ id: "x1", kind: "food", ref: "t-rice", qty: 150, eaten: false }] } };  // 150 g rice = 117 g carbs at 13:00
+    out.covers = preFuel(w({ at: "16:00" }), t, kg, 120);                                  // 180 min after lunch: counted, 117 >= 80
+    S.days[t].meals.l[0].qty = 80;                                                          // 62.4 g carbs: partial
+    out.partial = preFuel(w({ at: "16:00" }), t, kg, 120);
+    out.far = preFuel(w({ at: "19:00" }), t, kg, 120);                                      // 6 h after lunch: not counted
+    return out; });
+  assert.equal(r.kg, 80);
+  const g = x => x.amounts ? [x.g[0], x.g[1], x.kcal[0], x.kcal[1]] : null;
+  assert.deepEqual(g(r.l60), [80, 80, 320, 320]); assert.deepEqual(g(r.l90), [80, 120, 320, 480]); assert.deepEqual(g(r.l120), [80, 160, 320, 640]); assert.deepEqual(g(r.l180), [160, 240, 640, 960]); assert.deepEqual(g(r.l240), [240, 320, 960, 1280]);
+  assert.equal(r.short.amounts, false, "no amount invented for 60 min or less"); assert.match(r.short.text, /under an hour|light/i); assert.ok(r.easyLong.amounts, "a long easy one is still over 60 min");
+  assert.match(r.l120.text, /80–160 g carbs \(≈ 320–640 kcal\)/); assert.match(r.l120.text, /30–60 g per hour/, "long: the during-exercise rate stays");
+  assert.match(r.covers.text, /already has 117 g carbs/); assert.match(r.covers.text, /covers it/); assert.equal(r.covers.top, null);
+  assert.deepEqual(r.partial.top, [20, 100]); assert.match(r.partial.text, /add 20–100 g carbs \(≈ 80–400 kcal\)/); assert.equal(r.far.covered, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("icons: every icon named in the code exists, and the treat uses its own icon, not the star", async () => {
+  const src = require("fs").readFileSync(require("path").join(H.ROOT, "source/engine.html"), "utf8");
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const have = await app.page.evaluate(() => Object.keys(ICONS));
+  const named = [...new Set([...src.matchAll(/\bic\("([a-zA-Z0-9-]+)"/g)].map(m => m[1].replace(/-f$/, "")).concat([...src.matchAll(/\bicon: "([a-zA-Z0-9-]+)"/g)].map(m => m[1])))];
+  const missing = named.filter(n => !have.includes(n)); assert.deepEqual(missing, [], "icons named but not drawn");
+  assert.ok(have.includes("treat")); assert.equal((src.match(/Plan a treat[^\n]{0,40}icon: "star"/g) || []).length, 0);
+  assert.equal((src.match(/ic\("star"\)\}<span>Treat/g) || []).length, 0); assert.deepEqual(app.errors, []);
+});
+
+test("install guide: the right steps for each browser (Brave on Android says it usually only makes a plain shortcut and points to Chrome), installed state, and it shows in Settings › Account", async () => {
+  app = await H.startApp({ dir, seed: F.seed(), viewport: H.VIEWPORTS.phone });
+  const UA = { pixelChrome: "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36", firefox: "Mozilla/5.0 (Android 15; Mobile; rv:130.0) Gecko/130.0 Firefox/130.0", iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1", win: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0" };
+  const r = await app.page.evaluate(UA => ({ chrome: installGuide(UA.pixelChrome, false, false), brave: installGuide(UA.pixelChrome, true, false), ff: installGuide(UA.firefox, false, false), ios: installGuide(UA.iphone, false, false), edge: installGuide(UA.win, false, false), done: installGuide(UA.pixelChrome, false, true),
+    card: (UI.tab = "settings", render(), typeof installCard === "function" && /Install|installed/.test(installCard())) }), UA);
+  assert.equal(r.chrome.kind, "android"); assert.ok(r.chrome.steps.some(x => /Install app/.test(x)) && r.chrome.steps.some(x => /Long-press/.test(x)));
+  assert.equal(r.brave.kind, "brave"); assert.match(r.brave.title, /Brave/); assert.ok(r.brave.steps.some(x => /Chrome/.test(x)) && /plain shortcut/.test(r.brave.note + r.brave.alt));
+  assert.equal(r.ff.kind, "firefox"); assert.equal(r.ios.kind, "ios"); assert.ok(r.ios.steps.some(x => /Add to Home Screen/.test(x))); assert.equal(r.edge.kind, "desktop"); assert.match(r.edge.title, /Edge/);
+  assert.equal(r.done.kind, "installed"); assert.match(r.done.note, /Check-in/); assert.ok(r.card); assert.deepEqual(app.errors, []);
 });

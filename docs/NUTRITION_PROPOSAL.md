@@ -37,3 +37,11 @@ Mifflin et al. 1990; Harris-Benedict (revisione Roza & Shizgal 1984); Henry 2005
 
 ## 5. Criteri per approvare una modifica
 Per ogni formula: fonte, ipotesi, popolazione, errore atteso, test deterministico, documentazione, interruttore di rollback e confronto prima/dopo sui dati sintetici. L'utente approva la proposta prima di qualsiasi cambio numerico.
+
+## Carboidrati prima di una sessione (`preFuel`) — implementata il 25/10/2026 su richiesta, **formula da approvare**
+**Fonte primaria:** Thomas DT, Erdman KA, Burke LM. Position of the Academy of Nutrition and Dietetics, Dietitians of Canada, and the American College of Sports Medicine: Nutrition and Athletic Performance. *Med Sci Sports Exerc* 2016;48(3):543-568 (anche *J Acad Nutr Diet* 2016;116(3):501-528, DOI 10.1016/j.jand.2015.12.006): prima di uno sforzo > 60 min, 1–4 g/kg di carboidrati 1–4 h prima, con tempi, quantità e alimenti adatti alla persona.
+**Formula nel codice:** h = anticipo in ore limitato a 1–4; g/kg minimo = max(1, h − 1), massimo = min(4, h); grammi = g/kg × peso (arrotondati a 5 g); kcal = 4 × grammi. Sessione ≤ 60 min: nessuna quantità. I carboidrati dei pasti (pianificati o mangiati) tra 45 min e 4 h prima dell'inizio si sottraggono: se coprono il minimo si dice «covers it», altrimenti «add X–Y g».
+**Cosa è scelta dell'app e non dalla fonte:** la progressione «circa 1 g/kg per ora di anticipo» dentro l'intervallo 1–4 g/kg (la fonte dà solo gli estremi); l'arrotondamento a 5 g; la finestra 45 min–4 h per contare i pasti. **Da verificare sul testo integrale:** «durante» resta 30–60 g/h per sessioni ≥ 75 min come già nell'app; i valori fino a 90 g/h oltre le 2,5 h **non** sono stati aggiunti perché non ho potuto leggerli sul testo (il sito del documento non era raggiungibile dalla sessione).
+**Test numerico indipendente:** `tests/m11c.test.js` («pre-session fuel is calibrated»), calcolo a mano per 80 kg: 60 min → 80 g (320 kcal); 90 → 80–120 g; 120 → 80–160 g (320–640 kcal); 180 → 160–240 g; 240 → 240–320 g.
+**Stato:** attivo; in attesa che l'utente approvi o corregga la formula (regola 3 di AGENTS.md).
+
