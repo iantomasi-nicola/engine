@@ -716,49 +716,39 @@ test("M11i race: the presets parse into stations, the clock and the voice follow
     at(0); ACT["lv-step"](); at(1); ACT["lv-step"](); render(); o.mid = document.body.textContent; ACT["lv-step-undo"](); o.afterUndo = [L.res[0].rounds, L.res[0].splits.slice()]; at(1); ACT["lv-step"](); at(2); ACT["lv-step"](); at(3); ACT["lv-step"](); at(4); ACT["lv-step"](); at(5); ACT["lv-step"]();
     o.said = said.filter(x => x.trim()); o.res = [L.res[0].rounds, L.res[0].splits.slice(), L.res[0].done]; o.log = (S.train.circuitLog || []).filter(c => c.circuit === "Fire Set (Open)").map(c => c.sec); o.circ = FIT().circuits.find(c => c.name === "Fire Set (Open)")?.desc;
     return o; });
-  assert.deepEqual(r.fire, ["race", "Fire Set (Open)", 360, ["5 Pull-up", "10 Dip", "5 Pull-up", "20 Push-up", "5 Dip", "5 Pull-up"]]); assert.deepEqual(r.cut, ["race", "Cut · Mix C.L.", null, 65, 7]);
-  assert.deepEqual(r.tasks, ["race"]); assert.ok(/Station 1 of 6/.test(r.view0) && /Pull-up/.test(r.view0) && /Next/.test(r.view0) && /10 Dip/.test(r.view0), r.view0.slice(0, 300));
+  assert.deepEqual(r.fire, ["race", "Fire Set (Open)", 360, ["5 Pull-up", "10 Dip", "5 Pull-up", "20 Push-up", "5 Dip", "5 Pull-up"]]); assert.deepEqual(r.cut, ["race", "Cut · Mix C.L.", 360, 65, 7], "each circuit has its own 6 minute limit");
+  assert.deepEqual(r.tasks, ["race"]); assert.ok(/Station 1 of 6/.test(r.view0) && /Pull-up/.test(r.view0) && /10Dip/.test(r.view0) && /20Push-up/.test(r.view0), "the whole circuit is on screen: " + r.view0.slice(0, 300));
   assert.ok(/Station 3 of 6/.test(r.mid), "after two taps the third station is on screen"); assert.deepEqual(r.afterUndo, [1, [12]]);
   assert.deepEqual(r.res.slice(0, 2), [6, [12, 29, 11, 48, 12, 13]]); assert.equal(r.res[2], true);
   assert.deepEqual(r.said.slice(0, 5), ["Dip 10", "Pull-up 5", "Dip 10", "Pull-up 5", "Push-up 20"], "the voice names the next station and its reps right away (the undo repeats the one you are on)");
   assert.ok(r.said.includes("Ultimo: Pull-up 5") && r.said.some(x => /^Finito in 2 minuti e 5/.test(x)), r.said.join(" | "));
   assert.deepEqual(r.log, [125]); assert.equal(r.circ, "5 Pull-up · 10 Dip · 5 Pull-up · 20 Push-up · 5 Dip · 5 Pull-up"); assert.deepEqual(app.errors, []);
 });
-test("M11i race ranking: the position of your Fire Set among pasted times, the time of the place you want, split plan and slowest station — hand-computed", async () => {
+const RK_PASTE = ["Classifica di tappa · Fire Set + Taglio", "Atleta", "Fire Set", "Taglio", "Totale", "1°", "#4", "Alberto Bivona", "0:52.51", "1:19.64", "2:12.15", "2°", "#14", "Luigi Puccio", "Sciacca", "0:52.07", "1:23.92", "2:15.99", "3°", "#6", "Umberto Cerruto", "0:56.95", "1:35.89", "2:32.84", "4°", "#7", "Clemente Gugliotta", "1:02.27", "1:57.74", "3:00.01",
+  "5°", "#5", "Giuseppe D'Antoni", "1:33.89", "1:34.01", "3:07.90", "6°", "#18", "Luca Merlo", "1:09.87", "2:33.36", "3:43.23", "7°", "#2", "Jacopo Lecardane", "1:12.69", "3:17.80", "4:30.49", "8°", "#3", "Giovanni Croce", "2:58.68", "4:47.96", "7:46.64", "9°", "#1", "Giuseppe Ricotta", "5:08.04", "6:00.00", "11:08.04"].join("\n");
+test("M11i race ranking: the stage table pasted from the ranking page is read, your place on Fire Set, cut and total, the athlete at the place you want, several stages, split plan — hand-computed", async () => {
   app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
-  const r = await app.page.evaluate(() => { const t = todayISO(), name = "Fire Set (Open)";
-    S.train.circuitLog = [{ id: "a", date: t, circuit: name, sec: 125 }, { id: "b", date: addDays(t, -9), circuit: name, sec: 133 }];
-    S.logm[addDays(t, -1)] = { ...(S.logm[addDays(t, -1)] || {}), wsess: [{ name: "Fire", other: [{ title: name, kind: "fortime", race: true, sec: 125, rounds: 6, of: 6, cap: null, splits: [12, 29, 11, 48, 12, 13], stations: [[5, "Pull-up"], [10, "Dip"], [5, "Pull-up"], [20, "Push-up"], [5, "Dip"], [5, "Pull-up"]].map(([reps, n]) => ({ reps, name: n })) }] }] };
-    const times = raceTimes("1  Ana  2:00.5\n2  Bo  2:10\n3  Cy  2:30\nno time here\n4  Di  3:05"); const a = raceRank(125, times, "2"), b = raceRank(125, times, "1"), c = raceRank(190, times, "");
-    const sp = raceSplits(name, 130); S.train.race = { rank: "1  Ana  2:00.5\n2  Bo  2:10\n3  Cy  2:30\n4  Di  3:05", places: "2" }; DATA_V++;
-    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt = document.body.textContent;
-    return { times, a, b, c, tot: sp.tot, per: sp.ex.map(x => [x.name, Math.round(x.per * 1000) / 1000, Math.round(x.share * 1000) / 1000]), goal: sp.plan.map(x => Math.round(x.goal * 100) / 100), best: raceBest(name), txt, sw: document.documentElement.scrollWidth, vw: innerWidth }; });
-  assert.deepEqual(r.times, [120.5, 130, 150, 185]); assert.deepEqual([r.a.pos, r.a.n, r.a.faster, r.a.cut, r.a.gap], [2, 5, 60, 130, -5]); assert.deepEqual([r.b.pos, r.b.cut, r.b.gap], [2, 120.5, 4.5]); assert.deepEqual([r.c.pos, r.c.faster, r.c.cut], [5, 0, null], "190 s is slower than all four pasted times");
-  assert.equal(r.best, 125); assert.equal(r.tot, 125); assert.deepEqual(r.per, [["Dip", 2.733, 0.328], ["Pull-up", 2.4, 0.288], ["Push-up", 2.4, 0.384]], "dips cost 41 s for 15 reps, pull-ups 36 s for 15, push-ups 48 s for 20");
-  assert.deepEqual(r.goal, [12.48, 30.16, 11.44, 49.92, 12.48, 13.52], "each split × 130 / 125");
-  assert.ok(/Race circuits/.test(r.txt) && /Endurance Cup ranking/.test(r.txt) && /Position 2 of 5/.test(r.txt) && /you are 5 s faster/.test(r.txt), r.txt.slice(0, 300)); assert.ok(r.sw <= r.vw + 1); assert.deepEqual(app.errors, []);
-});
-
-/* ---------- M11i Calculators (I3): 1RM with six formulas and loads for 1 to 12 reps, pace and race-time predictions — hand-computed ---------- */
-test("M11i calculators: 100 kg × 5 gives the six formulas computed by hand, mean 115.79; added-weight pull-ups subtract the body; loads per rep; pace 41:30 over 10 km with Riegel and VDOT; the sheet updates as you type", async () => {
-  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
-  const r = await app.page.evaluate(() => { const R = calcRM(100, 5), one = Object.fromEntries(R.one.map(x => [x.n, Math.round(x.v * 100) / 100])), W = calcRM(30, 5, 80), L = calcLoads(R.mean, "Epley"), P = calcPace(10, 2490);
-    openSheet("calc", { tab: "rm", w: "", r: "", b: "", f: "Epley", d: "10", t: "" }); const inp = (k, v) => { const el = document.getElementById({ w: "cl-w", r: "cl-r" }[k]); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }; inp("w", "100"); inp("r", "5"); const out1 = document.getElementById("calc-out").textContent;
-    ACT["calc-tab"]({ dataset: { k: "pace" } }); inp2 = (id, v) => { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }; inp2("cl-d", "10"); inp2("cl-t", "41:30"); const out2 = document.getElementById("calc-out").textContent;
-    return { one, mean: Math.round(R.mean * 100) / 100, lo: Math.round(R.lo * 100) / 100, w: [Math.round(W.one[0].v * 100) / 100, Math.round(W.mean * 100) / 100], L: L.slice(0, 3).map(x => [x.r, Math.round(x.kg * 100) / 100, Math.round(x.pct * 10) / 10]), one1: calcRM(80, 1).mean, bad: [calcRM(0, 5), calcRM(100, 0), calcRM(100, 31)],
-      P: [Math.round(P.perKm), Math.round(P.perMile), Math.round(P.kmh * 100) / 100, P.preds.map(p => [p.l, Math.round(p.riegel)])], out1, out2 }; });
-  assert.deepEqual(r.one, { Epley: 116.67, Brzycki: 112.5, Lombardi: 117.46, "O'Conner": 112.5, Mayhew: 119.01, Wathan: 116.58 }); assert.equal(r.mean, 115.79); assert.equal(r.lo, 112.5);
-  assert.equal(r.w[0], 48.33, "30 kg added to 80 kg body weight for 5 reps: Epley (110 × 1.1667) − 80"); assert.equal(r.one1, 80); assert.deepEqual(r.bad, [null, null, null]);
-  assert.deepEqual(r.L[0].slice(0, 2), [1, 115.79]); assert.ok(Math.abs(r.L[1][1] - 108.55) < 0.01 && Math.abs(r.L[1][2] - 93.75) < 0.06, "2 reps by Epley: 115.787 / (1 + 2/30) = 108.55 kg, 93.75%");
-  assert.deepEqual(r.P.slice(0, 3), [249, 401, 14.46]); assert.deepEqual(r.P[3], [["5K", 1194], ["10K", 2490], ["Half marathon", 5494], ["Marathon", 11454]]);
-  assert.ok(/115\.8 kg/.test(r.out1) && /Epley/.test(r.out1) && /Wathan/.test(r.out1), r.out1.slice(0, 200)); assert.ok(/4:09/.test(r.out2) && /Riegel/.test(r.out2) && /VDOT/.test(r.out2), r.out2.slice(0, 200)); assert.deepEqual(app.errors, []);
+  const r = await app.page.evaluate((paste) => { const t = todayISO(), fn = "Fire Set (Open)", cn = "Cut · Mix C.L.";
+    S.train.circuitLog = [{ id: "a", date: t, circuit: fn, sec: 58 }, { id: "b", date: addDays(t, -9), circuit: fn, sec: 61 }, { id: "c", date: t, circuit: cn, sec: 90 }];
+    S.logm[addDays(t, -1)] = { ...(S.logm[addDays(t, -1)] || {}), wsess: [{ name: "Fire", other: [{ title: fn, kind: "fortime", race: true, sec: 125, rounds: 6, of: 6, cap: null, splits: [12, 29, 11, 48, 12, 13], stations: [[5, "Pull-up"], [10, "Dip"], [5, "Pull-up"], [20, "Push-up"], [5, "Dip"], [5, "Pull-up"]].map(([reps, n]) => ({ reps, name: n })) }] }] };
+    const T = raceTable(paste), C = raceCompare(T, 58, 90), at = raceAt(T, 2), single = raceTable("1  Ana  2:00.5\n2  Bo  2:10\nnoise\n3 Cy 2:30"), one = raceTable("1° #4 Alberto Bivona 0:52.51 1:19.64 2:12.15\n2° #14 Luigi Puccio 0:52.07 1:23.92 2:15.99");
+    const sp = raceSplits(fn, at.fire); S.train.race = { stages: [{ id: "s1", name: "Stage 1", text: paste }], places: "2", rest: 5 }; DATA_V++;
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt1 = document.body.textContent;
+    S.train.race.stages.push({ id: "s2", name: "Stage 2", text: paste }); DATA_V++; render(); const txt2 = document.body.textContent, sw = document.documentElement.scrollWidth;
+    return { n: T.length, first: T[0], second: T[1], last: T[8], C, at: [at.name, at.total], single: single.map(e => [e.name, e.fire, e.cut, e.total]), one: one.map(e => e.name), plan: sp.plan.map(x => Math.round(x.goal * 100) / 100), txt1, txt2, sw, vw: innerWidth }; }, RK_PASTE);
+  assert.equal(r.n, 9); assert.deepEqual(r.first, { name: "Alberto Bivona", fire: 52.51, cut: 79.64, total: 132.15 }); assert.equal(r.second.name, "Luigi Puccio", "the city under the name is ignored"); assert.deepEqual(r.last, { name: "Giuseppe Ricotta", fire: 308.04, cut: 360, total: 668.04 }, "a cut of 6:00.00 is the time limit");
+  assert.deepEqual(r.C.fire, { pos: 4, n: 10, faster: 60 }, "58.0 s: three Fire Sets are faster (52.51, 52.07, 56.95)"); assert.deepEqual(r.C.cut, { pos: 3, n: 10, faster: 70 }, "90.0 s: 79.64 and 83.92 are faster"); assert.deepEqual(r.C.total, { pos: 3, n: 10, faster: 70 }, "148.0 s: 132.15 and 135.99 are faster");
+  assert.deepEqual(r.at, ["Luigi Puccio", 135.99]); assert.deepEqual(r.single, [["Ana", 120.5, null, null], ["Bo", 130, null, null], ["Cy", 150, null, null]]); assert.deepEqual(r.one, ["Alberto Bivona", "Luigi Puccio"], "rows on one line work too");
+  assert.deepEqual(r.plan, [5, 12.08, 4.58, 19.99, 5, 5.42], "each split × 52.07 / 125");
+  assert.ok(/Place 3 of 10 on the total/.test(r.txt1) && /Place 2 \(Luigi Puccio\) is 2:15\.99: you are 12 s slower/.test(r.txt1) && /Fire Set 4th · cut 3rd/.test(r.txt1) && /9 athletes read/.test(r.txt1), r.txt1.slice(0, 300));
+  assert.ok(/Across the 2 stages: place 5 of 19/.test(r.txt2) && /faster than 74% of them/.test(r.txt2), r.txt2.slice(0, 300)); assert.ok(r.sw <= r.vw + 1); assert.deepEqual(app.errors, []);
 });
 test("M11i race stage: the Fire Set, a skippable rest and the cut circuit run as one workout; today's two times add up to the stage time", async () => {
   app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
-  const r = await app.page.evaluate(() => { const L = raceList(); const ts = buildTasks(`${raceScript(L[0])}\n\n- 3m Rest\n\n${raceScript(L[1])}`).map(t => [t.t, t.title, t.dur || t.cap || null]);
+  const r = await app.page.evaluate(() => { const L = raceList(); const ts = buildTasks(raceStageScript()).map(t => [t.t, t.title, t.dur || t.cap || null]);
     S.train.circuitLog = [{ id: "a", date: todayISO(), circuit: L[0].name, sec: 125 }, { id: "b", date: todayISO(), circuit: L[1].name, sec: 98 }, { id: "c", date: todayISO(), circuit: L[1].name, sec: 104 }]; DATA_V++;
     UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt = document.body.textContent; return { ts, stg: raceStageToday(), txt }; });
-  assert.deepEqual(r.ts, [["race", "Fire Set (Open)", 360], ["rest", "Rest", 180], ["race", "Cut · Mix C.L.", null]]); assert.deepEqual(r.stg, { a: 125, b: 98, sum: 223 }, "the better cut time of the day: 98 s");
+  assert.deepEqual(r.ts, [["race", "Fire Set (Open)", 360], ["rest", "Rest", 300], ["race", "Cut · Mix C.L.", 360]], "the rest between the two circuits is yours (5 min unless you set it)"); assert.deepEqual(r.stg, { a: 125, b: 98, sum: 223 }, "the better cut time of the day: 98 s");
   assert.ok(/Stage: Fire Set \+ Cut/.test(r.txt) && /today 2:05 \+ 1:38 = 3:43/.test(r.txt), r.txt.slice(0, 200)); assert.deepEqual(app.errors, []);
 });
 test("M11i race time limit: at the 6 minute limit the clock stops, the stations done are saved without a circuit time", async () => {
@@ -768,4 +758,28 @@ test("M11i race time limit: at the 6 minute limit the clock stops, the stations 
     UI.tab = "live"; render(); const txt = document.body.textContent; ACT["lv-done"](); const R = liveResults(L).other[0];
     return { timeUp, txt, R: [R.kind, R.race, R.rounds, R.of, R.cap], logged: (S.train.circuitLog || []).filter(x => x.circuit === "Fire Set (Open)").length }; });
   assert.deepEqual(r.timeUp, [true, true, true]); assert.ok(/Save 2\/6 stations/.test(r.txt), r.txt.slice(0, 200)); assert.deepEqual(r.R, ["fortime", true, 2, 6, 360]); assert.equal(r.logged, 0, "an unfinished circuit has no time"); assert.deepEqual(app.errors, []);
+});
+
+/* ---------- M11i workout pictures: one for each kind of session; race circuits as workouts ---------- */
+test("M11i workout pictures: endurance as zone bars with the time in each zone, strength as a block per set with the weight moved, blocks as a timeline with the stations of a race", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { const box = h => { const d = document.createElement("div"); d.innerHTML = h; return d; };
+    const run = box(woProfile(endTasks("Warmup\n- 10m Z1\n\nMain 5x\n- 3m Z4\n- 2m Z1\n\nCooldown\n- 5m Z1", "Running"))), str = box(scriptPreview("Pull 3x\n- 6 Pull-up +10kg\n- 8 Dip")), blk = box(scriptPreview("Fire Set race 6 min\n- 5 Pull-up\n- 10 Dip\n\nEMOM 10m\n- 5 Pull-up\n\nTabata 8x 20s/10s\n- Burpee"));
+    const h = c => +run.querySelector("rect." + c).getAttribute("height");
+    return { n: run.querySelectorAll("rect").length, h4: h("z4"), h1: h("z1"), zones: [...run.querySelectorAll(".wc-z > div")].map(d => d.textContent.replace(/\s+/g, " ").trim()), ticks: [...run.querySelectorAll(".wc-x span")].map(x => x.textContent),
+      sum: str.querySelector(".wc-sum").textContent, rows: [...str.querySelectorAll(".wc-r")].map(x => [x.querySelector(".wc-n").textContent, x.querySelectorAll(".wc-b i").length, [...x.querySelectorAll(".wc-b i")].map(i => i.textContent).join(",")]),
+      tl: [...blk.querySelectorAll(".wc-tl span b")].map(x => x.textContent), cells: blk.querySelectorAll(".rce-l span").length, tb: [blk.querySelectorAll(".wc-tb i").length, blk.querySelectorAll(".wc-tb u").length], em: blk.querySelectorAll(".wc-em span").length, none: woChart([]) }; });
+  assert.equal(r.n, 12, "warm-up, 5 × (hard, easy), cool-down"); assert.equal(r.h4, 88); assert.equal(r.h1, 22, "Z4 is drawn taller than Z1: 0.8 and 0.2 of 110"); assert.deepEqual(r.zones, ["Z125′63%", "Z415′38%"], "1500 s and 900 s of 2400 s");
+  assert.deepEqual(r.ticks, ["0", "10′", "20′", "30′", "40′"], "2400 s: a tick every 10 minutes"); assert.match(r.sum, /42 reps · 180 kg of added load/);
+  assert.deepEqual(r.rows, [["Pull-up", 3, "6,6,6"], ["Dip", 3, "8,8,8"]]); assert.deepEqual(r.tl, ["Fire Set", "EMOM", "Tabata"]); assert.equal(r.cells, 2); assert.deepEqual(r.tb, [8, 8]); assert.equal(r.em, 10); assert.equal(r.none, ""); assert.deepEqual(app.errors, []);
+});
+test("M11i race circuits as workouts: the editor adds Fire Set, Cut or a Stage with your rest, 'Save as a workout' makes them plannable and runnable, the rest between circuits is yours", async () => {
+  app = await H.startApp({ dir, seed: SC_SEED(), viewport: H.VIEWPORTS.phone });
+  const r = await app.page.evaluate(() => { ACT["we-new"](); const d = S_().draft; ACT["we-race"]({ dataset: { i: "0" } }); const one = d.script, nm = d.name; ACT["we-race"]({ dataset: { i: "1" } }); const two = parseScript(d.script).blocks.map(b => [b.kind, b.title]); closeSheet();
+    S.train.race = { stages: [], places: "", rest: 8 }; DATA_V++; const st = buildTasks(raceStageScript()).map(t => [t.t, t.dur || t.cap]);
+    ACT["race-save"]({ dataset: { i: "stage" } }); ACT["race-save"]({ dataset: { i: "0" } }); ACT["race-save"]({ dataset: { i: "0" } }); const tp = WK().tpls.filter(t => /Fire Set|Stage/.test(t.name)).map(t => [t.name, t.sport === strengthSport(), parseScript(t.script).blocks.map(b => b.kind).join("+")]);
+    UI.tab = "train"; UI.trainSeg = "perf"; UI.perfSeg = "records"; render(); const txt = document.body.textContent; return { one, nm, two, st, tp, txt }; });
+  assert.match(r.one, /^Fire Set \(Open\) race 6 min\n- 5 Pull-up\n- 10 Dip/); assert.equal(r.nm, "Fire Set (Open)"); assert.deepEqual(r.two, [["race", "Fire Set (Open) race 6 min"], ["race", "Cut · Mix C.L. race 6 min"]]);
+  assert.deepEqual(r.st, [["race", 360], ["rest", 480], ["race", 360]], "8 minutes of rest as set"); assert.deepEqual(r.tp, [["Stage: Fire Set + Cut", true, "race+rest+race"], ["Fire Set (Open)", true, "race"]], "saving twice updates the same workout");
+  assert.ok(/8 min rest, then Cut/.test(r.txt) && /Rest between circuits/.test(r.txt) && /Save as a workout/.test(r.txt)); assert.deepEqual(app.errors, []);
 });
