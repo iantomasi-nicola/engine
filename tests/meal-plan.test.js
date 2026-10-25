@@ -40,11 +40,19 @@ test("the week view is a tablet and desktop thing: it is offered there and not o
   }
 });
 
-test("the week view shows seven days by the meals, with each day's total against its target", async () => {
-  const page = await start(H.VIEWPORTS.desktop); await plan(page);
+test("the week view shows seven days by the meals, with each day's total against its target (seven columns on a wide window)", async () => {
+  const page = await start({ width: 1920, height: 1080 }); await plan(page);
   await page.evaluate(() => { UI.tab = "plan"; UI.planView = "week"; scheduleRender(); }); await page.waitForSelector(".pw");
   const r = await page.evaluate(() => ({ days: document.querySelectorAll(".pw-day").length, rows: [...document.querySelectorAll(".pw-row")].map(x => x.dataset.meal), items: document.querySelectorAll(".pw-it").length, tot: document.querySelector(".pw-day .pw-kcal")?.innerText, over: document.documentElement.scrollWidth > innerWidth, mon: document.querySelector(".pw-day").dataset.date === weekStartOf(todayISO()) }));
   assert.equal(r.days, 7); assert.deepEqual(r.rows, ["lunch", "dinner", "snack"]); assert.equal(r.items, 21); assert.match(r.tot, /\d/); assert.equal(r.over, false); assert.equal(r.mon, true);
+});
+
+test("on a PC window too narrow for seven readable columns the week is one row per day, the meals side by side, with nothing cut off", async () => {
+  const page = await start(H.VIEWPORTS.desktop); await plan(page);
+  await page.evaluate(() => { UI.tab = "plan"; UI.planView = "week"; scheduleRender(); }); await page.waitForSelector(".pw");
+  const r = await page.evaluate(() => { const cut = [...document.querySelectorAll(".pw-kcal")].filter(k => k.getBoundingClientRect().right > k.closest(".pw-day").getBoundingClientRect().right - 8).length;
+    return { tall: !!document.querySelector(".pw.tall"), days: document.querySelectorAll(".pw-day").length, items: document.querySelectorAll(".pw-it").length, cut, over: document.documentElement.scrollWidth > innerWidth, side: document.querySelector(".pw-mn").scrollWidth > document.querySelector(".pw-mn").clientWidth }; });
+  assert.equal(r.tall, true); assert.equal(r.days, 7); assert.equal(r.items, 21); assert.equal(r.cut, 0); assert.equal(r.over, false); assert.equal(r.side, false);
 });
 
 test("move, copy and duplicate from the item menu, each with undo; an eaten item can't be moved", async () => {

@@ -102,7 +102,7 @@ test("the week view has a «Fill from my habits» button, a clipboard chip once 
     const chip1 = document.querySelector(".pw-clip")?.innerText || "", paste1 = document.querySelectorAll('[data-act="meal-paste"]').length;
     ACT["mclip-clear"](); render(); await new Promise(x => setTimeout(x, 100)); return { fill, chip0, paste0, chip1, paste1, after: !!document.querySelector(".pw-clip") }; });
   assert.equal(r.fill, true); assert.equal(r.chip0, false); assert.equal(r.paste0, 0);
-  assert.match(r.chip1, /lunch/i); assert.equal(r.paste1, 21); assert.equal(r.after, false);
+  assert.match(r.chip1, /lunch/i); assert.equal(r.paste1, 20);   // every cell but the one it was copied from assert.equal(r.after, false);
   assert.deepEqual(app.errors, []);
 });
 
