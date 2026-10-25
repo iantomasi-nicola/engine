@@ -766,8 +766,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .set-in{display:flex;flex-direction:column;gap:12px;margin-top:14px}
 details.card>summary{cursor:pointer;list-style:none}
 details.card>summary::-webkit-details-marker{display:none}
-details.card>summary.lrow::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-right:6px;transition:transform .15s}
-details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
+details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-right:6px;transition:transform .15s}
+details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::after{transform:rotate(-135deg)}
 .proto p{margin:10px 0 0;font-size:13.5px;max-width:70ch}
 .goal-main{display:flex;align-items:center;gap:10px;margin:4px 0 6px}
 .goal-main b{font-size:26px;font-weight:780;letter-spacing:-.02em}
@@ -2277,7 +2277,7 @@ button,input,select,textarea{font-family:inherit;letter-spacing:inherit}
 /* ---------- surfaces: white cards on the grouped page, nested ones a step down ---------- */
 .card,.stat,.lv-card,.t-card,.wl-c,.pg-card,.rc,.lv-nx,.lv-li,.type-card,.meal,.coach,.dt,.streak,.ffw-c,.lv-banner,.td-card,.cv,.cv-wk,.gl-c,.pp-day,.set-grp,.td-s{background:var(--v-card)!important;border:0!important;border-radius:var(--r-card)!important;box-shadow:var(--v-e1)!important}
 .stat,.ffw-c{border-radius:var(--r-in)!important}
-:is(.card,.td-card,.lv-card,.meal,.cv,.set-grp,.gl-c,.rc,.coach) :is(.card,.stat,.td-s,.gl-c,.ffw-c,.rc,.lv-nx,.lv-li,.type-card,.pp-day){background:var(--v-card2)!important;box-shadow:none!important;border-radius:var(--r-in)!important}
+:is(.card,.td-card,.lv-card,.meal,.cv,.set-grp,.gl-c,.rc,.coach,.rec-sec) :is(.card,.stat,.td-s,.gl-c,.ffw-c,.rc,.lv-nx,.lv-li,.type-card,.pp-day){background:var(--v-card2)!important;box-shadow:none!important;border-radius:var(--r-in)!important}
 .sheet-b .card,.sheet-b .stat,.set-grp-in>.card,section .gl-c,.set-grp-in>section{background:var(--v-sheet-card)!important;border:0!important;border-radius:var(--r-in)!important;box-shadow:none!important}
 .set-grp-in>.card,.set-grp-in>section{background:var(--v-card2)!important}
 .sheet-b .card .card{background:transparent!important}
@@ -2582,7 +2582,9 @@ select,select.inp{-webkit-appearance:none;appearance:none;padding-right:38px!imp
 details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}
 details>summary:not(.lrow)::after,.nut-more summary::after,.fd-more>summary::after,.set-det summary::after{content:""!important;display:inline-block;flex:none;width:18px;height:18px;margin-left:8px;vertical-align:-4px;font-size:0!important;background:currentColor;opacity:.5;border:0!important;transform:none;transition:transform .18s;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat}
 details[open]>summary:not(.lrow)::after,.nut-more[open] summary::after,.fd-more[open]>summary::after,.set-det[open] summary::after{content:""!important;transform:rotate(180deg)}
-details.card>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after{transform:rotate(180deg)!important}
+details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::after{transform:rotate(180deg)!important}
+/* the paste / season rows of the Endurance Cup are fold rows like the others: same inset as the card text, chevron on the right */
+.rk .rk-paste>summary.lrow{padding:6px 0!important}
 /* design review 1 (25 Oct): one card-title style on Today (.td-ov, also the label of the four tiles), the Body card on one row, the rest-day line under its title */
 .gl-t .gl-h{justify-content:flex-start;font-size:12.5px;font-weight:500;letter-spacing:.02em;text-transform:none}
 .td-say.big{font-size:14.5px}
