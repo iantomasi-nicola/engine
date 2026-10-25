@@ -92,7 +92,9 @@ test("Settings: the BMR select offers the three formulas plus MET, the bonus has
   const hb = await ev(() => { FIT().energy.bmr = "Harris-Benedict"; FIT().energy.hbBonusOn = "off"; DATA_V++; const d = document.createElement("div"); d.innerHTML = fitSettings(); const off = d.querySelector('label[for="fit-energy-hbBonusOn"]')?.textContent, offFields = !!d.querySelector("#fit-energy-hbBonus");
     FIT().energy.hbBonusOn = "on"; DATA_V++; d.innerHTML = fitSettings(); const onFields = !!d.querySelector("#fit-energy-hbBonus") && !!d.querySelector("#fit-energy-hbThr"); FIT().energy.bmr = "Mifflin-St Jeor"; return { off, offFields, onFields, note: /not part of the published equation/.test(d.textContent) }; });
   assert.deepEqual(hb, { off: "Lean bonus", offFields: false, onFields: true, note: true });
-  assert.match(r.text, /90 recreational athletes aged 18–35/);
+  assert.doesNotMatch(r.text, /90 recreational athletes/, "the note shows only for Harris-Benedict and Ten Haaf");
+  const th = await ev(() => { FIT().energy.bmr = "Ten Haaf (weight)"; DATA_V++; const d = document.createElement("div"); d.innerHTML = fitSettings(); FIT().energy.bmr = "Mifflin-St Jeor"; return d.textContent; });
+  assert.match(th, /90 recreational athletes aged 18–35/);
 });
 
 test("changing the switch in Settings is saved and survives a reload", async () => {

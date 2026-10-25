@@ -48,3 +48,21 @@ test("describe a workout in words: the entry is in the Free workout sheet and in
     return { link, foot, back: UI.sheet === ed, script: /800mtr/.test(ed.draft.script), min: ed.draft.min, note: ed.draft.note }; });
   assert.deepEqual(r, { link: true, foot: ["Cancel", "Use it in this workout"], back: true, script: true, min: 55, note: "6x800" });
 });
+
+test("AI workout from words: the text is cleaned (bullets, fences, 400m = metres, 6× = 6x), the duration comes from the steps rather than the model's guess, a reply with no steps is asked again once, and the assumptions are shown", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const pure = await page.evaluate(() => ({
+    a: woNormalize("```\nWarmup\n• 15m Z2 Pace\n\n\n\nMain set 6×\n- 400m 3:50/km Pace\n90s Rest\n```"),
+    b: woNormalize("Main set\n- 20m Z2 Pace\n- 1,5km Z3 Pace"),
+  }));
+  // bullets -> "- ", fences gone, three blank lines -> one, 6× -> 6x, 400m (three digits: metres) -> 400mtr, a step line without "- " gets one; 20m stays minutes, 1,5km -> 1.5km
+  assert.equal(pure.a, "Warmup\n- 15m Z2 Pace\n\nMain set 6x\n- 400mtr 3:50/km Pace\n- 90s Rest");
+  assert.equal(pure.b, "Main set\n- 20m Z2 Pace\n- 1.5km Z3 Pace");
+  const r = await page.evaluate(async () => { let calls = 0;
+    Sync.sample = { json: async prompt => { calls++; return calls === 1 ? { sport: "Running", name: "Easy", script: "just run easily for an hour", min: 99, int: "Light" } : { sport: "Running", name: "Easy hour", script: "Main set\n- 40m Z2 Pace\n- 20m Z1 Pace", min: 99, int: "Light", notes: ["No pace given: Z2 assumed"] }; } };
+    ACT["wo-import"](); UI.sheet.desc = "easy hour"; await ACT["wi-go"](); const R = UI.sheet.res, text = document.querySelector(".sheet").innerText; return { calls, script: R.script, min: R.min, notes: R.notes, shown: /Z2 assumed/.test(text) }; });
+  assert.equal(r.calls, 2); assert.match(r.script, /40m Z2 Pace/);
+  assert.equal(r.min, 60, "40 + 20 minutes from the steps, not the 99 of the model");
+  assert.deepEqual(r.notes, ["No pace given: Z2 assumed"]); assert.ok(r.shown);
+  assert.deepEqual(app.errors, []);
+});

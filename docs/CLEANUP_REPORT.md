@@ -418,3 +418,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - Aggiunti `racePlan` (pura), `raceWeekKm`, `racePlanHTML`, `racePlanSum`, `racePlans`; agganciata in `trainRaces` (una sezione `foldOne("raceplan", …)` chiusa per gara; gara passata: solo «After» per 7 giorni). Nessun ACT/CHG nuovo, nessun CSS nuovo (righe `lrow`), nessuna dipendenza.
 - Ipotesi dichiarate nel codice: fuelling <60 min nessuno, 60–150 min 30–60 g/h, oltre 60–90 g/h (mai 120); carboidrati dei 2 giorni prima 5–7 g/kg (7–10 da 90 min); colazione 1–2 g/kg; dopo gara proteine 0,25–0,4 g/kg, carboidrati 0,5–1,0 g/kg (1,0–1,2 da 90 min); taper −20–30% km (−40–50% da mezza); liquidi 400–800 ml/h da 60 min, sodio solo «prova il sudore», nessun numero. Non sono nuove formule nutrizionali dell'energia: sono intervalli di consiglio; da confermare dall'utente.
 - Test: `tests/m9b.test.js` (4). Non eseguiti: suite intera, layout-audit, revisione grafica (limite di utilizzo).
+
+## M7b-2e D18 NEAT dai passi (26/10/2026)
+- **Verificato**: `tests/m7b.test.js` (3 test nuovi: 2.000/7.000/14.000 passi = 200,6/350/559,2 kcal calcolati a mano, interruttori e casi che restano sul vecchio calcolo, proiezione dei passi di oggi, migrazione).
+- **Cambiato**: `neatFromSteps` e `stepsProjected` prima di `energySeries`; nuovo ramo nel calcolo del NEAT dopo la base appresa e prima della media; `NEAT_SRC` con due provenienze; due campi in Settings › Energy model (sempre righe pari).
+- **Eliminato**: nessun codice morto introdotto.
+- **Aperto**: la costante «7.000 passi = NEAT predefinito» è un'ipotesi (nessuna fonte primaria nel sandbox); `aeeShadow` (AEE in ombra) ha il proprio NEAT che richiede ancora la base appresa; i giorni con corsa o camminata non usano i passi (i passi dell'allenamento andrebbero sottratti: da fare con la cadenza); la media degli ultimi 7 NEAT include valori già stimati (si auto-rinforza, F-04).
