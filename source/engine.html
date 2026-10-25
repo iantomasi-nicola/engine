@@ -2486,7 +2486,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 #main{gap:16px}
 .section-h{margin-top:8px}
 .today-grid.one{display:flex;flex-direction:column;gap:12px}
-.bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;background:var(--md-sc);color:var(--md-on-surface-variant);font-size:13px}
+.bk-due{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:24px;color:var(--md-on-surface-variant);font-size:13px}
 .bk-due>span{flex:1;min-width:0}
 
 #add-seg button{padding:0 6px!important;font-size:13px!important}
@@ -4831,7 +4831,7 @@ const tbl = (head, rows, cls = "", opt = {}) => {
   const lab = i => esc(plainH(head[i]));
   const rowsHtml = [...shown, ...tots].map(r => { let i = 0; return r.replace(/<td(?=[\s>])/g, () => `<td data-label="${lab(i++)}"`); }).join("");
   const style = hide.length ? `<style>${hide.map(x => `#${key} tr>*:nth-child(${x + 1})`).join(",")}{display:none!important}</style>` : "";
-  const tools = long || wide ? `<div class="tbl-tools">${long ? `<span class="faint">${shown.length} of ${body.length} rows</span>` : "<span></span>"}${wide ? `<button class="chip-a sm" data-act="tbl-cols" data-k="${key}">${ic("sliders", "sm")}Columns ${head.length - hide.length}/${head.length}</button>` : ""}</div>` : "";
+  const tools = long || wide || opt.lead ? `<div class="tbl-tools"><span class="row" style="gap:12px">${opt.lead || ""}${long ? `<span class="faint">${shown.length} of ${body.length} rows</span>` : ""}</span>${wide ? `<button class="chip-a sm" data-act="tbl-cols" data-k="${key}">${ic("sliders", "sm")}Columns ${head.length - hide.length}/${head.length}</button>` : ""}</div>` : "";
   const more = long ? `<div class="tbl-more">${n !== "all" && shown.length < body.length ? `<button class="btn text sm" data-act="tbl-more" data-k="${key}">Show 14 more</button>` : "<span></span>"}<div class="seg sm" role="group" aria-label="Rows to show">${[[14, "14"], [30, "30"], ["all", "All"]].map(([v, l]) => `<button data-act="tbl-n" data-k="${key}" data-v="${v}" aria-pressed="${String(n) === String(v)}">${l}</button>`).join("")}</div></div>` : "";
   return `${style}<div class="tbl-box">${tools}<div class="tbl-wrap"><table id="${key}" class="tbl ${cls} ${wide ? "wide-auto" : ""}"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></div>${more}</div>`;
 };
@@ -4998,9 +4998,10 @@ function kmChart() {
 }
 function trainRecords() {
   const rs = runState();
-  let h = `<div class="section-h"><h2>Running personal bests</h2><span class="row" style="gap:12px"><button class="link" data-act="calc-open" data-k="pace">${ic("sliders", "sm")} Calculators</button><button class="link" data-act="open-result" data-type="pb">${ic("plus", "sm")} Add</button></span></div>
+  const pbActs = `<button class="link" data-act="calc-open" data-k="pace">${ic("sliders", "sm")} Calculators</button><button class="link" data-act="open-result" data-type="pb">${ic("plus", "sm")} Add</button>`;   // in the table's own bar, beside Columns: one row, not two
+  let h = `<div class="section-h"><h2>Running personal bests</h2></div>
     ${tbl(["Distance", "PB", "Pace", "Date", "VDOT", "vs predicted"], RACE_DIST.map(([k, km]) => { const pb = pbFor(km), p = rs.preds.find(x => x.km === km); const v = pb ? vdotOf(km, pb.sec / 60) : null;
-      return `<tr><td>${k}</td><td class="n"><b>${pb ? fmtClock(pb.sec) : "—"}</b></td><td class="n">${pb ? fmtPace(pb.sec / 60 / km) : ""}</td><td>${pb ? fmtDM(pb.date) : ""}</td><td class="n">${v ? r1(v) : ""}</td><td class="n">${pb && p?.sec ? (pb.sec <= p.sec ? "−" : "+") + fmtClock(Math.abs(pb.sec - p.sec)) : ""}</td></tr>`; }))}
+      return `<tr><td>${k}</td><td class="n"><b>${pb ? fmtClock(pb.sec) : "—"}</b></td><td class="n">${pb ? fmtPace(pb.sec / 60 / km) : ""}</td><td>${pb ? fmtDM(pb.date) : ""}</td><td class="n">${v ? r1(v) : ""}</td><td class="n">${pb && p?.sec ? (pb.sec <= p.sec ? "−" : "+") + fmtClock(Math.abs(pb.sec - p.sec)) : ""}</td></tr>`; }), "", { lead: pbActs })}
     <div class="faint" style="font-size:12.5px">Races at 3k, 5k, 10k, half or marathon distance update your PBs by themselves. Minus = faster than the VDOT prediction.</div>`;
   h += `<button class="btn tonal sm" data-act="go-tprog" style="align-self:flex-start">${ic("chart", "sm")}Progress charts</button>`;
   h += `<div class="section-h"><h2>Calisthenics tests</h2><span class="row" style="gap:12px"><button class="link" data-act="test-start">${ic("play", "sm")} Test day</button><button class="link" data-act="open-result" data-type="calis">${ic("plus", "sm")} Add</button></span></div>

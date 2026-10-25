@@ -69,3 +69,22 @@ test("Overview: no «• -» pill when a value is missing; the two charts show a
   assert.match(r.grid, /four/); assert.equal(r.tiles.length, 4); assert.match(r.tiles[3], /logging streak/); assert.doesNotMatch(r.text, /Logging streak:/);
   assert.deepEqual(app.errors, []);
 });
+
+test("Personal bests: Calculators, Add and Columns share the table's one bar, on one line, at 390 and 1440", async () => {
+  for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.desktop]) {
+    const page = await start(vp);
+    const r = await page.evaluate(async () => { Object.assign(UI, { tab: "train", trainSeg: "perf", perfSeg: "records", fold: { rec: { "Running personal bests": true } } }); render(); await new Promise(x => setTimeout(x, 200));
+      const bar = document.querySelector(".tbl-tools"), items = [...bar.querySelectorAll("button")].map(b => { const q = b.getBoundingClientRect(); return { t: b.textContent.trim().replace(/\s+/g, " "), y: Math.round(q.top + q.height / 2) }; });
+      return { items, over: bar.scrollWidth > bar.clientWidth + 1 }; });
+    assert.deepEqual(r.items.map(i => i.t), ["Calculators", "Add", "Columns 6/6"], JSON.stringify(r));
+    assert.equal(new Set(r.items.map(i => i.y)).size, 1, "one line: " + JSON.stringify(r.items)); assert.ok(!r.over);
+    await app.close(); app = null;
+  }
+});
+
+test("the backup row on Today is the same plain row in the light and in the dark theme (no tonal fill that reads as a card only in dark)", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const bg = async scheme => { await page.emulateMedia({ colorScheme: scheme }); await page.evaluate(() => { UI.tab = "today"; render(); }); await page.waitForTimeout(250); return page.evaluate(() => { const e = document.querySelector(".bk-due"); return e ? getComputedStyle(e).backgroundColor : null; }); };
+  const light = await bg("light"), dark = await bg("dark");
+  assert.equal(light, "rgba(0, 0, 0, 0)"); assert.equal(dark, light);
+});
