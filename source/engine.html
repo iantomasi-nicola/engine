@@ -2944,8 +2944,7 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
-  if (s?.fit && s.fit.energy?.calV2From === undefined) o.fit.energy.calV2From = ALGO_START;
-  if (s?.fit && s.fit.energy?.netFrom === undefined) o.fit.energy.netFrom = ALGO_START;
+  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
   for (const k of DOWK) if (!Array.isArray(o.fit.pattern[k])) o.fit.pattern[k] = [];
   return o;
@@ -3519,7 +3518,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, hbBonus: 27.5, hbThr: 16, minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", netKcal: "on", netFrom: "", calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", calMode: "v2", calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3695,6 +3694,22 @@ function learnedRates() {
     return out;
   });
 }
+/* D20 (approved 26/10): the heart-rate-to-kcal factor of each sensor, learned from your own sessions (last 90 days) that have both a heart rate and a real, net kcal figure:
+   the median of real / Keytel per session, at least 6 sessions, pulled toward the global factor with the weight of 6 sessions, kept between 0.5 and 1.5.
+   No wrist-versus-strap multiplier is taken from the literature (it gives no sign); a sensor without history keeps the global factor. Off: energy.hrLearn "off"; days before energy.hrFrom keep the global factor. */
+function hrCalLearned(devId) {
+  return memo("hrcal|" + devId, () => {
+    const fit = FIT(), g = fit.run.hrCal, today = todayISO(), from = addDays(today, -89), kg = trendNow(), R = [];
+    for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) for (const w of d < from || d > today ? [] : day.workouts || []) {
+      if (!(w.hr > 0) || !(w.min > 0) || devOf(w) !== devId) continue; const rk = realKcal(w, d), kt = keytel(+w.hr, kg, ageAt(d), fit.profile.sex) * w.min;
+      if (rk > 0 && kt > 0 && rk / kt > 0.2 && rk / kt < 3) R.push(rk / kt);
+    }
+    if (R.length < 6) return { f: g, n: R.length, own: false };
+    R.sort((a, b) => a - b); const h = R.length >> 1, med = R.length % 2 ? R[h] : (R[h - 1] + R[h]) / 2;
+    return { f: clamp((R.length * med + 6 * g) / (R.length + 6), 0.5, 1.5), n: R.length, own: true, med };
+  });
+}
+const hrCalFor = (devId, date) => { const E = FIT().energy; return !devId || E.hrLearn === "off" || (E.hrFrom && date < E.hrFrom) ? FIT().run.hrCal : hrCalLearned(devId).f; };
 function keytel(hr, kg, age, sex) {
   const v = sex === "Female" ? (-20.4022 + 0.4472 * hr - 0.1263 * kg + 0.074 * age) : (-55.0969 + 0.6309 * hr + 0.1988 * kg + 0.2017 * age);
   return Math.max(0, v / 4.184);
@@ -3708,7 +3723,7 @@ function sessionKcal(w, date, kgOverride) {
   const kg = kgOverride || trendAt(date);
   if (w.load > 0 && w.min > 0 && rates.reg && !(w.km > 0 && w.sport === fit.runSport && fromDevice(w))) { const g = rates.reg; return { kcal: r0(w.min * clamp(g.a + g.b * w.load / w.min, g.lo * 0.9, g.hi * 1.1)), how: "load" }; }
   if (w.sport === fit.runSport && w.km > 0) return { kcal: r0(w.km * (rates.kmRate || kg)), how: "km" };
-  if (w.hr > 0 && w.min > 0) return { kcal: r0(keytel(w.hr, kg, ageAt(date), fit.profile.sex) * fit.run.hrCal * w.min), how: "hr" };
+  if (w.hr > 0 && w.min > 0) return { kcal: r0(keytel(w.hr, kg, ageAt(date), fit.profile.sex) * hrCalFor(devOf(w), date) * w.min), how: "hr" };
   // planned strength: calendar durations are unreliable, Engine's own timing of the script (calibrated on your live sessions) is used
   let m = +w.min || 0; if (m && w.script && !fromDevice(w) && typeof isStrength === "function" && isStrength(w.sport)) { try { const g = workoutGist(w).min; if (g > 0) m = g; } catch (e) {} }
   if (m > 0) return { kcal: r0(m * (rates[w.int || "Moderate"] || rates.Moderate)), how: rates.source === "own" ? "own" : "met" };
@@ -15669,7 +15684,7 @@ ACT["ss-dev"] = el => { const w = S_().draft, id = el.dataset.id; w.dev = devOf(
 function devSettings() {
   const fit = FIT(), D = devList(), opt = (v, cur, l) => `<option value="${esc(v)}" ${cur === v ? "selected" : ""}>${esc(l)}</option>`;
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="flabel">Heart-rate sensors</span>
-    <span class="faint" style="font-size:12.5px">Which sensor gives the heart rate of each sport. It is saved with every workout (you can change it per workout). Calories are not recalculated yet: this only records which sensor was used.</span>
+    <span class="faint" style="font-size:12.5px">Which sensor gives the heart rate of each sport. It is saved with every workout (you can change it per workout). «Total» calories are counted net of resting energy; once a sensor has 6 sessions with heart rate and calories, its own heart-rate factor is learned from them.${D.some(x => hrCalLearned(x.id).own) ? ` Learned: ${D.filter(x => hrCalLearned(x.id).own).map(x => `${esc(x.name)} ×${hrCalLearned(x.id).f.toFixed(2)} (${hrCalLearned(x.id).n} sessions)`).join(" · ")}.` : ""}</span>
     ${D.map(x => `<div class="grid2" style="grid-template-columns:minmax(0,1fr) 120px 40px;align-items:end"><div class="field"><label for="dv-n-${esc(x.id)}">Name</label><input id="dv-n-${esc(x.id)}" class="inp" value="${esc(x.name)}" data-chg="dev-name" data-id="${esc(x.id)}"></div>
       <div class="field"><label for="dv-k-${esc(x.id)}">Calories shown</label><select id="dv-k-${esc(x.id)}" class="inp" data-chg="dev-kcal" data-id="${esc(x.id)}">${opt("gross", x.kcal, "Total")}${opt("net", x.kcal, "Active only")}${opt("unknown", x.kcal, "Not sure")}</select></div>
       <button class="icon-btn" data-act="dev-del" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}

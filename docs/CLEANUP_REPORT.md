@@ -398,3 +398,10 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Differenza voluta da documentare**: `eatCandidates` (AEE in ombra) ha la propria conversione indipendente e tratta anche «unknown» come lordo (qualità «low»), mentre `netOfRest` lascia «unknown» com'è. Non cambia alcun target (T8).
 - **Eliminato**: la formula BMR duplicata dentro `energySeries` (ora `bmrOf`). Niente altro da rimuovere.
 - **Aperto**: D19 (3000 contro 2750 Zepp): D5b ne spiega solo una parte (≈ riposo dentro le sessioni, 75–150 kcal per sessione); il resto non è spiegabile senza i dati reali dell'utente → D20 e confronto con il valore dell'orologio. Restano D20, D18 (`neatMode`), F-01, F-02/D9, F-09, D7, F-11 `algoVersion` generale (oggi solo date di attivazione).
+
+## M7b-2c D20 fattore FC→kcal per dispositivo (26/10/2026)
+- **Verificato**: `tests/m7b.test.js` (16 test, due nuovi per D20: fattore appreso 0,625 su 8 sessioni calcolato a mano, fattore globale con meno di 6 sessioni, interruttore spento, `hrFrom` futuro, migrazione).
+- **Cambiato**: `hrCalLearned`/`hrCalFor` prima di `keytel`; il ramo `hr` di `sessionKcal` usa `hrCalFor(devOf(w), date)`; la migrazione delle date di attivazione in `normalizeSettings` è un ciclo su `calV2From`, `netFrom`, `hrFrom`; il testo di Settings › Heart-rate sensors diceva «Calories are not recalculated yet» (falso dopo D5b): aggiornato.
+- **Eliminato**: nessun codice morto introdotto.
+- **Aperto**: `eatCandidates` (AEE in ombra) continua a usare il fattore globale (è la stima indipendente); la correzione appresa «da peso e bilancio» (non solo da kcal di riferimento) non è fatta perché richiede dati reali; nessun moltiplicatore polso-contro-fascia dalla letteratura.
+

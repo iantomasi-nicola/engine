@@ -87,8 +87,8 @@ test("algorithm version (F-11): a saved profile from before gets the fixed v2 st
       kept = normalizeSettings({ fit: { energy: { calV2From: "2026-01-01" } } }).fit.energy, fresh = normalizeSettings({}).fit.energy, noEnergy = normalizeSettings({ fit: { profile: { sex: "Male" } } }).fit.energy;
     return { a: a.calV2From, mode: a.calMode, again: again.calV2From, kept: kept.calV2From, fresh: fresh.calV2From, noEnergy: noEnergy.calV2From, warn: a.warn }; });
   assert.deepEqual(r, { a: "2026-10-25", mode: "v2", again: "2026-10-25", kept: "2026-01-01", fresh: "", noEnergy: "2026-10-25", warn: "on" });
-  const n = await ev(() => { const a = normalizeSettings({ fit: { energy: { bmr: "x" } } }).fit.energy, f = normalizeSettings({}).fit.energy; return { a: [a.netKcal, a.netFrom], f: [f.netKcal, f.netFrom] }; });
-  assert.deepEqual(n, { a: ["on", "2026-10-25"], f: ["on", ""] });
+  const n = await ev(() => { const a = normalizeSettings({ fit: { energy: { bmr: "x" } } }).fit.energy, f = normalizeSettings({}).fit.energy; return { a: [a.netKcal, a.netFrom, a.hrLearn, a.hrFrom], f: [f.netKcal, f.netFrom, f.hrLearn, f.hrFrom] }; });
+  assert.deepEqual(n, { a: ["on", "2026-10-25", "on", "2026-10-25"], f: ["on", "", "on", ""] });
 });
 
 test("switching from legacy to v2 in the middle of a series moves the factor by no more than one step at the boundary", async () => {
@@ -135,5 +135,26 @@ test("D5b: the rates learned from device sessions are net too, so a planned sess
   near(r.off, 10, 0.001); near(r.on, 10 - 1780 / 1440, 0.01);   // each session is rounded to whole kcal (526), hence 0.01
 });
 function near(a, b, e) { assert.ok(Math.abs(a - b) <= e, `${a} vs ${b}`); }
+
+/* D20 (approved 26/10): the heart-rate-to-kcal factor of each sensor, learned from your own sessions that have both a heart rate and a real kcal figure.
+   Keytel, male 80 kg, 30 y, 150 bpm: (-55.0969 + 0.6309 * 150 + 0.1988 * 80 + 0.2017 * 30) / 4.184 = 14.6967 kcal/min, 881.80 in 60 min.
+   8 sessions of 60 min and 440 kcal (sensor counts net): ratio 440 / 881.80 = 0.49898. Pulled toward the global 0.794 with a weight of 6 sessions: (8 * 0.49898 + 6 * 0.794) / 14 = 0.62542.
+   A 30-minute session with heart rate and no kcal: 14.6967 * 0.62542 * 30 = 275.7 -> 276 on that sensor; 14.6967 * 0.794 * 30 = 350.1 -> 350 on a sensor without history. */
+const hrSetup = n => ev(n => { const t = todayISO(); S.logm = {}; FIT().energy.hrLearn = "on"; FIT().energy.hrFrom = ""; FIT().devices.find(x => x.id === "zepp").kcal = "net"; FIT().devices.find(x => x.id === "polar").kcal = "net";
+  for (let i = 1; i <= n; i++) { const d = addDays(t, -i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Cycling", min: 60, hr: 150, kcal: 440, src: "intervals", ext: "icu-a-" + i, dev: "zepp" }] }; } DATA_V++; }, n);
+const hrKcal = (dev, o = {}) => ev(([dev, o]) => { Object.assign(FIT().energy, o); DATA_V++; return sessionKcal({ sport: "Cycling", min: 30, hr: 150, dev }, todayISO(), 80); }, [dev, o]);
+test("D20: a sensor with 6+ sessions of its own gets its learned heart-rate factor (0.625), a sensor without history keeps the global one (0.794)", async () => {
+  await profile(); await hrSetup(8);
+  assert.deepEqual(await hrKcal("zepp"), { kcal: 276, how: "hr" });
+  assert.deepEqual(await hrKcal("polar"), { kcal: 350, how: "hr" });
+});
+test("D20: fewer than 6 sessions, the switch off, and days before hrFrom leave the global factor in use", async () => {
+  await profile(); await hrSetup(5);
+  assert.equal((await hrKcal("zepp")).kcal, 350);
+  await hrSetup(8);
+  assert.equal((await hrKcal("zepp", { hrLearn: "off" })).kcal, 350);
+  assert.equal((await hrKcal("zepp", { hrLearn: "on", hrFrom: "2999-01-01" })).kcal, 350);
+  assert.equal((await hrKcal("zepp", { hrFrom: "" })).kcal, 276);
+});
 
 test("the app starts without errors after these changes", async () => { assert.deepEqual(app.errors, []); });
