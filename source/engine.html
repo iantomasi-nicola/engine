@@ -5040,7 +5040,7 @@ function overviewView() {
 function changeChart() {
   const s = energySeries(), today = todayISO(), base = s.rows[addDays(today, -30)] || s.rows[s.start]; const pts = []; let cum = 0;
   for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
-  if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs a few days of logged food and weigh-ins.</div>`;
+  if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs logged food and weigh‑ins.</div>`;
   const W = chartW(true), H = 170, L = 34, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), lo = Math.min(-0.5, ...all), hi = Math.max(0.5, ...all);
   const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
   [lo, hi].forEach(v => g += `<text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r1(v)}</text>`);
