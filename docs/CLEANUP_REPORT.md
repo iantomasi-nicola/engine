@@ -398,3 +398,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Differenza voluta da documentare**: `eatCandidates` (AEE in ombra) ha la propria conversione indipendente e tratta anche «unknown» come lordo (qualità «low»), mentre `netOfRest` lascia «unknown» com'è. Non cambia alcun target (T8).
 - **Eliminato**: la formula BMR duplicata dentro `energySeries` (ora `bmrOf`). Niente altro da rimuovere.
 - **Aperto**: D19 (3000 contro 2750 Zepp): D5b ne spiega solo una parte (≈ riposo dentro le sessioni, 75–150 kcal per sessione); il resto non è spiegabile senza i dati reali dell'utente → D20 e confronto con il valore dell'orologio. Restano D20, D18 (`neatMode`), F-01, F-02/D9, F-09, D7, F-11 `algoVersion` generale (oggi solo date di attivazione).
+
+### M7b-2b · F-01 BMR (26/10)
+- **Verificato**: `tests/m7b-bmr.test.js` (12 test, valori a mano nei commenti: HB 1864.545 e 1345.9985, Ten Haaf 1989.2264, bordi di età 18/35/36/60, bonus, migrazione, Settings, ricarica) e `nutrition-baseline.test.js` (i due test KNOWN D10 aggiornati di proposito); `layout-audit.js`: nessun problema.
+- **Aggiornato**: `bmrOf` usa `hbOriginal`, `hbBonusKcal`, `tenHaafWeight`; `energyView` usa le stesse funzioni (4 tile affiancati; riga «Used today» solo con bonus o MET); `normalizeSettings` imposta `hbBonusOn` ("on" per i profili salvati prima).
+- **Eliminato**: le formule HB arrotondate duplicate in `bmrOf` e `energyView`, il tile «used today» e il ramo Katch-McArdle irraggiungibile di `inUse`.
+- **Aperto**: coefficienti Ten Haaf non verificati su un testo primario in questo ambiente; Cunningham/Ten Haaf-FFM; la scelta della formula cambia la serie passata (F-11).
