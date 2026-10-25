@@ -2489,11 +2489,12 @@ html body .sheet.full .sheet-h::before{display:none}
 .wb-sum{margin-top:6px}
 /* one section pattern: a title, then rows divided by a line, no boxes: the page before a workout, Programs, Workouts and History share it */
 .card.flat{background:none;box-shadow:none;border-radius:0}.card.flat>.lrow,.card.flat>button.lrow{padding-inline:2px}
+/* Ready to start (every variant): no cards, no boxes; figures sit in a row, sections are divided by a line */
+.pv-hero .pv-tiles>div,.pv-tiles>div{background:none!important;border:0!important;box-shadow:none!important;padding:2px 0!important;text-align:left}.pv-tiles{display:flex!important;gap:28px!important;flex-wrap:wrap}
+.pv-flat .lv-card{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding:18px 0!important}.pv-flat .lv-card.pv-top{border-top:0!important;padding-top:6px!important}.pv-flat .lv-card.flush{padding:6px 0!important}
 /* workout rows: flat on the page, divided by a line (no box, no tinted box inside a box) */
 .wl-flat{display:flex;flex-direction:column;min-width:0}.wl-flat .td-s:first-child{border-top:0!important}
-.wl-flat .td-s,.td-card .td-s{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding-left:0!important;padding-right:0!important}.td-card .td-s:first-of-type{border-top:0!important}
-.td-card.td-train,.td-card.td-next{background:none!important;box-shadow:none!important;padding-left:0!important;padding-right:0!important}
-.empty.slim.flat{background:none!important;box-shadow:none!important;padding:4px 0 8px!important;text-align:left;align-items:flex-start}.td-s .lin{display:block;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}.td-s .lin i{display:block;height:100%;background:var(--c,var(--ink));border-radius:2px}
+.wl-flat .td-s{background:none!important;box-shadow:none!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;padding-left:0!important;padding-right:0!important}.empty.slim.flat{background:none!important;box-shadow:none!important;padding:4px 0 8px!important;text-align:left;align-items:flex-start}.td-s .lin{display:block;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}.td-s .lin i{display:block;height:100%;background:var(--c,var(--ink));border-radius:2px}
 .pv-sec .section-h{margin:0}.pv-sec .section-h h2{font-size:18px!important}
 .set-grp>summary>.ic,.set-grp>summary .ic.chev{display:none}
 /* one chevron for every dropdown: selects and the sections that open and close */
@@ -9640,7 +9641,7 @@ function liveRunTask(L, t, r) {
 function runPreview(L) {
   const tasks = L.tasks, tot = tasks.reduce((a, t) => a + (t.dur || 0), 0), km = runEstKm(tasks);
   let h = topBar(`<button class="icon-btn" data-act="lv-cancel" aria-label="Close">${ic("close")}</button>`, "Ready to start", fmtLong(L.date), L.free ? `<span></span>` : `<button class="icon-btn" data-act="lv-edit" aria-label="Edit workout">${ic("edit")}</button>`);
-  h += `<div class="lv-wrap two"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
+  h += `<div class="lv-wrap two pv-flat"><div class="lv-main"><section class="lv-card pv-top"><h1 class="lv-h1">${esc(L.name)}</h1>
     <div class="pv-meta"><span>${ic("timer", "sm")}${fmtDurShort(tot)}</span>${km ? `<span>≈ ${r1(km)} km</span>` : ""}<span>${tasks.length} steps</span><span class="chip-s">${esc(L.sport)}</span></div>
     <p class="muted" style="margin:0;font-size:13.5px">Runs by itself: every step starts and ends on its own with a 3-2-1 countdown${PLAYER().voice ? " and spoken targets" : ""}. ${isBike(L.sport) ? "Put the phone on the bars and ride" : "Put the phone away and run"}. Pause is there if you need it.</p></section>
     ${(() => { const o = runOverview(tasks, L.sport, L.date, (L.planDate && (logGet(L.planDate)?.planned || []).find(w => w.at)?.at) || logGet(L.date)?.wxAt); return o ? `<section class="lv-card">${o}</section>` : ""; })()}
