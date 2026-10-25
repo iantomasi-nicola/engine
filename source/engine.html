@@ -201,8 +201,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 @media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
 /* expanded (computer): calendar and the open day side by side */
 .cv-split{display:flex;flex-direction:column;gap:14px}
+.cv-main{display:contents}.cv-main>.cv-leg,.cv-main>.cv-note{order:2}.cv-side{order:1}.cv-note{font-size:12.5px}
 .cv-next,.cv-month,.cv-meals{display:none}.cv-head{display:contents}
-@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-month{display:flex;flex-direction:column;gap:10px;padding:14px 16px}.cv-month .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.cv-meals{display:flex;flex-direction:column;margin-top:8px}.cv-meals .flabel{padding:0 0 2px}.cv-meals .lrow{padding:7px 0!important;min-height:0;font-size:14px}.cv-meals .lrow .t{font-size:14px}.cv-meals .lrow .num{font-size:13.5px}.cv-meals .flabel+.lrow{border-top:0}.cv-kpi .cv-mt{display:none}.cv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cv-head .cv-top{display:contents}.cv-head .cv-kpi{order:1;margin-left:auto}.cv-head .subseg{order:2}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
+@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-main{display:flex;flex-direction:column;gap:14px;min-width:0}.cv-main>.cv-leg,.cv-main>.cv-note,.cv-side{order:0}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-month{display:flex;flex-direction:column;gap:10px;padding:14px 16px}.cv-month .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.cv-meals{display:flex;flex-direction:column;margin-top:8px}.cv-meals .flabel{padding:0 0 2px}.cv-meals .lrow,.cv-next .lrow{padding:7px 0!important;min-height:0;font-size:14px}.cv-meals .lrow .t,.cv-next .lrow .t{font-size:14px}.cv-meals .lrow .num{font-size:13.5px}.cv-meals .flabel+.lrow{border-top:0}.cv-kpi .cv-mt{display:none}.cv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cv-head .cv-top{display:contents}.cv-head .cv-kpi{order:1;margin-left:auto}.cv-head .subseg{order:2}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .flabel+.lrow{border-top:0}}
 @media (min-width:1500px){.cv-split{grid-template-columns:minmax(0,1fr) 380px!important}}
 /* expanded: settings groups in two columns */
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
@@ -300,7 +301,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rce-l .blk{grid-column:1/-1;margin:2px 0 0;font-size:11.5px;color:var(--muted)}.rce-l small{opacity:.7;font-size:11.5px}.rce-sx{display:flex;gap:6px}.rce-sx span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:10px;background:var(--surface-2);font-size:13px}.rce-sx span b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rce-sx span small{color:var(--muted);font-variant-numeric:tabular-nums}.rce-sx span.now{background:var(--accent);color:var(--accent-ink)}.rce-sx span.now small{color:inherit;opacity:.8}.rce-sx span.ok small{color:var(--good)}
 .rk-t>div{grid-template-columns:minmax(0,1.5fr) 1fr 1fr 1fr!important;gap:6px!important;font-size:12.5px!important}.rk-t .you{background:var(--accent-soft);border-radius:8px;font-weight:600}.rk-nm{max-width:220px}.rk-paste summary{padding:6px 0}
 
-.tools{width:100%;max-width:880px;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(var(--nm),minmax(0,1fr));gap:10px}@media (min-width:560px){.tc-f{grid-template-columns:repeat(var(--n),minmax(0,1fr))}}@media (max-width:559px){.tc-f .tc-w{grid-column:1/-1}}.tc-f .inp{padding-left:10px}.tc-f .unit-inp .inp{padding-right:36px}.tc-f .unit-inp .inp:only-child{padding-right:10px}.tc-f .unit-inp span{right:9px}.tc-out{display:flex;flex-direction:column;gap:8px}
+.tools{width:100%;max-width:880px;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(var(--nm),minmax(0,1fr));gap:10px}@media (min-width:560px){.tc-f{grid-template-columns:repeat(var(--n),minmax(0,1fr))}}.tc-f .tc-w{grid-column:1/-1}.tc-f .inp{padding-left:10px}.tc-f .unit-inp .inp{padding-right:36px}.tc-f .unit-inp .inp:only-child{padding-right:10px}.tc-f .unit-inp span{right:9px}.tc-out{display:flex;flex-direction:column;gap:8px}
 .chip.doms.l1{background:color-mix(in srgb,var(--warn) 14%,var(--surface-2))}.chip.doms.l2{background:color-mix(in srgb,var(--warn) 32%,var(--surface-2))}.chip.doms.l3{background:color-mix(in srgb,var(--bad) 30%,var(--surface-2))}
 .rec-sec{display:flex;flex-direction:column;border-radius:var(--r-card,20px);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .rec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;text-align:left;color:var(--ink)}.rec-h>span{display:flex;flex-direction:column;gap:2px;min-width:0}.rec-h b{font-family:var(--display);font-size:17px;font-weight:600}.rec-h small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -385,7 +386,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .set-nav button:hover{background:var(--v-fill,var(--surface2))}
 .set-nav button[aria-current="page"]{background:color-mix(in srgb,var(--accent) 14%,transparent)}.set-nav button[aria-current="page"] b{color:var(--accent)}
 .set-pane{min-width:0;display:flex;flex-direction:column;gap:12px}.set-pane-h h2{margin:2px 0 2px;font-size:22px}.set-pane-h small{color:var(--muted);font-size:13px}
-.set-pane .set-grp-in{display:flex;flex-direction:column;gap:12px}
+.set-pane .set-grp-in{display:flex;flex-direction:column;gap:12px;padding:0}
 svg.chart{cursor:zoom-in;touch-action:pan-y}
 .ch-x{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3;opacity:.45;pointer-events:none}
 .ch-tip{position:fixed;z-index:90;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:7px 10px;border-radius:10px;background:color-mix(in srgb,var(--md-inverse-surface,#222) 94%,transparent);color:var(--md-inverse-on-surface,#fff);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:0 6px 20px rgb(0 0 0/.18);max-width:260px}
@@ -1141,6 +1142,8 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .cv-nav{display:flex;align-items:center;gap:4px}
 .cv-nav b{font-size:17px;font-weight:700;min-width:142px;text-align:center}
+.cv-nav-t{display:flex;flex-direction:column;align-items:center;min-width:142px;line-height:1.25}.cv-nav-t b{min-width:0}.cv-nav-t small{font-size:12px;color:var(--muted)}
+.cv-wkv{display:flex;flex-direction:column;gap:inherit;max-width:900px;min-width:0}
 .cv-kpi{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted)}
 .cv-kpi b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .cv-tools{margin-left:auto;display:flex;gap:6px;align-items:center}
@@ -1173,9 +1176,9 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-sum{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 10px;background:var(--surface-2);font-size:11px;min-width:0}
 .cv-sum b{font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
 .cv-sum small{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cv-day{display:flex;flex-direction:column;gap:6px;padding:14px}
+.cv-day{display:flex;flex-direction:column;gap:6px;padding:14px 16px}
 .cv-day-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.cv-day-h b{display:block;font-size:16px}.cv-day-h small{color:var(--muted);font-size:12.5px}
+.cv-day-h b,.cv-month>.flabel,.cv-next>.flabel{display:block;font-size:15px!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink)!important}.cv-day-h small{color:var(--muted);font-size:12.5px}
 .cv-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;padding:9px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink);width:100%}
 .cv-row:hover{filter:brightness(.98)}
 .cv-row b{display:block;font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1193,7 +1196,7 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-agenda{display:flex;flex-direction:column;gap:12px;touch-action:pan-y}
 .cv-wk{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
 .cv-wk-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--surface-2)}
-.cv-wk-h b{font-size:13.5px}.cv-wk-h small{font-size:12px;color:var(--muted)}
+.cv-wk-h b{display:flex;align-items:center;gap:8px;font-size:13.5px}.cv-wk-h small{font-size:12px;color:var(--muted)}
 .cv-ad{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
 .cv-ad:first-of-type{border-top:0}
 .cv-ad-d{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;padding:4px 0;color:var(--ink)}
@@ -1657,10 +1660,6 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 }
 
 /* ===== Train › Plan (intervals.icu week) ===== */
-.sync-bar{display:flex;align-items:center;gap:12px;padding:12px 14px}
-.sync-bar .dot{width:10px;height:10px;border-radius:50%;background:var(--faint);flex:0 0 auto}.sync-bar .dot.ok{background:var(--good)}.sync-bar .dot.warn{background:var(--warn)}
-.sb-t{display:flex;flex-direction:column;min-width:0;flex:1}.sb-t b{font-size:14.5px}.sb-t small{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
-.sync-bar .btn{flex:0 0 auto}
 .pl-week{padding:0;overflow:hidden}
 .pl-day{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border-top:1px solid var(--line)}
 .pl-day:first-child{border-top:0}
@@ -1683,7 +1682,6 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 /* ===== Today (v3): one surface per topic, type does the work ===== */
 .td-top .top-sub{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .td-top .top-title{font-size:30px;margin-top:2px}
-.sync-bar .dot.bad{background:var(--bad)}
 .td-nudges{display:flex;gap:8px;margin:0 0 12px}
 .td-nudge{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;background:var(--ink);color:var(--surface);font-size:13.5px;font-weight:600}
 .td-nudge+.td-nudge{background:var(--surface-2);color:var(--ink)}
@@ -2548,7 +2546,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 @media (max-width:599px){
   .cv-top{flex-direction:column-reverse;align-items:stretch;gap:8px}
   .cv-top .subseg{width:100%;max-width:none}.cv-top .subseg button{flex:1 1 0}
-  .cv-nav{justify-content:space-between}.cv-nav b{min-width:0;flex:1}
+  .cv-nav{justify-content:space-between}.cv-nav b{min-width:0;flex:1}.cv-nav-t{flex:1;min-width:0}
   .cv-tools{margin-left:0;width:100%;justify-content:space-between}
 }
 .day-pill.today:not([aria-current="date"]){background:color-mix(in srgb,var(--accent) 15%,transparent)}
@@ -2617,10 +2615,12 @@ details[open]>summary:not(.lrow)::after,.nut-more[open] summary::after,.fd-more[
 details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::after{transform:rotate(180deg)!important}
 /* Tools: left-aligned like every other view; the 1RM output has one right-hand axis (formula list, range, reps table) */
 .tc-out .card{box-shadow:none!important}
-.tc-out .an-g>.an-k:last-child{text-align:right;align-items:flex-end;padding-right:14px}.tc-top{grid-template-columns:auto auto!important;justify-content:space-between}.tc-top b{white-space:nowrap}.tc-one .lrow{padding-inline:14px!important}.tc-out .lrow .s{white-space:normal}
+.tc-pace{grid-template-columns:repeat(3,minmax(0,1fr))}.tc-acts{display:flex;align-items:center;gap:8px}.tc-acts>.btn{flex:none}.tc-acts .chips{flex:1;min-width:0}.tc-sel{display:flex;align-items:center;justify-content:space-between;gap:12px}.tc-sel select{width:auto;min-width:132px}.tools .rec-h small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.tc-one .lrow{padding-inline:14px!important}.tc-out .lrow .s{white-space:normal}
 .tc-reps>div{display:grid;grid-template-columns:minmax(0,1fr) 52px 84px;gap:0 12px;padding:7px 14px;align-items:baseline}.tc-reps>div>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
 .tc-reps b{font-weight:600}
+.lab-t.tc-pr>div{grid-template-columns:minmax(0,1fr) auto auto;gap:16px}.tc-pr>div>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}.tc-pr b{font-weight:600}
 /* calendar tools: Route, intervals.icu and Import are one kind of control (text buttons) */
+.chip-a .ic.st-ok{color:var(--good)}.chip-a .ic.st-warn{color:var(--warn)}.chip-a .ic.st-bad{color:var(--bad)}
 .cv-tools .chip-a{background:none!important;color:var(--md-primary)!important;font-weight:600!important;font-size:inherit;min-height:34px;padding:0 12px;border-radius:var(--r-pill)!important}
 /* the paste / season rows of the Endurance Cup are fold rows like the others: same inset as the card text, chevron on the right */
 .rk .rk-paste>summary.lrow{padding:6px 0!important}
@@ -2965,13 +2965,13 @@ const ALGO_START = "2026-10-25";   // first day of the M7b algorithms (calibrati
    A profile saved before an entry existed gets that entry's start, a constant (never "today": a sync or a second device would move it), so the days it already lived keep how they were computed.
    ALGO_VERSION = the newest entry; energy.algoV records the set a profile was last loaded with. Shown in Settings › How it is calculated. */
 const ALGO = [
-  { v: 1, k: "cal", name: "Calibration v2 · 28 days", ref: "F-06", from: "calV2From", on: E => E.calMode === "v2" && !(E.calManual > 0) },
-  { v: 2, k: "net", name: "Sensor kcal net of rest", ref: "D5b", from: "netFrom", on: E => E.netKcal !== "off" },
-  { v: 3, k: "hr", name: "Heart-rate factor per sensor", ref: "D20", from: "hrFrom", on: E => E.hrLearn !== "off" },
-  { v: 4, k: "neat", name: "NEAT from steps", ref: "D18", from: "neatFrom", on: E => E.neatMode !== "off" },
-  { v: 5, k: "bmr", name: "BMR Auto · Ten Haaf 18–35", ref: "F-01", from: "bmrAutoFrom", on: E => E.bmr === "Auto" },
-  { v: 6, k: "nutr", name: "Missing nutrient is not zero", ref: "F-09", from: "nutrFrom", on: E => E.nutrCoverage !== "off" },
-  { v: 7, k: "one", name: "One source per session", ref: "D7", from: "oneFrom", on: E => E.oneSrc !== "off" }
+  { v: 1, k: "cal", name: "Calibration v2 · 28 days", from: "calV2From", on: E => E.calMode === "v2" && !(E.calManual > 0) },
+  { v: 2, k: "net", name: "Sensor kcal net of rest", from: "netFrom", on: E => E.netKcal !== "off" },
+  { v: 3, k: "hr", name: "Heart-rate factor per sensor", from: "hrFrom", on: E => E.hrLearn !== "off" },
+  { v: 4, k: "neat", name: "NEAT from steps", from: "neatFrom", on: E => E.neatMode !== "off" },
+  { v: 5, k: "bmr", name: "BMR Auto · Ten Haaf 18–35", from: "bmrAutoFrom", on: E => E.bmr === "Auto" },
+  { v: 6, k: "nutr", name: "Missing nutrient is not zero", from: "nutrFrom", on: E => E.nutrCoverage !== "off" },
+  { v: 7, k: "one", name: "One source per session", from: "oneFrom", on: E => E.oneSrc !== "off" }
 ].map(a => ({ start: ALGO_START, ...a }));
 const ALGO_VERSION = Math.max(...ALGO.map(a => a.v));
 /* the entries in force on a date: switched on and not before their first day */
@@ -4719,6 +4719,10 @@ function axisTicks(lo, hi, n = 4, whole) {
   return out.length ? out : [lo, hi];
 }
 const axisGrid = (ticks, y, x1, x2, fmt) => ticks.map(v => `<line class="gl" x1="${x1}" x2="${x2}" y1="${y(v)}" y2="${y(v)}"/><text x="${x1 - 6}" y="${y(v) + 3.5}" text-anchor="end">${fmt(v)}</text>`).join("");
+/* the y range of a chart around a zero line: it holds 0 and every value, with padding (a tenth of the span, at least minPad) only on the side that has data, so there is never an empty band */
+function zeroRange(vals, minPad) { let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = Math.max((hi - lo) * 0.1, minPad); if (lo < 0) lo -= pad; if (hi > 0) hi += pad; return hi > lo ? [lo, hi] : [lo, lo + minPad]; }
+/* the dates under a chart: [date, x] pairs, the first starting at its x, the last ending at its x, the others centred */
+const dateAxis = (ticks, y) => ticks.map(([d, x], i) => `<text x="${x}" y="${y}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : ticks.length > 1 && i === ticks.length - 1 ? "end" : "middle"}">${fmtDM(d)}</text>`).join("");
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
@@ -4935,14 +4939,6 @@ VIEWS.train = function () {
   return h + (seg === "season" && FEAT("period") ? trainSeason() : seg === "races" ? trainRaces() : seg === "wk" ? trainWorkouts() : seg === "cal" ? trainCalendar() : seg === "fitness" ? trainFitness() : seg === "running" ? trainRunning() : seg === "records" ? trainRecords() : trainWeek());
 };
 /* ================= Train › Plan: the next two weeks from your calendar, what's done, what it costs in fuel ================= */
-function icuSyncBar() {
-  const s = icuState();
-  if (!s.key) return `<div class="card pad sync-bar"><span class="dot"></span><div class="sb-t"><b>Connect intervals.icu</b><small>Your calendar there becomes the plan, synced both ways.</small></div><button class="btn tonal sm" data-act="tab" data-tab="settings">Connect</button></div>`;
-  const P = icuPending(), busy = ICU_KICK_STATE === "sent";
-  const F = icuFail();
-  return `<div class="card pad sync-bar"><span class="dot ${F ? "bad" : s.bridge ? "ok" : "warn"}"></span><div class="sb-t"><b>intervals.icu</b><small>${busy ? "Syncing…" : F ? `Sync failed: ${esc(String(F.error || "unknown").slice(0, 90))}` : s.bridge ? `${icuAgo()} · syncs by itself` : "First sync in a moment"}${P.n && !busy ? ` · ${P.n} change${P.n > 1 ? "s" : ""} on the way` : ""}</small></div>
-    ${F ? `<button class="btn tonal sm" data-act="icu-now">Retry</button>` : ""}</div>`;
-}
 function planWeekTotals(ws) {
   const P = { n: 0, min: 0, load: 0, km: 0 }, D = { n: 0, min: 0, load: 0, km: 0 }, run = FIT().runSport;
   for (let i = 0; i < 7; i++) for (const x of daySessions(addDays(ws, i))) {
@@ -4954,11 +4950,12 @@ function planWeekTotals(ws) {
 function trainWeek() {
   const today = todayISO(), fit = FIT(), pm = icuPlanMode(), off = UI.planWk || 0, ws = addDays(weekStartOf(today), 7 * off), we = addDays(ws, 6);
   const hm = m => `${Math.floor(m / 60)}h${String(r0(m % 60)).padStart(2, "0")}`;
-  let h = icuSyncBar() + clipBar();
-  h += `<div class="rep-bar"><div class="rep-nav"><button class="icon-btn" data-act="plan-wk" data-d="-1" aria-label="Previous week">${ic("chevL")}</button><span style="text-align:center"><b>${off === 0 ? "This week" : off === 1 ? "Next week" : off === -1 ? "Last week" : `Week of ${fmtDM(ws)}`}</b><small class="faint" style="display:block;font-size:12px">${fmtDM(ws)} – ${fmtDM(we)}</small></span><button class="icon-btn" data-act="plan-wk" data-d="1" aria-label="Next week">${ic("chevR")}</button></div></div>`;
+  let h = `<div class="cv-head"><div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="plan-wk" data-d="-1" aria-label="Previous week">${ic("chevL")}</button><span class="cv-nav-t"><b>${off === 0 ? "This week" : off === 1 ? "Next week" : off === -1 ? "Last week" : `Week of ${fmtDM(ws)}`}</b><small>${fmtDM(ws)} – ${fmtDM(we)}</small></span><button class="icon-btn" data-act="plan-wk" data-d="1" aria-label="Next week">${ic("chevR")}</button></div>
+    ${subBar("cal-view", "week", [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div><div class="cv-kpi">${calTools()}</div></div>` + clipBar() + `<div class="cv-wkv">`;
   const { P, D } = planWeekTotals(ws), past = we < today, fut = ws > today;
-  const kv = (d, p, f = x => fmtN(x)) => fut ? f(p) : `${f(d)}<small class="faint" style="font-weight:500"> / ${f(p)}</small>`;
-  h += `<div class="stat-grid four">${kpi(kv(D.n, P.n, x => x), fut ? "sessions planned" : "sessions done / planned")}${kpi(kv(D.min, P.min, hm), "training time")}${kpi(kv(D.load, P.load, x => fmtN(r0(x))), pm ? "load (intervals.icu)" : "training load")}${kpi(kv(D.km, P.km, x => r1(x)), "km run")}</div>`;
+  /* «/ planned» only when it differs from what was done */
+  const kv = (d, p, f = x => fmtN(x)) => fut || f(d) === f(p) ? f(p) : `${f(d)}<small class="faint" style="font-weight:500"> / ${f(p)}</small>`;
+  h += `<div class="stat-grid four">${kpi(kv(D.n, P.n, x => x), fut ? "sessions planned" : D.n === P.n && P.n ? "sessions · all done" : "sessions done / planned")}${kpi(kv(D.min, P.min, hm), "training time")}${kpi(kv(D.load, P.load, x => fmtN(r0(x))), pm ? "load (intervals.icu)" : "training load")}${kpi(kv(D.km, P.km, x => r1(x)), "km run")}</div>`;
   let kT = 0, kE = 0;
   const days = [0, 1, 2, 3, 4, 5, 6].map(i => {
     const d = addDays(ws, i), its = daySessions(d), r = energyAt(d), T = targetsFor(d); kT += T.kcal; kE += trainAdded(r);
@@ -4980,7 +4977,7 @@ function trainWeek() {
   const rates = learnedRates();
   h += `<details class="card set-det"><summary>How training calories are estimated</summary><div class="set-in">${tbl(["Sport", "Light", "Moderate", "Hard", "Learned from"], fit.sports.map(sp => { const r = rates[sp.name] || {}; return `<tr><td>${esc(sp.name)}</td><td class="n">${r1(r.Light)}</td><td class="n">${r1(r.Moderate)}</td><td class="n">${r1(r.Hard)}</td><td class="s">${r.source === "own" ? `${r.n} watch sessions${r.reg ? ` · kcal vs load (${r.reg.n})` : ""}` : `MET ${sp.met} · needs ${fit.learn.minSessions} with watch kcal`}${sp.name === fit.runSport ? ` · ${r1(r.kmRate)} kcal/km` : ""}</td></tr>`; }), "", { noCols: true })}
     <div class="faint" style="font-size:12.5px">kcal per minute. Done sessions use your watch's kcal (from intervals.icu). Planned ones use their intervals.icu load when the sport has enough watch sessions with load (harder = more kcal per minute), else distance, heart rate or the rates above.</div></div></details>`;
-  return h;
+  return h + `</div>`;
 }
 const SPORT_COLORS = ["pro", "fat", "carb", "accent", "good", "faint", "bad"];
 function minutesChart() {
@@ -5105,9 +5102,10 @@ function changeChart() {
   const s = energySeries(), today = todayISO(), base = s.rows[addDays(today, -30)] || s.rows[s.start]; const pts = []; let cum = 0;
   for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
   if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs logged food and weigh‑ins.</div>`;
-  const W = chartW(true), H = 170, L = 34, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), lo = Math.min(-0.5, ...all), hi = Math.max(0.5, ...all);
+  const W = chartW(true), H = 170, L = 50, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), [lo, hi] = zeroRange(all, 0.1);
   const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
-  g += axisGrid(axisTicks(lo, hi, 3), y, L, W - R, r1);
+  g += axisGrid(axisTicks(lo, hi, 3), y, L, W - R, v => (v > 0 ? "+" : v < 0 ? "−" : "") + r1(Math.abs(v)) + " kg");
+  g += dateAxis([0, Math.round((pts.length - 1) / 2), pts.length - 1].filter((v, k, a) => a.indexOf(v) === k).map(i => [pts[i].d, x(i)]), H - 7);
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.e)).join(" ")}" fill="none" stroke="var(--carb)" stroke-width="2.2" stroke-dasharray="5 4"/>`;
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.a)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected and actual weight change">${g}</svg><div class="legend"><span><i style="background:var(--carb)"></i>From intake</span><span><i style="background:var(--accent)"></i>Trend weight</span></div>`;
@@ -5131,11 +5129,11 @@ function weekBalanceHTML() {
 }
 function balanceChart() {
   const W8 = weeklyTable().slice(-8); if (!W8.some(w => w.balance)) return `<div class="faint">No week with logged food yet.</div>`;
-  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.ceil(Math.max(500, ...vals.map(Math.abs)) / 250) * 250;
-  const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length;
-  let g = axisGrid(axisTicks(-mx, mx, 4, true), y, L, W - R, v => (v < 0 ? "−" : v > 0 ? "+" : "") + (Math.abs(v) >= 1000 ? Math.abs(v) / 1000 + "k" : Math.abs(v)));
+  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), [lo, hi] = zeroRange(vals, 250);
+  const y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)), bw = (W - L - R) / W8.length;
+  let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => (v < 0 ? "−" : v > 0 ? "+" : "") + (Math.abs(v) >= 1000 ? Math.abs(v) / 1000 + "k" : Math.abs(v)));
   W8.forEach((w, i) => { const v = w.balance || 0, x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${Math.min(y(v), y(0))}" width="${bw * 0.6}" height="${Math.abs(y(v) - y(0))}" rx="2" fill="var(--${v < 0 ? "fat" : "pro"})"><title>${fmtDM(w.ws)}: ${fmtN(v)} kcal</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly energy balance">${g}</svg><div class="faint" style="font-size:12px">Intake minus TDEE over logged days</div>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly energy balance">${g}</svg><div class="legend"><span>Intake minus TDEE over logged days</span></div>`;
 }
 /* grams per kg of trend weight: the one number the averages above don't give */
 function macroGkg() {
@@ -5784,7 +5782,7 @@ function fitSettings() {
     ${En.bmr === "Harris-Benedict" ? (En.hbBonusOn === "on" ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${fitSel("energy.hbBonusOn", "Lean bonus", hbSel)}${fitIn("energy.hbBonus", "Bonus", "kcal/pt")}${fitIn("energy.hbThr", "Below body fat", "%")}</div>` : fitSel("energy.hbBonusOn", "Lean bonus", hbSel)) : ""}
     ${(a => a >= 18 && a <= 35 && En.bmr !== "Auto" && !/Ten Haaf/.test(En.bmr) ? `<div class="note" role="note">Recreational athletes aged 18–35: in a study of 90 of them (Ten Haaf 2014, PMID 25275434) Mifflin and Harris-Benedict predicted resting energy within 10% in under half of them; Ten Haaf did as well as Cunningham. Choose Auto or Ten Haaf.</div>` : "")(ageAt(todayISO()))}
     ${En.bmr === "Harris-Benedict" ? `<div class="faint" style="font-size:12.5px">Harris-Benedict uses the original coefficients; its lean bonus (kcal per point of body fat under the threshold) is not part of the published equation.</div>` : /Ten Haaf|Auto/.test(En.bmr) ? `<div class="faint" style="font-size:12.5px">Ten Haaf was derived on 90 recreational athletes aged 18–35; outside that range the uncertainty grows (Auto then uses Mifflin). The lean-mass version needs your body fat.</div>` : ""}
-    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : fitSel("energy.oneSrc", "One source per session", onOff)}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}${En.kcalPerKgMode === "fixed" ? fitSel("energy.oneSrc", "One source per session", onOff) : ""}</div>
+    <div class="grid2">${fitIn("energy.neat", "Default NEAT", "kcal")}${fitSel("energy.neatMode", "NEAT from steps", onOff)}${En.neatMode !== "off" ? fitIn("energy.neatRefSteps", "Default NEAT equals", "steps/day") : "<div></div>"}${fitIn("energy.tef", "TEF (digestion)", "%", "pct")}${fitSel("energy.kcalPerKgMode", "Energy per kg of weight", [["auto", "By body fat"], ["fixed", "Fixed value"]])}${En.kcalPerKgMode === "fixed" ? fitIn("energy.kcalPerKg", "Fixed value", "kcal") : ""}${fitIn("energy.minWatchNeat", "Min watch NEAT", "kcal")}${En.kcalPerKgMode === "fixed" ? "<div></div>" : ""}${fitSel("energy.oneSrc", "One source per session", onOff)}${fitSel("energy.netKcal", "Sensor kcal net of rest", onOff)}</div>
     <div class="faint" style="font-size:12.5px">Check your watch on a rest day: a few hundred = active kcal, 2000+ = total kcal. With no watch history, NEAT follows your steps: the default NEAT counts as a day of the steps set above (6,540 = the US adult mean, NHANES 2005-06); today's steps are projected to the end of the day. Two recordings of the same session (overlapping in time, e.g. watch and armband) count once.</div>`, false, `${En.bmr} · NEAT ${En.neatMode === "off" ? "default" : "from steps"}`);
   h += grp("Calibration and coaching", `<div class="grid2">${fitSel("energy.calMode", "Method", [["v2", "v2 · 28 days"], ["legacy", "Legacy · 14 days"], ["off", "Off (factor 1)"]])}${fitSel("energy.warn", "Target warnings", onOff)}${fitIn("energy.calManual", "Manual factor (empty = learns)")}${fitIn("energy.calWeekKcal", "Max change / week", "kcal")}</div>
     ${En.calMode === "legacy" ? `<div class="grid4">${fitIn("energy.calMinIntake", "Days with intake")}${fitIn("energy.calMinWeigh", "Min weigh-ins")}${fitIn("energy.calLo", "Factor min")}${fitIn("energy.calHi", "Factor max")}</div>` : `<div class="grid4">${fitIn("energy.calV2From", "Starts on", "", "date")}${fitIn("energy.calBand", "Factor ± from 1")}${fitIn("energy.calMinWeigh2", "Min weigh-ins")}${fitIn("energy.calMinCov", "Min intake share", "%", "pct")}</div>`}
@@ -8053,11 +8051,13 @@ function calMonthCard(done, plan, future, min, km, tl) {
 }
 function calNextCard(sel) {
   const today = todayISO(), L = [];
-  for (let i = 0; i <= 14 && L.length < 5; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 5) L.push([d, x]); }
+  for (let i = 0; i <= 14 && L.length < 3; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 3) L.push([d, x]); }
   if (!L.length) return "";
   return `<section class="card cv-next" aria-label="Next sessions"><span class="flabel">Next sessions</span>${L.map(([d, x]) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null, meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · ");
     return `<button class="lrow" data-act="cal-sel" data-date="${d}"><span style="min-width:0"><span class="t">${esc(t?.name || x.p?.note || w.note || w.sport)}</span><span class="s">${d === today ? "Today" : DOWL[dow(d)]} ${fmtDM(d)} · ${esc(meta)}</span></span></button>`; }).join("")}</section>`;
 }
+/* Route, intervals.icu and Import: the text buttons at the right of the header row of Month, Agenda and Week */
+const calTools = () => `<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span>`;
 function trainCalendar() {
   const today = todayISO(), off = UI.calOff || 0, t = parseISO(today), view = UI.calView || "month", narrow = innerWidth < 640;
   const m0 = new Date(t.getFullYear(), t.getMonth() + off, 1), ms = isoOf(m0), me = isoOf(new Date(m0.getFullYear(), m0.getMonth() + 1, 0));
@@ -8068,7 +8068,7 @@ function trainCalendar() {
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
   let h = clipBar() + `<div class="cv-head"><div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
     ${subBar("cal-view", view, [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>
-    <div class="cv-kpi">${mDone || mPlan ? `<span class="cv-mt"><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span class="cv-mt"><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span class="cv-mt"><b>${r1(mKm)}</b> km</span>` : ""}<span class="cv-mt"><b>${fmtN(r0(mTl))}</b> load</span>` : `<span class="cv-mt">No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div></div>`;
+    <div class="cv-kpi">${mDone || mPlan ? `<span class="cv-mt"><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span class="cv-mt"><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span class="cv-mt"><b>${r1(mKm)}</b> km</span>` : ""}<span class="cv-mt"><b>${fmtN(r0(mTl))}</b> load</span>` : `<span class="cv-mt">No sessions this month</span>`}${calTools()}</div></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
     for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
@@ -8076,11 +8076,11 @@ function trainCalendar() {
       for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d < ms || d > me) continue; const its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d);
         if (!its.length && !rs.length && d !== today) continue;
         days += `<div class="cv-ad ${d === today ? "now" : ""}" data-sdrop="${d}"><button class="cv-ad-d" data-act="cal-sel" data-date="${d}"><b>${+d.slice(8)}</b><small>${DOW[dow(d)]}</small></button><div class="cv-ad-s">${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${r.km ? r1(r.km) + " km" : esc(r.sport || "")}</small></span></button>`).join("")}${its.map((x, k) => { const w = x.w; return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(x.p?.note || w.note || w.sport)}</b><small>${esc([shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · "))}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") : x.st === "missed" ? "Missed" : ""}</span></button>`; }).join("") || `<span class="cv-empty">Rest</span>`}${d >= today ? `<button class="cv-add" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div></div>`; }
-      h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))} ${phPill(weekPhase(ws).ph, true)}</b><small>${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}${fe ? ` · fitness ${r0(fe.ctl)}` : ""}</small></div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
+      h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))} ${phPill(weekPhase(ws).ph, true)}</b>${T.n || fe ? `<small>${[T.n ? `${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}` : "", fe ? `fitness ${r0(fe.ctl)}` : ""].filter(Boolean).join(" · ")}</small>` : ""}</div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
     }
     return h + `</div>`;
   }
-  h += `<div class="cv-split"><div class="cv" data-calswipe><div class="cv-h">${DOW.map(d => `<span>${narrow ? d[0] : d}</span>`).join("")}${narrow ? "" : `<span>Week</span>`}</div>`;
+  h += `<div class="cv-split"><div class="cv-main"><div class="cv" data-calswipe><div class="cv-h">${DOW.map(d => `<span>${narrow ? d[0] : d}</span>`).join("")}${narrow ? "" : `<span>Week</span>`}</div>`;
   for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
     let cells = "";
     for (let i = 0; i < 7; i++) {
@@ -8091,9 +8091,10 @@ function trainCalendar() {
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
     h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}${T.n ? `<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>` : ""}${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
-  h += `</div><div class="cv-side">${calDayPanel(sel)}${calMonthCard(mDone, mPlan, ms >= weekStartOf(today), mMin, mKm, mTl)}${calNextCard(sel)}</div></div>`;
-  return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
-    <div class="faint" style="font-size:12.5px">Tap a day to open it. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
+  h += `</div><div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
+    <div class="cv-note faint">Tap a day to open it. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div></div>
+    <div class="cv-side">${calDayPanel(sel)}${calMonthCard(mDone, mPlan, ms >= weekStartOf(today), mMin, mKm, mTl)}${calNextCard(sel)}</div></div>`;
+  return h;
 }
 ACT["cal-sel"] = el => { UI.calSel = el.dataset.date; if (UI.calView === "agenda") { UI.calView = "month"; } scheduleRender(); };
 ACT["cal-today"] = () => { UI.calOff = 0; UI.calSel = todayISO(); scheduleRender(); };
@@ -9706,9 +9707,9 @@ function planDiff(day, next) {
   return next.map(w => { if (w.sport === "Rest") return w; if (!w.ext) return { ...w, pushNew: true }; const o = old.find(x => x.ext === w.ext); return o && strip(o) !== strip(w) ? { ...w, dirty: true } : w; });
 }
 function icuChip() { const s = icuState();
-  if (!s.key) return `<button class="chip-a" data-act="tab" data-tab="settings"><span class="dot"></span>Connect intervals.icu</button>`;
+  if (!s.key) return `<button class="chip-a" data-act="tab" data-tab="settings">${ic("sync", "sm")}Connect intervals.icu</button>`;
   const p = icuPending().n;
-  return `<button class="chip-a" data-act="icu-sheet" aria-label="intervals.icu sync status"><span class="dot ${icuFail() ? "bad" : s.bridge ? "ok" : "warn"}"></span>intervals.icu · ${ICU_KICK_STATE === "sent" ? "syncing…" : icuFail() ? "sync failed" : s.bridge ? icuAgo() : "first sync soon"}${p ? ` · ${p} on the way` : ""}</button>`; }
+  return `<button class="chip-a" data-act="icu-sheet" aria-label="intervals.icu sync status">${ic("sync", "sm st-" + (icuFail() ? "bad" : s.bridge ? "ok" : "warn"))}intervals.icu · ${ICU_KICK_STATE === "sent" ? "syncing…" : icuFail() ? "sync failed" : s.bridge ? icuAgo() : "first sync soon"}${p ? ` · ${p} on the way` : ""}</button>`; }
 function icuSettingsCard() {
   const s = icuState(), b = s.bridge, P = icuPending(), busy = ICU_KICK_STATE === "sent", F = icuFail();
   const sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
@@ -11537,8 +11538,8 @@ function seriesChart(series, o = {}) {
   const x = d => L + (W - L - R) * (span ? daysBetween(d0, d) / span : 0.5), y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   let g = "";
   g += axisGrid(axisTicks(lo, hi, 3, o.int), y, L, W - R, o.fmt || r1);
-  const ticks = span < 1 ? [d0] : span < 2 ? [d0, d1] : [d0, addDays(d0, Math.round(span / 2)), d1];
-  ticks.forEach((d, i) => { g += `<text x="${x(d)}" y="${H - 7}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : i === ticks.length - 1 && ticks.length > 1 ? "end" : "middle"}">${fmtDM(d)}</text>`; });
+  const days = daysBetween(d0, d1);   // one day of data: one date
+  g += dateAxis((days < 1 ? [d0] : days < 2 ? [d0, d1] : [d0, addDays(d0, Math.round(days / 2)), d1]).map(d => [d, x(d)]), H - 7);
   for (const s of series) { if (!s.pts.length) continue; const P = [...s.pts].sort((a, b) => a[0].localeCompare(b[0]));
     if (P.length > 1) g += `<path d="${P.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
     const dense = P.length > 16; for (const [pi, p] of P.entries()) if (!dense || p[2]?.best || pi === P.length - 1) g += `<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="${p[2]?.best ? 5 : dense ? 3 : 3.5}" fill="${p[2]?.best ? "var(--bg)" : s.color}" stroke="${s.color}" stroke-width="2"><title>${fmtDM(p[0])}: ${(o.fmt || r1)(p[1])}${p[2]?.t ? " · " + esc(p[2].t) : ""}</title></circle>`; }
@@ -11719,8 +11720,9 @@ function energyView() {
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
   /* seven-day averages: the day-to-day swings of intake and training make a daily line a saw; the average shows where you are going */
   const roll7 = P => P.map(([d], i) => { const w = P.filter(([e]) => e <= d && e >= addDays(d, -6)); return [d, r0(w.reduce((a, q) => a + q[1], 0) / w.length)]; });
-  hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: roll7(pts("tdee")) }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, { name: "Target", color: "var(--faint)", pts: roll7(pts("target")), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
-  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], prev7.map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
+  const tdeeP = roll7(pts("tdee")), tgtP = roll7(pts("target")), sameT = tgtP.length === tdeeP.length && tgtP.every((q, i) => q[0] === tdeeP[i][0] && q[1] === tdeeP[i][1]);   // in Maintenance the target is the TDEE: one line, named so
+  hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: sameT ? "TDEE = target" : "TDEE", color: "var(--accent)", pts: tdeeP }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, ...(sameT ? [] : [{ name: "Target", color: "var(--faint)", pts: tgtP, dash: true }])], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
+  hh += `<div class="section-h"><h2>Day by day</h2></div>${!prev7.length ? `<div class="faint" style="font-size:13px">No day yet</div>` : tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], prev7.map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
   return hh;
 }
 /* ================= Settings › How it is calculated (M7c / D3): today's energy and target step by step =================
@@ -11770,7 +11772,7 @@ function explainHTML() {
   else if (r0(tg) !== r0(r.target)) h += row("Today's target", "after today's adjustments", fmtN(tg));
   const on = new Set(algoAt(t).map(a => a.k));
   const vers = ALGO.map(a => { const from = E[a.from], st = !a.on(E) ? "Off" : on.has(a.k) ? "In use" : "Not yet";
-    return row(esc(a.name), `${a.ref} · ${!a.on(E) ? "switched off" : from ? `${t >= from ? "since" : "starts"} ${fmtDM(from)}` : "from the first day"}`, null, `<span class="pill" style="--c:var(--${st === "In use" ? "good" : st === "Off" ? "muted" : "warn"})">${st}</span>`); }).join("");
+    return row(esc(a.name), !a.on(E) ? "switched off" : from ? `${t >= from ? "since" : "starts"} ${fmtDM(from)}` : "from the first day", null, `<span class="pill" style="--c:var(--${st === "In use" ? "good" : st === "Off" ? "muted" : "warn"})">${st}</span>`); }).join("");
   let nw = 0; for (let i = 0; i < 7; i++) { const x = logGet(addDays(t, -i)); if (x?.weight > 0 && !x.estW) nw++; }
   const intake = { food: "foods ticked as eaten", manual: "totals typed in the Check-in", est: "an estimate, left out of the calibration" }[r.intake?.src] || "nothing logged today";
   const src = row("Weight", nw ? `trend of ${nw} weigh-in${nw > 1 ? "s" : ""} in the last 7 days, typed by you` : "no weigh-in in the last 7 days: the last trend or your starting weight", null)
@@ -11779,7 +11781,7 @@ function explainHTML() {
     + row("Intake", intake, null)
     + row("Training", "intervals.icu activities, workouts recorded in Engine and typed ones; what is still planned counts until it is done. Two recordings of one session count once", null)
     + (devList().length ? row("Sensors", devList().map(x => `${esc(x.name)}: ${x.kcal === "gross" ? "total kcal, resting energy taken out" : x.kcal === "net" ? "active kcal" : "not sure, used as reported"}`).join(" · "), null) : "");
-  return `<div class="card ex">${h}</div><span class="flabel">Algorithm set v${ALGO_VERSION}</span><div class="card ex">${vers}</div><span class="flabel">Where the data come from</span><div class="card ex">${src}</div>`;
+  return `<span class="flabel">Today, step by step</span><div class="card ex">${h}</div>` + foldOne("explain", `Algorithm set v${ALGO_VERSION}`, `${on.size} of ${ALGO.length} in use`, "", `<div class="card ex">${vers}</div>`) + foldOne("explain", "Where the data come from", "Weight, body fat, steps, intake, training, sensors", "", `<div class="card ex">${src}</div>`);
 }
 
 /* ================= supplements: what, how much, when; a tick when taken; reminders at the set time ================= */
@@ -13111,12 +13113,12 @@ refreshAdd = function () { const before = new Set($$("#add-ctx .add-tag button[d
 const FEATS = [["period", "Season and periodization", "Train › Season, phase of each week, deload tips"], ["goals", "Long-term goals", "Progress › Goals and the card on Today"], ["photos", "Progress photos", "In Progress › Body"],
   ["sleep", "Sleep coach", "Tonight's target and short-night tips on Today"], ["report", "Weekly review on Today", "Monday to Wednesday; the report stays in Dashboard"], ["fuel", "Race fuelling", "Gel, water and salt cues in long sessions and races"],
   ["battery", "Energy battery", "Today: how charged you are, drained by the day and training, recharged by sleep and naps"], ["eatout", "Eaten out", "Estimate a restaurant meal and correct the next ones"], ["cook", "What can I cook", "Ideas from the pantry"], ["journal", "Daily journal", "Mood, energy, productivity and stress in ten seconds: card on Today in the evening, Check-in shortcut, Progress › Journal"],
-  ["explain", "How it is calculated", "Settings: the formulas, inputs and steps behind today's energy and target"]];
+  ["explain", "How it is calculated", "Settings › How it is calculated: formulas, inputs and steps"]];
 /* every feature is on until you switch it off, except these, off until you switch them on */
 const FEAT_OFF = ["explain"];
 const FEAT = k => { const v = (S.settings?.feat || {})[k]; return v === undefined ? !FEAT_OFF.includes(k) : v !== false; };
 function featCard() {
-  return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Features</span><small class="faint">Switch off what you don't use: it disappears from the screens. Nothing is deleted.</small>
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><small class="faint">Nothing is deleted: what you switch off only disappears from the screens.</small>
     ${FEATS.map(([k, l, d]) => `<label class="row sw-row" style="justify-content:space-between"><span>${l}<small class="faint" style="display:block;font-size:12px">${d}</small></span><button type="button" class="switch" role="switch" aria-checked="${FEAT(k)}" data-act="feat-toggle" data-k="${k}" aria-label="${esc(l)}"></button></label>`).join("")}</section>`; }
 SETTINGS_CARDS.push({ o: -1, fn: featCard });
 ACT["feat-toggle"] = el => { const k = el.dataset.k, on = !FEAT(k); S.settings.feat = { ...(S.settings.feat || {}), [k]: on };
@@ -13354,7 +13356,7 @@ VIEWS.train = function () { navFix(); const seg = UI.trainSeg;
   if (seg === "season") return trainHead(FEAT("period") ? "Blocks, deloads, races and the plan to them" : "Races, countdowns and results") + (FEAT("period") ? trainSeason() : "") + trainRaces();
   if (seg === "perf") { const p = UI.perfSeg || "fitness"; return trainHead("Fitness, running, strength and records") + subBar("perf-seg", p, [["fitness", "Fitness"], ["running", "Running"], ["strength", "Strength"], ["records", "Records"], ["gear", "Gear"]]) + (p === "running" ? foldView("running", trainRunning()) : p === "strength" ? foldView("strength", trainingProgressView()) : p === "records" ? trainRecords() : p === "gear" && typeof gearView === "function" ? foldView("gear", gearView()) : foldView("fitness", trainFitness()) + foldOne("fitness", "Level", (() => { try { const R = lvRunner(), C = lvCalis(); return [R ? "Runner " + LV_NAMES[Math.min(5, Math.floor(R.p))] : "", C && C.p != null ? "Calisthenics " + LV_NAMES[Math.min(5, Math.floor(C.p))] : ""].filter(Boolean).join(" · ") || "Needs a race or a test"; } catch (e) { return ""; } })(), "", levelView)); }
   const v = UI.calView || "month";
-  return trainHead("Your training calendar") + (v === "week" ? `<div class="cv-top">${subBar("cal-view", "week", [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>` + trainWeek() : trainCalendar());
+  return trainHead("Your training calendar") + (v === "week" ? trainWeek() : trainCalendar());
 };
 ACT["perf-seg"] = el => { UI.perfSeg = el.dataset.k; scheduleRender(); };
 VIEWS.progress = function () { navFix(); const seg = UI.progSeg;
@@ -14424,7 +14426,7 @@ function labView() {
   h += note("Adherence counts only days with food actually logged. Sleep regularity is the spread of the hours; HRV variation (coefficient of variation) rising while the average falls is a tiredness sign.") + `</div>`;
   return `<div class="lab-wrap">${h}</div>`;
 }
-/* ================= Calculators: one-rep max with six published formulas side by side, loads for 1 to 12 reps, pace and race-time predictions (L: I3) =================
+/* ================= Calculators: one-rep max with six published formulas side by side, loads for 2 to 12 reps (1 rep is the mean), pace and race-time predictions (L: I3) =================
    1RM formulas (load w, reps r; r = 1 is the load itself): Epley w(1 + r/30), Brzycki 36w/(37 − r), Lombardi w·r^0.10, O'Conner w(1 + 0.025r), Mayhew 100w/(52.2 + 41.9e^(−0.055r)),
    Wathan 100w/(48.8 + 53.8e^(−0.075r)). They were fitted on free-weight lifts at 2 to 10 reps: past 10 reps they drift apart, and the screen says so. With a body weight the load is
    body weight + added and the result is the added part, the same way the app's e1RM works. Pace: Riegel (1977) T2 = T1 × (D2/D1)^1.06 against the VDOT prediction (Daniels) used in Running. */
@@ -14434,21 +14436,22 @@ function calcRM(w, r, bw = 0) {
   if (!(w > 0) || !(r >= 1) || r > 30) return null; const tot = w + bw, one = RM_FORMULAS.map(([n, f]) => ({ n, v: r === 1 ? tot : f(tot, r) })).filter(x => isFinite(x.v)).map(x => ({ ...x, v: x.v - bw })), vs = one.map(x => x.v);
   return { one, mean: vs.reduce((a, b) => a + b, 0) / vs.length, lo: Math.min(...vs), hi: Math.max(...vs) };
 }
-const calcLoads = (oneRM, name, bw = 0) => { const F = RM_FORMULAS.find(f => f[0] === name) || RM_FORMULAS[0]; return Array.from({ length: 12 }, (_, i) => { const r = i + 1, tot = r === 1 ? oneRM + bw : F[2](oneRM + bw, r); return { r, kg: tot - bw, pct: (tot - bw) / oneRM * 100 }; }); };
+const calcLoads = (oneRM, name, bw = 0) => { const F = RM_FORMULAS.find(f => f[0] === name) || RM_FORMULAS[0]; return Array.from({ length: 11 }, (_, i) => { const r = i + 2, tot = F[2](oneRM + bw, r); return { r, kg: tot - bw, pct: (tot - bw) / oneRM * 100 }; }); };
 const calcRiegel = (sec, km, to) => sec * Math.pow(to / km, 1.06);
 function calcPace(km, sec) { if (!(km > 0) || !(sec > 0)) return null; const v = vdotOf(km, sec / 60);
-  return { perKm: sec / km, perMile: sec / km * 1.609344, kmh: km / (sec / 3600), preds: [[5, "5K"], [10, "10K"], [21.0975, "Half marathon"], [42.195, "Marathon"]].map(([d, l]) => ({ l, d, riegel: calcRiegel(sec, km, d), vdot: v ? predictMin(d, v) * 60 : null })) }; }
+  return { perKm: sec / km, perMile: sec / km * 1.609344, kmh: km / (sec / 3600), preds: [[5, "5K"], [10, "10K"], [21.0975, "Half marathon"], [42.195, "Marathon"]].filter(([d]) => Math.abs(d - km) > 0.01).map(([d, l]) => ({ l, d, riegel: calcRiegel(sec, km, d), vdot: v ? predictMin(d, v) * 60 : null })) }; }
 function calcOut(sh) {
   if (sh.tab === "rm") { const w = num(sh.w), r = Math.round(num(sh.r)), bw = num(sh.b) || 0, R = calcRM(w, r, bw); if (!R) return `<div class="faint" style="font-size:12.5px">Type the load and the reps of a hard set (1 to 30).</div>`;
     const F = sh.f || "Epley", L = calcLoads(R.mean, F, bw);
-    return `<div class="an-g tc-top"><div class="an-k"><b>${R.mean.toFixed(1)} kg</b><small>mean of the six formulas</small></div><div class="an-k"><b>${fmtKg(r1(R.lo))}–${fmtKg(r1(R.hi))} kg</b><small>range</small></div></div>
-      <div class="card tc-one">${R.one.map(x => `<div class="lrow" style="padding:8px 14px"><span><span class="t">${x.n}</span></span><span class="end num">${x.v.toFixed(1)} kg</span></div>`).join("")}</div>
-      <span class="flabel">Loads for 1 to 12 reps from the mean, with</span><div class="chips">${RM_FORMULAS.map(f => `<button class="chip sm" data-act="calc-f" data-k="${f[0]}" aria-pressed="${f[0] === F}">${f[0]}</button>`).join("")}</div>
-      <div class="lab-t tc-reps">${L.map(x => `<div><span>${x.r} rep${x.r > 1 ? "s" : ""}</span><span class="faint">${r0(x.pct)}%</span><b>${x.kg.toFixed(1)} kg</b></div>`).join("")}</div>
+    const mark = v => R.hi > R.lo ? v === R.lo ? "lowest" : v === R.hi ? "highest" : "" : "";   // the range is the lowest and the highest of the list: said there, once
+    return `<div class="an-k"><b>${R.mean.toFixed(1)} kg</b><small>mean of the six formulas</small></div>
+      <div class="card tc-one">${R.one.map(x => `<div class="lrow" style="padding:8px 14px"><span class="t">${x.n}${mark(x.v) ? ` <small class="faint">· ${mark(x.v)}</small>` : ""}</span><span class="end num">${x.v.toFixed(1)} kg</span></div>`).join("")}</div>
+      <div class="tc-sel"><label class="flabel" for="tc-rm-f">Loads for 2 to 12 reps with</label><select id="tc-rm-f" class="inp" data-chg="calc-f">${RM_FORMULAS.map(f => `<option value="${f[0]}" ${f[0] === F ? "selected" : ""}>${f[0]}</option>`).join("")}</select></div>
+      <div class="lab-t tc-reps">${L.map(x => `<div><span>${x.r} reps</span><span class="faint">${r0(x.pct)}%</span><b>${x.kg.toFixed(1)} kg</b></div>`).join("")}</div>
       <div class="faint" style="font-size:12.5px;line-height:1.5">Fitted on free-weight lifts at 2 to 10 reps: ${r > 10 ? "<b>above 10 reps the formulas drift apart, read it as a rough guide</b>" : "the closer to 5 reps and the fewer the reps in reserve, the better the estimate"}. With a body weight the load is body weight + the kg you typed and the result is the added kg, as in your records.</div>`; }
   const km = num(sh.d), sec = parseClock(sh.t), P = calcPace(km, sec); if (!P) return `<div class="faint" style="font-size:12.5px">Type a distance and a time (41:30 or 1:41:30), or tap a distance.</div>`;
-  return `<div class="an-g"><div class="an-k"><b>${fmtClock(P.perKm)}</b><small>per km</small></div><div class="an-k"><b>${fmtClock(P.perMile)}</b><small>per mile</small></div><div class="an-k"><b>${r1(P.kmh)}</b><small>km/h</small></div></div>
-    <span class="flabel">The same effort over other distances</span><div class="lab-t lvl-t r3"><div class="hd"><span>Distance</span><b>Riegel</b><span>VDOT</span></div>${P.preds.map(p => `<div><span>${p.l}</span><b>${fmtClock(p.riegel)}</b><span>${p.vdot ? fmtClock(p.vdot) : "—"}</span></div>`).join("")}</div>
+  return `<div class="an-g tc-pace"><div class="an-k"><b>${fmtClock(P.perKm)}</b><small>per km</small></div><div class="an-k"><b>${fmtClock(P.perMile)}</b><small>per mile</small></div><div class="an-k"><b>${r1(P.kmh)}</b><small>km/h</small></div></div>
+    <span class="flabel">The same effort over other distances</span><div class="lab-t tc-pr"><div class="hd"><span>Distance</span><span>Riegel</span><span>VDOT</span></div>${P.preds.map(p => `<div><span>${p.l}</span><b>${fmtClock(p.riegel)}</b><b>${p.vdot ? fmtClock(p.vdot) : "—"}</b></div>`).join("")}</div>
     <div class="faint" style="font-size:12.5px;line-height:1.5">Riegel (1977) multiplies the time by (distance ratio)^1.06: simple, and optimistic past the half marathon. VDOT (Daniels) is the one used in Running and for your zones: it allows for the share of VO2max you can hold at each duration.</div>`;
 }
 /* ================= Tools: the timers and the calculators in one place =================
@@ -14465,11 +14468,11 @@ const bwKg = () => r1(trendNow());
 const isBwEx = n => /pull|chin|dip|muscle|push|row|l-sit|handstand|ring/i.test(n || "");
 const tcLast = () => topSetTable().filter(t => t.last).map(t => ({ n: t.name, kg: +t.last.kg || 0, r: +t.last.reps || 0 }));
 const CALCS = [
-  { id: "rm", name: "1RM and loads", sub: "Six formulas side by side, loads for 1 to 12 reps", f: [["w", "Load", "kg"], ["r", "Reps", "reps"], ["b", "Body weight", "kg"]], def: { f: "Epley" },
+  { id: "rm", name: "1RM and loads", sub: "Six formulas side by side, loads for 2 to 12 reps", f: [["w", "Load", "kg"], ["r", "Reps", "reps"], ["b", "Body weight", "kg"]], def: { f: "Epley" },
     fill: () => { const L = tcLast()[0]; return L ? { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" } : null; },
     chips: () => tcLast().slice(0, 4).map(L => [`${L.n} ${L.kg ? "+" + L.kg : "BW"}×${L.r}`, { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" }]),
     out: s => { const R = calcRM(num(s.w), Math.round(num(s.r)), num(s.b) || 0); if (!R) return null; const F = s.f || "Epley", L = calcLoads(R.mean, F, num(s.b) || 0), r = Math.round(num(s.r));
-      return { html: calcOut({ tab: "rm", ...s }), text: [`1RM (mean of six formulas): ${R.mean.toFixed(1)} kg (range ${r1(R.lo)}–${r1(R.hi)}), from ${num(s.w)} kg × ${r}${num(s.b) ? ` at body weight ${num(s.b)} kg` : ""}`, ...L.map(x => `${x.r} rep${x.r > 1 ? "s" : ""}: ${x.kg.toFixed(1)} kg (${r0(x.pct)}%)`)].join("\n") }; } },
+      return { html: calcOut({ tab: "rm", ...s }), text: [`1RM (mean of six formulas): ${R.mean.toFixed(1)} kg (range ${r1(R.lo)}–${r1(R.hi)}), from ${num(s.w)} kg × ${r}${num(s.b) ? ` at body weight ${num(s.b)} kg` : ""}`, ...L.map(x => `${x.r} reps: ${x.kg.toFixed(1)} kg (${r0(x.pct)}%)`)].join("\n") }; } },
   { id: "pace", name: "Pace and race times", sub: "Pace, speed and the same effort over other distances", f: [["d", "Distance", "km"], ["t", "Time", ""]], def: { d: "10" },
     fill: () => { const t = (S.train.tests || []).filter(x => x.kind === "Race" && x.km > 0 && x.sec > 0).sort((a, b) => b.date.localeCompare(a.date))[0]; return t ? { d: String(t.km), t: fmtClock(t.sec) } : null; },
     chips: () => [[5, "5K"], [10, "10K"], [21.0975, "Half"], [42.195, "Marathon"]].map(([k, l]) => { const pb = pbFor(k); return [l + (pb ? " PB " + fmtClock(pb.sec) : ""), { d: String(k), ...(pb ? { t: fmtClock(pb.sec) } : {}) }]; }),
@@ -14502,8 +14505,8 @@ const CALCS = [
     fill: () => { const L = tcLast().find(x => isBwEx(x.n)); return { b: String(bwKg()), ...(L ? { k: String(L.kg), r: String(L.r), x: /dip/i.test(L.n) ? "dip" : "pull" } : {}) }; },
     chips: () => [["Pull-up", { x: "pull" }], ["Dip", { x: "dip" }]],
     out: s => { const b = num(s.b), k = num(s.k) || 0, r = Math.round(num(s.r)); if (!(b > 20) || !(r >= 1)) return null; const e = (b + k) * (1 + r / 30) - b, pct = e / b * 100, X = s.x || "pull", pos = lvPos(pct, LV_STR[X]), lvl = LV_NAMES[Math.min(5, Math.floor(pos))];
-      const at = n => (b + e) / (1 + n / 30) - b, rows = [["Estimated 1RM, added", `${e >= 0 ? "+" : ""}${r1(e)} kg`, `${r0(pct)}% of body weight`], ["Level on the Strength scale", lvl, `${X === "dip" ? "Dip" : "Pull-up"}, position ${pos.toFixed(1)} on the Level lines`], ...[3, 5, 8].map(n => [`For ${n} reps`, `${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`])];
-      return { html: tcOut(rows, "e1RM = (body weight + added) × (1 + reps/30) − body weight, the one the Records use."), text: [`${X === "dip" ? "Dip" : "Pull-up"}: +${k} kg × ${r} at ${b} kg → 1RM ${e >= 0 ? "+" : ""}${r1(e)} kg (${r0(pct)}% of body weight, ${lvl})`, ...[3, 5, 8].map(n => `${n} reps: ${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`)].join("\n") }; } },
+      const at = n => (b + e) / (1 + n / 30) - b, rows = [["Estimated 1RM, added", `${e >= 0 ? "+" : ""}${r1(e)} kg`, `${r0(pct)}% of body weight`], ["Level on the Strength scale", lvl, `${X === "dip" ? "Dip" : "Pull-up"}, position ${pos.toFixed(1)} on the Level lines`], ...[3, 5, 8].filter(n => n !== r).map(n => [`For ${n} reps`, `${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`])];
+      return { html: tcOut(rows, "e1RM = (body weight + added) × (1 + reps/30) − body weight, the one the Records use."), text: [`${X === "dip" ? "Dip" : "Pull-up"}: +${k} kg × ${r} at ${b} kg → 1RM ${e >= 0 ? "+" : ""}${r1(e)} kg (${r0(pct)}% of body weight, ${lvl})`, ...[3, 5, 8].filter(n => n !== r).map(n => `${n} reps: ${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`)].join("\n") }; } },
   { id: "fuel", name: "Fuel for a long session", sub: "Carbs, fluid and sodium by duration", f: [["m", "Duration", "min"], ["g", "Carbs per gel", "g"]], def: { g: "25" },
     fill: () => { const w = daySessions(todayISO()).filter(x => x.st === "planned").map(x => x.w).sort((a, b) => (+b.min || 0) - (+a.min || 0))[0]; return w?.min ? { m: String(r0(w.min)) } : null; },
     chips: () => [["1 h", { m: "60" }], ["90 min", { m: "90" }], ["2 h", { m: "120" }], ["3 h", { m: "180" }], ["4 h", { m: "240" }]],
@@ -14513,15 +14516,15 @@ const CALCS = [
   { id: "sweat", name: "Sweat rate", sub: "Weigh yourself before and after, in dry clothes", f: [["a", "Weight before", "kg"], ["z", "Weight after", "kg"], ["d", "Drank", "ml"], ["m", "Time", "min"]], def: { d: "0" },
     fill: () => ({ a: String(bwKg()) }),
     out: s => { const a = num(s.a), z = num(s.z), d = num(s.d) || 0, m = num(s.m); if (!(a > 20 && z > 20 && m > 0)) return null; const loss = a - z + d / 1000, rate = loss / (m / 60), pct = (a - z) / a * 100;
-      const rows = [["Sweat rate", `${tcFmt(rate)} L/h`, "weight lost + fluid drunk"], ["Body mass lost", `${tcFmt(pct)}%`, pct > 2 ? "over 2%: drink more next time" : "under 2%: fine"], ["To drink per hour", `${r0(rate * 1000 * .6)}–${r0(rate * 1000 * .8)} ml`, "60–80% of the sweat, a starting point"]];
-      return { html: tcOut(rows, "Same method as the ACSM position stand on exercise and fluid replacement (Sawka 2007). One session in similar weather only: repeat it in heat."), text: [`Sweat rate: ${tcFmt(rate)} L/h over ${r0(m)} min (${tcFmt(pct)}% of body mass lost)`].join("\n") }; } }
+      const rows = [["Sweat rate", `${tcFmt(rate)} L/h`, "weight lost + fluid drunk"], ["Body mass lost", `${r1(pct)}%`, pct > 2 ? "over 2%: drink more next time" : "under 2%: fine"], ["To drink per hour", `${roundTo(rate * 1000 * .6, 10)}–${roundTo(rate * 1000 * .8, 10)} ml`, "60–80% of the sweat, a starting point"]];
+      return { html: tcOut(rows, "Same method as the ACSM position stand on exercise and fluid replacement (Sawka 2007). One session in similar weather only: repeat it in heat."), text: [`Sweat rate: ${tcFmt(rate)} L/h over ${r0(m)} min (${r1(pct)}% of body mass lost)`].join("\n") }; } }
 ];
 const calcState = c => { const s = tcs(c.id); for (const [k, v] of Object.entries(c.def || {})) if (s[k] === undefined) s[k] = v; return s; };
 function calcCard(c) {
-  const open = UI.toolOpen === c.id, s = calcState(c), R = open ? c.out(s) : null, chips = open && c.chips ? c.chips() : [];
+  const open = UI.toolOpen === c.id, s = calcState(c), R = open ? c.out(s) : null, chips = open && c.chips ? c.chips() : [], nf = c.f.filter(x => !x[3]).length;   // the wide field (plates) takes a row of its own: the others share the columns
   return `<section class="rec-sec${open ? " open" : ""}"><button class="rec-h" data-act="calc-tog" data-k="${c.id}" aria-expanded="${open}"><span><b>${c.name}</b><small>${c.sub}</small></span>${ic(open ? "chevU" : "chevD", "sm")}</button>
-    ${open ? `<div class="rec-b"><div class="tc-f" style="--n:${c.f.length};--nm:${c.f.length > 3 || c.f.some(x => x[3]) ? 2 : c.f.length}">${c.f.map(([k, l, u, wd]) => `<div class="field${wd ? " tc-w" : ""}"><label for="tc-${c.id}-${k}">${l}</label><div class="unit-inp"><input id="tc-${c.id}-${k}" class="inp" inputmode="${k === "t" && c.id === "pace" || k === "p" ? "text" : "decimal"}" value="${esc(s[k] ?? "")}" data-in="tc" data-c="${c.id}" data-k="${k}">${u ? `<span>${u}</span>` : ""}</div></div>`).join("")}</div>
-      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="tc-fill" data-c="${c.id}">${ic("spark", "sm")}Use my data</button>${chips.map(([l, v], i) => `<button class="chip sm" data-act="tc-chip" data-c="${c.id}" data-i="${i}">${esc(l)}</button>`).join("")}</div>
+    ${open ? `<div class="rec-b"><div class="tc-f" style="--n:${nf};--nm:${nf < c.f.length ? nf : c.f.length > 3 ? 2 : c.f.length}">${c.f.map(([k, l, u, wd]) => `<div class="field${wd ? " tc-w" : ""}"><label for="tc-${c.id}-${k}">${l}</label><div class="unit-inp"><input id="tc-${c.id}-${k}" class="inp" inputmode="${k === "t" && c.id === "pace" || k === "p" ? "text" : "decimal"}" value="${esc(s[k] ?? "")}" data-in="tc" data-c="${c.id}" data-k="${k}">${u ? `<span>${u}</span>` : ""}</div></div>`).join("")}</div>
+      <div class="tc-acts"><button class="btn tonal sm" data-act="tc-fill" data-c="${c.id}">${ic("spark", "sm")}Use my data</button>${chips.length ? `<div class="chips scroll">${chips.map(([l, v], i) => `<button class="chip sm" data-act="tc-chip" data-c="${c.id}" data-i="${i}">${esc(l)}</button>`).join("")}</div>` : ""}</div>
       <div id="tc-out-${c.id}" class="tc-out">${R ? R.html : tcHint("Fill the fields, or tap «Use my data».")}</div>
       <div class="row" style="gap:8px"><button class="btn soft sm" data-act="tc-copy" data-c="${c.id}">${ic("copy", "sm")}Copy as text</button>${navigator.share ? `<button class="btn text sm" data-act="tc-share" data-c="${c.id}">Share</button>` : ""}</div></div>` : ""}</section>`;
 }
@@ -14531,7 +14534,7 @@ ACT["tool-back"] = () => { const r = UI.toolRet; UI.toolRet = null; if (r) { UI.
 ACT["tool-seg"] = el => { UI.toolSeg = el.dataset.k; scheduleRender(); };
 ACT["tc-fill"] = el => { const c = CALCS.find(x => x.id === el.dataset.c), v = c.fill && c.fill(); if (!v) { toast("Nothing to fill from yet: log a result first."); return; } Object.assign(tcs(c.id), v); scheduleRender(); };
 ACT["tc-chip"] = el => { const c = CALCS.find(x => x.id === el.dataset.c), ch = c.chips()[+el.dataset.i]; if (ch) { Object.assign(tcs(c.id), ch[1]); scheduleRender(); } };
-ACT["calc-f"] = el => { tcs("rm").f = el.dataset.k; scheduleRender(); };
+CHG["calc-f"] = v => { tcs("rm").f = v; scheduleRender(); };
 INP.tc = (v, el) => { const c = CALCS.find(x => x.id === el.dataset.c); calcState(c)[el.dataset.k] = v; const o = $(`#tc-out-${c.id}`); if (o) { const R = c.out(calcState(c)); o.innerHTML = R ? R.html : tcHint("Fill the fields, or tap «Use my data»."); } };
 const tcText = c => { const R = c.out(calcState(c)); return R ? `${c.name}\n${R.text}\n— Engine` : ""; };
 ACT["tc-copy"] = async el => { const c = CALCS.find(x => x.id === el.dataset.c), t = tcText(c); if (!t) { toast("Nothing to copy yet."); return; }

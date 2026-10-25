@@ -21,7 +21,7 @@ const SHEETS_TO_OPEN = [
 /* runs in the page: design lint, the things that look "storto" without breaking the layout: edges that almost line up, a row whose controls sit at different heights, cards of different height side by side, an icon off the text's axis, tiny text. Warnings: they do not fail the audit (use --strict to make them fail) */
 const LINT = () => {
   const out = [], R = e => e.getBoundingClientRect(), name = e => (e.tagName.toLowerCase() + (e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : "")).slice(0, 50);
-  const vis = e => { const s = getComputedStyle(e), r = R(e); if (s.visibility === "hidden" || s.display === "none" || +s.opacity <= 0.05 || r.width <= 0 || r.height <= 0) return false; const d = e.closest("details"); if (d && !d.open && !e.closest("summary")) return false; return true; };
+  const vis = e => { const s = getComputedStyle(e), r = R(e); if (s.visibility === "hidden" || s.display === "none" || +s.opacity <= 0.05 || r.width <= 0 || r.height <= 0) return false; for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open && !(e.closest("summary") && e.closest("summary").parentElement === d)) return false; return true; };
   const root = document.querySelector(".sheet") || document.querySelector("main") || document.body, skip = "svg,canvas,.cv,.wb,.ph-strip,.td-ds,.toast,#toast,.bnav,.tnav,.dock,.lv-dock,.sheet-f,.sheet-h,.wc,.mini,.bt-svg,.chart";
   const all = [...root.querySelectorAll("*")].filter(e => vis(e) && !e.closest(skip));
   for (const p of all) { const kids = [...p.children].filter(c => vis(c) && !/^(svg|path|use|i|script|style)$/i.test(c.tagName)); if (kids.length < 2) continue;
@@ -44,7 +44,7 @@ const LINT = () => {
 /* runs in the page: returns the problems it finds in what is on screen now */
 const CHECK = () => {
   const vw = innerWidth, out = [], R = e => e.getBoundingClientRect(), name = e => (e.tagName.toLowerCase() + (e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : "")).slice(0, 60);
-  const vis = e => { const s = getComputedStyle(e), r = R(e); if (s.visibility === "hidden" || s.display === "none" || +s.opacity <= 0.05 || r.width <= 0 || r.height <= 0) return false; const d = e.closest("details"); if (d && !d.open && !e.closest("summary")) return false; return true; };
+  const vis = e => { const s = getComputedStyle(e), r = R(e); if (s.visibility === "hidden" || s.display === "none" || +s.opacity <= 0.05 || r.width <= 0 || r.height <= 0) return false; for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open && !(e.closest("summary") && e.closest("summary").parentElement === d)) return false; return true; };
   const scrolls = e => { for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if ((o === "auto" || o === "scroll") && a.scrollWidth > a.clientWidth) return true; } return false; };
   if (document.documentElement.scrollWidth > vw + 1) out.push(`page scrolls sideways (${document.documentElement.scrollWidth} > ${vw})`);
   const root = document.querySelector(".sheet") || document.querySelector("main") || document.body;

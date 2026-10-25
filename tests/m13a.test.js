@@ -184,9 +184,9 @@ test("Tools: the calculators give the hand-computed numbers and copy them as tex
   // warm-up for 100 kg: 40×6, 60×4, 75×3, 90×1 and the empty bar
   assert.equal(await run("warm", { w: "100", bar: "20" }), "Warm-up for 100 kg\nEmpty bar: 20 kg × 10\n40%: 40 kg × 6\n60%: 60 kg × 4\n75%: 75 kg × 3\n90%: 90 kg × 1");
   // relative strength: (80+20)(1+5/30) − 80 = 36.67 kg = 45.8 % of body weight
-  const rel = await run("rel", { b: "80", k: "20", r: "5", x: "pull" }); assert.match(rel, /1RM \+36\.7 kg \(46% of body weight/); assert.match(rel, /3 reps: \+26\.1 kg/); assert.match(rel, /5 reps: \+20 kg/);
-  // sweat: 70 → 69 kg, drank 500 ml in 60 min = 1.5 L/h, 1.43 % lost
-  assert.match(await run("sweat", { a: "70", z: "69", d: "500", m: "60" }), /1\.5 L\/h over 60 min \(1\.43% of body mass lost\)/);
+  const rel = await run("rel", { b: "80", k: "20", r: "5", x: "pull" }); assert.match(rel, /1RM \+36\.7 kg \(46% of body weight/); assert.match(rel, /3 reps: \+26\.1 kg/); assert.match(rel, /8 reps: \+12\.1 kg/); assert.doesNotMatch(rel, /5 reps:/, "the typed reps are not listed again");
+  // sweat: 70 → 69 kg, drank 500 ml in 60 min = 1.5 L/h, 1/70 = 1.4 % lost (one decimal)
+  assert.match(await run("sweat", { a: "70", z: "69", d: "500", m: "60" }), /1\.5 L\/h over 60 min \(1\.4% of body mass lost\)/);
   // fuel: 2 h → 30–60 g/h, 90 g in all, 4 gels of 25 g
   const fuel = await run("fuel", { m: "120", g: "25" }); assert.match(fuel, /Carbs per hour: 30–60 g/); assert.match(fuel, /≈ 90 g \(4 gels of 25 g\)/);
   // 1RM: 100 kg × 5 → Epley 116.7, mean of six formulas close to it

@@ -135,7 +135,7 @@ test("D3: off by default (a feature you switch on), then a Settings group that s
 
 test("D3: the steps show the engine's own numbers, each once; the BMR formula written with today's inputs gives the BMR; a copy of a session says where it is counted", async () => {
   await day({ today: true });
-  const r = await ev(() => { const d = document.createElement("div"); d.innerHTML = explainHTML(); const txt = [...d.querySelectorAll(".t,.s,.end,.flabel")].map(e => e.textContent).join(" | ").replace(/\s+/g, " "), x = energyAt(todayISO());
+  const r = await ev(() => { UI.fold = { explain: { ["Algorithm set v" + ALGO_VERSION]: true, "Where the data come from": true } }; const d = document.createElement("div"); d.innerHTML = explainHTML(); UI.fold = {}; const txt = [...d.querySelectorAll(".t,.s,.end,.flabel")].map(e => e.textContent).join(" | ").replace(/\s+/g, " "), x = energyAt(todayISO());
     const bmrLine = [...d.querySelectorAll(".lrow")].find(l => /Resting energy/.test(l.textContent)).querySelector(".s").textContent;
     const count = v => (txt.match(new RegExp("(?<![\\d,.])" + fmtN(v).replace(/,/g, ",") + "(?![\\d,.])", "g")) || []).length;
     return { counts: [x.bmr, x.neat, x.eat, x.tef, x.tdee].map(count), eat: x.eat, formula: bmrLine.split("·")[1].replace(/kg|cm|y|m\b/g, "").replace(/×/g, "*").replace(/−/g, "-"), bmr: x.bmr, dup: /same session as Running 50′ at 09:00: counted there, once/.test(txt), vers: d.querySelectorAll(".card.ex")[1].querySelectorAll(".lrow").length, pills: [...d.querySelectorAll(".card.ex")[1].querySelectorAll(".pill")].map(p => p.textContent) }; });
