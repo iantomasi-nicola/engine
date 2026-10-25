@@ -9,13 +9,14 @@ test("Share as a story: typing or toggling redraws the picture in place: same pr
   const page = await open();
   await page.evaluate(() => { const t = todayISO(); mutateLog(t, d => { d.wsess = [{ id: "s1", name: "Pulls", min: 40, rpe: 7, sets: [{ ex: "Pull-up", reps: [6], round: 1 }] }]; d.workouts = [{ sport: strengthSport(), min: 40, sid: "s1", note: "Pulls", rpe: 7 }]; }); DATA_V++; ACT["story-open"]({ dataset: { date: t, id: "s1" } }); });
   await page.waitForSelector(".story-pv img", { timeout: 8000 }); await page.waitForTimeout(500);
-  await page.evaluate(() => { document.querySelector(".story-pv img").__mark = 1; document.querySelector(".sheet-b").scrollTop = 220; window.__src0 = document.querySelector(".story-pv img").src; });
-  await page.click("#st-title"); await page.keyboard.press("End"); await page.keyboard.type(" rainy", { delay: 40 }); await page.waitForTimeout(1200);
-  const r = await page.evaluate(() => ({ same: document.querySelector(".story-pv img")?.__mark === 1, focus: document.activeElement?.id, val: document.getElementById("st-title").value, scroll: document.querySelector(".sheet-b").scrollTop, src: document.querySelector(".story-pv img").src !== __src0 }));
-  assert.equal(r.same, true, "the preview element is the same"); assert.equal(r.focus, "st-title"); assert.match(r.val, /rainy$/); assert.ok(r.scroll >= 200, "scroll kept: " + r.scroll); assert.equal(r.src, true, "the picture was redrawn");
+  /* the preview stays at the top (L15): scroll so the title field sits just under it, then give it the cursor */
+  await page.evaluate(() => { document.querySelector(".story-pv img").__mark = 1; const b = document.querySelector(".sheet-b"), i = document.getElementById("st-title"); b.scrollTop = 0; b.scrollTop = Math.max(0, i.getBoundingClientRect().top - document.querySelector(".story-pv").getBoundingClientRect().bottom - 12); window.__s0 = b.scrollTop; window.__src0 = document.querySelector(".story-pv img").src; i.focus({ preventScroll: true }); i.setSelectionRange(i.value.length, i.value.length); });
+  await page.keyboard.press("End"); await page.keyboard.type(" rainy", { delay: 40 }); await page.waitForTimeout(1200);
+  const r = await page.evaluate(() => ({ same: document.querySelector(".story-pv img")?.__mark === 1, focus: document.activeElement?.id, val: document.getElementById("st-title").value, scroll: document.querySelector(".sheet-b").scrollTop, s0: __s0, src: document.querySelector(".story-pv img").src !== __src0 }));
+  assert.equal(r.same, true, "the preview element is the same"); assert.equal(r.focus, "st-title"); assert.match(r.val, /rainy$/); assert.ok(r.s0 > 100 && Math.abs(r.scroll - r.s0) <= 2, `scroll kept: ${r.s0} → ${r.scroll}`); assert.equal(r.src, true, "the picture was redrawn");
   await page.evaluate(() => { document.querySelector('[data-act="story-stat"]').click(); }); await page.waitForTimeout(900);
   const c = await page.evaluate(() => ({ same: document.querySelector(".story-pv img")?.__mark === 1, pressed: document.querySelector('[data-act="story-stat"]').getAttribute("aria-pressed"), scroll: document.querySelector(".sheet-b").scrollTop }));
-  assert.equal(c.same, true); assert.equal(c.pressed, "false"); assert.ok(c.scroll >= 200);
+  assert.equal(c.same, true); assert.equal(c.pressed, "false"); assert.ok(Math.abs(c.scroll - r.s0) <= 2, `scroll kept after a chip: ${c.scroll}`);
 });
 
 const RECEIPT = { store: "Lidl", date: null, total: 22.6, items: [{ name: "Test rice", qty: 1, price: 2.1 }, { name: "Test chicken", qty: 2, price: 9.8 }, { name: "Test oil", qty: 1, weight_g: 750, price: 6.5 }, { name: "Gelato Pistacchio Sammontana", brand: "Sammontana", qty: 1, price: 4.2 }] };

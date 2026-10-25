@@ -113,7 +113,7 @@ test("the Pantry has no how-it-works card; «Left on» lists every item, running
   await page.evaluate(() => { for (let k = 0; k < 10; k++) { S.shop.pantry["x" + k] = { g: 100 }; S.foods["x" + k] = { id: "x" + k, name: "Unused thing " + k, unit: "g", per: { kcal: 1, p: 0, c: 0, f: 0, fib: 0 }, servings: [], source: "custom" }; } S.shop.pantry["t-rice"] = { g: 700 }; S.shop.pantry["t-oil"] = { g: 300 }; DATA_V++; UI.paFcOpen = true; UI.tab = "pantry"; scheduleRender(); });
   await page.waitForSelector(".pa-forecast");
   assert.equal(await page.evaluate(() => !!document.querySelector(".pa-how") && /How the pantry works/.test(document.body.innerText)), false);
-  const f = await page.evaluate(() => { const F = pantryForecast(addDays(todayISO(), 6 - dow(todayISO()))); return { first: F.rows[0].f.name, states: F.rows.map(r => r.state), n: F.rows.length }; });
+  const f = await page.evaluate(() => { const F = pantryForecast(addDays(todayISO(), 6)); return { first: F.rows[0].f.name, states: F.rows.map(r => r.state), n: F.rows.length }; });
   assert.ok(["out", "low"].includes(f.states[0]), "the item that runs down comes first: " + f.states.join(","));
   assert.ok(f.states.lastIndexOf("idle") === f.states.length - 1 || !f.states.includes("idle"), "items the plan doesn't use come last");
   assert.equal(await page.evaluate(() => document.querySelectorAll(".pa-forecast .fc-row").length), 8, "eight to start with");

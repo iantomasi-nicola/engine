@@ -25,7 +25,7 @@ PWA statica per un atleta ibrido (nutrizione, running, calisthenics, forza). Nes
 npm i terser lightningcss      # in una cartella fuori dalla repo
 NODE_MODULES=<cartella>/node_modules node source/build-web.js <outdir> nomin   # build non minificata fuori repo
 ```
-Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commit che tocca `source/`: build in cartella temporanea, avvio in Chromium (Playwright è preinstallato) con rete esterna bloccata, **zero `pageerror`** e UI visibile sui tre viewport (390×844, 820×1180, 1440×900). Il rebuild dei file di root (e `npm run release-check`) si fa solo a fine milestone, in un commit dedicato, e la pubblicazione solo su richiesta: durante la milestone `check-build` segnala giustamente che la build di root è indietro rispetto al sorgente.
+Test: `cd tests && npm run verify` (vedi `tests/README.md`). Prima di ogni commit che tocca `source/`: build in cartella temporanea, avvio in Chromium (Playwright è preinstallato) con rete esterna bloccata, **zero `pageerror`** e UI visibile sui tre viewport (390×844, 820×1180, 1440×900). Il rebuild dei file di root (e `npm run release-check`) si fa in un commit dedicato a ogni pubblicazione; l'utente ha chiesto pubblicazioni frequenti (vedi «Design impeccabile»): durante la milestone `check-build` segnala giustamente che la build di root è indietro rispetto al sorgente.
 
 ## Regole ingegneristiche (dal mandato dell'utente)
 1. Una sola fonte di verità per Foods, Recipes, Meal Plan, Storage, Shopping: quantità, unità, prezzi, nutrienti. Scorta reale ≠ consumo pianificato ≠ consumo effettivo; le proiezioni non alterano mai la giacenza.
@@ -47,6 +47,12 @@ Concordato con l'utente: commit atomici e push **frequenti** sul branch di lavor
 
 ## Stile visivo (richiesta dell'utente, 24/10/2026)
 Minimale, in pieno stile Material Design (Google, evoluzione recente): superfici tonali, raggi coerenti, nessun bordino/filetto decorativo colorato (es. barra verde a sinistra o contorno sulla cella «oggi»: si usa solo un fondo tenue), ombre e linee ridotte al necessario. Prima di ogni commit visivo: allineamenti e simmetrie su 390/820/1440 px. M14 include la verifica di allineamento e design di tutte le schermate.
+
+## Design impeccabile su tre viste (COMANDO PERMANENTE dell'utente, 24/10/2026)
+Nessuna grafica disallineata o storta, nessuna icona fuori asse, nessun testo coperto, sovrapposto, tagliato o compresso, su **telefono (390), tablet (820) e PC (1440 e oltre)**. Tipografia curata: gerarchia dei titoli, interlinea, spazi tra testi e blocchi coerenti. Design minimale (vedi «Stile visivo»).
+- Il controllo si rifà **ogni volta che una schermata passa davanti** (screenshot sui tre viewport), non solo a fine milestone: se si nota qualcosa si corregge subito, anche fuori dal perimetro, e la schermata si può riprogettare da zero se è confusa (es. pulsanti messi a caso).
+- Schermi grandi: nessuna schermata si allarga fino a diventare brutta; ogni schermata ha una larghezza o un layout adatti (anche specifici per PC, tablet e telefono).
+- Pubblicazioni frequenti: dopo ogni gruppo di correzioni si pubblica su `main` (rollback indicato) con il **riepilogo delle funzioni pubblicate e dove trovarle**, perché l'utente le prova a mano passo passo.
 
 ## Passaggio di consegne
 Per riprendere il lavoro leggere **`docs/HANDOFF.md`** (stato esatto, procedure, trappole, prossimi passi, decisioni aperte) prima di tutto il resto.

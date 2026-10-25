@@ -8,25 +8,25 @@ const open = async (viewport = H.VIEWPORTS.phone, o = {}) => { app = await H.sta
 const SCRIPT = "Pull 4x\\n- 6 Pull-up +10kg\\n- 8 Ring row rings 45cm\\n\\nLegs 3x\\n- 10 Kettlebell swing";
 const begin = async (page, script = SCRIPT) => { await page.evaluate(`(() => { startWorkout({ script: "${script}", name: "Gear day", sport: strengthSport(), date: todayISO() }); UI.tab = "live"; render(); })()`); await page.waitForTimeout(250); };
 
-test("Today: four richer tiles, a Yesterday card that says what was logged, supplements as tap targets with the next one named; nothing overflows on the three screens; no «How was today?»", async () => {
+test("Today: four richer tiles, a Yesterday card that says what was logged, supplements as tap rows by time in the Reminders card; nothing overflows on the three screens; no «How was today?»", async () => {
   for (const vp of Object.values(H.VIEWPORTS)) {
     const page = await open(vp);
     const r = await page.evaluate(async () => { S.settings.supps = [{ id: "c1", name: "Creatina", dose: "5 g", times: ["09:00"], days: [], on: true, since: addDays(todayISO(), -30) }, { id: "b1", name: "Beta-alanina", times: ["21:00"], days: [], on: true, since: addDays(todayISO(), -30) }];
       mutateLog(addDays(todayISO(), -1), d => { d.sleep = 7.2; }); for (let i = 2; i < 9; i++) mutateLog(addDays(todayISO(), -i), d => { d.weight = 80.5 - i * 0.05; }); mutateLog(todayISO(), d => { d.weight = 80.1; }); DATA_V++; UI.tab = "today"; scheduleRender(); await new Promise(r => setTimeout(r, 300));
       const tiles = [...document.querySelectorAll(".glance .gl-t")].map(t => t.querySelector(".gl-h").innerText.trim()), txt = document.body.innerText.replace(/\s+/g, " ");
-      return { tiles, spark: !!document.querySelector(".glance .gl-sp"), bar: !!document.querySelector(".glance .gl-bar"), yd: !!document.querySelector(".yd2"), ydSum: document.querySelector(".yd-sum")?.innerText || "", sp: document.querySelectorAll(".sp2-b").length, next: /Next: Creatina at 09:00/.test(txt), over: document.documentElement.scrollWidth > innerWidth + 1, journal: /How was today\?/.test(txt) }; });
-    assert.equal(r.tiles.length, 4, vp.width + "px"); assert.match(r.tiles[0], /ENERGY/i); assert.match(r.tiles.join(" "), /WEIGHT/i); assert.ok(r.spark && r.bar); assert.ok(r.yd); assert.match(r.ydSum, /7\.2 h sleep/); assert.equal(r.sp, 2); assert.ok(r.next || r.sp === 2);
+      return { tiles, spark: !!document.querySelector(".glance .gl-sp"), bar: !!document.querySelector(".glance .gl-bar"), yd: !!document.querySelector(".yd2"), ydSum: document.querySelector(".yd-sum")?.innerText || "", sp: document.querySelectorAll(".rm-t").length, times: [...document.querySelectorAll(".rm-t .rm-w")].map(e => e.innerText), over: document.documentElement.scrollWidth > innerWidth + 1, journal: /How was today\?/.test(txt) }; });
+    assert.equal(r.tiles.length, 4, vp.width + "px"); assert.match(r.tiles[0], /ENERGY/i); assert.match(r.tiles.join(" "), /WEIGHT/i); assert.ok(r.spark && r.bar); assert.ok(r.yd); assert.match(r.ydSum, /7\.2 h sleep/); assert.equal(r.sp, 2); assert.deepEqual(r.times, ["09:00", "21:00"], "rows by time");
     assert.equal(r.over, false, vp.width + "px"); assert.equal(r.journal, false);
     await app.close(); app = null;
   }
 });
 
-test("a supplement tap marks it taken with the time, the card counts it and the next one moves on", async () => {
+test("a supplement tap marks it taken with the time, the Reminders card counts it", async () => {
   const page = await open();
   const r = await page.evaluate(async () => { S.settings.supps = [{ id: "c1", name: "Creatina", times: ["09:00"], days: [], on: true, since: addDays(todayISO(), -30) }]; DATA_V++; UI.tab = "today"; scheduleRender(); await new Promise(r => setTimeout(r, 250));
-    const k = document.querySelector(".sp2-b").dataset.k; ACT["supp-tick"]({ dataset: { k, date: todayISO() } }); scheduleRender(); await new Promise(r => setTimeout(r, 250));
-    return { done: document.querySelector(".sp2-b").classList.contains("done"), head: document.querySelector(".sp2 .td-ov").innerText.replace(/\s+/g, " "), small: document.querySelector(".sp2-b small").innerText }; });
-  assert.equal(r.done, true); assert.match(r.head, /1 of 1/); assert.match(r.small, /Taken/);
+    const before = document.querySelector(".rm .td-ov").innerText.replace(/\s+/g, " "), k = document.querySelector(".rm-t").dataset.k; ACT["supp-tick"]({ dataset: { k, date: todayISO() } }); scheduleRender(); await new Promise(r => setTimeout(r, 250));
+    return { before, done: document.querySelector(".rm-t").classList.contains("done"), head: document.querySelector(".rm .td-ov").innerText.replace(/\s+/g, " "), when: document.querySelector(".rm-t .rm-w").innerText }; });
+  assert.match(r.before, /Reminders.*1 to do/); assert.equal(r.done, true); assert.match(r.head, /Reminders.*All done/); assert.match(r.when, /Taken/);
 });
 
 test("the page before a workout is made of sections on the page, divided by lines: no boxes stuck together", async () => {
