@@ -509,7 +509,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .day-pill b{font-family:var(--display);font-stretch:112%;font-size:16px;font-weight:700;color:var(--ink);line-height:1}
 .day-pill small{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .day-pill .ring{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ink) calc(var(--p)*1%),var(--surface-3) 0)}
-.day-pill .ring b{width:24px;height:24px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12.5px}
+.day-pill .ring.r0{background:none!important}.day-pill .ring b{width:24px;height:24px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12.5px}
 .day-pill[aria-current="date"]{background:var(--ink);color:var(--bg)}
 .day-pill[aria-current="date"] .ring{background:conic-gradient(var(--bg) calc(var(--p)*1%),color-mix(in srgb,var(--bg) 25%,transparent) 0)}
 .day-pill[aria-current="date"] .ring b{background:var(--ink);color:var(--bg)}
@@ -589,7 +589,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .item-kcal{font-family:var(--display);font-stretch:110%;font-weight:650;font-size:14px;font-variant-numeric:tabular-nums;text-align:right;padding-right:2px}
 .item-kcal small{display:block;font-family:var(--body);font-weight:500;font-size:11px;color:var(--faint)}
 .grip{width:30px;height:40px;display:grid;place-items:center;color:var(--faint);touch-action:none;cursor:grab}
-.add-row{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px 14px;color:var(--accent);font-weight:650;font-size:14px;border-top:1px dashed var(--line)}
+.add-row{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px 14px;color:var(--accent);font-weight:650;font-size:14px}
 .drop-line{height:3px;border-radius:2px;background:var(--accent);margin:0 12px;list-style:none}
 .drag-ghost{position:fixed;z-index:100;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,.22);border-radius:14px;opacity:.96;transform:rotate(-1.2deg) scale(1.02);border:1px solid var(--line)}
 body.dragging,body.dragging *{cursor:grabbing!important}
@@ -817,7 +817,8 @@ details.card[open]>summary.lrow::after{transform:rotate(-135deg)}
 .fab{position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(80px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:18px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 38%,transparent);transition:transform .12s}
 .fab:active{transform:scale(.92)}
 .fab.away{transform:translateY(140px)}
-@media (min-width:1180px){.plan-side .toolbar{flex-wrap:wrap;overflow:visible}}
+/* the day's actions: one grid as wide as the card above (3 columns), icons on every button on tablet and PC, on none on a phone */
+@media (min-width:600px){.plan-side .toolbar{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;overflow:visible!important}.plan-side .toolbar .btn{justify-content:center;min-width:0}}
 @media (min-width:960px){.fab{bottom:28px;right:36px}}
 .nav-ic{display:grid;place-items:center;width:54px;height:28px;border-radius:99px;transition:background .15s,color .15s}
 .bnav button[aria-current="page"] .nav-ic{background:var(--accent-soft);color:var(--accent)}
@@ -1610,7 +1611,7 @@ body.live-mode .shell{grid-template-columns:minmax(0,1fr)!important;gap:0!import
 @media (max-width:520px){.top-sub.hide-sm{display:none}.hide-xs{display:none!important}}
 /* many tabs on a phone: a row of pills that scrolls sideways, not a squeezed segmented bar */
 @media (max-width:760px){
-  .seg.many{border:0!important;gap:6px!important;margin:0 -16px;padding:0 16px!important;scroll-snap-type:x proximity;scroll-padding:0 16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent)}
+  .seg.many,header.top .seg.many{border:0!important;gap:6px!important;margin:0 -16px;padding:0 16px!important;scroll-snap-type:x proximity;scroll-padding:0 16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent)}
   .seg.many button{flex:0 0 auto!important;min-height:36px!important;padding:0 16px!important;scroll-snap-align:start;font-size:14px!important}
 }
 .col-list{display:flex;flex-direction:column}
@@ -1713,7 +1714,7 @@ button.td-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,
 .td-next{gap:0}.td-next .td-ov{margin-bottom:4px}.td-next .td-row:nth-child(2){border-top:0}
 .td-cd{display:flex;flex-direction:column;align-items:flex-end;flex:0 0 auto}.td-cd b{font-size:22px;font-weight:600;line-height:1}.td-cd small{font-size:11px;color:var(--muted)}
 .td-ds{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.td-d{display:flex;flex-direction:column;align-items:center;gap:6px}
+.td-d{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 8px;border-radius:14px}
 .td-d small{font-size:11.5px;color:var(--muted);font-weight:600}
 .td-d i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--muted)}
 .td-d i svg{width:15px;height:15px}
@@ -1721,7 +1722,7 @@ button.td-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,
 .td-d.done i{background:var(--good);color:#fff}
 .td-d.miss i{background:color-mix(in srgb,var(--bad) 16%,transparent);border:1.5px solid var(--bad);color:var(--bad)}
 .td-d.part i{background:color-mix(in srgb,var(--warn) 16%,transparent);border:1.5px solid var(--warn);color:var(--warn);font-size:11px}
-.td-d.now small{color:var(--ink)}.td-d.now i{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
+.td-d.now small{color:var(--ink)}.td-d.now{background:color-mix(in srgb,var(--accent) 14%,transparent)}
 @media (max-width:380px){.td-v{padding:0 7px}.td-v b{font-size:19px}.td-s-b b{font-size:18px}.td-go{padding:0 16px}}
 /* calendar drag / copy-paste */
 [data-sdrag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:grab}
@@ -1822,7 +1823,7 @@ button.td-card:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,
 .tm-big b{font-family:var(--display);font-size:48px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.tm-big b span{font-size:.5em;color:var(--faint)}
 .tm-laps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.tm-laps span{display:flex;flex-direction:column;align-items:center;padding:6px 10px;border-radius:12px;background:var(--surface-2)}
 .tm-laps small{font-size:11px;color:var(--faint)}.tm-laps b{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:15px}
-.has-badge{position:relative}.badge{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:10.5px;font-weight:700;display:grid;place-items:center;line-height:1}
+.has-badge{position:relative}@media (min-width:600px){.td-q.has-badge .badge{position:static;margin-left:2px}}.badge{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:10.5px;font-weight:700;display:grid;place-items:center;line-height:1}
 .td-nudges{flex-wrap:wrap}
 .td-q{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:17px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:13.5px;font-weight:600}
 .sq-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.sq-top .faint{font-size:12.5px}
@@ -2496,12 +2497,11 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 }
 @media (max-width:599px){
   .td-cta{justify-content:flex-start}
-  .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center;padding:0 10px!important}.plan-side .toolbar .btn:not(:first-child) .ic{display:none}
+  .plan-side .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}.plan-side .toolbar .tb-more{display:none}.plan-side .toolbar .btn{flex:1 1 auto;justify-content:center;padding:0 10px!important}.plan-side .toolbar .btn .ic{display:none}
   .goal .stat small{font-size:11px}.goal .stat .faint{line-height:1.25}
   .ph-w small{font-size:9px}
   .st-ctl .seg{flex:1 1 auto}.st-ctl .seg button{padding:0 10px!important;flex:1 1 auto}
 }
-@media (max-width:380px){.plan-side .toolbar .btn .ic{display:none}.plan-side .toolbar .btn{padding:0 10px!important}}
 /* the narrowest phones (folded, 280–340 px): labels may take two lines, rows wrap instead of running off */
 @media (max-width:340px){
   .seg:not(.many) button,.subseg button{white-space:normal!important;line-height:1.15;padding:4px 8px!important;font-size:13px!important}
@@ -2521,8 +2521,6 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 }
 .day-pill.today:not([aria-current="date"]){background:color-mix(in srgb,var(--accent) 15%,transparent)}
 .day-pill.today:not([aria-current="date"]) small,.day-pill.today:not([aria-current="date"]) .ring b{color:var(--accent)!important}
-.day-pill.today::after{content:"";position:absolute;bottom:2px;left:50%;width:14px;height:3px;margin-left:-7px;border-radius:2px;background:var(--accent)}
-.day-pill.today[aria-current="date"]::after{background:var(--bg)}
 .shop-row .pk-st .icon-btn.sm{width:30px!important;height:30px!important;min-width:30px;padding:0}.shop-row .pk-st .icon-btn .ic{width:18px!important;height:18px!important}
 .shop-list .shop-row{padding-top:0;padding-bottom:0;min-height:44px;grid-template-columns:34px minmax(0,1fr) auto}
 .shop-list .shop-main{padding-top:6px;padding-bottom:6px}.shop-list .shop-main .s{font-size:11.5px}
@@ -2585,6 +2583,10 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 details>summary:not(.lrow)::after,.nut-more summary::after,.fd-more>summary::after,.set-det summary::after{content:""!important;display:inline-block;flex:none;width:18px;height:18px;margin-left:8px;vertical-align:-4px;font-size:0!important;background:currentColor;opacity:.5;border:0!important;transform:none;transition:transform .18s;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat}
 details[open]>summary:not(.lrow)::after,.nut-more[open] summary::after,.fd-more[open]>summary::after,.set-det[open] summary::after{content:""!important;transform:rotate(180deg)}
 details.card>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after{transform:rotate(180deg)!important}
+/* design review 1 (25 Oct): one card-title style on Today (.td-ov, also the label of the four tiles), the Body card on one row, the rest-day line under its title */
+.gl-t .gl-h{justify-content:flex-start;font-size:12.5px;font-weight:500;letter-spacing:.02em;text-transform:none}
+.td-say.big{font-size:14.5px}
+.td-vs{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 </style>
 <div class="shell"><nav id="side" class="side" aria-label="Sections"></nav><main id="main" class="main"></main></div>
 <nav id="bnav" class="bnav" aria-label="Sections"></nav><button id="fab" class="fab" data-act="open-add" aria-label="Add food" hidden><svg class="ic lg" viewBox="0 -960 960 960" aria-hidden="true"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></svg></button><div id="sheet-root"></div><div id="toast" aria-live="polite"></div>
@@ -4206,8 +4208,6 @@ function render() {
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
   if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
   setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + v());
-  // long tab rows scroll sideways on phones: keep the current tab in view
-  for (const s of $$(".seg.many")) { const b = s.querySelector('[aria-pressed="true"]'); if (b && s.scrollWidth > s.clientWidth) s.scrollLeft = b.offsetLeft - (s.clientWidth - b.offsetWidth) / 2; }
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
   $("#fab").hidden = UI.tab !== "plan";
   if (UI.sheet && UI.sheet.live) renderSheet();
@@ -4236,7 +4236,7 @@ function weekStrip() {
     const dotC = SMART() ? (() => { const l = energyAt(d).sess.list.filter(w => w.sport !== "Rest"); return l.length ? `var(--${INT_COLOR[l.reduce((a, w) => w.int === "Hard" ? "Hard" : a === "Hard" ? a : w.int || a, "Light")] || "carb"})` : "transparent"; })() : (t.id === "rest" ? "transparent" : colorVar(t.color));
     h += `<button class="day-pill ${d === today ? "today" : ""}" data-act="date" data-date="${d}" ${d === UI.date ? 'aria-current="date"' : ""} aria-label="${fmtLong(d)}">
       <small>${DOW[i].slice(0, 2)}</small>
-      <span class="ring" style="--p:${ringPct(d)}"><b>${parseISO(d).getDate()}</b></span>
+      <span class="ring${ringPct(d) ? "" : " r0"}" style="--p:${ringPct(d)}"><b>${parseISO(d).getDate()}</b></span>
       <i class="tdot" style="background:${dotC}"></i></button>`;
   }
   return h + `<button class="nav" data-act="week" data-d="7" aria-label="Next week">${ic("chevR")}</button>`;
@@ -4280,7 +4280,7 @@ VIEWS.plan = function () {
     <div class="hero-body">
       <div class="kring">${kRing(tot.kcal, eat.kcal, T.kcal)}<div class="center" aria-live="polite"><span class="big">${fmtN(tot.kcal)}</span><span class="lab">of ${fmtN(T.kcal)} kcal</span><span class="of ${tot.kcal && !onT && !eat.manual && !eat.kcal ? "warn" : ""}">${planTxt}</span></div></div>
       <div class="mbars">${macroBar("Carbs", "c", "carb", tot.c, eat.c, T.c)}${macroBar("Protein", "p", "pro", tot.p, eat.p, T.p)}${macroBar("Fat", "f", "fat", tot.f, eat.f, T.f)}
-        <div class="legend"><span><i></i>Eaten</span><span><i class="pl"></i>Planned</span><span class="faint">target ${fmtN(T.kcal)} kcal</span></div></div>
+        <div class="legend"><span><i></i>Eaten</span><span><i class="pl"></i>Planned</span></div></div>
     </div>${deficitHTML(date)}${SMART() ? smartStrip(date) : ""}</section>`;
   // the weigh-in lives in Today's check-in only
 
@@ -4315,7 +4315,7 @@ function mealCard(date, m, day, T) {
       <div class="meal-meta"><b>${fmtN(mt.kcal)}</b> <span class="tgt">/ ${fmtN(tgt)} kcal</span><br>
       <span class="pcf"><span style="--c:var(--carb)">${r0(mt.c)}C</span><span style="--c:var(--pro)">${r0(mt.p)}P</span><span style="--c:var(--fat)">${r0(mt.f)}F</span></span></div>
       <button class="icon-btn" data-act="meal-menu" data-meal="${m.id}" aria-label="${esc(m.name)} options">${ic("more")}</button></div>
-    <div class="mprog ${mt.kcal > tgt * 1.1 ? "over" : ""}" aria-hidden="true"><i class="pl" style="width:${pp}%"></i><i style="width:${ep}%"></i></div>
+    ${items.length ? `<div class="mprog ${mt.kcal > tgt * 1.1 ? "over" : ""}" aria-hidden="true"><i class="pl" style="width:${pp}%"></i><i style="width:${ep}%"></i></div>` : ""}
     <ul class="items" data-meal="${m.id}">${items.map(it => itemRow(it, m.id)).join("")}</ul>
     <button class="add-row" data-act="open-add" data-meal="${m.id}">${ic("plus", "sm")}Add to ${esc(m.name.toLowerCase())}</button></section>`;
 }
@@ -7051,9 +7051,10 @@ ACT["tbl-col-all"] = () => { const sh = S_(); if (TBL[sh.k]) TBL[sh.k].hide = []
 ACT["plan-wk"] = el => { UI.planWk = (UI.planWk || 0) + +el.dataset.d; scheduleRender(); };
 /* ================= daily coach: the few things worth doing today ================= */
 function proteinPick(gap, mealId) {
-  const ctx = plannerContext(); const kind = S.settings.meals.find(m => m.id === mealId)?.kind || "s";
+  const ctx = plannerContext(); ctx.jit = 0;   // no random jitter: the advice must name the same food at every render
+  const kind = S.settings.meals.find(m => m.id === mealId)?.kind || "s";
   const c = allFoods().filter(f => f.per && f.per.p >= 10 && f.per.p * 4 / Math.max(f.per.kcal, 1) >= 0.45 && dietOK(f) && (f.meals || ["m"]).includes(kind) && f.role !== "X")
-    .map(f => ({ f, s: scoreFood(ctx, f, mealId) + f.per.p * 4 / f.per.kcal * 2 })).sort((a, b) => b.s - a.s)[0];
+    .map(f => ({ f, s: scoreFood(ctx, f, mealId) + f.per.p * 4 / f.per.kcal * 2 })).sort((a, b) => b.s - a.s || a.f.name.localeCompare(b.f.name))[0];
   if (!c) return null;
   let q = gap / (c.f.per.p / 100); const [lo, hi] = boundsFor(c.f); q = roundQty({ kind: "food", food: c.f, q: clamp(q, lo, hi) });
   return { food: c.f, q, p: c.f.per.p * q / 100, kcal: c.f.per.kcal * q / 100 };
@@ -7101,8 +7102,10 @@ function coachCard(date) {
   const list = coachInsights(date); if (!list.length) return "";
   const open = UI.coachAll; const shown = open ? list : list.slice(0, 3);
   return `<section class="coach" aria-label="Coach"><div class="coach-h"><span class="flabel">Coach</span>${list.length > 3 ? `<button class="link" data-act="coach-more">${open ? "Less" : `All ${list.length}`}</button>` : ""}</div>
-    ${shown.map(x => `<div class="tip" style="--c:var(--${x.tone})"><span class="tip-ic">${ic(x.icon, "sm")}</span><div class="tip-b"><b>${esc(x.t)}</b><span>${x.d}</span>${x.act ? `<button class="btn soft sm" data-act="${x.act}" ${x.data || ""}>${x.btn}</button>` : ""}</div></div>`).join("")}</section>`;
+    ${shown.map(tipHTML).join("")}</section>`;
 }
+/* one advice row, the same on Meals (Coach) and on Today (Coming up) */
+const tipHTML = x => `<div class="tip" style="--c:var(--${x.tone})"><span class="tip-ic">${ic(x.icon, "sm")}</span><div class="tip-b"><b>${esc(x.t)}</b><span>${x.d}</span>${x.act ? `<button class="btn soft sm" data-act="${x.act}" ${x.data || ""}>${x.btn}</button>` : ""}</div></div>`;
 ACT["coach-more"] = () => { UI.coachAll = !UI.coachAll; scheduleRender(); };
 ACT.rebalance = el => {
   const date = el.dataset.date; const snap = snapshotDays([date]); const T = targetsFor(date);
@@ -9408,7 +9411,7 @@ VIEWS.today = function () {
     <div class="row">${settingsBtn()}</div></div></header>`;
   h += liveBanner();
   /* the Check-in is always one tap away, first in the row; the dot says something is still missing today */
-  const nudges = [`<button class="td-nudge" data-act="open-checkin" data-date="${today}">${ic("pulse", "sm")}Check-in${!(Lg.weight > 0) || (!(Lg.sleep > 0) && !(Lg.hrv > 0) && !(Lg.rhr > 0)) ? `<i class="td-pend" aria-label="to do"></i>` : ""}</button>`];
+  const nudges = checkinNotice() ? [] : [`<button class="td-nudge" data-act="open-checkin" data-date="${today}">${ic("pulse", "sm")}Check-in${!(Lg.weight > 0) || (!(Lg.sleep > 0) && !(Lg.hrv > 0) && !(Lg.rhr > 0)) ? `<i class="td-pend" aria-label="to do"></i>` : ""}</button>`];
 
   /* ---- training ---- */
   const kind = !items.length ? "Rest day" : allDone ? "Done" : hardLeft ? "Key session" : minLeft >= 90 ? "Big day" : "Training";
@@ -9444,7 +9447,7 @@ VIEWS.today = function () {
   const avg = (k, a, b) => { const v = []; for (let i = a; i <= b; i++) { const x = +logGet(addDays(today, -i))?.[k]; if (x > 0) v.push(x); } return v.length ? v.reduce((p, q) => p + q, 0) / v.length : null; };
   const sl = +Lg.sleep || null, sl7 = avg("sleep", 1, 7), hv = +Lg.hrv || L.hrvLast || null, rh = +Lg.rhr || (L.rhr7 ? r0(L.rhr7) : null);
   const arrow = (v, b, inv) => v == null || b == null || Math.abs(v - b) < Math.max(1, b * 0.03) ? "" : `<em class="${(v > b) !== !!inv ? "up" : "dn"}">${v > b ? "↑" : "↓"}</em>`;
-  const vit = (l, v, u, sub) => `<div class="td-v"><small>${l}</small><b>${v ?? "—"}${v != null && u ? `<i>${u}</i>` : ""}</b><span>${sub || "&nbsp;"}</span></div>`;
+  const vit = (l, v, u, sub) => `<div class="td-v"><small>${l}</small><b>${v ?? "—"}${v != null && u ? `<i>${u}</i>` : ""}</b>${sub ? `<span>${sub}</span>` : ""}</div>`;
   const body = `<button class="td-card td-body" data-act="open-checkin" data-date="${today}"><div class="td-ov"><span>Body</span><span class="t-${rTone}">${ready === "green" ? "Ready" : ready === "yellow" ? "Reduced" : ready === "red" ? "Low" : "Check in"}</span></div>
     <div class="td-vs">${vit("Sleep", sl ? r1(sl) : null, "h", sl7 ? `${arrow(sl, sl7)}vs ${r1(sl7)}` : "")}${vit("HRV", hv ? r0(hv) : null, "ms", L.hrvOk ? `${arrow(hv, L.hrvBase)}vs ${r0(L.hrvBase)}` : "")}${vit("Resting HR", rh, "", L.base ? `${arrow(rh, L.base, true)}vs ${r0(L.base)}` : "")}${N ? vit("Form", `${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}`, "", esc(N.zone[1])) : ""}</div></button>`;
 
@@ -9474,14 +9477,14 @@ VIEWS.today = function () {
   const rows = [
     `<button class="td-row" data-act="${tl.length ? "wo-open" : "plan-wo"}" data-date="${tm}" data-i="0" data-list="planned"><span><b>Tomorrow</b><small>${tl.length ? esc(tl.map(w => (w.tpl ? tplById(w.tpl)?.name : w.note || w.sport)).join(" + ")) + (typeof gearShort === "function" ? gearShort(tl, tm) : "") : "Rest"}</small></span><span class="faint">${tl.length ? hm(tl.reduce((a, w) => a + (+w.min || 0), 0)) : ""}</span></button>`,
     race ? `<button class="td-row" data-act="rc-edit" data-id="${race.id}"><span><b>${esc(race.name)}</b><small>${(() => { const I = raceInsight(race); return [fmtDM(race.date), race.goal ? "goal " + esc(race.goal) : "", I.pred ? "predicted " + fmtClock(I.pred) : ""].filter(Boolean).join(" · "); })()}</small></span><span class="td-cd"><b>${daysBetween(today, race.date)}</b><small>days</small></span></button>` : "",
-    ...tips.map(x => `<button class="td-row" ${x.act ? `data-act="${x.act}" ${x.data || ""}` : ""}><span><b>${esc(x.t)}</b><small>${x.d}</small></span>${x.act ? `<span class="link">${x.btn}</span>` : ""}</button>`)].filter(Boolean);
+    ...tips.map(tipHTML)].filter(Boolean);
   const next = `<section class="td-card td-next"><div class="td-ov"><span>Coming up</span></div>${rows.join("")}</section>`;
 
   const quick = `<button class="td-q has-badge" data-act="shopq-open" aria-label="Shopping list">${ic("cart", "sm")}Shopping${shopBadge()}</button>${FEAT("eatout") ? `<button class="td-q" data-act="eat-out">${ic("plate", "sm")}Eaten out</button>` : ""}<button class="td-q" data-act="free-open">${ic("play", "sm")}<span>Free<span class="q-long"> workout</span></span></button><button class="td-q" data-act="timer-open">${ic("timer", "sm")}Tools</button>`;
   return h + `<div class="td-nudges">${nudges.join("")}${quick}</div>` + (innerWidth < 900
     // phone: one column in the order you use it: yesterday's gaps and today's ticks, training, food, body, then the rest
     ? `<div class="today-grid one">${glanceHTML()}${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${fuel}${body}${todayCards("b")}${expiryCard("today")}${week}${next}${todayCards("z")}</div>`
-    : `<div class="today-glance">${glanceHTML()}</div><div class="today-grid"><div class="tg-col">${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${body}${expiryCard("today")}${todayCards("z")}</div><div class="tg-col">${fuel}${todayCards("b")}${week}${next}</div></div>`);
+    : `<div class="today-glance">${glanceHTML()}</div><div class="today-grid"><div class="tg-col">${todayCards("a")}${yesterdayCard()}${remindersCard()}${todayCards("c")}${tr}${body}${week}${expiryCard("today")}</div><div class="tg-col">${fuel}${todayCards("b")}${next}</div></div>${todayCards("z")}`);
 };
 /* ================= the week of food in one place: every meal of the seven days on one grid, rows lined up, a tap opens or adds ================= */
 VIEWS.week = function () {
@@ -13028,7 +13031,8 @@ ACT["jr-ai"] = async () => {
 if (location.hash === "#dash") { UI.tab = "progress"; UI.progSeg = "reports"; }
 SETTINGS_CARDS.push({ o: -2, fn: navPosCard });
 /* on a phone the tab rows scroll: keep the open one in view */
-{ const _ar = afterRender; afterRender = function () { _ar(); document.querySelectorAll(".seg.many, .subseg").forEach(g => { const b = g.querySelector('[aria-pressed="true"],[aria-selected="true"]'); if (b && g.scrollWidth > g.clientWidth + 2) { const l = b.offsetLeft - g.offsetLeft, r = l + b.offsetWidth; if (l < g.scrollLeft + 24 || r > g.scrollLeft + g.clientWidth - 28) g.scrollLeft = Math.max(0, l - 24); } }); }; }
+/* the one place that keeps the current pill of a long tab row in view (phones scroll these rows sideways), 16 px from the edge like the page gutter */
+{ const _ar = afterRender; afterRender = function () { _ar(); document.querySelectorAll(".seg.many, .subseg").forEach(g => { const b = g.querySelector('[aria-pressed="true"],[aria-selected="true"]'); if (b && g.scrollWidth > g.clientWidth + 2) { const l = b.offsetLeft - g.offsetLeft, r = l + b.offsetWidth; if (l - 16 < g.scrollLeft || r + 24 > g.scrollLeft + g.clientWidth) g.scrollLeft = Math.max(0, l - 16); } }); }; }
 /* ================= intervals.icu on its own: both ways, no button =================
    A change here (plan, workout, check-in) is sent a few seconds later; the calendar, activities and wellness
    come in when the app opens or comes back to the front, and every 15 minutes while it stays open.
@@ -15047,7 +15051,7 @@ function glanceHTML() {
   const left = T.kcal - (eat.kcal || 0), F = fitnessNow(), sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
   const tile = (act, extra, ico, label, v, u, sub, tone, vis) => `<button class="gl-t ${tone || ""}" data-act="${act}" ${extra}><span class="gl-h">${ic(ico, "sm")}<em>${label}</em></span><b>${v}${u ? `<i>${u}</i>` : ""}</b>${sub ? `<span class="gl-s">${sub}</span>` : ""}${vis || ""}</button>`;
   const pLeft = Math.max(0, T.p - (eat.p || 0)), pct = T.kcal ? clamp((eat.kcal || 0) / T.kcal * 100, 0, 100) : 0;
-  const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", left >= 0 ? fmtN(left) : "+" + fmtN(-left), left >= 0 ? "kcal left" : "kcal over", `${fmtN(eat.kcal || 0)} of ${fmtN(T.kcal)} · ${r0(pLeft)} g protein to go`, left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
+  const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", left >= 0 ? fmtN(left) : "+" + fmtN(-left), left >= 0 ? "kcal left" : "kcal over", pLeft > 0 ? `${r0(pLeft)} g protein to go` : "Protein target reached", left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
   const t2 = FEAT("battery") ? (() => { const B = btDay(), [word, lvl] = btState(B);
     return tile("bt-open", `aria-label="Energy battery, ${btPct(B.now)}, ${word}. Open the details"`, "bolt", "Battery", r0(B.now), "%", `${napOn() ? `Napping since ${napOn().at}` : `${word} · ${btPct(B.atBed)} at bedtime`}`, "", `<span class="gl-bar bt-${lvl}"><i style="width:${clamp(B.now, 0, 100)}%"></i></span>`); })()
     : D && !D.none ? tile("tab", 'data-tab="plan"', "trend", D.proj <= 0 ? "Deficit" : "Surplus", sg(D.proj), "kcal", `${D.done ? "so far" : "if you eat the plan"} · cut set ${sg(D.set)}`, "")
@@ -15057,7 +15061,7 @@ function glanceHTML() {
   const spark = pts.length > 2 ? `<svg class="gl-sp" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.map((v, i) => `${(i / (pts.length - 1) * 100).toFixed(1)},${(22 - (v - lo) / span * 20).toFixed(1)}`).join(" ")}"/></svg>` : "";
   const we = a ? weightEstNow() : null, t3 = we ? tile("tab", 'data-tab="progress"', "weight", "Weight trend", "≈ " + r1(we.kg), "kg", `estimated · last weigh-in ${we.since} days ago`, "", spark)
     : tile("tab", 'data-tab="progress"', "weight", "Weight trend", a ? r1(a) : "—", a ? "kg" : "", a && b ? `${sgn(a - b)} kg in 7 days` : "Weigh in to start the trend", "", spark);
-  const t4 = tile("train-seg", 'data-k="perf"', "pulse", "Form", F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", "%", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
+  const t4 = tile("train-seg", 'data-k="perf"', "pulse", "Form", F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", F ? "%" : "", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
   return `<div class="glance">${t1}${t2}${t3}${t4}</div>`;
 }
 /* ================= deleted foods: a bin for 3 days (restore with one tap), then gone for good ================= */
