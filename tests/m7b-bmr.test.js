@@ -64,7 +64,7 @@ test("side by side: Mifflin 1780, Harris-Benedict 1864.545 (no bonus in the tile
     return { tiles: [...sec.querySelectorAll(".stat")].map(s => s.textContent), grid: sec.className, note: sec.nextElementSibling?.textContent || "" }; });
   assert.equal(r.tiles.length, 4);
   assert.match(r.tiles[0], /^1,780Mifflin-St Jeor$/);
-  assert.match(r.tiles[1], /^1,865Harris-Benedict \(1918\/1919\)$/);
+  assert.match(r.tiles[1].replace(/\u2011/g, "-"), /^1,865Harris-Benedict \(1918\/1919\)$/);
   assert.match(r.tiles[2], /^—Katch-McArdleneeds body fat %$/);
   assert.match(r.tiles[3], /^1,989Ten Haaf \(weight\)in use · athletes 18–35$/);
   assert.ok(!/better|best|recommended/i.test(r.tiles.join(" ")));
