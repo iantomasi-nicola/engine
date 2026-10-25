@@ -93,3 +93,52 @@ Metodo: confronto riga per riga del **testo originale** del primo prompt (sezion
 
 ## 4. Riepilogo numerico
 Backlog: 94 requisiti tecnici/funzionali + 43 richieste in corso d'opera (L1–L43). Fatti o verificati: tutti i blocchi A, B, C (tranne C7), E1, F1, G2, G5, I1, I2, J1, K1–K10, L1–L11, L13, L14, L17, L21–L25, L28–L37, L39–L43. Da fare: D (quasi tutto), E2–E5, C7, F2–F4, G1/G3/G4, H1–H9, I3, I4, J2–J6, L12, L15, L16, L18, L19, L20, L26, L27, L38.
+
+## Verifica del 26/10/2026: tutto ciò che l'utente ha chiesto, contro il codice e il backlog
+Controllo di tutti i messaggi dell'utente dall'inizio della sessione (gli ID sono in `PRODUCT_REQUIREMENTS.md`). **Fatto** = pubblicato su `main`; **Milestone** = in roadmap con la milestone indicata; **Lacuna** = chiesto e non fatto né pianificato fino a oggi, ora messo in roadmap.
+
+| Richiesta (in breve) | Stato | Dove / ID |
+|---|---|---|
+| Ready to start / Workouts / Programs con la riga di Today senza card | Fatto | M10b, `woRow` |
+| «Segnaposto smart» solo per gli sgarri fuori (non in shopping/pantry); sgarro pianificato a circa X kcal senza decidere con cosa | Fatto | L98 |
+| Desktop a tutto schermo, schermate specifiche per telefono/tablet/PC; design impeccabile, tipografia, niente storto | Fatto in continuo (regola permanente) · **Milestone** M13d per le altre schermate | L92, AGENTS.md, agente `design-reviewer` |
+| Sezione reminders del giorno in Today (con i supplementi); promemoria visibili ma non invadenti | Fatto | M11d, M13a (L133) |
+| Feature proposte 1, 3 (consigli pre-workout a tempo e modo), 4; la 5 rifiutata | Fatto / Scartata | L106 |
+| Kcal del pre-workout calibrate; icona treat migliorata; guida all'installazione rimossa | Fatto | M11d |
+| BMI; bilancio settimanale con grafico e totale; foto di progresso su tutti i dispositivi; foto vecchie sincronizzate; guida SQL del bucket | Fatto (l'utente ha risolto le foto) | M11f/g |
+| Score del pacing severo; analisi del workout di intervals.icu con tutti i dati; dati «da nerd» affidabili | Fatto (endpoint intervals.icu non verificati dal vivo) | M11e–g, Lab |
+| Livello runner e calisthenics (severo, tra due categorie, previsione del tempo al livello successivo), complimenti e consigli, confronto con dati reali | Fatto (scale dell'app ancorate a percentili pubblicati, con etichette di confidenza) | M11h/i, `LEVELS.md` |
+| Export recap workout in PDF | Fatto | M11g |
+| Foto numerose: paginazione; reminder foto mensile disattivabile | Fatto | M11i |
+| Batteria biologica (modello a due processi, HRV/FC), in bella vista in Today | Fatto (non validata su dati reali) | M11h/j, `BATTERY.md` |
+| Goal: storico con date, conteggi, per sport | Fatto | L121 |
+| Endurance Cup (Fire Set e taglio), tool nel live con voce, regolamento, ranking, passare/no, consigli | Fatto; regolamento rev. 5, stagioni, import, consigli | M11j/k/l, M13a, `RACE.md` |
+| «…se provare la categoria successiva» | **Lacuna → M11m** | L151 |
+| Anteprima grafica del workout per sport; grafici veri per forza/calisthenics/circuiti/misti | Fatto | M11k/l |
+| Wo con i circuiti Fire Set/Cut, riposo a scelta, vista compatta nel live | Fatto | M11k |
+| Today rifatta; altre schermate «premium» | Today fatta (M13a); **Milestone** M13d per le altre | L133 |
+| Pisolino a minuti personalizzati, eliminabile, inserimento veloce | Fatto | L128, L134 |
+| Progress con meno sottomenu senza perdere funzioni | Fatto | L142 |
+| Sezione Tools: timer + calcolatori con «Use my data» e «Copy as text» | Fatto | L140 |
+| Stima del tempo di un workout più veritiera | Fatto | L130 |
+| Promemoria dell'arm band per la corsa | Fatto | L129 |
+| Algoritmo del sonno rifinito con studi | Fatto (il bisogno personale non è ancora appreso dai dati) | L135, `SLEEP.md` |
+| Il regolamento cambia ogni anno; ranking per stagione, reset, modifica | Fatto | L138 |
+| Campi del check-in che perdono caratteri | Fatto (due giri; da riprovare a mano) | L132, L139 |
+| Massa magra in kg precisa; avviso se cala troppo nel cut | Fatto | L136, `BODY_COMPOSITION.md` |
+| Records: modifica/elimina, come registrare il best del Fire Set, importa ranking, dove sono i consigli, sezioni compatte | Fatto | L137, L138 |
+| Calorie in base al dispositivo (polso contro fascia) | **Milestone** M7b (D20/D20b): nessun moltiplicatore da letteratura, va appreso dai dati | D20b |
+| Formule nutrizionali approvate («te le approvo tutte»): D19, D5b, D7, D8, D11, D17, D18, F-01, F-09… | **Milestone** M7b (Fable 5.1 xhigh) | `NUTRITION_AUDIT.md` |
+| Migliorare tutti i report con i dati nuovi | Fatto per settimana/mese/testo copiato; **Lacuna → M11m**: riepilogo «All-time» e PDF del recap con le stesse sezioni | L148, L152 |
+| Micronutrienti con AI | **Milestone** M7e | L16 |
+| Scambio pranzo↔cena | Fatto (Fuel › Meals › ⋯ in alto a destra › «Swap lunch and dinner», visibile se il giorno ha cibi) | C5 |
+| Test day con risultati scelti per i record | Fatto | L146 |
+| Stima del peso nei buchi con correzione retroattiva | Fatto come visualizzazione; entrare nel trend/TDEE solo con approvazione (M7b) | L147 |
+| Journal: sensazioni di allenamento e DOMS (dove e intensità); suggerimenti dei workout in base ai DOMS per sport | Fatto; **Lacuna → M11m**: promemoria del mattino dopo una sessione dura («Sore anywhere?») e DOMS nei suggerimenti del Free Workout | L145, L153 |
+| Ricetta da link con i prodotti già in Foods | Fatto dove il sito lo permette (CORS); **Milestone** proxy Supabase (serve autorizzazione) | L149 |
+| Grafico «kcal x/y/z short» storto | Sistemati l'asse di «Calories vs target», «Last 6 weeks» e l'anello kcal di Fuel; **da confermare con l'utente** quale grafico intendesse | L150 |
+| Season: filtro Calisthenics senza gare di corsa; barre di «this week» storte | Fatto | L143 |
+| Training › Stats ripensata, menu chiusi di default | Fatto | L141 |
+| Agente che controlla le grafiche storte | Fatto (`.claude/agents/design-reviewer.md`, design lint nell'audit); primo giro dell'agente da leggere | AGENTS.md regola 10 |
+| Passaggio di consegne e modello consigliato per milestone | Fatto | `HANDOFF.md` §2, `NEXT_AI_PROMPT.md` |
+| Resto del vecchio backlog (H8–H9 recupero, H1 esercizi personalizzati, G1/G3/G4, L19, M9b, M12 con contaflessioni, M13 logo/animazioni/gesti, M14, M15, P1 prestazioni, S-1) | **Milestone** già in roadmap | `ROADMAP.md` |
