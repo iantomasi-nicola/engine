@@ -115,4 +115,4 @@ Ripetere dopo: reload, modalità offline, sync simulata con conflitto (due dispo
 | 2026-10-25 | M11g: analisi della registrazione intervals.icu, score severo, Lab; M11f foto più robuste | vedi `git log` |
 
 ## Modello consigliato per le prossime milestone
-Vedi `docs/HANDOFF.md` §2 (tabella con modello e livello di impegno per ogni milestone: M7b Fable 5.1 xhigh + revisione `/code-review` max; redesign Opus 5.5 high; funzioni medie Sonnet 5.5 high; M14 Fable xhigh; M15 Sonnet medium→high).
+Vedi `docs/HANDOFF.md` §2 (tabella con modello e livello di impegno per ogni milestone: M7b Opus 5.5 high + revisione `/code-review` high; redesign Opus 5.5 high; funzioni medie Sonnet 5.5 high; M14 Opus 5.5 high; M15 Sonnet medium→high).

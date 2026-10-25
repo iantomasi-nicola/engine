@@ -2,7 +2,7 @@
 
 Gli agenti stanno in `.claude/agents/` (sono file della repo: ogni sessione li trova). Servono a **migliorare processo e risultato**: tolgono dal contesto principale le attese lunghe e le letture di log, danno un secondo sguardo indipendente e permettono lavori paralleli senza pestarsi i piedi.
 
-**Regole di costo (richiesta dell'utente):** mai impegno `max`; di norma `medium` o `high`, `xhigh` solo per le formule nutrizionali e per le revisioni critiche. Niente modelli che richiedono crediti extra (Fable 5.1 chiede crediti d'uso a parte: usarlo solo se l'utente lo autorizza; altrimenti Opus 5.5 `xhigh`). Haiku solo per lavoro meccanico di lettura e di esecuzione.
+**Regole di costo (richiesta dell'utente):** mai impegno `max`; `xhigh` solo se davvero necessario (ordine dell'utente: è costoso) e dichiarandone il motivo; di norma `medium` o `high`, `high` per formule nutrizionali e revisioni critiche. Niente modelli che richiedono crediti extra (Fable 5.1 chiede crediti d'uso a parte: usarlo solo se l'utente lo autorizza; altrimenti Opus 5.5 `high`). Haiku solo per lavoro meccanico di lettura e di esecuzione.
 
 | Agente | Modello | Impegno | Quando | Scrive? |
 |---|---|---|---|---|
