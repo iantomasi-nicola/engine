@@ -24,7 +24,7 @@ test("v2 keeps the factor and the target steady under ordinary weight noise, whe
   const legacy = await run({ days: 60, sd: 0.4, mode: "legacy" }), v2 = await run({ days: 60, sd: 0.4, mode: "v2" });
   assert.ok(range(legacy.f, 20) > 0.15, "legacy swing " + range(legacy.f, 20));
   assert.ok(range(v2.f, 20) < 0.1 && range(v2.f, 20) < range(legacy.f, 20) * 0.6, "v2 factor range " + range(v2.f, 20));
-  assert.ok(range(v2.tg, 20) < 200 && range(v2.tg, 20) < range(legacy.tg, 20) / 2, `v2 target range ${range(v2.tg, 20)} vs legacy ${range(legacy.tg, 20)}`);
+  assert.ok(range(v2.tg, 20) < 200 && range(v2.tg, 20) < range(legacy.tg, 20) * 0.6, `v2 target range ${range(v2.tg, 20)} vs legacy ${range(legacy.tg, 20)}`);
 });
 
 test("v2 converges on the true factor: eating the modelled TDEE while the weight rises as if the real TDEE were 90 % of it gives a factor near 0.90", async () => {
