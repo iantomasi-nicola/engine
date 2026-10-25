@@ -28,3 +28,17 @@ test("the calorie ring shows whole percentages that add up to 100 and no kcal fi
   assert.match(r.tile, /0\s*kcal eaten/); assert.doesNotMatch(r.tile, /protein to go|kcal left/);
   assert.equal(r.bmrRows, 0, "no «BMR n ·» line per day");
 });
+
+test("Energy: Day by day starts at yesterday (today is the big number); the BMR formula in use is named in the heading and has no tile; the other tiles keep names and «%» in one piece", async () => {
+  const page = await start(H.VIEWPORTS.phone);
+  const r = await page.evaluate(() => { UI.tab = "progress"; UI.progSeg = "food"; UI.foodSeg = "energy"; render(); const m = document.getElementById("main");
+    const heads = [...m.querySelectorAll(".section-h")], bmr = heads.find(h => /Basal/.test(h.textContent)), dd = heads.find(h => /Day by day/.test(h.textContent)), tbl = dd.nextElementSibling;
+    const tiles = [...bmr.nextElementSibling.querySelectorAll(".stat")].map(s => s.querySelector("small").textContent), days = [...tbl.querySelectorAll("tbody tr td:first-child")].map(td => td.textContent);
+    return { head: bmr.textContent, tiles, days, first: fmtDM(addDays(todayISO(), -1)), today: fmtDM(todayISO()) }; });
+  assert.match(r.head, /Mifflin-St Jeor in use/);
+  assert.equal(r.tiles.filter(t => /Mifflin/.test(t)).length, 0, "the formula in use has no tile"); assert.equal(r.tiles.length, 3);
+  assert.equal(r.days[0], r.first); assert.ok(!r.days.includes(r.today), "today is not in Day by day"); assert.ok(r.days.length >= 1 && r.days.length <= 7);
+  assert.ok(r.tiles.every(t => !/Harris-Benedict|Ten Haaf|Mifflin-St| %/.test(t)), JSON.stringify(r.tiles));
+  assert.ok(r.tiles.some(t => /Harris‑Benedict/.test(t)));
+  assert.deepEqual(app.errors, []);
+});

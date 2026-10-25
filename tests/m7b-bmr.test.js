@@ -58,25 +58,26 @@ test("Ten Haaf age term at the edges of its data and beyond (male 80 kg / 1.80 m
   }
 });
 
-test("side by side: Mifflin 1780, Harris-Benedict 1864.545 (no bonus in the tile), Ten Haaf 1989.2264, Katch-McArdle needs body fat; none is called better and the one in use is marked", async () => {
+test("side by side: the formula in use is named in the heading (its number is the BMR in the legend) and the tiles show the OTHER formulas: Mifflin 1780, Harris-Benedict 1864.545 (no bonus in the tile), Katch-McArdle needs body fat; none is called better", async () => {
   await profile({ bmr: "Ten Haaf (weight)" });
-  const r = await ev(() => { const d = document.createElement("div"); d.innerHTML = energyView(); const sec = [...d.querySelectorAll(".section-h")].find(x => /Basal/.test(x.textContent)).nextElementSibling;
-    return { tiles: [...sec.querySelectorAll(".stat")].map(s => s.textContent), grid: sec.className, note: sec.nextElementSibling?.textContent || "" }; });
-  assert.equal(r.tiles.length, 4);
-  assert.match(r.tiles[0], /^1,780Mifflin-St Jeor$/);
+  const r = await ev(() => { const d = document.createElement("div"); d.innerHTML = energyView(); const h = [...d.querySelectorAll(".section-h")].find(x => /Basal/.test(x.textContent)), sec = h.nextElementSibling;
+    return { head: h.textContent, tiles: [...sec.querySelectorAll(".stat")].map(s => s.textContent), grid: sec.className, note: sec.nextElementSibling?.textContent || "" }; });
+  assert.match(r.head, /Ten Haaf \(weight\) in use/);
+  assert.equal(r.tiles.length, 3);
+  assert.match(r.tiles[0].replace(/[\u2011\u00a0]/g, c => c === "\u2011" ? "-" : " "), /^1,780Mifflin-St Jeor$/);
   assert.match(r.tiles[1].replace(/\u2011/g, "-"), /^1,865Harris-Benedict \(1918\/1919\)$/);
-  assert.match(r.tiles[2], /^—Katch-McArdleneeds body fat %$/);
-  assert.match(r.tiles[3], /^1,989Ten Haaf \(weight\)in use · athletes 18–35$/);
-  assert.ok(!/better|best|recommended/i.test(r.tiles.join(" ")));
-  assert.ok(/four/.test(r.grid));
+  assert.match(r.tiles[2].replace(/\u00a0/g, " "), /^—Katch.McArdleneeds body fat %$/);
+  assert.ok(!/better|best|recommended|in use/i.test(r.tiles.join(" ")));
+  assert.ok(/tri/.test(r.grid));
 });
 
 test("side by side outside the age of the Ten Haaf data (60 y) the tile says so; the Harris-Benedict bonus in use is told once, as the number actually used (60 y: 1864.545 - 30*6.755 = 1661.895, plus 165 = 1826.895, shown as 1,827)", async () => {
   await profile({ bmr: "Harris-Benedict", age: 60, bf: 10, bonus: "on" });
-  const r = await ev(() => { const d = document.createElement("div"); d.innerHTML = energyView(); const sec = [...d.querySelectorAll(".section-h")].find(x => /Basal/.test(x.textContent)).nextElementSibling;
-    return { tiles: [...sec.querySelectorAll(".stat")].map(s => s.textContent), note: sec.nextElementSibling?.textContent || "" }; });
-  assert.match(r.tiles[3], /Ten Haaf \(weight\).*outside 18–35/);
-  assert.match(r.tiles[1], /in use/);
+  const r = await ev(() => { const d = document.createElement("div"); d.innerHTML = energyView(); const h = [...d.querySelectorAll(".section-h")].find(x => /Basal/.test(x.textContent)), sec = h.nextElementSibling;
+    return { head: h.textContent, tiles: [...sec.querySelectorAll(".stat")].map(s => s.textContent), note: sec.nextElementSibling?.textContent || "" }; });
+  assert.match(r.head, /Harris-Benedict in use/);
+  assert.equal(r.tiles.length, 3);
+  assert.match(r.tiles[2], /Ten.Haaf.\(weight\).*outside 18–35/);
   assert.match(r.note, /Used today: 1,827 kcal/); assert.match(r.note, /lean bonus of 165/);
 });
 

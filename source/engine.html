@@ -694,7 +694,7 @@ textarea.inp{padding:10px 12px;min-height:80px;resize:vertical}
 .stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .stat{background:var(--surface);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);min-width:0}
 .stat b{display:block;font-family:var(--display);font-stretch:112%;font-size:22px;font-weight:760;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
-.stat small{font-size:11.5px;color:var(--muted);font-weight:600;display:block;line-height:1.35}.stat small.faint{color:var(--faint);font-weight:500}.stat.on{background:var(--accent-soft)}
+.stat small{font-size:11.5px;color:var(--muted);font-weight:600;display:block;line-height:1.35}.stat small.faint{color:var(--faint);font-weight:500}
 .chart{width:100%;height:auto;display:block;max-width:1100px}.chfs-b svg.chart{max-width:none}
 .chart text{fill:var(--muted);font-size:10.5px;font-family:var(--body)}
 .chart .gl{stroke:var(--line);stroke-width:1}
@@ -760,7 +760,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .goal .stat b{font-size:19px}
 .tag{white-space:nowrap}
 .hero-top .train{flex:1 1 auto;min-width:0}
-@media (max-width:560px){.stat-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.stat b{font-size:19px}}
+@media (max-width:560px){.stat-grid.four,.stat-grid.tri{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-grid.tri>.stat:last-child:nth-child(odd){grid-column:1/-1}.stat b{font-size:19px}}
 .set-det summary{cursor:pointer;font-family:var(--display);font-stretch:112%;font-weight:720;font-size:16px;list-style:none;display:flex;justify-content:space-between;align-items:center}
 .set-det summary::-webkit-details-marker{display:none}
 .set-det summary::after{content:"+";font-size:20px;color:var(--muted)}
@@ -11625,7 +11625,7 @@ function energyView() {
   const age = prof.dob ? Math.floor(daysBetween(prof.dob, today) / 365.25) : 30, w = r.trend, h = prof.height || 175, F = prof.sex === "Female", bf = r.bf;
   const mif = 10 * w + 6.25 * h - 5 * age + (F ? -161 : 5), hb = hbOriginal(w, h, age, F), th = tenHaafWeight(w, h / 100, age, F), km = bf != null ? 370 + 21.6 * w * (1 - bf / 100) : null;
   const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
-  const L7 = last(7);
+  const prev7 = [...Array(7)].map((_, i) => s.rows[addDays(today, -(i + 1))]).filter(Boolean);   // Day by day starts at yesterday: today is the big number above
   const parts = [["BMR", r.bmr, "var(--accent)"], ["Activity (NEAT)", r.neat, "var(--carb)"], ["Training", r.eat, "var(--pro)"], ["Digestion (TEF)", r.tef, "var(--fat)"]], tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1;
   let hh = `${profileNote()}<div class="card pad en-card"><div class="nut-h"><span class="flabel">Today's energy</span><span class="faint" style="font-size:12.5px">${fmtDM(today)}</span></div>
     <div class="en-big"><b>${fmtN(r.tdee)}</b><span>kcal burned today (TDEE)${r.tdeeSE ? ` ± ${fmtN(r0(r.tdeeSE))}` : ""}${r.factor !== 1 ? ` · ${fmtN(r.tdeeW)} from the formulas × ${r.factor.toFixed(2)} calibration` : ""}</span></div>
@@ -11635,15 +11635,18 @@ function energyView() {
     <div class="en-leg">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}<b>${fmtN(v)}</b></span>`).join("")}</div>
     <div class="stat-grid${r.target !== r.tdee ? " four" : ""}">${r.target !== r.tdee ? kpi(fmtN(r.target), "target today", (r.phase?.phase || "") + (phaseKcal(r.phase, r.tdee) ? ` · ${phaseKcal(r.phase, r.tdee) > 0 ? "+" : ""}${fmtN(phaseKcal(r.phase, r.tdee))}` : "")) : ""}${kpi(r.intake ? fmtN(r.intake.kcal) : "—", "eaten today")}${kpi(r.balance != null ? `${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : "—", "balance today")}${kpi(r1(w) + " kg", "trend weight")}</div></div>`;
   const inTh = age >= 18 && age <= 35, bmrUsed = E.bmr === "Auto" ? (inTh ? "Ten Haaf (weight)" : "Mifflin-St Jeor") : E.bmr, bonus = bmrUsed === "Harris-Benedict" ? hbBonusKcal(bf) : 0;   // the "used today" line only when the lean bonus or the MET shortcut moves the number
-  hh += `<div class="section-h"><h2>Basal metabolism</h2><span class="faint" style="font-size:12.5px">${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}</span></div>
-    <div class="stat-grid four">${kpi(fmtN(mif), "Mifflin-St Jeor", bmrUsed === "Mifflin-St Jeor" ? "in use" : "", bmrUsed === "Mifflin-St Jeor" ? "on" : "")}${kpi(fmtN(hb), "Harris‑Benedict (1918/1919)", bmrUsed === "Harris-Benedict" ? "in use" : "", bmrUsed === "Harris-Benedict" ? "on" : "")}${kpi(km ? fmtN(km) : "—", "Katch-McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))} kg` : "needs body fat %")}${kpi(fmtN(th), "Ten Haaf (weight)", (bmrUsed === "Ten Haaf (weight)" ? "in use · " : "") + (inTh ? "athletes 18–35" : "outside 18–35, less certain"), bmrUsed === "Ten Haaf (weight)" ? "on" : "")}</div>${bonus > 0 || bmrUsed === "MET" ? `<div class="faint" style="font-size:12.5px">Used today: <b>${fmtN(r.bmr)} kcal</b> (${bmrUsed === "MET" ? "kg × 24" : `Harris-Benedict plus a lean bonus of ${fmtN(bonus)}`}).</div>` : ""}`;
+  /* the formula in use is named in the heading and its number is the BMR in the legend above: the tiles show the other formulas only */
+  const NB = "\u2011", NS = "\u00a0", tiles = [["Mifflin-St Jeor", fmtN(mif), "Mifflin" + NB + "St" + NS + "Jeor", ""], ["Harris-Benedict", fmtN(hb), "Harris" + NB + "Benedict (1918/1919)", ""],
+    ["Katch-McArdle", km ? fmtN(km) : "—", "Katch" + NB + "McArdle", km ? `lean mass ${r1(w * (1 - bf / 100))}${NS}kg` : `needs body fat${NS}%`], ["Ten Haaf (weight)", fmtN(th), "Ten" + NS + "Haaf (weight)", inTh ? "athletes 18–35" : "outside 18–35, less certain"]].filter(t => t[0] !== bmrUsed);
+  hh += `<div class="section-h"><h2>Basal metabolism</h2><span class="faint" style="font-size:12.5px">${esc(bmrUsed === "MET" ? "MET (kg × 24)" : bmrUsed)} in use</span></div>
+    <div class="stat-grid ${tiles.length === 4 ? "four" : "tri"}">${tiles.map(t => kpi(t[1], t[2], t[3])).join("")}</div><div class="faint" style="font-size:12.5px">The other formulas, for ${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}.${bonus > 0 || bmrUsed === "MET" ? ` Used today: <b>${fmtN(r.bmr)} kcal</b> (${bmrUsed === "MET" ? "kg × 24" : `Harris-Benedict plus a lean bonus of ${fmtN(bonus)}`}).` : ""}</div>`;
   hh += aeeShadowCard();
   hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
   /* seven-day averages: the day-to-day swings of intake and training make a daily line a saw; the average shows where you are going */
   const roll7 = P => P.map(([d], i) => { const w = P.filter(([e]) => e <= d && e >= addDays(d, -6)); return [d, r0(w.reduce((a, q) => a + q[1], 0) / w.length)]; });
   hh += `<div class="section-h"><h2>Last 6 weeks</h2><span class="faint" style="font-size:12.5px">7-day averages</span></div><div class="card pad">${seriesChart([{ name: "TDEE", color: "var(--accent)", pts: roll7(pts("tdee")) }, { name: "Eaten", color: "var(--carb)", pts: roll7(last(42).filter(x => x.intake && x.intake.kcal > 0).map(x => [x.d, r0(x.intake.kcal)])) }, { name: "Target", color: "var(--faint)", pts: roll7(pts("target")), dash: true }], { fmt: v => fmtN(r0(v)), l: 48, label: "TDEE, intake and target, 7-day averages", minPad: 50 })}</div>`;
-  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], [...L7].reverse().map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
+  hh += `<div class="section-h"><h2>Day by day</h2></div>${tbl(["Day", "TDEE", "Training", "Eaten", "Balance"], prev7.map(x => `<tr><td>${fmtDM(x.d)}</td><td class="n"><b>${fmtN(x.tdee)}</b><span class="s">NEAT ${fmtN(x.neat)} · TEF ${fmtN(x.tef)}</span></td><td class="n">${fmtN(x.eat)}</td><td class="n">${x.intake ? fmtN(x.intake.kcal) : "—"}</td><td class="n">${x.balance != null ? `<span style="color:var(--${x.balance < 0 ? "good" : "warn"})">${x.balance > 0 ? "+" : ""}${fmtN(x.balance)}</span>` : "—"}</td></tr>`))}`;
   return hh;
 }
 
