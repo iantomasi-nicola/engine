@@ -2971,7 +2971,10 @@ const ALGO = [
   { v: 4, k: "neat", name: "NEAT from steps", from: "neatFrom", on: E => E.neatMode !== "off" },
   { v: 5, k: "bmr", name: "BMR Auto · Ten Haaf 18–35", from: "bmrAutoFrom", on: E => E.bmr === "Auto" },
   { v: 6, k: "nutr", name: "Missing nutrient is not zero", from: "nutrFrom", on: E => E.nutrCoverage !== "off" },
-  { v: 7, k: "one", name: "One source per session", from: "oneFrom", on: E => E.oneSrc !== "off" }
+  { v: 7, k: "one", name: "One source per session", from: "oneFrom", on: E => E.oneSrc !== "off" },
+  { v: 8, k: "hrnet", name: "Heart-rate kcal net of rest", from: "hrNetFrom", on: E => E.hrNet !== "off" },
+  { v: 9, k: "bmrramp", name: "BMR Auto · 14 days to change formula", from: "bmrRampFrom", on: E => E.bmr === "Auto" && E.bmrRamp !== "off" },
+  { v: 10, k: "kpk", name: "Energy per kg by body fat everywhere", from: "kpkFrom", on: E => E.kcalPerKgMode !== "fixed" }
 ].map(a => ({ start: ALGO_START, ...a }));
 const ALGO_VERSION = Math.max(...ALGO.map(a => a.v));
 /* the entries in force on a date: switched on and not before their first day */
@@ -2987,6 +2990,7 @@ function normalizeSettings(s) {
   if (!Array.isArray(o.avoid)) o.avoid = [];
   if (!Array.isArray(o.cuisines)) o.cuisines = [];
   o.fit = deepMerge(defaultFit(), s?.fit || {});
+  for (const k of ["tef", "neat"]) { const v = o.fit.energy[k]; if (!(typeof v === "number" && v >= 0)) o.fit.energy[k] = defaultFit().energy[k]; }   // a field saved empty means the default (an empty TEF or NEAT was a silent zero)
   if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
   if (s?.fit) for (const a of ALGO) if (s.fit.energy?.[a.from] === undefined) o.fit.energy[a.from] = a.start;
@@ -3581,7 +3585,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", nutrCoverage: "on", nutrFrom: "", oneSrc: "on", oneFrom: "", algoV: 0, netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", nutrCoverage: "on", nutrFrom: "", oneSrc: "on", oneFrom: "", algoV: 0, netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", hrNet: "on", hrNetFrom: "", bmrRamp: "on", bmrRampFrom: "", kpkFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -3617,11 +3621,14 @@ function mutateLog(date, fn) {
   put("logm", mk, doc);
 }
 function allLogDates() { const out = []; for (const m of Object.values(S.logm)) for (const d of Object.keys(m.days || {})) out.push(d); return out.sort(); }
+/* every weigh-in [date, kg], oldest first: the setup's, typed and imported ones (estimated ones with withEst). Cached until the data change; a copy is returned, callers may pop it */
 function weightsSeries(withEst = false) {
-  const w = {};
-  for (const [d, v] of Object.entries(S.body.w || {})) w[d] = +v;
-  for (const m of Object.values(S.logm)) for (const [d, v] of Object.entries(m.days || {})) if (v.weight > 0 && (withEst || !v.estW)) w[d] = +v.weight;
-  return Object.entries(w).sort((a, b) => a[0].localeCompare(b[0]));
+  return memo("weights|" + withEst, () => {
+    const w = {};
+    for (const [d, v] of Object.entries(S.body.w || {})) w[d] = +v;
+    for (const m of Object.values(S.logm)) for (const [d, v] of Object.entries(m.days || {})) if (v.weight > 0 && (withEst || !v.estW)) w[d] = +v.weight;
+    return Object.entries(w).sort((a, b) => a[0].localeCompare(b[0]));
+  }).slice();
 }
 
 /* ================= daily journal: data =================
@@ -3700,10 +3707,17 @@ const journalRows = () => allLogDates().filter(jrFilled).map(d => { const j = jr
 
 /* ================= memo (recomputed when data changes) ================= */
 let DATA_V = 0; const MEMO = {};
-function memo(key, fn) { const k = key + "|" + DATA_V + "|" + todayISO(); if (MEMO[key]?.k !== k) MEMO[key] = { k, v: fn() }; return MEMO[key].v; }
+/* the hour is in the key: today's numbers project the steps to the evening, so they move with the clock even when no data change */
+function memo(key, fn) { const k = key + "|" + DATA_V + "|" + todayISO() + "|" + new Date().getHours(); if (MEMO[key]?.k !== k) MEMO[key] = { k, v: fn() }; return MEMO[key].v; }
 
 /* ================= workout calories ================= */
-function ageAt(date) { const dob = FIT().profile.dob; if (!dob) return 30; return Math.floor(daysBetween(dob, date) / 365.25); }
+/* age by the calendar: a year more on the birthday itself (a 29 February birthday counts from 1 March in other years); no date of birth = 30 */
+function isLeap(y) { return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0); }
+function lastBirthday(dob, date) {
+  const [, m, d] = dob.split("-").map(Number), [y, mm, dd] = date.split("-").map(Number), yr = mm > m || (mm === m && dd >= d) ? y : y - 1;
+  return m === 2 && d === 29 && !isLeap(yr) ? `${yr}-03-01` : `${yr}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+function ageAt(date) { const dob = FIT().profile.dob; if (!dob) return 30; return +lastBirthday(dob, date).slice(0, 4) - +dob.slice(0, 4); }
 const INTS = ["Light", "Moderate", "Hard"];
 /* real kcal = measured by a watch: typed in, recorded in intervals.icu, or imported from the workbook */
 const fromDevice = w => w.src === "intervals" || /^icu-a-/.test(w.ext || "") || (w.exts || []).length > 0;
@@ -3711,8 +3725,10 @@ const fromDevice = w => w.src === "intervals" || /^icu-a-/.test(w.ext || "") || 
 function netOfRest(kc, w, date, kg, learn) {
   const E = FIT().energy, min = parseMinutes(w.min) || 0;
   if (E.netKcal === "off" || (!learn && E.netFrom && date < E.netFrom) || !(min > 0) || devById(devOf(w))?.kcal !== "gross") return kc;
-  return Math.max(0, r0(kc - bmrOf(kg || trendNow(), FIT().profile.bf, ageAt(date), date) / 1440 * min));
+  return Math.max(0, r0(kc - restPerMin(kg, date) * min));
 }
+/* resting energy per minute on a date (kg = the trend weight unless given): what a session's minutes would have burned anyway */
+function restPerMin(kg, date) { return bmrOf(kg || trendNow(), FIT().profile.bf, ageAt(date), date) / 1440; }
 function realKcal(w, date) { if (w.watch > 0) return netOfRest(+w.watch, w, date, 0, true); if (w.kcal > 0 && fromDevice(w)) return netOfRest(+w.kcal, w, date, 0, true); if (w.kcal > 0 && FIT().learn.realBefore && date < FIT().learn.realBefore) return +w.kcal; return 0; }
 /* learned kcal/min by sport and intensity from sessions with real kcal (watch), else the MET table */
 function learnedRates() {
@@ -3762,10 +3778,12 @@ function learnedRates() {
    Strength sessions are left out; ratios outside 0.2-3 are treated as errors of the data (a filter, not a coefficient). The window is the 90 days up to today, so the estimate of an old session without kcal can move a little as new sessions come in. No wrist-versus-strap multiplier is taken from the literature (it gives no sign); a sensor without history keeps the global factor. Off: energy.hrLearn "off"; days before energy.hrFrom keep the global factor. */
 function hrCalLearned(devId) {
   return memo("hrcal|" + devId, () => {
-    const fit = FIT(), g = fit.run.hrCal, today = todayISO(), from = addDays(today, -89), kg = trendNow(), R = [];
+    const fit = FIT(), g = fit.run.hrCal, today = todayISO(), from = addDays(today, -89), kg = trendNow(), R = [], net = fit.energy.hrNet !== "off";
     for (const m of Object.values(S.logm)) for (const [d, day] of Object.entries(m.days || {})) for (const w of d < from || d > today ? [] : day.workouts || []) {
       if (!(w.hr > 0) || !(w.min > 0) || devOf(w) !== devId || (typeof isStrength === "function" && isStrength(w.sport))) continue; const rk = realKcal(w, d), kt = keytel(+w.hr, kg, ageAt(d), fit.profile.sex) * w.min;
-      if (rk > 0 && kt > 0 && rk / kt > 0.2 && rk / kt < 3) R.push(rk / kt);
+      // with the heart-rate kcal net of rest (#4) the factor scales the gross Keytel figure: real net kcal plus the session's rest, so factor x Keytel - rest gives the real figure back
+      const q = rk > 0 && kt > 0 ? (net ? rk + restPerMin(kg, d) * w.min : rk) / kt : 0;
+      if (q > 0.2 && q < 3) R.push(q);
     }
     if (R.length < 6) return { f: g, n: R.length, own: false };
     R.sort((a, b) => a - b); const h = R.length >> 1, med = R.length % 2 ? R[h] : (R[h - 1] + R[h]) / 2;
@@ -3773,6 +3791,10 @@ function hrCalLearned(devId) {
   });
 }
 const hrCalFor = (devId, date) => { const E = FIT().energy; return !devId || E.hrLearn === "off" || (E.hrFrom && date < E.hrFrom) ? FIT().run.hrCal : hrCalLearned(devId).f; };
+/* #4 (approved by the owner, M14b): Keytel predicts gross energy. With energy.hrNet on (from hrNetFrom) the resting energy of the session's minutes is taken out, as D5b does for sensor kcal,
+   so the EAT adds to the BMR without counting rest twice; days before hrNetFrom keep the gross figure. The AEE in the shadow uses this same figure, always net. */
+const hrNetOn = date => { const E = FIT().energy; return E.hrNet !== "off" && !(E.hrNetFrom && date < E.hrNetFrom); };
+function hrKcal(w, date, kg, net = hrNetOn(date)) { const min = +w.min, g = keytel(+w.hr, kg, ageAt(date), FIT().profile.sex) * hrCalFor(devOf(w), date) * min; return r0(net ? Math.max(0, g - restPerMin(kg, date) * min) : g); }
 function keytel(hr, kg, age, sex) {
   const v = sex === "Female" ? (-20.4022 + 0.4472 * hr - 0.1263 * kg + 0.074 * age) : (-55.0969 + 0.6309 * hr + 0.1988 * kg + 0.2017 * age);
   return Math.max(0, v / 4.184);
@@ -3786,7 +3808,7 @@ function sessionKcal(w, date, kgOverride) {
   const kg = kgOverride || trendAt(date);
   if (w.load > 0 && w.min > 0 && rates.reg && !(w.km > 0 && w.sport === fit.runSport && fromDevice(w))) { const g = rates.reg; return { kcal: r0(w.min * clamp(g.a + g.b * w.load / w.min, g.lo * 0.9, g.hi * 1.1)), how: "load" }; }
   if (w.sport === fit.runSport && w.km > 0) return { kcal: r0(w.km * (rates.kmRate || kg)), how: "km" };
-  if (w.hr > 0 && w.min > 0) return { kcal: r0(keytel(w.hr, kg, ageAt(date), fit.profile.sex) * hrCalFor(devOf(w), date) * w.min), how: "hr" };
+  if (w.hr > 0 && w.min > 0) return { kcal: hrKcal(w, date, kg), how: "hr" };
   // planned strength: calendar durations are unreliable, Engine's own timing of the script (calibrated on your live sessions) is used
   let m = +w.min || 0; if (m && w.script && !fromDevice(w) && typeof isStrength === "function" && isStrength(w.sport)) { try { const g = workoutGist(w).min; if (g > 0) m = g; } catch (e) {} }
   if (m > 0) return { kcal: r0(m * (rates[w.int || "Moderate"] || rates.Moderate)), how: rates.source === "own" ? "own" : "met" };
@@ -3864,7 +3886,9 @@ const isWalkSport = sp => /walk|hik/i.test(sp || "");
    underpredicted nearly all their 127 values (SEE 4.5 against 1.13 ml/kg/min). V = 1.3 m/s is the free-living walking speed assumed (cadence of 100 steps/min = 3 METs, CADENCE-Adults, PMID 30654810).
    Stride = 0.415 x height is the usual approximation (not checked against a primary source here). 80 kg, 1.8 m: 0.606 kcal/kg/km, 2000 steps = 1.494 km = 72.4 kcal. */
 const walkKcalKgKm = htM => (3.85 + 5.97 * 1.3 * 1.3 / (htM || 1.75)) * (1000 / (1.3 * 60)) * 0.005;
-const STEP_KCAL = (kg, steps, heightCm) => walkKcalKgKm((heightCm || 175) / 100) * kg * (steps * 0.415 * (heightCm || 175) / 100 / 1000);
+const STEP_KCAL = (kg, steps, cm = heightCm()) => walkKcalKgKm(cm / 100) * kg * (steps * 0.415 * cm / 100 / 1000);
+/* the one height of the energy maths (#1): the profile's when it is a height in cm (120-230), else the 175 cm the profile notice says is assumed. strict: null instead of 175 (BMI, waist/height) */
+function heightCm(strict) { const h = +FIT().profile.height; return h >= 120 && h <= 230 ? h : strict ? null : 175; }
 /* Calibration v2 (M7b, F-06/D8, formula approved by the owner on 26/10; method and assumptions in docs/NUTRITION_AUDIT.md F-06: 7000 kcal/kg is an assumption, the prior 0.08 is a design choice, no coefficient from a primary source): the factor that scales the modelled TDEE to what your weight really did.
    Window of up to 28 days; weight slope by least squares (with its standard error) instead of the difference of two 7-day means;
    quality gates (>= 21 days of log, intake typed or from food on >= 70 % of them, >= 8 weigh-ins); shrunk toward 1 by how uncertain the slope is
@@ -3874,6 +3898,8 @@ const STEP_KCAL = (kg, steps, heightCm) => walkKcalKgKm((heightCm || 175) / 100)
    9400 kcal/kg of fat and 1800 kcal/kg of lean tissue. 12 kg of fat: 5871 kcal/kg; 30 kg: 7443.6 (where the rule holds, as the paper says). Without body fat, the fixed value (energy.kcalPerKg). Off: energy.kcalPerKgMode "fixed". */
 const energyDensity = fm => { const p = fm / (fm + 10.4); return p * 9400 + (1 - p) * 1800; };
 const kcalPerKgFor = (kg, bf, E) => E.kcalPerKgMode === "fixed" || !(bf > 0 && bf < 60 && kg > 0) ? E.kcalPerKg : energyDensity(kg * bf / 100);
+/* #11 (approved by the owner, M14b): the same energy per kg wherever a balance becomes kg (goal ETA, estimated weight, «≈ kg» of the week, «≈ g» of the Day deficit, estKg); days before energy.kpkFrom keep the fixed value */
+function kpkAt(date, kg, bf) { const E = FIT().energy; return E.kpkFrom && date < E.kpkFrom ? E.kcalPerKg : kcalPerKgFor(kg, bf, E); }
 function calibV2(rows, d, E) {
   const W = E.calWin || 28; let nDays = 0, nI = 0, sI = 0, sT = 0; const pts = [];
   for (let k = 1; k <= W; k++) {
@@ -3910,17 +3936,27 @@ function bmrFormula(bf, age, date) {
   if (m === "Ten Haaf (FFM)" && !(bf > 0 && bf < 60)) m = "Ten Haaf (weight)";
   return ["Harris-Benedict", "Ten Haaf (weight)", "Ten Haaf (FFM)", "MET"].includes(m) ? m : "Mifflin-St Jeor";
 }
-function bmrOf(kg, bf, age, date) {
-  const prof = FIT().profile, female = prof.sex === "Female", m = bmrFormula(bf, age, date);
+function bmrBy(m, kg, bf, age) {
+  const female = FIT().profile.sex === "Female", cm = heightCm();
   if (m === "Ten Haaf (FFM)") return (95.272 * kg * (1 - bf / 100) + 2026.161) / 4.184;
-  if (m === "Harris-Benedict") return hbOriginal(kg, prof.height, age, female) + hbBonusKcal(bf);
-  if (m === "Ten Haaf (weight)") return tenHaafWeight(kg, prof.height / 100, age, female);
-  if (m === "MET") return (prof.sex === "Female" ? 0.9 : 1) * kg * 24;
-  return 10 * kg + 6.25 * prof.height - 5 * age + (prof.sex === "Female" ? -161 : 5);
+  if (m === "Harris-Benedict") return hbOriginal(kg, cm, age, female) + hbBonusKcal(bf);
+  if (m === "Ten Haaf (weight)") return tenHaafWeight(kg, cm / 100, age, female);
+  if (m === "MET") return (female ? 0.9 : 1) * kg * 24;
+  return 10 * kg + 6.25 * cm - 5 * age + (female ? -161 : 5);
+}
+/* #10 (approved by the owner, M14b): when Auto changes formula at a birthday (Ten Haaf from 18 to 35, Mifflin outside) the BMR goes from the old formula to the new one in a straight line over
+   the 14 days after the birthday (day 0 = the old formula, day 14 = the new one), instead of a step of up to 200 kcal overnight. Both formulas take the same inputs of the day. Off: energy.bmrRamp "off";
+   days before bmrRampFrom keep the step. */
+function bmrOf(kg, bf, age, date) {
+  const m = bmrFormula(bf, age, date), v = bmrBy(m, kg, bf, age), E = FIT().energy, dob = FIT().profile.dob;
+  if (E.bmr !== "Auto" || E.bmrRamp === "off" || !date || !dob || (E.bmrRampFrom && date < E.bmrRampFrom)) return v;
+  const b = lastBirthday(dob, date), k = daysBetween(b, date), m0 = k < 14 && (!E.bmrAutoFrom || addDays(b, -1) >= E.bmrAutoFrom) ? bmrFormula(bf, age - 1, addDays(b, -1)) : m;
+  if (m0 === m) return v;
+  const v0 = bmrBy(m0, kg, bf, age); return v0 + (v - v0) * k / 14;
 }
 /* D18 (approved 26/10): NEAT from the steps when no watch figure has taught the app your usual extra movement. The default NEAT stands for a day of neatRefSteps steps = 6540, the mean of US adults in NHANES 2005-06 after censoring inactivity counts (Tudor-Locke 2009, PMID 19516163: the 9676 of all counts overestimate); you can change it;
    the steps add or take away what they cost. Today's steps are a projection: steps so far + the typical steps of the rest of the waking day (7-22 h), from the median of the last 14 days. */
-function neatFromSteps(kg, steps, heightCm, E) { return STEP_KCAL(kg, steps, heightCm) + Math.max(0, E.neat - STEP_KCAL(kg, E.neatRefSteps || 6540, heightCm)); }
+function neatFromSteps(kg, steps, E) { return STEP_KCAL(kg, steps) + Math.max(0, E.neat - STEP_KCAL(kg, E.neatRefSteps || 6540)); }
 function stepsProjected(steps, hour, med) { return med > 0 ? steps + med * (1 - clamp((hour - 7) / 15, 0, 1)) : steps; }
 function energySeries() {
   return memo("energy", () => {
@@ -3930,13 +3966,11 @@ function energySeries() {
     if (dates[0] && dates[0] < start) start = dates[0];
     const end = addDays(today, 42);
     const rows = {}, order = [];
-    let trend = prof.startWeight || S.settings.weight || 75, bf = prof.bf || null, factor = 1;
-    const wins = [], neats = [], baseVals = [], stepHist = []; let seKeep = null;
+    let bf = prof.bf || null, factor = 1;
+    const neats = [], baseVals = [], stepHist = []; let seKeep = null;
     for (let d = start; d <= end; d = addDays(d, 1)) {
       const L = logGet(d) || {};
-      const wv = L.weight > 0 ? +L.weight : null; const real = L.estW ? null : wv;
-      wins.push(wv); if (wins.length > 7) wins.shift();
-      const ws = wins.filter(x => x != null); if (ws.length) trend = ws.reduce((a, b) => a + b, 0) / ws.length;
+      const real = L.weight > 0 && !L.estW ? +L.weight : null, trend = trendSimple(d);
       if (L.bf > 0) bf = +L.bf;
       const age = ageAt(d);
       const bmr = bmrOf(trend, bf, age, d);
@@ -3945,17 +3979,19 @@ function energySeries() {
       const eat = kcals.reduce((a, b) => a + b, 0);
       // the day's watch total holds everything the watch counted, extra minutes of a session left running included: take out the raw value, not the trimmed one; a second recording of the same session is in it once (D7)
       const watchView = (L.workouts || []).reduce((a, w) => { if (dupOf(w, d)) return a; const dev = w.watch > 0 || w.raw?.kcal > 0 || (w.kcal > 0 && fromDevice(w)), k = w.watch > 0 ? +w.watch : w.raw?.kcal > 0 ? +w.raw.kcal : w.kcal > 0 && fromDevice(w) ? +w.kcal : sessionKcal(w, d, trend).kcal;
-        // the daily "active kcal" leaves out resting energy: the workout's share of it is the sensor's figure net of rest (same device, same basis); in total mode the gross figure stays
-        return a + (dev && E.watchMode === "active" ? netOfRest(k, w, d, trend) : k); }, 0);
+        // the daily "active kcal" leaves out resting energy and the total holds it once, in the BMR: in both the workout's share is the sensor's figure net of rest (same device, same basis), the same net figure as the EAT
+        return a + (dev && E.watchMode !== "neat" ? netOfRest(k, w, d, trend) : k); }, 0);
       let neat = null, neatSrc = "watch", nx = null;   // nx: the inputs behind the NEAT, for Settings › How it is calculated
       if (L.watch > 0) { const v = E.watchMode === "neat" ? +L.watch : E.watchMode === "total" ? Math.max(0, L.watch - bmr - watchView) : Math.max(0, L.watch - watchView); if (v >= ((L.workouts || []).length || E.watchMode === "total" ? E.minWatchNeat : 1)) { neat = v; nx = { watch: +L.watch, mode: E.watchMode, sub: watchView }; } }   // a figure you typed on a day with no workout is taken as it is (75 is a real quiet day); the minimum only guards a difference (AEE minus workouts) and total mode
       const amb = sess.list.some(w => w.sport && w.sport !== "Rest" && (w.sport === fit.runSport || isWalkSport(w.sport))), stepsD = L.steps > 0 ? +L.steps : 0;
-      if (neat != null && stepsD && !amb) baseVals.push([d, neat - STEP_KCAL(trend, stepsD, prof.height)]);
-      if (neat == null && stepsD && !amb) { const bv = baseVals.filter(x => x[0] >= addDays(d, -90)).map(x => x[1]); if (bv.length >= 14) { const o = [...bv].sort((a, b) => a - b), h = o.length >> 1, base = Math.max(0, o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2); neat = STEP_KCAL(trend, stepsD, prof.height) + base; neatSrc = "steps"; nx = { steps: stepsD, stepK: neat - base, base, n: bv.length }; } }
+      if (neat != null && stepsD && !amb) baseVals.push([d, neat - STEP_KCAL(trend, stepsD)]);
+      // today's steps are a projection to the evening in both branches: steps so far + the typical rest of the day (D18)
+      const sd = !stepsD || amb ? stepsD : d === today ? stepsProjected(stepsD, new Date().getHours(), medianOf(stepHist.filter(x => x[0] >= addDays(d, -14)).map(x => x[1]))) : stepsD;
+      // NEAT from steps = Off switches off both step branches (the learned base predates neatFrom, so that date only gates the default-NEAT branch)
+      if (neat == null && stepsD && !amb && E.neatMode !== "off") { const bv = baseVals.filter(x => x[0] >= addDays(d, -90)).map(x => x[1]); if (bv.length >= 14) { const base = Math.max(0, medianOf(bv)), stepK = STEP_KCAL(trend, sd); neat = stepK + base; neatSrc = sd !== stepsD ? "stepsProj" : "steps"; nx = { steps: sd, so: stepsD, stepK, base, n: bv.length }; } }
       if (neat == null && stepsD && !amb && E.neatMode !== "off" && (!E.neatFrom || d >= E.neatFrom)) {
-        const med = d === today ? medianOf(stepHist.filter(x => x[0] >= addDays(d, -14)).map(x => x[1])) : null, sd = d === today ? stepsProjected(stepsD, new Date().getHours(), med) : stepsD;
-        neat = neatFromSteps(trend, sd, prof.height, E); neatSrc = sd !== stepsD ? "stepsRefProj" : "stepsRef";
-        const stepK = STEP_KCAL(trend, sd, prof.height); nx = { steps: sd, so: stepsD, stepK, base: neat - stepK, ref: E.neatRefSteps || 6540 };
+        neat = neatFromSteps(trend, sd, E); neatSrc = sd !== stepsD ? "stepsRefProj" : "stepsRef";
+        const stepK = STEP_KCAL(trend, sd); nx = { steps: sd, so: stepsD, stepK, base: neat - stepK, ref: E.neatRefSteps || 6540 };
       }
       if (stepsD && !amb) stepHist.push([d, stepsD]);
       if (neat == null) { const prev = neats.slice(-7); neat = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : E.neat; neatSrc = prev.length ? "avg" : "default"; nx = { n: prev.length, amb: amb && stepsD > 0 }; }
@@ -3972,7 +4008,8 @@ function energySeries() {
           // v2: no data that passes the gates = the factor stays where it was; otherwise it moves toward the target by at most calWeekKcal a week, up to twice that when the data are clean (shrink weight w near 1)
           const c = calibV2(rows, d, E), step = (E.calWeekKcal > 0 ? E.calWeekKcal : 100) * (c ? 1 + c.w : 1) / 7 / tdeeW;
           f = c ? clamp(c.target, factor - step, factor + step) : factor;
-          if (c) { dataTdee = c.dataTdee; calRel = c.rel; seKeep = tdeeW * c.sd; }
+          if (c) { dataTdee = c.dataTdee; calRel = c.rel; }
+          seKeep = c ? tdeeW * c.sd : null;   // the factor is kept, its uncertainty is not: data that no longer pass the gates say nothing about how reliable it still is
         } else {
           let nI = 0, sI = 0, sT = 0, nW = 0;
           for (let k = 1; k <= 14; k++) { const r = rows[addDays(d, -k)]; if (!r) continue; if (r.intake && !r.intake.est) { nI++; sI += r.intake.kcal; sT += r.tdeeW; } if (r.real) nW++; }
@@ -3987,7 +4024,7 @@ function energySeries() {
       const P = pp.p * trend, F = pp.f * trend, C = Math.max(0, (target - 4 * P - 9 * F) / 4);
       const balance = intake ? intake.kcal - tdee : null;
       const seNow = E.calManual > 0 || E.calMode === "off" ? null : seKeep, calPct = seNow ? 1.96 * seNow * f / tdee * 100 : null, calConf = seNow ? confWithin((E.calTargetPct || 5) / 100 * tdee, seNow * f) : null;
-      rows[d] = { d, real, trend, bf, age, bmr, bmrF: bmrFormula(bf, age, d), neat, neatSrc, nx, eat, sess, kcals, hows, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calConf, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / E.kcalPerKg };
+      rows[d] = { d, real, trend, bf, age, bmr, bmrF: bmrFormula(bf, age, d), neat, neatSrc, nx, eat, sess, kcals, hows, tef, tdeeW, factor: f, calRel, tdeeSE: seNow, calPct, calConf, calOk: calPct != null && calPct <= (E.calTargetPct || 5), dataTdee, tdee, phase: ph, target, p: P, f: F, c: C, cmin: pp.cmin * trend, intake, balance, estKg: balance == null ? null : balance / kpkAt(d, trend, bf) };
       order.push(d);
     }
     return { rows, order, start, end };
@@ -4006,7 +4043,7 @@ function calStatus(r) {
 }
 function tdeeBasis(r) {
   const sess = r.sess.src === "logged" ? "training logged" : r.sess.src === "mixed" ? "training logged plus what is still planned" : r.sess.list.some(w => w.sport && w.sport !== "Rest") ? "planned training" : "no training";
-  return sess + " · " + ({ watch: "your daily watch figure", steps: "steps and your usual extra movement", stepsRef: "full-day steps", stepsRefProj: "steps so far plus a typical rest of the day", avg: "the average NEAT of recent days", default: "the default NEAT" }[r.neatSrc] || "NEAT");
+  return sess + " · " + ({ watch: "your daily watch figure", steps: "steps and your usual extra movement", stepsProj: "steps so far plus a typical rest of the day, and your usual extra movement", stepsRef: "full-day steps", stepsRefProj: "steps so far plus a typical rest of the day", avg: "the average NEAT of recent days", default: "the default NEAT" }[r.neatSrc] || "NEAT");
 }
 function energyAt(date) { const s = energySeries(); return s.rows[date] || (date < s.start ? s.rows[s.start] : s.rows[s.end]); }
 /* F-07 (D11): what does not add up in a day's target. Warnings only: the target is never corrected silently (protein + fat beyond the target, target under the resting energy, carbs under the phase minimum). */
@@ -4017,11 +4054,14 @@ function energyWarnings(r, c = r.c) {
   if (!out.some(w => w.id === "conflict") && c < r.cmin) out.push({ id: "carbs", text: `Carbs below ${r1(FIT().phaseParams[r.phase.phase]?.cmin)} g/kg` });
   return out;
 }
-function trendAt(date) { return energyAt(date)?.trend || trendSimple(date); }
+function trendAt(date) { return trendSimple(date); }
+/* the one trend weight (#23), the energy series' too: mean of the weigh-ins of the 7 days up to the date (the setup's and estimated ones included); none in that week = the last one before; none at all = the starting weight */
 function trendSimple(date) {
-  const all = weightsSeries(true).filter(([d]) => d <= date); if (!all.length) return FIT().profile.startWeight || S.settings.weight || 75;
-  const win = all.filter(([d]) => d >= addDays(date, -6));
-  return win.length ? win.reduce((a, [, v]) => a + v, 0) / win.length : all[all.length - 1][1];
+  return memo("trend|" + date, () => {
+    const all = weightsSeries(true).filter(([d]) => d <= date); if (!all.length) return FIT().profile.startWeight || S.settings.weight || 75;
+    const win = all.filter(([d]) => d >= addDays(date, -6));
+    return win.length ? win.reduce((a, [, v]) => a + v, 0) / win.length : all[all.length - 1][1];
+  });
 }
 function trendNow() { return trendSimple(todayISO()); }
 function smartTargets(date) {
@@ -4037,16 +4077,17 @@ function weekBudget() {
   return { budget, eatenBefore, daysLeft, leftPerDay: daysLeft > 0 ? (budget - eatenBefore) / daysLeft : 0 };
 }
 function goalState() {
-  const fit = FIT(), g = fit.goal, today = todayISO(), r = energyAt(today), E = fit.energy;
-  const w = r.trend, bfNow = r.bf, lean = bfNow > 0 ? w * (1 - bfNow / 100) : null, ls = +g.leanShare || 0;
+  const fit = FIT(), g = fit.goal, today = todayISO(), r = energyAt(today);
+  // the body fat of the Lean mass card (28-day weighted mean) when there are readings, else the last one or the profile's; the lean share is held at 0-90 % (100 % = no fat lost, no ETA)
+  const LE = leanEst(today), w = r.trend, bfNow = LE ? LE.bf : r.bf, lean = LE ? LE.lean : bfNow > 0 ? w * (1 - bfNow / 100) : null, ls = clamp(+g.leanShare || 0, 0, 0.9), kpk = kpkAt(today, w, bfNow);
   let goalW = null;
   if (g.value > 0) goalW = g.type === "weight" ? +g.value : (lean != null && 1 - g.value / 100 - ls > 0 ? (lean - ls * w) / (1 - g.value / 100 - ls) : null);
   const goalBf = g.type === "bf" ? +g.value : (goalW && lean != null ? (goalW - (lean - ls * (w - goalW))) / goalW * 100 : null);
   const toLose = goalW != null ? w - goalW : null;
   const fat = toLose != null ? toLose * (1 - ls) : null;
-  const energy = fat != null ? Math.max(0, fat) * E.kcalPerKg : null;
+  const energy = fat != null ? Math.max(0, fat) * kpk : null;
   const deficit = -(r.target - r.tdee);
-  const perWeek = deficit > 0 ? deficit * 7 / E.kcalPerKg / (1 - ls) : 0;
+  const perWeek = deficit > 0 ? deficit * 7 / kpk / (1 - ls) : 0;
   const weeks = toLose > 0 && perWeek > 0 ? toLose / perWeek : null;
   const eta = weeks != null ? addDays(today, Math.round(weeks * 7)) : null;
   let needed = null, verdict = "";
@@ -4057,22 +4098,22 @@ function goalState() {
     else { needed = energy / days; const diff = needed - deficit; verdict = `To reach it by ${fmtDM(g.date)} you need about ${fmtN(needed)} kcal/day of deficit (${r0(needed / r.tdee * 100)}% of TDEE) vs ${fmtN(deficit)} now · ` + (Math.abs(diff) <= 50 ? "on track." : diff > 0 ? `${fmtN(diff)} kcal/day more needed.` : `${fmtN(-diff)} kcal/day less would be enough.`); }
   }
   const text = g.type === "weight" ? `${r1(g.value)} kg` : `${r1(g.value)}% body fat${goalW ? ` (≈ ${r1(goalW)} kg)` : ""}`;
-  return { w, bfNow, lean, goalW, goalBf, toLose, fat, energy, deficit, perWeek, weeks, eta, needed, verdict, text, reached: goalW != null && Math.abs(goalW - w) < 0.2 };
+  return { w, bfNow, lean, goalW, goalBf, toLose, fat, energy, deficit, perWeek, weeks, eta, needed, verdict, text, kpk, reached: goalW != null && Math.abs(goalW - w) < 0.2 };
 }
 function weeklyTable() {
   return memo("weekly", () => {
     const s = energySeries(), today = todayISO(), fit = FIT(), E = fit.energy;
     const first = weekStartOf(s.start), out = [];
     for (let ws = first; ws <= weekStartOf(today); ws = addDays(ws, 7)) {
-      let weigh = 0, wsum = 0, nI = 0, iSum = 0, tSum = 0, tgSum = 0, bal = 0, bfs = [], sess = 0, mins = 0, kc = 0, km = 0;
+      let weigh = 0, wsum = 0, nI = 0, iSum = 0, tSum = 0, tgSum = 0, bal = 0, bfs = [], sess = 0, mins = 0, kc = 0, km = 0, ek = 0;
       for (let i = 0; i < 7; i++) {
         const d = addDays(ws, i), r = s.rows[d]; if (!r) continue;
         if (r.real) { weigh++; wsum += r.real; }
-        if (r.intake && d <= today) { bal += r.balance; if (!r.intake.est) { nI++; iSum += r.intake.kcal; tSum += r.tdeeW; tgSum += r.target; } }
+        if (r.intake && d <= today) { bal += r.balance; ek += r.estKg; if (!r.intake.est) { nI++; iSum += r.intake.kcal; tSum += r.tdeeW; tgSum += r.target; } }
         if (r.bf && logGet(d)?.bf) bfs.push(r.bf);
         if (r.sess.src === "logged") { sess += r.sess.list.length; mins += r.sess.list.reduce((a, w) => a + (+w.min || 0), 0); kc += r.eat; km += r.sess.list.filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); }
       }
-      const row = { ws, phase: phaseFor(ws).phase, weigh, avgW: weigh ? wsum / weigh : null, nI, avgI: nI ? iSum / nI : null, avgTdee: nI ? tSum / nI : null, avgTarget: nI ? tgSum / nI : null, balance: bal || nI ? bal : null, estKg: bal || nI ? bal / E.kcalPerKg : null,
+      const row = { ws, phase: phaseFor(ws).phase, weigh, avgW: weigh ? wsum / weigh : null, nI, avgI: nI ? iSum / nI : null, avgTdee: nI ? tSum / nI : null, avgTarget: nI ? tgSum / nI : null, balance: bal || nI ? bal : null, estKg: bal || nI ? ek : null,
         bf: bfs.length ? bfs.reduce((a, b) => a + b, 0) / bfs.length : null, sess, mins, kcal: kc, km, inProgress: addDays(ws, 6) >= today };
       const prev = out[out.length - 1];
       if (prev && prev.avgW && row.avgW) { row.chg = row.avgW - prev.avgW; row.chgPct = row.chg / prev.avgW; }
@@ -4345,7 +4386,7 @@ function measureTable() {
     return { k, l, first, last, prev, dPrev: prev != null ? last - prev : null, dFirst: vals.length > 1 ? last - first : null, n: vals.length };
   });
   const lastD = dates[dates.length - 1]; const w = rows.find(r => r.k === "waist")?.last, h = rows.find(r => r.k === "hips")?.last;
-  return { rows, dates, lastD, prevD: dates[dates.length - 2], wh: w && FIT().profile.height ? w / FIT().profile.height : null, whip: w && h ? w / h : null, sites };
+  return { rows, dates, lastD, prevD: dates[dates.length - 2], wh: w && heightCm(true) ? w / heightCm(true) : null, whip: w && h ? w / h : null, sites };
 }
 /* ================= icons ================= */
 const ICONS = {"lock":"<path d=\"M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm240-200q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z\"/>","treat":"<path d=\"M480 -900C360 -900 260 -800 260 -680C260 -620 275 -592 290 -565A48.75 48.75 0 0 0 387.5 -565A48.75 48.75 0 0 0 485 -565A48.75 48.75 0 0 0 582.5 -565A48.75 48.75 0 0 0 680 -565C685 -592 700 -620 700 -680C700 -800 600 -900 480 -900Z\"/><path fill-rule=\"evenodd\" d=\"M280 -470H680L528 -120Q480 -40 432 -120ZM480 -390L535 -335L480 -280L425 -335Z\"/>","story":"<path fill-rule=\"evenodd\" d=\"M340 -880H620Q710 -880 710 -790V-170Q710 -80 620 -80H340Q250 -80 250 -170V-790Q250 -880 340 -880ZM350 -820H610Q650 -820 650 -780V-180Q650 -140 610 -140H350Q310 -140 310 -180V-780Q310 -820 350 -820ZM480 -660L340 -520H440V-300H520V-520H620Z\"/>","recipe":"<path fill-rule=\"evenodd\" d=\"M454 -820H506Q520 -820 520 -806V-774Q520 -760 506 -760H454Q440 -760 440 -774V-806Q440 -820 454 -820ZM220 -750H740Q770 -750 770 -720V-720Q770 -690 740 -690H220Q190 -690 190 -720V-720Q190 -750 220 -750ZM300 -660H660Q730 -660 730 -590V-240Q730 -170 660 -170H300Q230 -170 230 -240V-590Q230 -660 300 -660ZM330 -600H630Q670 -600 670 -560V-270Q670 -230 630 -230H330Q290 -230 290 -270V-560Q290 -600 330 -600ZM156 -610H214Q240 -610 240 -584V-576Q240 -550 214 -550H156Q130 -550 130 -576V-584Q130 -610 156 -610ZM746 -610H804Q830 -610 830 -584V-576Q830 -550 804 -550H746Q720 -550 720 -576V-584Q720 -610 746 -610Z\"/>","plus":"<path d=\"M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z\"/>","minus":"<path d=\"M230-450q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h500q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H230Z\"/>","scan":"<path d=\"M222-149.82q0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H70q-12.75 0-21.37-8.63Q40-137.25 40-150v-122q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v92h92q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5ZM889.18-302q12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v122q0 12.75-8.62 21.37Q901.75-120 889-120H767q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h92v-92q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62ZM168-231q-6 0-10.5-4.5T153-246v-469q0-6 4.5-10.5T168-730h50q6 0 10.5 4.5T233-715v469q0 6-4.5 10.5T218-231h-50Zm127 0q-9 0-15-6.24t-6-14.55v-457.42q0-8.32 6-14.55 6-6.24 15-6.24t15 6.24q6 6.23 6 14.55v457.42q0 8.31-6 14.55T295-231Zm116 0q-6 0-10.5-4.5T396-246v-469q0-6 4.5-10.5T411-730h53q6 0 10.5 4.5T479-715v469q0 6-4.5 10.5T464-231h-53Zm125 0q-6 0-10.5-4.5T521-246v-469q0-6 4.5-10.5T536-730h91q6 0 10.5 4.5T642-715v469q0 6-4.5 10.5T627-231h-91Zm169 0q-9 0-15-6.24t-6-14.55v-457.42q0-8.32 6-14.55 6-6.24 15-6.24t15 6.24q6 6.23 6 14.55v457.42q0 8.31-6 14.55T705-231Zm81 0q-7.6 0-13.3-5.7-5.7-5.7-5.7-13.3v-460.63q0-8.37 5.7-13.87T786-730q7.6 0 13.3 5.7 5.7 5.7 5.7 13.3v460.62q0 8.38-5.7 13.88T786-231ZM222-809.82q0 12.82-8.62 21.32-8.63 8.5-21.38 8.5h-92v92q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q40-675.25 40-688v-122q0-12.75 8.63-21.38Q57.25-840 70-840h122q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5Zm515-.36q0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h122q12.75 0 21.38 8.62Q919-822.75 919-810v122q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-92h-92q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5Z\"/>","search":"<path d=\"M378-329q-108.16 0-183.08-75Q120-479 120-585t75-181q75-75 181.5-75t181 75Q632-691 632-584.85 632-542 618-502q-14 40-42 75l242 240q9 8.56 9 21.78T818-143q-9 9-22.22 9-13.22 0-21.78-9L533-384q-30 26-69.96 40.5Q423.08-329 378-329Zm-1-60q81.25 0 138.13-57.5Q572-504 572-585t-56.87-138.5Q458.25-781 377-781q-82.08 0-139.54 57.5Q180-666 180-585t57.46 138.5Q294.92-389 377-389Z\"/>","chevL":"<path d=\"m406-481 177 177q9 9 8.5 21t-9.5 21q-9 9-21.5 9t-21.5-9L341-460q-5-5-7-10t-2-11q0-6 2-11t7-10l199-199q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L406-481Z\"/>","chevR":"<path d=\"M530-481 353-658q-9-9-8.5-21t9.5-21q9-9 21.5-9t21.5 9l198 198q5 5 7 10t2 11q0 6-2 11t-7 10L396-261q-9 9-21 8.5t-21-9.5q-9-9-9-21.5t9-21.5l176-176Z\"/>","chevU":"<path d=\"M480-555 304-379q-9 9-21 8.5t-21-9.5q-9-9-9-21.5t9-21.5l197-197q5-5 10-7t11-2q6 0 11 2t10 7l198 198q9 9 8.5 21t-9.5 21q-9 9-21.5 9t-21.5-9L480-555Z\"/>","chevD":"<path d=\"M480-356q-6 0-11-2t-10-7L261-563q-9-9-8.5-21.5T262-606q9-9 21.5-9t21.5 9l175 176 176-176q9-9 21-8.5t21 9.5q9 9 9 21.5t-9 21.5L501-365q-5 5-10 7t-11 2Z\"/>","check":"<path d=\"m378-332 363-363q9.27-9 21.64-9 12.36 0 21.36 9.05 9 9.06 9 21.5 0 12.45-9 21.45L399-267q-9 9-21 9t-21-9L175-449q-9-9.07-8.5-21.53.5-12.47 9.55-21.47 9.06-9 21.5-9 12.45 0 21.45 9l159 160Z\"/>","grip":"<path d=\"M349.91-160q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm260 0q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm-260-250q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm260 0q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm-260-250q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm260 0q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Z\"/>","trash":"<path d=\"M261-120q-24.75 0-42.37-17.63Q201-155.25 201-180v-570h-11q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h158q0-13 8.63-21.5 8.62-8.5 21.37-8.5h204q12.75 0 21.38 8.62Q612-822.75 612-810h158q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5h-11v570q0 24.75-17.62 42.37Q723.75-120 699-120H261Zm438-630H261v570h438v-570ZM397.18-266q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-339q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v339q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63Zm166 0q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-339q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v339q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63ZM261-750v570-570Z\"/>","star":"<path d=\"m323-245 157-94 157 95-42-178 138-120-182-16-71-168-71 167-182 16 138 120-42 178Zm157-24L294-157q-8 5-17 4.5t-16-5.5q-7-5-10.5-13t-1.5-18l49-212-164-143q-8-7-9.5-15.5t.5-16.5q2-8 9-13.5t17-6.5l217-19 84-200q4-9 12-13.5t16-4.5q8 0 16 4.5t12 13.5l84 200 217 19q10 1 17 6.5t9 13.5q2 8 .5 16.5T826-544L662-401l49 212q2 10-1.5 18T699-158q-7 5-16 5.5t-17-4.5L480-269Zm0-206Z\"/>","cart":"<path d=\"M286.79-81Q257-81 236-102.21t-21-51Q215-183 236.21-204t51-21Q317-225 338-203.79t21 51Q359-123 337.79-102t-51 21Zm400 0Q657-81 636-102.21t-21-51Q615-183 636.21-204t51-21Q717-225 738-203.79t21 51Q759-123 737.79-102t-51 21ZM235-741l110 228h288l125-228H235Zm-30-60h589.07q22.97 0 34.95 21 11.98 21-.02 42L694-495q-11 19-28.56 30.5T627-453H324l-56 104h461q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H277q-42 0-60.5-28t.5-63l64-118-152-322H81q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32Q68.25-880 81-880h68q9 0 16.2 4.43 7.2 4.44 10.8 12.57l29 62Zm140 288h288-288Z\"/>","sync":"<path d=\"M220-477q0 63 23.5 109.5T307-287l30 21v-94q0-13 8.5-21.5T367-390q13 0 21.5 8.5T397-360v170q0 13-8.5 21.5T367-160H197q-13 0-21.5-8.5T167-190q0-13 8.5-21.5T197-220h100l-15-12q-64-51-93-111t-29-134q0-94 49.5-171.5T342-766q11-5 21 0t14 16q5 11 0 22.5T361-710q-64 34-102.5 96.5T220-477Zm520-6q0-48-23.5-97.5T655-668l-29-26v94q0 13-8.5 21.5T596-570q-13 0-21.5-8.5T566-600v-170q0-13 8.5-21.5T596-800h170q13 0 21.5 8.5T796-770q0 13-8.5 21.5T766-740H665l15 14q60 56 90 120t30 123q0 93-48 169.5T623-195q-11 6-22.5 1.5T584-210q-5-11 0-22.5t16-17.5q65-33 102.5-96T740-483Z\"/>","dash":"<path d=\"M510-600v-210q0-12.75 8.63-21.38Q527.25-840 540-840h270q12.75 0 21.38 8.62Q840-822.75 840-810v210q0 12.75-8.62 21.37Q822.75-570 810-570H540q-12.75 0-21.37-8.63Q510-587.25 510-600ZM120-480v-330q0-12.75 8.63-21.38Q137.25-840 150-840h270q12.75 0 21.38 8.62Q450-822.75 450-810v330q0 12.75-8.62 21.37Q432.75-450 420-450H150q-12.75 0-21.37-8.63Q120-467.25 120-480Zm390 330v-330q0-12.75 8.63-21.38Q527.25-510 540-510h270q12.75 0 21.38 8.62Q840-492.75 840-480v330q0 12.75-8.62 21.37Q822.75-120 810-120H540q-12.75 0-21.37-8.63Q510-137.25 510-150Zm-390 0v-210q0-12.75 8.63-21.38Q137.25-390 150-390h270q12.75 0 21.38 8.62Q450-372.75 450-360v210q0 12.75-8.62 21.37Q432.75-120 420-120H150q-12.75 0-21.37-8.63Q120-137.25 120-150Zm60-360h210v-270H180v270Zm390 330h210v-270H570v270Zm0-450h210v-150H570v150ZM180-180h210v-150H180v150Zm210-330Zm180-120Zm0 180ZM390-330Z\"/>","flag":"<path d=\"M260-429v279q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-620q0-12.75 8.63-21.38Q217.25-800 230-800h289q10.5 0 18.75 6.5T548-776l14 62h208q12.75 0 21.38 8.62Q800-696.75 800-684v310q0 12.75-8.62 21.37Q782.75-344 770-344H568q-10.5 0-18.75-6T539-367l-14-62H260Zm335 25h145v-250H535q-10.5 0-18.75-6.5T506-678l-14-62H260v251h292q10.5 0 18.75 6T581-466l14 62Zm-95-168Z\"/>","list":"<path d=\"M407-198q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h403q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H407Zm0-252q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h403q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H407Zm0-253q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h403q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H407ZM189-161q-28.05 0-48.02-19Q121-199 121-227.5t19.5-48q19.5-19.5 48-19.5t47.5 19.98q19 19.97 19 48.02 0 27.23-19.39 46.61Q216.23-161 189-161Zm0-252q-28.05 0-48.02-19.68Q121-452.36 121-480t19.98-47.32Q160.95-547 189-547q27.23 0 46.61 19.68Q255-507.64 255-480t-19.39 47.32Q216.23-413 189-413Zm-1-253q-27.64 0-47.32-19.68T121-733q0-27.64 19.68-47.32T188-800q27.64 0 47.32 19.68T255-733q0 27.64-19.68 47.32T188-666Z\"/>","timer":"<path d=\"M390-860q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h180q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H390Zm90.18 447q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-170q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v170q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63ZM480-81q-74 0-139.5-28.5T226-187q-49-49-77.5-114.5T120-441q0-74 28.5-139.5T226-695q49-49 114.5-77.5T480-801q67 0 126 22.5T711-716l30-30q9-9 21-9t21 9q9 9 9 21t-9 21l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81Zm0-60q125 0 212.5-87.5T780-441q0-125-87.5-212.5T480-741q-125 0-212.5 87.5T180-441q0 125 87.5 212.5T480-141Zm0-299Z\"/>","trend":"<path d=\"M102-252q-9-9-9-21.5t9-21.5l228-227q16.93-17 41.97-17Q397-539 414-522l125 125 241-241h-97q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h167q12.75 0 21.38 8.62Q880-680.75 880-668v167q0 12-8.27 21t-20.5 9Q839-471 830-480t-9-21v-93L580-354q-16.93 17-41.97 17Q513-337 496-354L371-478 145-252q-9 9-21.5 9t-21.5-9Z\"/>","bell":"<path d=\"M190-200q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h50v-304q0-84 49.5-150.5T420-798v-22q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v22q81 17 130.5 83.5T720-564v304h50q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H190Zm290-302Zm0 422q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM300-260h360v-304q0-75-52.5-127.5T480-744q-75 0-127.5 52.5T300-564v304Z\"/>","bellOff":"<path d=\"M679-200H190q-13 0-21.5-8.5T160-230q0-13 8.5-21.5T190-260h50v-304q0-33 8-65t25-61l45 45q-9 19-13.5 39.5T300-564v304h319L96-784q-9-9-9-21t9-21q9-9 21-9t21 9l684 685q9 9 9 21t-9 21q-9 9-21 9t-21-9L679-200ZM540-798q81 17 130.5 83.5T720-564v163q0 15-9.5 22.5T690-371q-11 0-20.5-7.5T660-401v-163q0-75-52.5-127.5T480-744q-27 0-52.5 8T380-713q-12 8-26 7.5T331-717q-8-10-8-21.5t10-19.5q19-14 41-24.5t46-15.5v-22q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v22Zm-80 378Zm20 340q-31 0-54.5-18T402-145q0-7 4.5-11t11.5-4h124q7 0 11.5 4t4.5 11q0 29-23.5 47T480-80Zm28-461Z\"/>","play":"<path d=\"M320-258v-450q0-14 9.07-22 9.06-8 21.15-8 3.78 0 7.91 1 4.12 1 7.87 3l354 226q7 5 10.5 11t3.5 14q0 8-3.5 14T720-458L366-232q-3.78 2-7.95 3-4.16 1-7.94 1-12.11 0-21.11-8t-9-22Zm60-225Zm0 171 269-171-269-171v342Z\"/>","pause":"<path d=\"M585-200q-24.75 0-42.37-17.63Q525-235.25 525-260v-440q0-24.75 17.63-42.38Q560.25-760 585-760h115q24.75 0 42.38 17.62Q760-724.75 760-700v440q0 24.75-17.62 42.37Q724.75-200 700-200H585Zm-325 0q-24.75 0-42.37-17.63Q200-235.25 200-260v-440q0-24.75 17.63-42.38Q235.25-760 260-760h115q24.75 0 42.38 17.62Q435-724.75 435-700v440q0 24.75-17.62 42.37Q399.75-200 375-200H260Zm325-60h115v-440H585v440Zm-325 0h115v-440H260v440Zm0-440v440-440Zm325 0v440-440Z\"/>","pulse":"<path d=\"M80-740q0-24 18-42t42-18h680q24 0 42 18t18 42v140q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-140H140v140q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q80-587.25 80-600v-140Zm60 580q-24 0-42-18t-18-42v-140q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v140h680v-140q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v140q0 24-18 42t-42 18H140Zm259.81-130q8.19 0 15.79-4t11.4-12l133-266 53 106q3.75 8 11.25 12t15.75 4h210q12.75 0 21.38-8.68 8.62-8.67 8.62-21.5 0-12.82-8.62-21.32-8.63-8.5-21.38-8.5H659l-72-143q-3.72-8.25-11.17-11.63-7.45-3.37-15.64-3.37-8.19 0-15.79 3.37-7.6 3.38-11.4 11.63L400-388l-53-106q-3.75-8-11.25-12T320-510H110q-12.75 0-21.37 8.68-8.63 8.67-8.63 21.5 0 12.82 8.63 21.32Q97.25-450 110-450h191l72 144q3.72 8 11.17 12 7.45 4 15.64 4ZM480-480Z\"/>","chart":"<path d=\"M149.82-120q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-46q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v46q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-206q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v206q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-146q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v146q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-246q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v246q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-366q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v366q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM559.5-499q-11.5 0-22.46-4.7-10.97-4.69-20.04-13.3L400-634 172-407q-9.07 9-21.53 8.5-12.47-.5-21.34-9.5-8.13-9-8.63-21t8.5-21l229-227q9.07-8.87 20.04-12.93Q389-694 400-694t22.34 4.07Q433.68-685.87 442-677l118 118 229-229q9-9 21-9t20.87 9q8.13 9 8.63 21t-8.5 21L602-517q-8 9-19.5 13.5t-23 4.5Z\"/>","sliders":"<path d=\"M456.82-120q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-165q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v53h323q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H487v52q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM150-202q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h187q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm186.82-166q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-52H150q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h157v-54q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v166q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM457-450q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h353q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H457Zm165.82-165q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-165q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v52h157q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H653v53q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM150-698q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h353q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z\"/>","plate":"<path d=\"M285-600v-250q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v250h65v-250q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v249.73q0 58.27-36.5 99.77Q397-459 345-448v338q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q285-97.25 285-110v-338q-52-11-88.5-52.5T160-600.27V-850q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v250h65Zm415 200h-85q-12.75 0-21.37-8.63Q585-417.25 585-430v-275q0-69 42.5-122t98.5-53q14 0 24 10.13T760-846v736q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q700-97.25 700-110v-290Z\"/>","jar":"<path d=\"M338.82-650q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-58q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v58q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm0 361q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-136q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v136q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM220-80q-24.75 0-42.37-17.63Q160-115.25 160-140v-680q0-24.75 17.63-42.38Q195.25-880 220-880h520q24.75 0 42.38 17.62Q800-844.75 800-820v680q0 24.75-17.62 42.37Q764.75-80 740-80H220Zm0-60h520v-398H220v398Zm0-458h520v-222H220v222Z\"/>","spark":"<path d=\"m654-454-91 147q-8 13-22.5 10T522-314l-33-133-306 305q-9 9-21 9t-21-9q-9-9-9-21t9-21l305-305-133-33q-14-4-17-18.5t10-22.5l147-92-12-172q-1-15 12.5-22t24.5 3l132 111 160-64q14-5 24 5t5 24l-65 160 111 132q10 11 3.5 24.5T827-441l-173-13ZM131-721q-5-5-5-11t5-11l46-46q5-5 11-5t11 5l45 45q5 5 5 11t-5 11l-46 46q-5 5-11 5t-11-5l-45-45Zm428 307 63-102 120 9-78-92 45-111-111 45-92-78 9 120-102 64 117 29 29 116Zm163 283-46-46q-5-5-4.5-11t5.5-11l45-45q5-5 11-5t11 5l46 46q5 5 4.5 11t-5.5 11l-45 45q-5 5-11 5t-11-5ZM578-579Z\"/>","copy":"<path d=\"M300-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h440q24 0 42 18t18 42v560q0 24-18 42t-42 18H300Zm0-60h440v-560H300v560ZM180-80q-24 0-42-18t-18-42v-590q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v590h470q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32Q662.75-80 650-80H180Zm120-180v-560 560Z\"/>","camera":"<path d=\"M479.5-267q72.5 0 121.5-49t49-121.5q0-72.5-49-121T479.5-607q-72.5 0-121 48.5t-48.5 121q0 72.5 48.5 121.5t121 49Zm0-60q-47.5 0-78.5-31.5t-31-79q0-47.5 31-78.5t78.5-31q47.5 0 79 31t31.5 78.5q0 47.5-31.5 79t-79 31.5ZM140-120q-24 0-42-18t-18-42v-513q0-23 18-41.5t42-18.5h147l55-66q8-11 20-16t26-5h184q14 0 26 5t20 16l55 66h147q23 0 41.5 18.5T880-693v513q0 24-18.5 42T820-120H140Zm0-60h680v-513H645l-73-87H388l-73 87H140v513Zm340-257Z\"/>","image":"<path d=\"M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0 0v-600 600Zm86-97h429q8.5 0 12.75-8t-.75-16L590-457q-5-6-12-6t-12 6L446-302l-81-111q-5-6-12-6t-12 6l-86 112q-6 8-1.75 16t12.75 8Z\"/>","close":"<path d=\"M480-438 270-228q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522-480l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480-438Z\"/>","more":"<path d=\"M207.86-432Q188-432 174-446.14t-14-34Q160-500 174.14-514t34-14Q228-528 242-513.86t14 34Q256-460 241.86-446t-34 14Zm272 0Q460-432 446-446.14t-14-34Q432-500 446.14-514t34-14Q500-528 514-513.86t14 34Q528-460 513.86-446t-34 14Zm272 0Q732-432 718-446.14t-14-34Q704-500 718.14-514t34-14Q772-528 786-513.86t14 34Q800-460 785.86-446t-34 14Z\"/>","edit":"<path d=\"M180-180h44l472-471-44-44-472 471v44Zm-30 60q-13 0-21.5-8.5T120-150v-73q0-12 5-23.5t13-19.5l557-556q8-8 19-12.5t23-4.5q11 0 22 4.5t20 12.5l44 44q9 9 13 20t4 22q0 11-4.5 22.5T823-694L266-138q-8 8-19.5 13t-23.5 5h-73Zm629-617-41-41 41 41Zm-105 64-22-22 44 44-22-22Z\"/>","swap":"<path d=\"m194-323 100 100q9 9 9 21.16t-8.61 21Q285-172 272.9-172q-12.1 0-20.9-9L101-332q-5-5-7-10.13-2-5.14-2-11Q92-359 94-364q2-5 7-10l151-151q9-9 21-9t21.39 9q8.61 9 8.61 21t-9 21L194-383h286q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H194Zm572-254H480q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h286L666-737q-9-9-9-21.16t8.61-21Q675-788 687.1-788q12.1 0 20.9 9l151 151q5 5 7 10.13 2 5.14 2 11 0 5.87-2 10.87-2 5-7 10L708-435q-9 9-21 9t-21.39-9q-8.61-9-8.61-21t9-21l100-100Z\"/>","move":"<path d=\"M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z\"/>","undo":"<path d=\"M289-200q-13 0-21.5-8.5T259-230q0-13 8.5-21.5T289-260h280q70 0 120.5-46.5T740-422q0-69-50.5-115.5T569-584H274l93 93q9 9 9 21t-9 21q-9 9-21 9t-21-9L181-593q-5-5-7-10t-2-11q0-6 2-11t7-10l144-144q9-9 21-9t21 9q9 9 9 21t-9 21l-93 93h294q95 0 163.5 64T800-422q0 94-68.5 158T568-200H289Z\"/>","bolt":"<path d=\"m393-165 279-335H492l36-286-253 366h154l-36 255Zm-33-195H217q-17.87 0-26.44-16-8.56-16 2.44-31l338-488q8-11 20-15t24 1q12 5 19 16.17 7 11.17 5 23.83l-39 309h176q19.36 0 27.18 17T759-511L388-66q-8.44 9.9-20.72 12.95Q355-50 344-55.25q-11-5.25-17.5-16.13Q320-82.25 322-95l38-265Zm113-115Z\"/>","book":"<path d=\"M248-300q53.57 0 104.28 12.5Q403-275 452-250v-427q-45-30-97.62-46.5Q301.76-740 248-740q-38 0-74.5 9.5T100-707v434q31-14 70.5-20.5T248-300Zm264 50q50-25 98-37.5T712-300q38 0 78.5 6t69.5 16v-429q-34-17-71.82-25-37.82-8-76.18-8-54 0-104.5 16.5T512-677v427Zm-30 79q-7.54 0-14.27-1.5Q461-174 456-178q-47-29-99.85-45-52.84-16-108.15-16-36.54 0-71.77 9T106-208q-23.1 11-44.55-3Q40-225 40-251v-463q0-15 7-27.5T68-761q42-20 87.39-29.5 45.4-9.5 92.61-9.5 63 0 122.5 17T482-731q51-35 109.5-52T712-800q46.87 0 91.93 9.5Q849-781 891-761q14 7 21.5 19.5T920-714v463q0 27.89-22.5 42.45Q875-194 853-208q-34-14-69.23-22.5Q748.54-239 712-239q-54.27 0-106.14 16Q554-207 508-178q-5 4-11.73 5.5T482-171ZM276-489Zm284-119q0-5.52 4.02-11.34 4.03-5.82 8.98-7.66 30-11 61.34-17 31.33-6 65.91-6 21.61 0 42.68 2.5T784-640q6 2 11 7.4 5 5.39 5 12.13 0 11.47-7.5 17.47-7.5 6-18.5 3-16.8-5-35.4-7.5Q720-610 700-610q-29 0-56 5.5T591-588q-14 5-22.5-.5T560-608Zm0 220q0-5.81 4.02-11.94 4.03-6.12 8.98-8.06 30-11 61.34-16.5 31.33-5.5 65.91-5.5 21.61 0 42.68 2.5T784-420q6 2 11 7.4 5 5.39 5 12.13 0 11.47-7.5 17.47-7.5 6-18.5 3-16.8-5-35.4-7.5Q720-390 700-390q-29 0-56 5t-53 16q-14 5-22.5 0t-8.5-19Zm0-110q0-5.52 4.02-11.34 4.03-5.82 8.98-7.66 30-11 61.34-17 31.33-6 65.91-6 21.61 0 42.68 2.5T784-530q6 2 11 7.4 5 5.39 5 12.13 0 11.47-7.5 17.47-7.5 6-18.5 3-16.8-5-35.4-7.5Q720-500 700-500q-29 0-56 5.5T591-478q-14 5-22.5-.5T560-498Z\"/>","type":"<path d=\"M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h420q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z\"/>","weight":"<path d=\"M480.5-489q50.5 0 84-33.5t33.5-84q0-50.5-33.5-84.5t-84-34q-50.5 0-84.5 34t-34 84.5q0 50.5 34 84t84.5 33.5ZM417-587q-8 0-14-6t-6-14q0-8 6-14t14-6q8 0 14 6t6 14q0 8-6 14t-14 6Zm63 0q-8 0-14-6t-6-14q0-8 6-14t14-6q8 0 14 6t6 14q0 8-6 14t-14 6Zm63 0q-8 0-14-6t-6-14q0-8 6-14t14-6q8 0 14 6t6 14q0 8-6 14t-14 6ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z\"/>","leaf":"<path d=\"M213-175q-43.59-45-68.3-104Q120-338 120-400q0-73 25.5-133.5T222-645q62-62 180-90.5T700-759q20 1 36 8t29 20q13 13 20.5 29t8.5 36q3 90-2 164.5T772.5-367Q758-307 735-261t-55 78q-51 51-110 77T444-80q-69 0-126.5-23.5T213-175Zm103 0q25 17 58 26t69.92 9Q497-140 547-162t91-64q27-27 46-70.5t31-103Q727-459 731-534t0-165q-94-2-168.5 2.5T431-680q-57 12-98 30.5T266-604q-42 43-64 91t-22 98q0 48 20.5 100.5T251-230q53-98 127-176t157-123q-87 75-141 162.5T316-175Zm0 0Zm0 0Z\"/>","calendar":"<path d=\"M180-80q-24 0-42-18t-18-42v-620q0-24 18-42t42-18h65v-28q0-13.6 9.2-22.8 9.2-9.2 22.8-9.2 14.02 0 23.51 9.2Q310-861.6 310-848v28h340v-28q0-13.6 9.2-22.8 9.2-9.2 22.8-9.2 14.03 0 23.51 9.2Q715-861.6 715-848v28h65q24 0 42 18t18 42v620q0 24-18 42t-42 18H180Zm0-60h600v-430H180v430Zm0-490h600v-130H180v130Zm0 0v-130 130Zm300 230q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-160 0q-17 0-28.5-11.5T280-440q0-17 11.5-28.5T320-480q17 0 28.5 11.5T360-440q0 17-11.5 28.5T320-400Zm320 0q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-160 0q-17 0-28.5-11.5T280-280q0-17 11.5-28.5T320-320q17 0 28.5 11.5T360-280q0 17-11.5 28.5T320-240Zm320 0q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z\"/>","download":"<path d=\"M479.87-325q-5.87 0-10.87-2-5-2-10-7L308-485q-9-9.27-8.5-21.64.5-12.36 9.11-21.36 9.39-9 21.89-9t21.5 9l98 99v-341q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v341l99-99q8.8-9 20.9-8.5 12.1.5 21.49 9.5 8.61 9 8.61 21.5t-9 21.5L501-334q-5 5-10.13 7-5.14 2-11 2ZM220-160q-24 0-42-18t-18-42v-113q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v113h520v-113q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v113q0 24-18 42t-42 18H220Z\"/>","home":"<path d=\"M220-180h150v-220q0-12.75 8.63-21.38Q387.25-430 400-430h160q12.75 0 21.38 8.62Q590-412.75 590-400v220h150v-390L480-765 220-570v390Zm-60 0v-390q0-14.25 6.38-27 6.37-12.75 17.62-21l260-195q15.68-12 35.84-12Q500-825 516-813l260 195q11.25 8.25 17.63 21 6.37 12.75 6.37 27v390q0 24.75-17.62 42.37Q764.75-120 740-120H560q-12.75 0-21.37-8.63Q530-137.25 530-150v-220H430v220q0 12.75-8.62 21.37Q412.75-120 400-120H220q-24.75 0-42.37-17.63Q160-155.25 160-180Zm320-293Z\"/>","fitness":"<path d=\"M268-650 147-529q-9 9-21 9t-21-9q-8-8-8.5-20.5T104-571l36-37-35-35q-9-9-9-21t9-21l64-64-21-21q-9-9-9-21t9-21q8-8 20.5-8.5T190-813l22 21 63-63q9-9 21-9t21 9l35 35 37-36q9-8 21-8t21 9q9 9 9 21t-9 21L310-692l382 382 121-121q9-9 21-9t21 9q8 8 8.5 20.5T856-389l-36 37 35 35q9 9 9 21t-9 21l-65 65 21 21q9 9 9 21t-9 21q-9 9-21 9t-21-9l-21-21-63 63q-9 9-21 9t-21-9l-35-35-37 36q-9 8-21 8t-21-9q-9-9-9-21t9-21l121-121-382-382Z\"/>","settings":"<path d=\"M421-80q-14 0-25-9t-13-23l-15-94q-19-7-40-19t-37-25l-86 40q-14 6-28 1.5T155-226L97-330q-8-13-4.5-27t15.5-23l80-59q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-80-59q-12-9-15.5-23t4.5-27l58-104q8-13 22-17.5t28 1.5l86 40q16-13 37-25t40-18l15-95q2-14 13-23t25-9h118q14 0 25 9t13 23l15 94q19 7 40.5 18.5T669-710l86-40q14-6 27.5-1.5T804-734l59 104q8 13 4.5 27.5T852-580l-80 57q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l80 58q12 8 15.5 22.5T863-330l-58 104q-8 13-22 17.5t-28-1.5l-86-40q-16 13-36.5 25.5T592-206l-15 94q-2 14-13 23t-25 9H421Zm15-60h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715-480q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538-708l-14-112h-88l-14 112q-34 7-63.5 24T306-642l-106-46-40 72 94 69q-4 17-6.5 33.5T245-480q0 17 2.5 33.5T254-413l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Zm44-210q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-130Z\"/>","run":"<path d=\"M535-70v-209l-108-99-36 159q-2.97 12.12-12.98 18.56Q368-194 356-196l-208-43q-11-2-18-12t-5-22q2-12 12.5-18t21.5-4l171 34 73-369-100 47v104q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-125q0-9.33 4.88-16.72 4.87-7.39 13.12-11.28l146-61q32-14 45.5-17.5t27.1-3.5q20.4 0 35.9 8.5T542-680l42 67q23 37 60 65.5t86 36.5q12.75 2.16 21.38 10.82 8.62 8.66 8.62 20.92 0 12.26-8.55 21.26-8.55 9-20.45 7-57-6-102.5-36.5T543-573l-39 158 81 75q5 4.55 7.5 10.24T595-318v248q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q535-57.25 535-70Zm5.08-684q-30.08 0-51.58-21.42t-21.5-51.5q0-30.08 21.42-51.58t51.5-21.5q30.08 0 51.58 21.42t21.5 51.5q0 30.08-21.42 51.58t-51.5 21.5Z\"/>","home-f":"<path d=\"M160-180v-390q0-14.25 6.38-27 6.37-12.75 17.62-21l260-195q15.68-12 35.84-12Q500-825 516-813l260 195q11.25 8.25 17.63 21 6.37 12.75 6.37 27v390q0 24.75-17.62 42.37Q764.75-120 740-120H590q-12.75 0-21.37-8.63Q560-137.25 560-150v-220q0-12.75-8.62-21.38Q542.75-400 530-400H430q-12.75 0-21.37 8.62Q400-382.75 400-370v220q0 12.75-8.62 21.37Q382.75-120 370-120H220q-24.75 0-42.37-17.63Q160-155.25 160-180Z\"/>","fitness-f":"<path d=\"M268-650 147-529q-9 9-21 9t-21-9q-8-8-8.5-20.5T104-571l36-37-35-35q-9-9-9-21t9-21l64-64-21-21q-9-9-9-21t9-21q8-8 20.5-8.5T190-813l22 21 63-63q9-9 21-9t21 9l35 35 37-36q9-8 21-8t21 9q9 9 9 21t-9 21L310-692l382 382 121-121q9-9 21-9t21 9q8 8 8.5 20.5T856-389l-36 37 35 35q9 9 9 21t-9 21l-65 65 21 21q9 9 9 21t-9 21q-9 9-21 9t-21-9l-21-21-63 63q-9 9-21 9t-21-9l-35-35-37 36q-9 8-21 8t-21-9q-9-9-9-21t9-21l121-121-382-382Z\"/>","plate-f":"<path d=\"M285-600v-250q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v250h65v-250q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v249.73q0 58.27-36.5 99.77Q397-459 345-448v338q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q285-97.25 285-110v-338q-52-11-88.5-52.5T160-600.27V-850q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v250h65Zm415 200h-85q-12.75 0-21.37-8.63Q585-417.25 585-430v-275q0-69 42.5-122t98.5-53q14 0 24 10.13T760-846v736q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63Q700-97.25 700-110v-290Z\"/>","chart-f":"<path d=\"M149.82-120q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-46q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v46q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-206q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v206q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-146q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v146q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-246q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v246q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63Zm165 0q-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-366q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v366q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63ZM559.5-499q-11.5 0-22.46-4.7-10.97-4.69-20.04-13.3L400-634 172-407q-9.07 9-21.53 8.5-12.47-.5-21.34-9.5-8.13-9-8.63-21t8.5-21l229-227q9.07-8.87 20.04-12.93Q389-694 400-694t22.34 4.07Q433.68-685.87 442-677l118 118 229-229q9-9 21-9t20.87 9q8.13 9 8.63 21t-8.5 21L602-517q-8 9-19.5 13.5t-23 4.5Z\"/>","dash-f":"<path d=\"M540-570q-12.75 0-21.37-8.63Q510-587.25 510-600v-210q0-12.75 8.63-21.38Q527.25-840 540-840h270q12.75 0 21.38 8.62Q840-822.75 840-810v210q0 12.75-8.62 21.37Q822.75-570 810-570H540ZM150-450q-12.75 0-21.37-8.63Q120-467.25 120-480v-330q0-12.75 8.63-21.38Q137.25-840 150-840h270q12.75 0 21.38 8.62Q450-822.75 450-810v330q0 12.75-8.62 21.37Q432.75-450 420-450H150Zm390 330q-12.75 0-21.37-8.63Q510-137.25 510-150v-330q0-12.75 8.63-21.38Q527.25-510 540-510h270q12.75 0 21.38 8.62Q840-492.75 840-480v330q0 12.75-8.62 21.37Q822.75-120 810-120H540Zm-390 0q-12.75 0-21.37-8.63Q120-137.25 120-150v-210q0-12.75 8.63-21.38Q137.25-390 150-390h270q12.75 0 21.38 8.62Q450-372.75 450-360v210q0 12.75-8.62 21.37Q432.75-120 420-120H150Z\"/>","timer-f":"<path d=\"M390-860q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h180q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H390Zm90.18 447q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-170q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v170q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63ZM480-81q-74 0-139.5-28.5T226-187q-49-49-77.5-114.5T120-441q0-74 28.5-139.5T226-695q49-49 114.5-77.5T480-801q67 0 125.5 22T710-717l30-30q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81Z\"/>","settings-f":"<path d=\"M421-80q-14 0-25-9t-13-23l-15-94q-19-7-40-19t-37-25l-86 40q-14 6-28 1.5T155-226L97-330q-8-13-4.5-27t15.5-23l80-59q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-80-59q-12-9-15.5-23t4.5-27l58-104q8-13 22-17.5t28 1.5l86 40q16-13 37-25t40-18l15-95q2-14 13-23t25-9h118q14 0 25 9t13 23l15 94q19 7 40.5 18.5T669-710l86-40q14-6 27.5-1.5T804-734l59 104q8 13 4.5 27.5T852-580l-80 57q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l80 58q12 8 15.5 22.5T863-330l-58 104q-8 13-22 17.5t-28-1.5l-86-40q-16 13-36.5 25.5T592-206l-15 94q-2 14-13 23t-25 9H421Zm59-270q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Z\"/>","star-f":"<path d=\"M480-269 294-157q-8 5-17 4.5t-16-5.5q-7-5-10.5-13t-1.5-18l49-212-164-143q-8-7-9.5-15.5t.5-16.5q2-8 9-13.5t17-6.5l217-19 84-200q4-9 12-13.5t16-4.5q8 0 16 4.5t12 13.5l84 200 217 19q10 1 17 6.5t9 13.5q2 8 .5 16.5T826-544L662-401l49 212q2 10-1.5 18T699-158q-7 5-16 5.5t-17-4.5L480-269Z\"/>","pulse-f":"<path d=\"M140-160q-24 0-42-18t-18-42v-200q0-13 8.5-21.5T110-450h191l72 144q4 8 11.5 12t15.5 4q8 0 15.5-4t11.5-12l133-266 53 106q4 8 11.5 12t15.5 4h210q13 0 21.5 8.5T880-420v200q0 24-18 42t-42 18H140ZM80-740q0-24 18-42t42-18h680q24 0 42 18t18 42v200q0 13-8.5 21.5T850-510H659l-72-143q-4-8-11.5-11.5T560-668q-8 0-15.5 3.5T533-653L400-388l-53-106q-4-8-11.5-12t-15.5-4H110q-13 0-21.5-8.5T80-540v-200Z\"/>"};
@@ -4415,13 +4456,10 @@ function render() {
 }
 
 /* ================= plan view ================= */
-/* what was eaten: ticked foods, or the daily total typed in the check-in / imported from Excel */
+/* what was eaten, with the one priority of the energy maths (intakeFor, #5): the daily total typed in the check-in or imported from Excel replaces the food log, as the check-in says; otherwise the ticked foods */
 function eatenFor(date) {
-  const d = S.days[date]; const t = d ? dayTotals(d, true) : ZERO();
-  if (t.kcal > 0) return t;
-  const L = logGet(date);
-  if (L && L.kcal > 0) return { kcal: +L.kcal, p: +L.p || 0, c: +L.c || 0, f: +L.f || 0, manual: true, hasMacros: L.p > 0 || L.c > 0 || L.f > 0 };
-  return t;
+  const x = intakeFor(date); if (!x) return ZERO();
+  return x.src === "food" ? x : { ...x, manual: true, hasMacros: x.p > 0 || x.c > 0 || x.f > 0 };
 }
 function ringPct(date) {
   const t = targetsFor(date).kcal || 1; const d = S.days[date];
@@ -4772,8 +4810,8 @@ function splitDonut(p, c, f) {
    nothing was logged). When a weigh-in comes after a gap the estimates in between are bent to end on it: the difference between the estimate and the scale is spread over the days of the gap in
    proportion to the days elapsed. Shown on the weight chart and in the Today tile only: the trend, the TDEE and the calibration never use it. At most 28 days after the last weigh-in. Docs: docs/WEIGHT_ESTIMATE.md */
 function weightFill(from, to, dk) {
-  const R = weightsSeries(false); if (!R.length) return []; const E = FIT().energy, s = dk ? null : energySeries();
-  const step = dk || (d => { const r = s.rows[d]; if (!r) return 0; return (r.balance != null ? r.balance : phaseKcal(r.phase, r.tdee)) / (E.kcalPerKg || 7000); });
+  const R = weightsSeries(false); if (!R.length) return []; const s = dk ? null : energySeries();
+  const step = dk || (d => { const r = s.rows[d]; if (!r) return 0; return (r.balance != null ? r.balance : phaseKcal(r.phase, r.tdee)) / kpkAt(d, r.trend, r.bf); });
   const out = [];
   for (let i = 0; i < R.length; i++) { const [d0, w0] = R[i], nx = R[i + 1], last = nx ? addDays(nx[0], -1) : to < addDays(d0, 28) ? to : addDays(d0, 28), seg = []; let cum = 0;
     for (let d = addDays(d0, 1); d <= (nx ? nx[0] : last); d = addDays(d, 1)) { cum += step(addDays(d, -1)); seg.push({ d, kg: +w0 + cum }); }
@@ -5089,9 +5127,9 @@ function overviewView() {
   let h = weekBalanceHTML();
   h += `<div class="card pad goal"><div class="row" style="justify-content:space-between"><span class="flabel">Goal</span><button class="link" data-act="tab" data-tab="settings">Edit</button></div>
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
-    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(E.kcalPerKg)} kcal per kg`)}${etaKpi(G)}</div>
+    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(G.kpk)} kcal per kg`)}${etaKpi(G)}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
-  h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "watch-based")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
+  h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "from the formulas")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
   const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
   h += `<div class="section-h"><h2>How am I doing · last 7 days</h2><span class="faint" style="font-size:12px">${esc(C.summary)}</span></div><div class="card">${C.ind.map(i => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${i.k}</span><span class="s" style="white-space:normal">${esc(i.d)}</span></span><span class="end">${i.st === "-" ? "" : pill(i.st)}</span></div>`).join("")}</div>`;
   h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Expected vs actual change</h2></div><div class="card pad">${changeChart()}</div></div><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Weekly balance</h2></div><div class="card pad">${balanceChart()}</div></div></div>`;
@@ -5112,9 +5150,9 @@ function changeChart() {
 }
 /* the balance of one week (Monday to Sunday): intake minus TDEE for every day that has food in it; the total is the sum, in kcal and in kg at your kcal-per-kg */
 function weekBalance(off = 0) {
-  const t = todayISO(), ws = addDays(weekStartOf(t), 7 * off), s = energySeries(), days = []; let total = 0, n = 0, est = 0;
-  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), r = s.rows[d], ok = r && r.intake && d <= t; if (ok) { total += r.balance || 0; n++; if (r.intake.est) est++; } days.push({ d, bal: ok ? r.balance || 0 : null, est: ok && !!r.intake.est, today: d === t }); }
-  return { ws, days, total: Math.round(total), n, est, kg: total / (FIT().energy.kcalPerKg || 7000) };
+  const t = todayISO(), ws = addDays(weekStartOf(t), 7 * off), s = energySeries(), days = []; let total = 0, kg = 0, n = 0, est = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), r = s.rows[d], ok = r && r.intake && d <= t; if (ok) { total += r.balance || 0; kg += r.estKg || 0; n++; if (r.intake.est) est++; } days.push({ d, bal: ok ? r.balance || 0 : null, est: ok && !!r.intake.est, today: d === t }); }
+  return { ws, days, total: Math.round(total), n, est, kg };
 }
 function weekBalanceHTML() {
   const o = Math.min(0, UI.balWk || 0), W = weekBalance(o), last = W.days.filter(x => x.bal != null);
@@ -5167,7 +5205,7 @@ function leanHTML() {
   return `<div class="section-h"><h2>Lean mass</h2></div><div class="stat-grid">${kpi(`${r1(E.lean)} kg`, "lean mass", `± ${r1(E.se)} kg · fat ${r1(E.bf)}% from ${E.n} reading${E.n > 1 ? "s" : ""}`)}${kpi(`${r1(E.fat)} kg`, "fat mass")}${A ? kpi(sgn(A.dl, 1) + " kg", "lean mass, 4 weeks", `weight ${sgn(A.dw, 1)} kg${A.share != null ? ` · ${r0(A.share * 100)}% of the loss` : ""}`) : kpi("—", "lean mass, 4 weeks", "needs 2 readings in each month")}</div>
     ${A?.bad ? `<div class="note" style="border-color:var(--warn)"><b>Lean mass is falling in this cut.</b> ${r1(-A.dl)} kg in 4 weeks (±${r1(A.se)}), ${A.share != null ? `${r0(A.share * 100)}% of the weight you lost` : "while your weight did not drop"}. Check protein (about 1.8–2.2 g/kg), keep heavy sets in the week, and aim for 0.5–1% of body weight a week. Body fat from a scale is noisy: read the trend of a month, not a day.</div>` : `<div class="faint" style="font-size:12.5px">Trend weight × (1 − body fat averaged over 28 days). ${A ? (A.cut ? "No alarming loss of lean mass in this cut." : "") : ""}</div>`}`;
 }
-function bmiHTML() { const cm = FIT().profile.height, kg = energyAt(todayISO()).trend || weightsSeries().pop()?.[1] || null, b = bmiOf(kg, cm);
+function bmiHTML() { const cm = heightCm(true), kg = energyAt(todayISO()).trend || weightsSeries().pop()?.[1] || null, b = bmiOf(kg, cm);
   if (!b) return `<div class="bmi faint" style="font-size:13px">BMI needs your height (Settings › Targets › Profile) and a weight.</div>`;
   return `<div class="section-h"><h2>Body mass index</h2></div><div class="bmi"><div class="bmi-t"><b class="bmi-n">${b.v}</b><span class="bmi-c">${b.cat}</span></div><small>${r1(kg)} kg at ${r0(cm)} cm. BMI can't tell muscle from fat: for a trained body, waist and body fat say more.</small></div>`; }
 function bodyView() {
@@ -5183,7 +5221,7 @@ function bodyView() {
 }
 function weeksView() {
   const W = [...weeklyTable()].reverse();
-  return tbl(["Week", "Phase", "Avg kg", "Change", "Rate", "Intake", "TDEE", "Target", "Balance", "Est. kg", "BF %", "Lean", "Lean share", "Sessions", "Min", "kcal", "Run km"], W.map(w => `<tr><td><b>${fmtDM(w.ws)}</b></td><td>${esc(w.phase)}</td><td class="n">${w.avgW ? r1(w.avgW) : "—"}<span class="s">${w.weigh} weigh-ins</span></td><td class="n">${w.chg != null ? sgn(w.chg, 1) + `<span class="s">${sgn(w.chgPct * 100, 1)}%</span>` : ""}</td><td>${w.rate ? `<span class="pill" style="--c:var(--${w.rate === "In range" ? "good" : w.rate === "In progress" || w.rate === "Few weigh-ins" ? "faint" : "warn"})">${w.rate}</span>` : ""}</td><td class="n">${w.avgI ? fmtN(w.avgI) : "—"}<span class="s">${w.nI} days</span></td><td class="n">${w.avgTdee ? fmtN(w.avgTdee) : ""}</td><td class="n">${w.avgTarget ? fmtN(w.avgTarget) : ""}</td><td class="n">${w.balance != null ? fmtN(w.balance) : ""}</td><td class="n">${w.estKg != null ? sgn(w.estKg, 1) : ""}</td><td class="n">${w.bf ? r1(w.bf) : ""}</td><td class="n">${w.lean ? r1(w.lean) : ""}</td><td class="n">${w.leanShare != null ? r0(w.leanShare * 100) + "%" : ""}</td><td class="n">${w.sess || ""}</td><td class="n">${w.mins ? fmtN(w.mins) : ""}</td><td class="n">${w.kcal ? fmtN(w.kcal) : ""}</td><td class="n">${w.km ? r1(w.km) : ""}</td></tr>`), "wide") + `<div class="faint" style="font-size:12.5px">Balance = intake minus watch-based TDEE over logged days. Lean share of loss over 4 weeks: consider stopping a cut when it stays above 20–25%.</div>`;
+  return tbl(["Week", "Phase", "Avg kg", "Change", "Rate", "Intake", "TDEE", "Target", "Balance", "Est. kg", "BF %", "Lean", "Lean share", "Sessions", "Min", "kcal", "Run km"], W.map(w => `<tr><td><b>${fmtDM(w.ws)}</b></td><td>${esc(w.phase)}</td><td class="n">${w.avgW ? r1(w.avgW) : "—"}<span class="s">${w.weigh} weigh-ins</span></td><td class="n">${w.chg != null ? sgn(w.chg, 1) + `<span class="s">${sgn(w.chgPct * 100, 1)}%</span>` : ""}</td><td>${w.rate ? `<span class="pill" style="--c:var(--${w.rate === "In range" ? "good" : w.rate === "In progress" || w.rate === "Few weigh-ins" ? "faint" : "warn"})">${w.rate}</span>` : ""}</td><td class="n">${w.avgI ? fmtN(w.avgI) : "—"}<span class="s">${w.nI} days</span></td><td class="n">${w.avgTdee ? fmtN(w.avgTdee) : ""}</td><td class="n">${w.avgTarget ? fmtN(w.avgTarget) : ""}</td><td class="n">${w.balance != null ? fmtN(w.balance) : ""}</td><td class="n">${w.estKg != null ? sgn(w.estKg, 1) : ""}</td><td class="n">${w.bf ? r1(w.bf) : ""}</td><td class="n">${w.lean ? r1(w.lean) : ""}</td><td class="n">${w.leanShare != null ? r0(w.leanShare * 100) + "%" : ""}</td><td class="n">${w.sess || ""}</td><td class="n">${w.mins ? fmtN(w.mins) : ""}</td><td class="n">${w.kcal ? fmtN(w.kcal) : ""}</td><td class="n">${w.km ? r1(w.km) : ""}</td></tr>`), "wide") + `<div class="faint" style="font-size:12.5px">Balance = intake minus TDEE over logged days. Lean share of loss over 4 weeks: consider stopping a cut when it stays above 20–25%.</div>`;
 }
 /* ================= the day's real deficit: intake (eaten, or what's planned if more) − today's TDEE ================= */
 function dayDeficit(date) {
@@ -5192,16 +5230,18 @@ function dayDeficit(date) {
   const eat = eatenFor(date), tot = dayTotals(getDay(date)), set = phaseKcal(r.phase, r.tdee);
   const intake = eat.manual ? eat.kcal : Math.max(eat.kcal || 0, tot.kcal || 0);
   const done = !!eat.manual || date < todayISO() || (eat.kcal > 0 && eat.kcal >= (tot.kcal || 0) - 1);
-  return { tdee: r.tdee, set, intake, eaten: eat.kcal || 0, done, none: !intake, proj: intake - r.tdee, now: (eat.kcal || 0) - r.tdee, kg: (intake - r.tdee) / FIT().energy.kcalPerKg };
+  return { tdee: r.tdee, set, intake, eaten: eat.kcal || 0, done, none: !intake, proj: intake - r.tdee, now: (eat.kcal || 0) - r.tdee, kg: (intake - r.tdee) / kpkAt(date, r.trend, r.bf), phase: r.phase.phase };
 }
+/* the phase as a word for the texts of the day's balance: cut, bulk, maintenance */
+const phaseWord = ph => String(ph || "Maintenance").toLowerCase();
 function deficitHTML(date) {
   const D = dayDeficit(date); if (!D) return "";
-  const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v));
-  if (D.none) return `<div class="dfc"><div class="dfc-m"><small>Day deficit</small><b class="faint">—</b><span>Plan or log food to see it · cut set ${sg(D.set)}</span></div><div class="dfc-r"><span>TDEE <b>${fmtN(D.tdee)}</b></span></div></div>`;
+  const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmtN(Math.abs(v)), pw = phaseWord(D.phase);
+  if (D.none) return `<div class="dfc"><div class="dfc-m"><small>Day deficit</small><b class="faint">—</b><span>Plan or log food to see it · ${pw} set ${sg(D.set)}</span></div><div class="dfc-r"><span>TDEE <b>${fmtN(D.tdee)}</b></span></div></div>`;
   const gap = D.proj - D.set, tone = D.set < 0 ? (D.proj > 0 ? "bad" : gap < -300 ? "warn" : Math.abs(gap) <= 150 ? "good" : "") : Math.abs(D.proj - D.set) <= 150 ? "good" : Math.abs(D.proj - D.set) > 400 ? "warn" : "";
   const word = D.proj < 0 ? "deficit" : "surplus";
-  const note = tone === "warn" && D.set < 0 ? `${fmtN(-gap)} more than your cut: eat a bit more to protect training` : tone === "bad" ? "Above maintenance today" : Math.abs(gap) <= 150 ? "On your cut" : gap > 0 ? `${fmtN(gap)} kcal less ${D.set < 0 ? "deficit" : "margin"} than planned` : `${fmtN(-gap)} kcal beyond plan`;
-  return `<div class="dfc ${tone}"><div class="dfc-m"><small>Day ${word}${D.done ? "" : " · if you eat the plan"}</small><b>${sg(D.proj)} <i>kcal</i></b><span>${esc(note)} · cut set ${sg(D.set)}</span></div>
+  const note = tone === "warn" && D.set < 0 ? `${fmtN(-gap)} more than your ${pw}: eat a bit more to protect training` : tone === "bad" ? "Above maintenance today" : Math.abs(gap) <= 150 ? `On your ${pw}` : gap > 0 ? `${fmtN(gap)} kcal less ${D.set < 0 ? "deficit" : "margin"} than planned` : `${fmtN(-gap)} kcal beyond plan`;
+  return `<div class="dfc ${tone}"><div class="dfc-m"><small>Day ${word}${D.done ? "" : " · if you eat the plan"}</small><b>${sg(D.proj)} <i>kcal</i></b><span>${esc(note)} · ${pw} set ${sg(D.set)}</span></div>
     <div class="dfc-r"><span>TDEE <b>${fmtN(D.tdee)}</b></span>${!D.done && D.eaten ? `<span>So far <b>${sg(D.now)}</b></span>` : ""}<span>≈ <b>${sg(Math.round(D.kg * 1000))} g</b></span></div></div>`;
 }
 /* ================= sheet framework ================= */
@@ -5594,7 +5634,7 @@ SHEETS.onboard = sh => ({
     <div class="lrow" style="padding:4px 0;border:0"><span><span class="t">Plan my next 7 days now</span><span class="s">Uses common Italian and Mediterranean staples until it learns your habits</span></span><button class="switch" role="switch" aria-checked="${sh.plan}" data-act="ob-plan" aria-label="Plan the next 7 days"></button></div>`,
   foot: `<button class="btn primary" data-act="ob-done">Start</button>`
 });
-const NEAT_SRC = { watch: "from your watch", steps: "from your steps and your usual extra movement", stepsRef: "from your steps: the default NEAT counts as an average day of steps", stepsRefProj: "from today's steps so far plus a typical rest of the day", avg: "average of the last 7 days", default: "default value: no data yet" };
+const NEAT_SRC = { watch: "from your watch", steps: "from your steps and your usual extra movement", stepsProj: "from today's steps so far plus a typical rest of the day, and your usual extra movement", stepsRef: "from your steps: the default NEAT counts as an average day of steps", stepsRefProj: "from today's steps so far plus a typical rest of the day", avg: "average of the last 7 days", default: "default value: no data yet" };
 /* a day picker for sheets: previous day, the date (tap it to pick any day), next day. go = the action that opens that day */
 function dayNavHTML(d, go) {
   const t = todayISO(), txt = `${d < t ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`;
@@ -5613,10 +5653,11 @@ SHEETS.checkin = sh => {
   if (past && SUPPS().length) body += suppListHTML(d);
   if (past && FEAT("journal")) body += `<button class="ci-more" data-act="jr-open" data-date="${d}"><span><b>Journal</b><small>${jrFilled(d) ? esc(JR_KEYS.filter(k => jrHas(jrOf(d), k)).map(k => `${JR_NAME[k]} ${k === "m" ? jrMoodOf(jrOf(d).m).toLowerCase() : jrOf(d)[k]}`).join(" · ") || "One sentence") : "Mood, energy, productivity, stress · ten seconds"}</small></span>${ic("book", "sm")}</button>`;
   if (past) {
-    // the three numbers you type; the rest comes from intervals.icu and the plan
+    // the three numbers you type; the rest comes from intervals.icu and the plan. The strip shows the subtraction really made (#14): AEE minus the workouts the watch counted, not the EAT with what is still planned
+    const aee = r.neatSrc === "watch" && r.nx?.mode === "active", stillK = (r.sess.items || []).reduce((a, x, i) => a + (x.st !== "done" ? r.kcals[i] || 0 : 0), 0);
     body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
-      <div class="ci-calc">${L.watch > 0 && E.watchMode === "active" ? `<span><small>AEE</small><b>${fmtN(L.watch)}</b></span><span class="op">−</span>` : ""}<span><small>Training (EAT)</small><b>${fmtN(r.eat)}</b></span><span class="op">${L.watch > 0 && E.watchMode === "active" ? "=" : "+"}</span><span><small>NEAT${L.watch > 0 || r.neatSrc === "steps" ? "" : " (7-day)"}</small><b>${fmtN(r.neat)}</b></span><span class="ci-tdee"><small>TDEE</small><b>${fmtN(r.tdee)}</b></span></div>
-      <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${L.watch > 0 ? E.watchMode === "active" ? ` · NEAT = ${fmtN(L.watch)} AEE − training seen by the watch` : "" : r.neatSrc === "steps" ? ` · NEAT from your ${fmtN(L.steps)} steps plus your usual extra movement` : " · NEAT: your 7-day average (no steps for this day)"}.</small>`;
+      <div class="ci-calc">${aee ? `<span><small>AEE</small><b>${fmtN(L.watch)}</b></span><span class="op">−</span><span><small>Workouts</small><b>${fmtN(r.nx.sub)}</b></span><span class="op">=</span>` : `<span><small>Training (EAT)</small><b>${fmtN(r.eat)}</b></span><span class="op">+</span>`}<span><small>NEAT${{ avg: " (7-day)", default: " (default)" }[r.neatSrc] || ""}</small><b>${fmtN(r.neat)}</b></span><span class="ci-tdee"><small>TDEE</small><b>${fmtN(r.tdee)}</b></span></div>
+      <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${stillK > 0 ? ` · ${fmtN(stillK)} kcal of training still planned` : ""}${aee ? " · NEAT = AEE − the workouts the watch counted" : !sh.energy ? ` · NEAT ${NEAT_SRC[r.neatSrc] || NEAT_SRC.avg}` : ""}.</small>`;
     const more = [L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : "", L.rhr ? `RHR ${L.rhr}` : "", L.steps ? `${fmtN(L.steps)} steps` : "", logged.length ? `${logged.length} workout${logged.length > 1 ? "s" : ""}` : "", food.kcal ? `${fmtN(food.kcal)} kcal eaten` : ""].filter(Boolean).join(" · ");
     body += `<button class="ci-more" data-act="ci-more" aria-expanded="${!!sh.more}"><span><b>From intervals.icu and your plan</b><small>${esc(more || "Sleep, HRV, resting HR, steps, workouts, intake")}</small></span>${ic(sh.more ? "chevU" : "chevD", "sm")}</button>`;
     if (sh.more) {
@@ -5637,7 +5678,7 @@ SHEETS.checkin = sh => {
   body += past && !sh.energy ? `<button class="ci-more" data-act="ci-energy" aria-expanded="false"><span><b>Energy for this day</b><small>TDEE ${fmtN(r.tdee)} · target ${fmtN(r.target)}${r.intake ? ` · balance ${r.balance > 0 ? "+" : ""}${fmtN(r.balance)}` : ""}</small></span>${ic("chevD", "sm")}</button>` : `<div class="field"><span class="flabel">Energy for this day</span>${profileNote()}${deficitHTML(d)}<div class="card">
     ${row("BMR", fmtN(r.bmr), `${E.bmr} · trend ${r1(r.trend)} kg`)}${row("NEAT (daily movement)", fmtN(r.neat), NEAT_SRC[r.neatSrc] || "average of the last 7 days")}
     ${row("Training", fmtN(r.eat), r.sess.list.length ? `${(SESS_SRC[r.sess.src] || "").toLowerCase()} · ${esc(r.sess.list.map(w => `${w.note || w.sport} ${fmtN(sessionKcal(w, d).kcal)}`).join(" + "))}` : "rest")}${row("Digestion (TEF)", fmtN(r.tef), `${r0(E.tef * 100)}% of the above`)}
-    ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `watch-based ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : FIT().energy.calMode === "v2" ? "calibration 1.00 (v2 needs 3 weeks of log, 8 weigh-ins and food on 70% of the days)" : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
+    ${row("TDEE", fmtN(r.tdee), r.factor !== 1 ? `formulas ${fmtN(r.tdeeW)} × calibration ${r.factor.toFixed(2)}` : FIT().energy.calMode === "v2" ? "calibration 1.00 (v2 needs 3 weeks of log, 8 weigh-ins and food on 70% of the days)" : "calibration 1.00 (needs 14 days of intake and weigh-ins)")}
     ${row(esc(r.phase.phase), (v => (v > 0 ? "+" : "") + fmtN(v))(phaseKcal(r.phase, r.tdee)), `kcal/day vs TDEE${r.phase.phase === "Maintenance" && +r.phase.pct > 0 && !(+r.phase.kcal) ? ` (${r.phase.pct}% deficit)` : ""}`)}${row("<b>Target</b>", `<b>${fmtN(r.target)}</b>`, `${r0(r.c)} g carbs · ${r0(r.p)} g protein · ${r0(r.f)} g fat`)}
     ${r.intake ? row("Balance", (r.balance > 0 ? "+" : "") + fmtN(r.balance), `≈ ${sgn(r.estKg * 1000, 0)} g of body weight`) : ""}</div></div>`;
   return { title: `${d < today ? "Log · " : ""}${relDay(d)} · ${fmtDM(d)}`, titleHTML: dayNavHTML(d, "ci-go"), body, foot: `${UI.tab !== "plan" || UI.date !== d ? `<button class="btn soft" data-act="open-day-plan" data-date="${d}">${ic("plate", "sm")}Meals</button>` : ""}<button class="btn primary" data-act="close-sheet">Done</button>` };
@@ -5735,7 +5776,7 @@ SHEETS.result = sh => {
 function profileSummary() {
   const f = FIT(), P = f.profile, t = todayISO(), L = [], num0 = v => fmtN(Math.round(v));
   const nm = [P.name, P.surname].filter(Boolean).join(" "), kg = trendAt(t), bf = lastBf();
-  L.push([nm || "Athlete", P.dob ? `${ageAt(t)} y` : "", P.height ? `${P.height} cm` : "", kg ? `${r1(kg)} kg` : "", bf ? `${r1(bf[1])}% body fat` : ""].filter(Boolean).join(" · "));
+  L.push([nm || "Athlete", P.dob ? `${ageAt(t)} y` : "", heightCm(true) ? `${heightCm(true)} cm` : "", kg ? `${r1(kg)} kg` : "", bf ? `${r1(bf[1])}% body fat` : ""].filter(Boolean).join(" · "));
   const sports = f.sports.map(x => x.name).filter(n => n && n !== "Rest" && n !== "Other" && (logSports().has(n) || n === f.runSport)); if (sports.length) L.push("Sports: " + sports.join(", "));
   // calisthenics and strength: best bodyweight reps and best weighted set of each exercise you track
   const cal = new Map(calisTable().filter(x => x.n).map(x => [x.name, x])), top = new Map(topSetTable().filter(x => x.best != null).map(x => [x.name, x]));
@@ -5771,7 +5812,7 @@ function fitSettings() {
   const grp = (title, inner, open, sub = "") => `<details class="card pad set-det fx" data-k="${esc(title)}" ${open || (UI.setDet || {})[title] ? "open" : ""}><summary><span><b>${title}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span></summary><div class="set-in">${inner}</div></details>`;
   let h = "";
   h += grp("Profile", `<div class="grid2">${fitIn("profile.name", "Name", "", "text")}${fitIn("profile.surname", "Surname", "", "text")}${fitSel("profile.sex", "Sex", [["Male", "Male"], ["Female", "Female"]])}${fitIn("profile.dob", "Date of birth", "", "date")}${fitIn("profile.height", "Height", "cm")}${fitIn("profile.startWeight", "Starting weight", "kg")}${fitIn("profile.bf", "Body fat (optional)", "%")}${fitIn("profile.maxHr", "Max HR (until you test)", "bpm")}${fitIn("trackStart", "Tracking start", "", "date")}</div>
-    <div class="faint" style="font-size:12.5px">Age ${ageAt(todayISO())}. The starting weight is used until the first weigh-in.</div><button class="btn soft sm" data-act="profile-open" style="align-self:flex-start">${ic("story", "sm")}Share my profile</button>`, false, [[f.profile.name, f.profile.surname].filter(Boolean).join(" ") || "Name not set", `age ${ageAt(todayISO())}`, `${f.profile.height} cm`, `${f.profile.startWeight} kg`].join(" · "));
+    <div class="faint" style="font-size:12.5px">Age ${ageAt(todayISO())}. The starting weight is used until the first weigh-in.</div><button class="btn soft sm" data-act="profile-open" style="align-self:flex-start">${ic("story", "sm")}Share my profile</button>`, false, [[f.profile.name, f.profile.surname].filter(Boolean).join(" ") || "Name not set", `age ${ageAt(todayISO())}`, `${heightCm()} cm`, `${f.profile.startWeight} kg`].join(" · "));
   h += grp("Goal", `<div class="grid2">${fitSel("goal.type", "Goal type", [["bf", "Body fat %"], ["weight", "Weight (kg)"]])}${fitIn("goal.value", f.goal.type === "weight" ? "Target weight" : "Target body fat", f.goal.type === "weight" ? "kg" : "%")}${fitIn("goal.date", "Target date (optional)", "", "date")}${fitIn("goal.leanShare", "Lean share of weight lost", "%", "pct")}</div><div class="faint" style="font-size:12.5px">0% = all fat. Typically 10–20% in a cut.</div>`, false, f.goal.value > 0 ? `${r1(f.goal.value)}${f.goal.type === "weight" ? " kg" : "% body fat"}${f.goal.date ? " · by " + fmtDM(f.goal.date) : ""}` : "No goal set");
   h += grp("Phases · calories vs TDEE", `<div class="card">${f.phases.map((p, i) => `<div class="lrow ph-row" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 96px 36px;gap:8px"><input id="ph-s-${i}" class="inp" type="date" value="${p.start}" data-ph="start" data-i="${i}" aria-label="Start date"><select id="ph-p-${i}" class="inp" data-ph="phase" data-i="${i}" aria-label="Phase">${["Cut", "Maintenance", "Bulk"].map(k => `<option ${p.phase === k ? "selected" : ""}>${k}</option>`).join("")}</select>${p.phase === "Maintenance" && !(+p.kcal) ? `<div class="unit-inp"><input id="ph-c-${i}" class="inp" inputmode="decimal" value="${p.pct || 0}" data-ph="pct" data-i="${i}" aria-label="Slight deficit, percent of TDEE"><span>% less</span></div>` : `<div class="unit-inp"><input id="ph-k-${i}" class="inp" inputmode="numeric" value="${p.kcal}" data-ph="kcal" data-i="${i}" aria-label="kcal per day"><span>kcal</span></div>`}<button class="icon-btn" data-act="ph-del" data-i="${i}" aria-label="Remove phase">${ic("close", "sm")}</button></div>`).join("")}</div>
     <button class="btn soft sm" data-act="ph-add" style="align-self:flex-start">${ic("plus", "sm")}New phase from today</button>
@@ -7383,9 +7424,14 @@ ACT["ci-more"] = () => { const sh = S_(); sh.more = !sh.more; renderSheet(); };
 ACT["ci-energy"] = () => { const sh = S_(); sh.energy = true; renderSheet(); };
 CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); }); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
 CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.dataset.k] = v.trim() || null; }); };
+/* fields whose value has a valid range (#1, #17) or whose empty value means the default (#20): a height must be in cm, the lean share of the loss stays under 90 %, TEF and Default NEAT are never an empty zero */
+const FIT_RANGE = { "profile.height": { lo: 120, hi: 230, refuse: "Height in cm, between 120 and 230" }, "goal.leanShare": { lo: 0, hi: 0.9, hold: "Lean share is kept between 0 and 90%" }, "energy.tef": { def: true }, "energy.neat": { def: true } };
 function fitChange(el) {
-  const t = el.dataset.t, p = el.dataset.fit; let v = el.value;
+  const t = el.dataset.t, p = el.dataset.fit, R = FIT_RANGE[p]; let v = el.value;
   if (t === "num") v = v.trim() === "" ? null : num(v); else if (t === "pct") v = v.trim() === "" ? null : num(v) / 100; else v = v.trim();
+  if (R?.def && v == null) v = p.split(".").reduce((o, k) => o?.[k], defaultFit());
+  if (R?.refuse && v != null && !(v >= R.lo && v <= R.hi)) { const old = p.split(".").reduce((o, k) => o?.[k], FIT()); el.value = old == null ? "" : String(t === "pct" ? r1(old * 100) : old); toast(R.refuse); return; }
+  if (R?.hold && v != null && !(v >= R.lo && v <= R.hi)) { v = clamp(v, R.lo, R.hi); toast(R.hold); }
   setPath(FIT(), p, v);
   if (p === "profile.sex" || p === "profile.height" || p === "profile.startWeight") profileConfirm(p.slice(8));
   saveSettings();
@@ -7733,10 +7779,10 @@ function periodOf(kind, off) {
   return { a, b, label: `${fmtDM(a)} – ${fmtDM(b)}`, kind };
 }
 function periodStats(P) {
-  const s = energySeries(), today = todayISO(), fit = FIT(), E = fit.energy;
+  const s = energySeries(), today = todayISO(), fit = FIT();
   const end = P.b < today ? P.b : today; const R = { ...P, end, days: 0 };
   if (end < P.a) return R;
-  let nI = 0, sI = 0, sT = 0, onT = 0, bal = 0, nM = 0, mp = 0, mc = 0, mf = 0, tp = 0, tc = 0, tf = 0, weigh = 0, wsum = 0, sleep = [], rhr = [], sess = 0, mins = 0, kcal = 0, km = 0, hard = 0, load = 0, cheats = 0;
+  let nI = 0, sI = 0, sT = 0, onT = 0, bal = 0, ek = 0, nM = 0, mp = 0, mc = 0, mf = 0, tp = 0, tc = 0, tf = 0, weigh = 0, wsum = 0, sleep = [], rhr = [], sess = 0, mins = 0, kcal = 0, km = 0, hard = 0, load = 0, cheats = 0;
   const sports = {}, dayRows = []; let best = null, high = null;
   for (let d = P.a; d <= end; d = addDays(d, 1)) {
     R.days++; const r = s.rows[d], L = logGet(d) || {}; if (!r) continue;
@@ -7744,7 +7790,7 @@ function periodStats(P) {
     dayRows.push({ d, T, tot: it || ZERO(), has: !!it });
     if (it && !it.est) { nI++; sI += it.kcal; sT += T.kcal; const dev = Math.abs(it.kcal - T.kcal) / T.kcal; if (dev <= 0.1) onT++; if (!best || dev < best.dev) best = { d, dev, k: it.kcal }; if (!high || it.kcal > high.k) high = { d, k: it.kcal };
       if (it.p > 0 || it.c > 0) { nM++; mp += it.p; mc += it.c; mf += it.f; tp += T.p; tc += T.c; tf += T.f; } }
-    if (r.balance != null) bal += r.balance;
+    if (r.balance != null) { bal += r.balance; ek += r.estKg; }
     if (r.real) { weigh++; wsum += r.real; }
     if (L.sleep > 0) sleep.push(+L.sleep); if (L.rhr > 0) rhr.push(+L.rhr);
     const ws = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest");
@@ -7756,7 +7802,7 @@ function periodStats(P) {
   const r0w = s.rows[addDays(P.a, -1)] || s.rows[P.a], r1w = s.rows[end];
   const bfs = []; for (let d = P.a; d <= end; d = addDays(d, 1)) { const L = logGet(d); if (L?.bf > 0) bfs.push(+L.bf); }
   const inRange = (x) => x.date >= P.a && x.date <= end;
-  Object.assign(R, { nI, avgI: nI ? sI / nI : null, avgT: nI ? sT / nI : null, onT, bal, expKg: bal / E.kcalPerKg, trendA: r0w?.trend, trendB: r1w?.trend, trendChg: r0w && r1w ? r1w.trend - r0w.trend : null,
+  Object.assign(R, { nI, avgI: nI ? sI / nI : null, avgT: nI ? sT / nI : null, onT, bal, expKg: ek, trendA: r0w?.trend, trendB: r1w?.trend, trendChg: r0w && r1w ? r1w.trend - r0w.trend : null,
     nM, avgP: nM ? mp / nM : null, avgC: nM ? mc / nM : null, avgF: nM ? mf / nM : null, tP: nM ? tp / nM : null, tC: nM ? tc / nM : null, tF: nM ? tf / nM : null,
     weigh, avgW: weigh ? wsum / weigh : null, bfA: bfs[0], bfB: bfs[bfs.length - 1], sleep: sleep.length ? sleep.reduce((a, b) => a + b, 0) / sleep.length : null, rhr: rhr.length ? rhr.reduce((a, b) => a + b, 0) / rhr.length : null,
     sess, mins, kcal, km, hard, load, sports, cheats, best, high, dayRows, phase: phaseFor(end).phase,
@@ -7975,9 +8021,11 @@ function fitnessSeries() {
     return { rows, first, today, now: r, ramp: r && r7 ? r.ctl - r7.ctl : null };
   });
 }
+/* #18: form as a % of fitness means nothing while fitness is tiny (one session gives −354 %): under a CTL of 10 (a display threshold of the app, about 70 load a week) pct and zone are null and the screens show «—» */
+const FORM_MIN_CTL = 10;
 function fitnessNow() {
-  const F = fitnessSeries(); if (!F.now) return null; const r = F.now, pct = r.ctl > 0 ? r.form / r.ctl * 100 : 0;
-  return { ctl: r.ctl, atl: r.atl, form: r.form, pct, zone: formZone(pct), ramp: F.ramp };
+  const F = fitnessSeries(); if (!F.now) return null; const r = F.now, pct = r.ctl >= FORM_MIN_CTL ? r.form / r.ctl * 100 : null;
+  return { ctl: r.ctl, atl: r.atl, form: r.form, pct, zone: pct == null ? null : formZone(pct), ramp: F.ramp };
 }
 /* the PMC chart: fitness, fatigue, form + daily load bars; dashed = projected from your plan */
 function pmcChart(days = 120) {
@@ -8014,8 +8062,8 @@ function fitnessCards() {
   return `<div class="ffw">
     <div class="ffw-c" style="--c:var(--c-fit)"><small>Fitness</small><b>${r0(N.ctl)}</b><span>${N.ramp != null ? `${N.ramp >= 0 ? "+" : "−"}${r1(Math.abs(N.ramp))} ramp / 7 d` : "42-day load"}</span></div>
     <div class="ffw-c" style="--c:var(--c-atl)"><small>Fatigue</small><b>${r0(N.atl)}</b><span>7-day load</span></div>
-    <div class="ffw-c" style="--c:var(--${z[2]})"><small>Form</small><b>${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}</b><span>${z[1]} · ${r0(N.pct)}%</span></div></div>
-    <div class="faint" style="font-size:12.5px">${esc(z[3])}. ${fitnessSeries().now?.icu ? "Same fitness and fatigue as intervals.icu (synced daily); the days ahead follow your planned load." : "Load = intervals.icu load, or minutes × RPE (1 h at RPE 8 ≈ 100)."} ${N.ramp > 8 ? "Fitness is ramping fast: watch fatigue." : ""}</div>`;
+    <div class="ffw-c" style="--c:var(--${z ? z[2] : "faint"})"><small>Form</small><b>${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}</b><span>${z ? `${z[1]} · ${r0(N.pct)}%` : "— %"}</span></div></div>
+    <div class="faint" style="font-size:12.5px">${z ? esc(z[3]) : `Fitness under ${FORM_MIN_CTL}: the form zone needs a few weeks of training`}. ${fitnessSeries().now?.icu ? "Same fitness and fatigue as intervals.icu (synced daily); the days ahead follow your planned load." : "Load = intervals.icu load, or minutes × RPE (1 h at RPE 8 ≈ 100)."} ${N.ramp > 8 ? "Fitness is ramping fast: watch fatigue." : ""}</div>`;
 }
 /* ================= training calendar: month grid or agenda, one day open below with what's on it ================= */
 const hmOf = m => `${Math.floor(m / 60)}h${String(r0(m % 60)).padStart(2, "0")}`;
@@ -9873,7 +9921,7 @@ VIEWS.today = function () {
   const arrow = (v, b, inv) => v == null || b == null || Math.abs(v - b) < Math.max(1, b * 0.03) ? "" : `<em class="${(v > b) !== !!inv ? "up" : "dn"}">${v > b ? "↑" : "↓"}</em>`;
   const vit = (l, v, u, sub) => `<div class="td-v"><small>${l}</small><b>${v ?? "—"}${v != null && u ? `<i>${u}</i>` : ""}</b>${sub ? `<span>${sub}</span>` : ""}</div>`;
   const body = `<button class="td-card td-body" data-act="open-checkin" data-date="${today}"><div class="td-ov"><span>Body</span><span class="t-${rTone}">${ready === "green" ? "Ready" : ready === "yellow" ? "Reduced" : ready === "red" ? "Low" : "Check in"}</span></div>
-    <div class="td-vs">${vit("Sleep", sl ? r1(sl) : null, "h", sl7 ? `${arrow(sl, sl7)}vs ${r1(sl7)}` : "")}${vit("HRV", hv ? r0(hv) : null, "ms", L.hrvOk ? `${arrow(hv, L.hrvBase)}vs ${r0(L.hrvBase)}` : "")}${vit("Resting HR", rh, "", L.base ? `${arrow(rh, L.base, true)}vs ${r0(L.base)}` : "")}${N ? vit("Form", `${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}`, "", esc(N.zone[1])) : ""}</div></button>`;
+    <div class="td-vs">${vit("Sleep", sl ? r1(sl) : null, "h", sl7 ? `${arrow(sl, sl7)}vs ${r1(sl7)}` : "")}${vit("HRV", hv ? r0(hv) : null, "ms", L.hrvOk ? `${arrow(hv, L.hrvBase)}vs ${r0(L.hrvBase)}` : "")}${vit("Resting HR", rh, "", L.base ? `${arrow(rh, L.base, true)}vs ${r0(L.base)}` : "")}${N ? vit("Form", `${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}`, "", N.zone ? esc(N.zone[1]) : "") : ""}</div></button>`;
 
   /* ---- fuel ---- */
   const tot = dayTotals(getDay(today)), eat = eatenFor(today), base = eat.kcal ? eat : tot, nx = left[0]?.w;
@@ -11639,18 +11687,18 @@ function eatCandidates(w, date) {
   const out = [], fit = FIT(), min = parseMinutes(w?.min) || 0; if (!w || !w.sport || w.sport === "Rest" || !(min > 0)) return out;
   const kg = trendAt(date), rest = energyAt(date).bmr / 1440, run = w.sport === fit.runSport, walk = isWalkSport(w.sport), km = +w.km || 0, strength = isStrength(w.sport);
   if ((run || walk) && km > 0.3) {
-    const v = km * 1000 / min, g = Math.max(0, (+w.elev || 0) / (km * 1000)), vo2 = run ? 0.2 * v + 0.9 * v * g : 3.85 + 5.97 * (v / 60) ** 2 / ((FIT().profile.height || 175) / 100) + 1.8 * v * g, ok = run ? v >= 100 && v <= 400 : v >= 40 && v <= 130;
+    const v = km * 1000 / min, g = Math.max(0, (+w.elev || 0) / (km * 1000)), vo2 = run ? 0.2 * v + 0.9 * v * g : 3.85 + 5.97 * (v / 60) ** 2 / (heightCm() / 100) + 1.8 * v * g, ok = run ? v >= 100 && v <= 400 : v >= 40 && v <= 130;
     out.push({ m: "acsm", kcal: r0(vo2 * kg * min / 1000 * AEE_KCAL_PER_L), q: ok && w.elev ? "high" : ok ? "medium" : "low", note: `${run ? "running" : "walking"} equation from pace${w.elev ? " and climb" : ", flat assumed"}` });
   }
   const kc = +w.kcal > 0 ? +w.kcal : +w.watch > 0 ? +w.watch : 0;
   if (kc > 0) { const basis = devById(devOf(w))?.kcal || "unknown"; out.push({ m: "device", kcal: basis === "net" ? r0(kc) : Math.max(0, r0(kc - rest * min)), q: basis === "unknown" ? "low" : "medium", note: basis === "net" ? "sensor value, already net" : `sensor value minus ${r0(rest * min)} kcal of resting energy${basis === "unknown" ? " (what it counts is not set)" : ""}` }); }
-  if (+w.hr > 0 && !strength) out.push({ m: "hr", kcal: Math.max(0, r0(keytel(+w.hr, kg, ageAt(date), fit.profile.sex) * fit.run.hrCal * min - rest * min)), q: "low", note: "from heart rate (Keytel), net of rest" });
+  if (+w.hr > 0 && !strength) out.push({ m: "hr", kcal: hrKcal({ ...w, min }, date, kg, true), q: "low", note: "from heart rate (Keytel), net of rest" });
   const sp = fit.sports.find(x => x.name === w.sport);
   out.push({ m: "met", kcal: Math.max(0, r0(Math.max(0, (sp?.met || 5) * (fit.intMult[w.int || "Moderate"] || 1) - 1) * kg / 60 * min)), q: "low", note: "generic MET of the sport, net of the resting MET" });
   const order = run || walk ? ["acsm", "device", "hr", "met"] : strength ? ["device", "met"] : ["device", "hr", "met"];
   return out.filter(c => order.includes(c.m)).sort((a, b) => order.indexOf(a.m) - order.indexOf(b.m));
 }
-const stepKcal = (date, steps) => STEP_KCAL(trendAt(date), steps, FIT().profile.height);   // net walking cost 0.5 kcal/kg/km (ACSM walking, 0.1 ml/kg/m x 5 kcal/l); stride 0.415 x height
+const stepKcal = (date, steps) => STEP_KCAL(trendAt(date), steps);   // net walking cost 0.5 kcal/kg/km (ACSM walking, 0.1 ml/kg/m x 5 kcal/l); stride 0.415 x height
 const ambulatory = date => sessionsFor(date).list.some(w => w.sport && w.sport !== "Rest" && (w.sport === FIT().runSport || isWalkSport(w.sport)));
 const medianOf = a => { if (!a.length) return null; const x = [...a].sort((p, q) => p - q), h = x.length >> 1; return x.length % 2 ? x[h] : (x[h - 1] + x[h]) / 2; };
 /* the part of NEAT that steps don't show: the median of (watch NEAT - steps NEAT) over past days with both and no run or walk. Needs 14 days. */
@@ -11697,7 +11745,7 @@ const profileNote = () => { const g = profileGaps(); return g.length ? `<div cla
 function energyView() {
   const s = energySeries(), today = todayISO(), r = s.rows[today] || energyAt(today), E = FIT().energy, prof = FIT().profile;
   if (!r) return `<div class="note">Add your profile (Settings → Profile) and a weight to see your energy numbers.</div>`;
-  const age = prof.dob ? Math.floor(daysBetween(prof.dob, today) / 365.25) : 30, w = r.trend, h = prof.height || 175, F = prof.sex === "Female", bf = r.bf;
+  const age = ageAt(today), w = r.trend, h = heightCm(), F = prof.sex === "Female", bf = r.bf;
   const mif = 10 * w + 6.25 * h - 5 * age + (F ? -161 : 5), hb = hbOriginal(w, h, age, F), th = tenHaafWeight(w, h / 100, age, F), km = bf != null ? 370 + 21.6 * w * (1 - bf / 100) : null;
   const last = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const x = s.rows[addDays(today, -i)]; if (x) out.push(x); } return out; };
   const prev7 = [...Array(7)].map((_, i) => s.rows[addDays(today, -(i + 1))]).filter(Boolean);   // Day by day starts at yesterday: today is the big number above
@@ -11716,7 +11764,8 @@ function energyView() {
   hh += `<div class="section-h"><h2>Basal metabolism</h2><span class="faint" style="font-size:12.5px">${esc(bmrUsed === "MET" ? "MET (kg × 24)" : bmrUsed)} in use</span></div>
     <div class="stat-grid ${tiles.length === 4 ? "four" : "tri"}">${tiles.map(t => kpi(t[1], t[2], t[3])).join("")}</div><div class="faint" style="font-size:12.5px">The other formulas, for ${age} y · ${h} cm · ${r1(w)} kg${bf != null ? ` · ${r1(bf)}% fat` : ""}.${bonus > 0 || bmrUsed === "MET" ? ` Used today: <b>${fmtN(r.bmr)} kcal</b> (${bmrUsed === "MET" ? "kg × 24" : `Harris-Benedict plus a lean bonus of ${fmtN(bonus)}`}).` : ""}</div>`;
   hh += aeeShadowCard();
-  hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT ${E.watchMode === "off" ? "uses the default" : "comes from your watch when it's logged, otherwise the last 7 days"} (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value. The correction compares what you ate with how your weight moved (${fmtN(E.kcalPerKg)} kcal per kg).</div>`;
+  const kpk = kpkAt(today, r.trend, r.bf), kpkBy = kpk !== E.kcalPerKg ? `, by your ${r1(r.bf)}% body fat` : "";
+  hh += accuracyHTML() + `<div class="faint" style="font-size:12.5px">NEAT comes from your watch when it's logged${E.neatMode !== "off" ? ", otherwise from your steps" : ""}, otherwise the average of the last 7 days (${fmtN(E.neat)} kcal by default). TEF = ${r0(E.tef * 100)}% of what you burn. Training uses the session's heart rate, pace or MET value${hrNetOn(today) ? ", net of resting energy" : ""}. The correction compares what you ate with how your weight moved (${fmtN(kpk)} kcal per kg${kpkBy}).</div>`;
   const pts = k => last(42).filter(x => x[k] != null).map(x => [x.d, r0(k === "intake" ? x.intake.kcal : x[k])]);
   /* seven-day averages: the day-to-day swings of intake and training make a daily line a saw; the average shows where you are going */
   const roll7 = P => P.map(([d], i) => { const w = P.filter(([e]) => e <= d && e >= addDays(d, -6)); return [d, r0(w.reduce((a, q) => a + q[1], 0) / w.length)]; });
@@ -11729,7 +11778,7 @@ function energyView() {
    Nothing is computed here: every figure is read from today's energy row (energySeries), the sessions' figures and their provenance (sessionSource = sessionKcal), the target (targetsFor) and the
    algorithm list (ALGO). The formula texts write out the coefficients bmrOf uses, with today's inputs. Each figure is shown once. */
 function bmrText(m, r, prof) {
-  const kg = r1(r.trend), cm = prof.height || 175, a = r.age, F = prof.sex === "Female";
+  const kg = r1(r.trend), cm = heightCm(), a = r.age, F = prof.sex === "Female";
   return {
     "Mifflin-St Jeor": `10 × ${kg} kg + 6.25 × ${cm} cm − 5 × ${a} y ${F ? "− 161" : "+ 5"}`,
     "Harris-Benedict": F ? `655.0955 + 9.5634 × ${kg} kg + 1.8496 × ${cm} cm − 4.6756 × ${a} y` : `66.473 + 13.7516 × ${kg} kg + 5.0033 × ${cm} cm − 6.755 × ${a} y`,
@@ -11747,6 +11796,7 @@ function explainHTML() {
   const nx = r.nx || {}, NEAT = {
     watch: () => nx.mode === "neat" ? "your watch's non-exercise figure" : `watch ${fmtN(nx.watch)} ${nx.mode === "total" ? "total − BMR" : "active"} − ${fmtN(nx.sub)} of workouts`,
     steps: () => `${fmtN(nx.steps)} steps cost ${fmtN(nx.stepK)} + ${fmtN(nx.base)} the steps don't show (median of ${nx.n} days with your watch figure)`,
+    stepsProj: () => `${fmtN(nx.so)} steps so far, about ${fmtN(nx.steps)} by tonight: they cost ${fmtN(nx.stepK)} + ${fmtN(nx.base)} the steps don't show (median of ${nx.n} days with your watch figure)`,
     stepsRef: () => `${fmtN(nx.steps)} steps cost ${fmtN(nx.stepK)} (Ludlow-Weyand walking) + ${fmtN(nx.base)} the steps don't show (default NEAT at ${fmtN(nx.ref)} steps)`,
     stepsRefProj: () => `${fmtN(nx.so)} steps so far, about ${fmtN(nx.steps)} by tonight: they cost ${fmtN(nx.stepK)} (Ludlow-Weyand walking) + ${fmtN(nx.base)} the steps don't show`,
     avg: () => `average of the last ${nx.n} days${nx.amb ? " (a run or walk today: its steps are in training)" : ""}`,
@@ -12603,7 +12653,7 @@ function sleepTonight(d = todayISO()) {
   if (st >= 10000 && st14.length >= 5 && st >= 1.5 * st14.reduce((a, v) => a + v, 0) / st14.length) add("neat", `Very active day (${fmtN(st)} steps)`, .25);
   const Ld = logGet(d) || {}, nap = (Ld.naps || []).reduce((a, n) => a + (+n.min || 0), 0) + (Ld.naps ? 0 : +Ld.nap || 0); if (nap >= 10) add("nap", `Napped ${r0(nap)} min`, -Math.min(.5, Math.round(nap / 60 * 50) / 100));
   const extra = parts.slice(1).reduce((a, x) => a + x.h, 0), t = clamp(tgt + Math.min(1.5, extra), Math.max(5, tgt - .5), 10), bed = hm2h(P.wake) - t - .25, bh = ((bed % 24) + 24) % 24;
-  return { t, parts, why: parts.slice(1).map(x => x.label.charAt(0).toLowerCase() + x.label.slice(1)), bed: `${String(Math.floor(bh)).padStart(2, "0")}:${String(Math.round((bh % 1) * 60 / 5) * 5 % 60).padStart(2, "0")}`, debt, avg7: s7.length ? s7.reduce((a, b) => a + b, 0) / s7.length : null };
+  return { t, parts, why: parts.slice(1).map(x => x.label.charAt(0).toLowerCase() + x.label.slice(1)), bed: btHM(Math.round(bh * 12) / 12), debt, avg7: s7.length ? s7.reduce((a, b) => a + b, 0) / s7.length : null };
 }
 /* your data: after a short night (< 6.5 h) vs a good one (≥ 7.5 h), how intake vs target and training change that day; and how you sleep after heavy days */
 function sleepLinks(days = 120) {
@@ -13946,7 +13996,7 @@ const FOLD_SUM = {
   "Race circuits": () => raceSel().fire.name,
   "Endurance Cup ranking": () => { const q = raceSeason(), b = raceBestIn(raceSel().fire.name, q); return `${q.name} · ${b != null ? "Fire Set " + fmtClock(b) : "no Fire Set yet"}`; },
   "All results": () => `${recRows().length} entries · edit or delete`,
-  "Fitness curve": () => { const F = fitnessNow(); return F ? `Form ${F.pct > 0 ? "+" : ""}${r0(F.pct)}%` : "Needs a few sessions"; },
+  "Fitness curve": () => { const F = fitnessNow(); return F?.pct != null ? `Form ${F.pct > 0 ? "+" : ""}${r0(F.pct)}%` : "Needs a few sessions"; },
   "Training minutes · last 8 weeks": () => { let m = 0; for (let i = 0; i < 56; i++) for (const w of logGet(addDays(todayISO(), -i))?.workouts || []) m += +w.min || 0; return m ? `${minTxt(m)} in 8 weeks` : "No sessions yet"; },
   "Weekly running goal": () => { const k = runWeek(weekStartOf(todayISO())).km; return `${r1(k)} km this week`; },
   "Race predictions": () => { const p = runState().preds.find(x => x.km === 5); return p?.sec ? `5k ${fmtClock(p.sec)} · from VDOT` : "Log a race or a test"; },
@@ -14185,10 +14235,12 @@ function modelCheck(days = 28) {
   return memo("mcheck" + days, () => {
     const s = energySeries(), today = todayISO(), E = FIT().energy, o = obsRate(days); const L = [];
     for (let i = days; i >= 1; i--) { const r = s.rows[addDays(today, -i)]; if (r?.intake && !r.intake.est) L.push(r); }
-    if (L.length < 10 || !o) return { nI: L.length, nW: o?.n || 0 };
+    // the weigh-ins are counted on their own: under 8 the slope (obsRate) is null, but «now 6 and 0» would say none were logged
+    let nW = 0; for (let i = days - 1; i >= 0; i--) if (s.rows[addDays(today, -i)]?.real) nW++;
+    if (L.length < 10 || !o) return { nI: L.length, nW };
     const av = f => L.reduce((a, r) => a + f(r), 0) / L.length;
     const eat = av(r => r.intake.kcal), formula = av(r => r.tdeeW), used = av(r => r.tdee), kpk = kcalPerKgFor(L[L.length - 1].trend, L[L.length - 1].bf, E), measured = eat - o.kgDay * kpk;
-    const plan = av(r => +r.phase?.kcal || 0);
+    const plan = av(r => phaseKcal(r.phase, r.tdee));   // a Maintenance % counts as the kcal it takes off that day
     return { nI: L.length, nW: o.n, eat, formula, used, measured, real: eat - measured, plan, expKg: (eat - formula) * days / kpk, actKg: o.kgDay * days, gap: measured - formula };
   });
 }
@@ -14787,7 +14839,8 @@ function btDay(d = todayISO()) {
   return { ...c, d: base, series, end, cur, sleeping, byWake: sleeping ? c.E(c.W + 24) : null, wake, now, atBed, low: Math.min(...done.map(p => p.e)), charged: wake - prev.E(prev.bed), conf,
     parts: { pressure: 100 * (1 - (cur <= c.bed ? btPressure(base, c.S0, cur) : btDown(btPressure(base, c.S0, c.bed), clamp(cur - c.bed, 0, c.sleepNext)))), adj: cur <= c.bed ? c.V.adj : 0, fatigue: c.fat(cur) } };
 }
-const btHM = h => { const x = ((h % 24) + 24) % 24; return String(Math.floor(x)).padStart(2, "0") + ":" + String(Math.round((x % 1) * 60) % 60).padStart(2, "0"); };
+/* hours -> "HH:MM": the total minutes are rounded first, so 22.995 h is 23:00 (not 22:00) and 23.999 h is 00:00 */
+const btHM = h => { const m = ((Math.round(h * 60) % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
 const btPct = x => r0(x) + "%";
 function btChart(D, big) {
   const W = 320, H = big ? 132 : 48, X = h => 3 + (h - D.W) / (D.end - D.W) * (W - 6), Y = e => H - 4 - e / 100 * (H - 8), P = a => a.map((p, i) => `${i ? "L" : "M"}${X(p.h).toFixed(1)} ${Y(p.e).toFixed(1)}`).join(""), past = D.series.filter(p => p.h <= D.cur + 1e-9), fut = D.today ? D.series.filter(p => p.h >= D.cur - 1e-9) : [];
@@ -15516,7 +15569,7 @@ function yGaps() {
 }
 function yesterdayCard() { const G = yGaps(); if (!G) return ""; const d = G.d, n = (G.weight ? 1 : 0) + (G.supp.length ? 1 : 0) + (G.food ? 1 : 0) + G.wo.length;
   const last = weightsSeries().pop(), L = logGet(d) || {}, kc = intakeFor(d), ses = daySessions(d).filter(x => x.st === "done").length;
-  const sum = [kc ? `${fmtN(kc)} kcal eaten` : "", ses ? `${ses} session${ses > 1 ? "s" : ""} done` : "", L.sleep > 0 ? `${r1(L.sleep)} h sleep` : "", L.weight > 0 ? `${r1(L.weight)} kg` : ""].filter(Boolean).join(" · ");
+  const sum = [kc ? `${fmtN(kc.kcal)} kcal eaten` : "", ses ? `${ses} session${ses > 1 ? "s" : ""} done` : "", L.sleep > 0 ? `${r1(L.sleep)} h sleep` : "", L.weight > 0 ? `${r1(L.weight)} kg` : ""].filter(Boolean).join(" · ");
   const row = (ico, label, body) => `<div class="yd-r2"><span class="yd-i">${ic(ico, "sm")}</span><span class="yd-l">${label}</span>${body}</div>`;
   return `<section class="td-card yd2" aria-label="Yesterday"><div class="td-ov"><span>${ic("calendar", "sm")}Yesterday · ${n} to fill in</span><button class="link" data-act="yd-ok">Dismiss</button></div>
     ${sum ? `<div class="yd-sum">${esc(sum)}</div>` : ""}
@@ -15616,14 +15669,14 @@ function glanceHTML() {
   const t1 = tile("tab", 'data-tab="plan"', "bolt", "Energy", none ? "0" : left >= 0 ? fmtN(left) : "+" + fmtN(-left), none ? "kcal eaten" : left >= 0 ? "kcal left" : "kcal over", none ? "" : pLeft > 0 ? `${r0(pLeft)} g protein to go` : "Protein target reached", left < -150 ? "warn" : "", `<span class="gl-bar${left < 0 ? " over" : ""}"><i style="width:${pct}%"></i></span>`);
   const t2 = FEAT("battery") ? (() => { const B = btDay(), [word, lvl] = btState(B);
     return tile("bt-open", `aria-label="Energy battery, ${btPct(B.now)}, ${word}. Open the details"`, "bolt", "Battery", r0(B.now), "%", `${napOn() ? `Napping since ${napOn().at}` : `${word} · ${btPct(B.atBed)} at bedtime`}`, "", `<span class="gl-bar bt-${lvl}"><i style="width:${clamp(B.now, 0, 100)}%"></i></span>`); })()
-    : D && !D.none ? tile("tab", 'data-tab="plan"', "trend", D.proj <= 0 ? "Deficit" : "Surplus", sg(D.proj), "kcal", `${D.done ? "so far" : "if you eat the plan"} · cut set ${sg(D.set)}`, "")
+    : D && !D.none ? tile("tab", 'data-tab="plan"', "trend", D.proj <= 0 ? "Deficit" : "Surplus", sg(D.proj), "kcal", `${D.done ? "so far" : "if you eat the plan"} · ${phaseWord(D.phase)} set ${sg(D.set)}`, "")
     : tile("tab", 'data-tab="plan"', "trend", "Balance", "—", "", "Plan or log food to see it", "");
   const has = weightsSeries().length, a = has ? trendSimple(t) : null, b = has ? trendSimple(addDays(t, -7)) : null;
   const pts = has ? [...Array(14)].map((_, i) => trendSimple(addDays(t, i - 13))).filter(v => v > 0) : [], lo = Math.min(...pts), hi = Math.max(...pts), span = Math.max(0.4, hi - lo);
   const spark = pts.length > 2 ? `<svg class="gl-sp" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.map((v, i) => `${(i / (pts.length - 1) * 100).toFixed(1)},${(22 - (v - lo) / span * 20).toFixed(1)}`).join(" ")}"/></svg>` : "";
   const we = a ? weightEstNow() : null, t3 = we ? tile("tab", 'data-tab="progress"', "weight", "Weight trend", "≈ " + r1(we.kg), "kg", `estimated · last weigh-in ${we.since} days ago`, "", spark)
     : tile("tab", 'data-tab="progress"', "weight", "Weight trend", a ? r1(a) : "—", a ? "kg" : "", a && b ? `${sgn(a - b)} kg in 7 days` : "Weigh in to start the trend", "", spark);
-  const t4 = tile("train-seg", 'data-k="perf"', "pulse", "Form", F ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", F ? "%" : "", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
+  const t4 = tile("train-seg", 'data-k="perf"', "pulse", "Form", F?.pct != null ? `${F.pct > 0 ? "+" : ""}${r0(F.pct)}` : "—", F?.pct != null ? "%" : "", L.ready === "green" ? "Ready to train" : L.ready === "yellow" ? "Readiness reduced" : L.ready === "red" ? "Low readiness" : "Add sleep and HRV for readiness", L.ready === "red" ? "warn" : "");
   return `<div class="glance">${t1}${t2}${t3}${t4}</div>`;
 }
 /* ================= deleted foods: a bin for 3 days (restore with one tap), then gone for good ================= */
