@@ -201,8 +201,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 @media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
 /* expanded (computer): calendar and the open day side by side */
 .cv-split{display:flex;flex-direction:column;gap:14px}
-.cv-next{display:none}
-@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
+.cv-next,.cv-month,.cv-meals{display:none}.cv-head{display:contents}
+@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-month{display:flex;flex-direction:column;gap:10px;padding:14px 16px}.cv-month .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.cv-meals{display:flex;flex-direction:column;margin-top:8px}.cv-meals .flabel{padding:0 0 2px}.cv-meals .lrow{padding:7px 0!important;min-height:0;font-size:14px}.cv-meals .lrow .t{font-size:14px}.cv-meals .lrow .num{font-size:13.5px}.cv-meals .flabel+.lrow{border-top:0}.cv-kpi .cv-mt{display:none}.cv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cv-head .cv-top{display:contents}.cv-head .cv-kpi{order:1;margin-left:auto}.cv-head .subseg{order:2}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
+@media (min-width:1500px){.cv-split{grid-template-columns:minmax(0,1fr) 380px!important}}
 /* expanded: settings groups in two columns */
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
 
@@ -299,7 +300,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rce-l .blk{grid-column:1/-1;margin:2px 0 0;font-size:11.5px;color:var(--muted)}.rce-l small{opacity:.7;font-size:11.5px}.rce-sx{display:flex;gap:6px}.rce-sx span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:10px;background:var(--surface-2);font-size:13px}.rce-sx span b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rce-sx span small{color:var(--muted);font-variant-numeric:tabular-nums}.rce-sx span.now{background:var(--accent);color:var(--accent-ink)}.rce-sx span.now small{color:inherit;opacity:.8}.rce-sx span.ok small{color:var(--good)}
 .rk-t>div{grid-template-columns:minmax(0,1.5fr) 1fr 1fr 1fr!important;gap:6px!important;font-size:12.5px!important}.rk-t .you{background:var(--accent-soft);border-radius:8px;font-weight:600}.rk-nm{max-width:220px}.rk-paste summary{padding:6px 0}
 
-.tools{width:100%;max-width:880px;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px}.tc-out{display:flex;flex-direction:column;gap:8px}
+.tools{width:100%;max-width:880px;display:flex;flex-direction:column;gap:12px;min-width:0}.tools>*,.tools .rec-sec,.tools .rec-b,.tc-out,.tc-out .card,.tc-f .field{min-width:0}.tc-f .inp,.tc-f .unit-inp{min-width:0;width:100%}.tools .lab-t{overflow-x:auto}.tools>.top{margin-bottom:0}.tools .tm-modes{margin:0}.tools section.card.pad{display:flex;flex-direction:column;gap:14px}.tc-list{display:flex;flex-direction:column;gap:10px}.tc-f{display:grid;grid-template-columns:repeat(var(--nm),minmax(0,1fr));gap:10px}@media (min-width:560px){.tc-f{grid-template-columns:repeat(var(--n),minmax(0,1fr))}}@media (max-width:559px){.tc-f .tc-w{grid-column:1/-1}}.tc-f .inp{padding-left:10px}.tc-f .unit-inp .inp{padding-right:36px}.tc-f .unit-inp .inp:only-child{padding-right:10px}.tc-f .unit-inp span{right:9px}.tc-out{display:flex;flex-direction:column;gap:8px}
 .chip.doms.l1{background:color-mix(in srgb,var(--warn) 14%,var(--surface-2))}.chip.doms.l2{background:color-mix(in srgb,var(--warn) 32%,var(--surface-2))}.chip.doms.l3{background:color-mix(in srgb,var(--bad) 30%,var(--surface-2))}
 .rec-sec{display:flex;flex-direction:column;border-radius:var(--r-card,20px);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .rec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;text-align:left;color:var(--ink)}.rec-h>span{display:flex;flex-direction:column;gap:2px;min-width:0}.rec-h b{font-family:var(--display);font-size:17px;font-weight:600}.rec-h small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2616,8 +2617,8 @@ details[open]>summary:not(.lrow)::after,.nut-more[open] summary::after,.fd-more[
 details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px!important;height:18px!important;border:0!important;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 10l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;transform:none!important;margin-right:2px!important}details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::after{transform:rotate(180deg)!important}
 /* Tools: left-aligned like every other view; the 1RM output has one right-hand axis (formula list, range, reps table) */
 .tc-out .card{box-shadow:none!important}
-.tc-out .an-g>.an-k:last-child{text-align:right;align-items:flex-end;padding-right:14px}
-.tc-reps>div{display:grid;grid-template-columns:minmax(0,1fr) 84px 52px;gap:0 12px;padding:7px 14px;align-items:baseline}.tc-reps>div>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+.tc-out .an-g>.an-k:last-child{text-align:right;align-items:flex-end;padding-right:14px}.tc-top{grid-template-columns:auto auto!important;justify-content:space-between}.tc-top b{white-space:nowrap}.tc-one .lrow{padding-inline:14px!important}.tc-out .lrow .s{white-space:normal}
+.tc-reps>div{display:grid;grid-template-columns:minmax(0,1fr) 52px 84px;gap:0 12px;padding:7px 14px;align-items:baseline}.tc-reps>div>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
 .tc-reps b{font-weight:600}
 /* calendar tools: Route, intervals.icu and Import are one kind of control (text buttons) */
 .cv-tools .chip-a{background:none!important;color:var(--md-primary)!important;font-weight:600!important;font-size:inherit;min-height:34px;padding:0 12px;border-radius:var(--r-pill)!important}
@@ -4686,6 +4687,16 @@ function topFoods(dates, basis) {
 function chartW(half) { /* the width the chart really has (page next to the menu, minus padding), at most 1040 so the drawing is never stretched: text keeps its size */ const full = clamp(innerWidth - (innerWidth >= 1024 ? 288 : innerWidth >= 600 ? 96 : 0) - 64, 280, 1040); return half && innerWidth >= 560 ? Math.floor((full - 14) / 2) : full; }
 /* every how many columns a date label fits (about 52 px each: «14 Sept» is 40 px at 10.5 px), so neighbours never touch */
 const xStep = colW => Math.max(1, Math.ceil(52 / Math.max(1, colW)));
+/* the y-axis values of every chart: multiples of a round step (1, 2 or 5 × 10^k) inside lo..hi, about n intervals, whole numbers only when `whole`; at least three unless the range is tiny */
+function axisTicks(lo, hi, n = 4, whole) {
+  if (!(hi > lo)) return [lo];
+  const raw = (hi - lo) / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p * (1 - 1e-9);
+  let step = (m <= 1.5 ? 1 : m <= 3 ? 2 : m <= 7 ? 5 : 10) * p; if (whole) step = Math.max(1, step);
+  const out = []; for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9; k++) out.push(+(k * step).toFixed(10));
+  if (out.length < 3 && !whole && n < 16) return axisTicks(lo, hi, n * 2, whole);
+  return out.length ? out : [lo, hi];
+}
+const axisGrid = (ticks, y, x1, x2, fmt) => ticks.map(v => `<line class="gl" x1="${x1}" x2="${x2}" y1="${y(v)}" y2="${y(v)}"/><text x="${x1 - 6}" y="${y(v) + 3.5}" text-anchor="end">${fmt(v)}</text>`).join("");
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
@@ -4752,8 +4763,7 @@ function weightChart(ws) {
   const vs = ws.map(w => +w[1]); const lo = Math.floor(Math.min(...vs, ...est.map(e => e.kg)) - 0.5), hi = Math.ceil(Math.max(...vs, ...est.map(e => e.kg)) + 0.5);
   const x = s => L + (W - L - R) * (parseISO(s).getTime() - t0) / span;
   const y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1));
-  let g = ""; const step = Math.max(1, Math.ceil((hi - lo) / 4));
-  for (let v = lo; v <= hi; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => v);
   const ma = vs.map((_, i) => { const s = vs.slice(Math.max(0, i - 6), i + 1); return s.reduce((a, b) => a + b, 0) / s.length; });
   g += `<path d="${ws.map((w, i) => (i ? "L" : "M") + x(w[0]) + " " + y(ma[i])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
   ws.forEach((w, i) => g += `<circle cx="${x(w[0])}" cy="${y(vs[i])}" r="${i === n - 1 && !est.length ? 4.5 : 2.6}" fill="${i === n - 1 && !est.length ? "var(--accent)" : "var(--faint)"}"><title>${fmtDM(w[0])}: ${vs[i]} kg</title></circle>`);
@@ -4957,7 +4967,7 @@ function minutesChart() {
   const used = sports.filter(sp => weeks.some(w => w.m[sp]));
   const W = chartW(), H = 190, L = 34, R = 6, Tp = 8, B = 22; const mx = niceMax(Math.max(60, ...weeks.map(w => Object.values(w.m).reduce((a, b) => a + b, 0))));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx); const bw = (W - L - R) / 8, barW = bw * 0.6; let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, r0);
   weeks.forEach((w, i) => { let acc = 0; const x = L + i * bw + (bw - barW) / 2;
     used.forEach((sp, j) => { const v = w.m[sp] || 0; if (!v) return; g += `<rect x="${x}" y="${y(acc + v)}" width="${barW}" height="${y(acc) - y(acc + v)}" fill="var(--${SPORT_COLORS[j % 7]})"><title>${sp}: ${r0(v)} min</title></rect>`; acc += v; });
     if (i % xStep(bw) === 0) g += `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${fmtDM(w.s)}</text>`; });
@@ -4998,8 +5008,7 @@ function vdotChart(rs) {
   const pts = rs.T.filter(t => t.vdot).map(t => [t.date, t.vdot]); if (pts.length < 2) return `<div class="faint" style="font-size:13px">Log two tests or races to see the trend.</div>`;
   const W = chartW(true), H = 170, L = 32, R = 10, Tp = 10, B = 22; const t0 = parseISO(pts[0][0]).getTime(), t1 = parseISO(pts[pts.length - 1][0]).getTime() || t0 + 1;
   const lo = Math.floor(Math.min(...pts.map(p => p[1])) - 1), hi = Math.ceil(Math.max(...pts.map(p => p[1])) + 1);
-  const x = d => L + (W - L - R) * (parseISO(d).getTime() - t0) / Math.max(1, t1 - t0), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
-  for (let v = lo; v <= hi; v += Math.max(1, Math.ceil((hi - lo) / 4))) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  const x = d => L + (W - L - R) * (parseISO(d).getTime() - t0) / Math.max(1, t1 - t0), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => v);
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(p[0]) + " " + y(p[1])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>`;
   pts.forEach((p, i) => g += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="var(--accent)"><title>${fmtDM(p[0])}: ${r1(p[1])}</title></circle>`);
   g += `<text x="${L}" y="${H - 6}">${fmtDM(pts[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(pts[pts.length - 1][0])}</text>`;
@@ -5022,7 +5031,7 @@ function kmChart() {
   for (let k = 7; k >= 0; k--) { const s = addDays(ws0, -7 * k); wk.push([s, weekKm(s), kmGoalFor(s)]); }
   const W = chartW(true), H = 170, L = 30, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(10, ...wk.map(w => Math.max(w[1], w[2] * 1.15))));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx), bw = (W - L - R) / 8; let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, r0);
   wk.forEach(([s, km, goal], i) => { const x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${y(km)}" width="${bw * 0.6}" height="${y(0) - y(km)}" rx="3" fill="${goal > 0 && km >= goal ? "var(--good)" : "var(--fat)"}"><title>${fmtDM(s)}: ${r1(km)} km${goal ? ` · goal ${r1(goal)}` : ""}</title></rect>`;
     if (goal > 0) g += `<line x1="${L + i * bw + 2}" x2="${L + (i + 1) * bw - 2}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
     if (i % xStep(bw) === 0) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(s)}</text>`; });
@@ -5074,8 +5083,8 @@ function changeChart() {
   for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
   if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs logged food and weigh‑ins.</div>`;
   const W = chartW(true), H = 170, L = 34, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), lo = Math.min(-0.5, ...all), hi = Math.max(0.5, ...all);
-  const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
-  [lo, hi].forEach(v => g += `<text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r1(v)}</text>`);
+  const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
+  g += axisGrid(axisTicks(lo, hi, 3), y, L, W - R, r1);
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.e)).join(" ")}" fill="none" stroke="var(--carb)" stroke-width="2.2" stroke-dasharray="5 4"/>`;
   g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + x(i) + " " + y(p.a)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected and actual weight change">${g}</svg><div class="legend"><span><i style="background:var(--carb)"></i>From intake</span><span><i style="background:var(--accent)"></i>Trend weight</span></div>`;
@@ -5099,8 +5108,9 @@ function weekBalanceHTML() {
 }
 function balanceChart() {
   const W8 = weeklyTable().slice(-8); if (!W8.some(w => w.balance)) return `<div class="faint">No week with logged food yet.</div>`;
-  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.max(500, ...vals.map(Math.abs));
-  const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length; let g = `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/><text x="${L - 5}" y="${y(mx) + 8}" text-anchor="end">+${r1(mx / 1000)}k</text><text x="${L - 5}" y="${y(-mx)}" text-anchor="end">−${r1(mx / 1000)}k</text>`;
+  const W = chartW(true), H = 170, L = 40, R = 6, Tp = 10, B = 22, vals = W8.map(w => w.balance || 0), mx = Math.ceil(Math.max(500, ...vals.map(Math.abs)) / 250) * 250;
+  const y = v => Tp + (H - Tp - B) * (1 - (v + mx) / (2 * mx)), bw = (W - L - R) / W8.length;
+  let g = axisGrid(axisTicks(-mx, mx, 4, true), y, L, W - R, v => (v < 0 ? "−" : v > 0 ? "+" : "") + (Math.abs(v) >= 1000 ? Math.abs(v) / 1000 + "k" : Math.abs(v)));
   W8.forEach((w, i) => { const v = w.balance || 0, x = L + i * bw + bw * 0.2; g += `<rect x="${x}" y="${Math.min(y(v), y(0))}" width="${bw * 0.6}" height="${Math.abs(y(v) - y(0))}" rx="2" fill="var(--${v < 0 ? "fat" : "pro"})"><title>${fmtDM(w.ws)}: ${fmtN(v)} kcal</title></rect>`; if (i % 2 === 0 || W > 420) g += `<text x="${x + bw * 0.3}" y="${H - 6}" text-anchor="middle">${fmtDM(w.ws)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly energy balance">${g}</svg><div class="faint" style="font-size:12px">Intake minus TDEE over logged days</div>`;
 }
@@ -7895,8 +7905,7 @@ function journeyChart(D, goalW) {
   const s = D.s, ds = D.dates.slice(D.dates.indexOf(D.first)); if (ds.length < 2) return `<div class="faint">Needs a few days of data.</div>`;
   const pts = ds.map(d => s.rows[d]); const vals = pts.flatMap(r => [r.trend, r.real].filter(v => v)); if (goalW != null) vals.push(goalW);
   const W = chartW(), H = 220, L = 36, R = 10, Tp = 12, B = 24, lo = Math.floor(Math.min(...vals) - 0.5), hi = Math.ceil(Math.max(...vals) + 0.5), n = ds.length - 1;
-  const x = i => L + (W - L - R) * i / n, y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1)); let g = "";
-  const stp = Math.max(1, Math.ceil((hi - lo) / 5)); for (let v = lo; v <= hi; v += stp) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  const x = i => L + (W - L - R) * i / n, y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1)); let g = axisGrid(axisTicks(lo, hi, 5, true), y, L, W - R, v => v);
   if (goalW != null) g += `<line x1="${L}" x2="${W - R}" y1="${y(goalW)}" y2="${y(goalW)}" stroke="var(--good)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
   const line = pts.map((r, i) => r.trend ? (i && pts[i - 1].trend ? "L" : "M") + x(i).toFixed(1) + " " + y(r.trend).toFixed(1) : "").join(" ");
   g += `<path d="${line} L${x(n)} ${H - B} L${x(0)} ${H - B} Z" fill="var(--accent)" opacity=".08"/>`;
@@ -7911,7 +7920,7 @@ function weeklyIntakeChart() {
   const Wk = weeklyTable().filter(w => w.avgI).slice(-12); if (!Wk.length) return `<div class="faint">Log food for a week to see this.</div>`;
   const W = chartW(), H = 190, L = 40, R = 6, Tp = 10, B = 22, mx = niceMax(Math.max(...Wk.map(w => Math.max(w.avgI, w.avgTarget || 0))) * 1.05), bw = (W - L - R) / Wk.length;
   const y = v => Tp + (H - Tp - B) * (1 - v / mx); let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${fmtN(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - R, fmtN);
   Wk.forEach((w, i) => { const x0 = L + i * bw, cx = x0 + bw / 2, bwid = Math.min(26, bw * 0.6), dev = w.avgTarget ? (w.avgI - w.avgTarget) / w.avgTarget : 0;
     g += `<rect x="${cx - bwid / 2}" y="${y(w.avgI)}" width="${bwid}" height="${y(0) - y(w.avgI)}" rx="4" fill="var(--accent)" opacity="${w.inProgress ? .45 : Math.abs(dev) <= 0.1 ? 1 : .7}"><title>Week of ${fmtDM(w.ws)}: ${fmtN(w.avgI)} kcal a day vs ${fmtN(w.avgTarget || 0)} target</title></rect>`;
     if (w.avgTarget) g += `<line x1="${cx - bwid / 2 - 4}" x2="${cx + bwid / 2 + 4}" y1="${y(w.avgTarget)}" y2="${y(w.avgTarget)}" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>`;
@@ -7961,12 +7970,12 @@ function pmcChart(days = 120) {
   const x = i => L + (W - L - Rr) * i / n, y = v => Tp + (mid - Tp) * (1 - v / mx), yl = v => mid - (mid - Tp) * 0.45 * v / lmx;
   const fy = v => mid + 10 + (H - B - mid - 10) * (0.5 - v / (2 * fr));
   let g = "";
-  for (let i = 0; i <= 4; i++) { const v = mx * i / 4; g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${r0(v)}</text>`; }
+  g += axisGrid(axisTicks(0, mx, 4, true), y, L, W - Rr, r0);
   // load bars
   const bw = Math.max(1, (W - L - Rr) / (n + 1) * 0.7);
   R.forEach((r, i) => { if (r.tl > 0) g += `<rect x="${x(i) - bw / 2}" y="${yl(r.tl)}" width="${bw}" height="${mid - yl(r.tl)}" fill="var(--faint)" opacity="${r.fut ? .25 : .45}"><title>${fmtDM(ds[i])}: load ${r0(r.tl)}</title></rect>`; });
   // form band
-  g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${fy(0)}" y2="${fy(0)}"/><text x="${W - Rr + 5}" y="${fy(0) + 3.5}">0</text><text x="${W - Rr + 5}" y="${fy(-fr * .8) + 3.5}">−${r0(fr * .8)}</text>`;
+  g += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${fy(0)}" y2="${fy(0)}"/>${axisTicks(-fr, fr, 4, true).filter(v => Math.abs(v) < fr * .92).map(v => `<text x="${W - Rr + 5}" y="${fy(v) + 3.5}">${v < 0 ? "−" : v > 0 ? "+" : ""}${Math.abs(v)}</text>`).join("")}`;
   for (const [lo, hi, c] of [[-30, -10, "accent"], [5, 25, "good"]]) { const pl = v => fy(v / 100 * (F.now?.ctl || 40)); g += `<rect x="${L}" width="${W - L - Rr}" y="${pl(hi)}" height="${Math.max(0, pl(lo) - pl(hi))}" fill="var(--${c})" opacity=".09"/>`; }
   const path = (key, from, to, fn) => R.slice(from, to + 1).map((r, j) => (j ? "L" : "M") + x(from + j).toFixed(1) + " " + fn(r[key]).toFixed(1)).join(" ");
   const line = (key, c, fn, w) => `<path d="${path(key, 0, ti, fn)}" fill="none" stroke="var(--${c})" stroke-width="${w}" stroke-linejoin="round"/><path d="${path(key, ti, n, fn)}" fill="none" stroke="var(--${c})" stroke-width="${w}" stroke-dasharray="4 4" opacity=".75"/>`;
@@ -7998,6 +8007,11 @@ function calItem(d, x, k, narrow) {
   if (narrow) return `<span class="cv-bar ${x.st}" style="--c:${calColor(x)}"${drag}></span>`;
   return `<span class="cv-s ${x.st}" data-act="wo-open" ${dsAttr(d, x, k)}${drag} role="button" tabindex="0" style="--c:${calColor(x)}"><b>${esc(shortSport(w.sport))}</b><i>${w.min ? r0(w.min) + "′" : ""}${w.km ? ` ${r1(w.km)}k` : ""}</i></span>`;
 }
+/* PC only (the side column has the room): what the day holds at the table, one row per meal with food, opening that day in Fuel */
+function calMealRows(d) {
+  const day = S.days[d], ml = day ? activeMeals().map(m => [m.name, mealTotals(day.meals?.[m.id] || []), (day.meals?.[m.id] || []).length]).filter(x => x[2]) : [];
+  return ml.length ? `<div class="cv-meals"><span class="flabel">Meals</span>${ml.map(([n, t, c]) => `<button class="lrow" data-act="open-day-plan" data-date="${d}"><span style="min-width:0"><span class="t">${esc(n)}</span><span class="s">${c} food${c > 1 ? "s" : ""}</span></span><span class="end num">${fmtN(r0(t.kcal))} kcal</span></button>`).join("")}</div>` : "";
+}
 function calDayPanel(d) {
   const today = todayISO(), its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d), L = logGet(d) || {};
   const rows = its.map((x, k) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null;
@@ -8008,9 +8022,12 @@ function calDayPanel(d) {
       <div class="row" style="gap:6px">${d >= today ? `<button class="btn tonal sm" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}">${ic(UI.clip ? "copy" : "plus", "sm")}${UI.clip ? "Paste" : "Plan"}</button>` : ""}${d > today ? `<button class="btn soft sm" data-act="rc-new" data-date="${d}">${ic("flag", "sm")}Race</button>` : ""}<button class="btn soft sm" data-act="open-checkin" data-date="${d}">${ic("edit", "sm")}${d <= today ? "Log" : "Edit"}</button></div></div>
     ${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${esc(r.sport || "Race")}${r.km ? ` · ${r1(r.km)} km` : ""}${r.goal ? ` · goal ${esc(r.goal)}` : ""}</small></span><span class="cv-st">${r.pri || ""}-race</span></button>`).join("")}
     ${rows || `<div class="cv-empty">${d < today ? "Nothing logged · rest day" : "Rest day"}</div>`}
-    <button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
+    ${calMealRows(d)}<button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
 }
-/* the right-hand column of the calendar on a PC: the open day, then the sessions still to come */
+/* the right-hand column of the calendar on a PC: the open day, the month's totals (the line above the grid shows them on smaller screens), then the sessions still to come */
+function calMonthCard(done, plan, future, min, km, tl) {
+  return `<section class="card cv-month" aria-label="This month"><span class="flabel">This month</span>${done || plan ? `<div class="stat-grid">${kpi(`${done}${plan && future ? ` / ${plan}` : ""}`, "sessions")}${kpi(hmOf(min), "time")}${kpi(km ? r1(km) : "0", "km")}${kpi(fmtN(r0(tl)), "load")}</div>` : `<div class="faint" style="font-size:13px">No sessions this month</div>`}</section>`;
+}
 function calNextCard(sel) {
   const today = todayISO(), L = [];
   for (let i = 0; i <= 14 && L.length < 5; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 5) L.push([d, x]); }
@@ -8026,9 +8043,9 @@ function trainCalendar() {
   // month totals
   let mMin = 0, mKm = 0, mTl = 0, mDone = 0, mPlan = 0;
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
-  let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
+  let h = clipBar() + `<div class="cv-head"><div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
     ${subBar("cal-view", view, [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>
-    <div class="cv-kpi">${mDone || mPlan ? `<span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span>` : `<span>No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
+    <div class="cv-kpi">${mDone || mPlan ? `<span class="cv-mt"><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span class="cv-mt"><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span class="cv-mt"><b>${r1(mKm)}</b> km</span>` : ""}<span class="cv-mt"><b>${fmtN(r0(mTl))}</b> load</span>` : `<span class="cv-mt">No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
     for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
@@ -8051,7 +8068,7 @@ function trainCalendar() {
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
     h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}${T.n ? `<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>` : ""}${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
-  h += `</div><div class="cv-side">${calDayPanel(sel)}${calNextCard(sel)}</div></div>`;
+  h += `</div><div class="cv-side">${calDayPanel(sel)}${calMonthCard(mDone, mPlan, ms >= weekStartOf(today), mMin, mKm, mTl)}${calNextCard(sel)}</div></div>`;
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
     <div class="faint" style="font-size:12.5px">Tap a day to open it. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
@@ -11496,7 +11513,7 @@ function seriesChart(series, o = {}) {
   const vs = pts.map(p => p[1]); let lo = Math.min(...vs), hi = Math.max(...vs); const pad = Math.max((hi - lo) * 0.12, Math.abs(hi) * 0.03, o.minPad || 0.5); lo -= pad; hi += pad; if (o.zero && lo > 0) lo = 0;
   const x = d => L + (W - L - R) * (span ? daysBetween(d0, d) / span : 0.5), y = v => { const t = (v - lo) / (hi - lo || 1); return Tp + (H - Tp - B) * (o.invert ? t : 1 - t); };
   let g = "";
-  for (let i = 0; i <= 3; i++) { const v = lo + (hi - lo) * i / 3; g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${(o.fmt || r1)(v)}</text>`; }
+  g += axisGrid(axisTicks(lo, hi, 3, o.int), y, L, W - R, o.fmt || r1);
   const ticks = span < 1 ? [d0] : span < 2 ? [d0, d1] : [d0, addDays(d0, Math.round(span / 2)), d1];
   ticks.forEach((d, i) => { g += `<text x="${x(d)}" y="${H - 7}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : i === ticks.length - 1 && ticks.length > 1 ? "end" : "middle"}">${fmtDM(d)}</text>`; });
   for (const s of series) { if (!s.pts.length) continue; const P = [...s.pts].sort((a, b) => a[0].localeCompare(b[0]));
@@ -14340,10 +14357,10 @@ function calcPace(km, sec) { if (!(km > 0) || !(sec > 0)) return null; const v =
 function calcOut(sh) {
   if (sh.tab === "rm") { const w = num(sh.w), r = Math.round(num(sh.r)), bw = num(sh.b) || 0, R = calcRM(w, r, bw); if (!R) return `<div class="faint" style="font-size:12.5px">Type the load and the reps of a hard set (1 to 30).</div>`;
     const F = sh.f || "Epley", L = calcLoads(R.mean, F, bw);
-    return `<div class="an-g"><div class="an-k"><b>${R.mean.toFixed(1)} kg</b><small>mean of the six formulas</small></div><div class="an-k"><b>${fmtKg(r1(R.lo))}–${fmtKg(r1(R.hi))} kg</b><small>range</small></div></div>
+    return `<div class="an-g tc-top"><div class="an-k"><b>${R.mean.toFixed(1)} kg</b><small>mean of the six formulas</small></div><div class="an-k"><b>${fmtKg(r1(R.lo))}–${fmtKg(r1(R.hi))} kg</b><small>range</small></div></div>
       <div class="card tc-one">${R.one.map(x => `<div class="lrow" style="padding:8px 14px"><span><span class="t">${x.n}</span></span><span class="end num">${x.v.toFixed(1)} kg</span></div>`).join("")}</div>
       <span class="flabel">Loads for 1 to 12 reps from the mean, with</span><div class="chips">${RM_FORMULAS.map(f => `<button class="chip sm" data-act="calc-f" data-k="${f[0]}" aria-pressed="${f[0] === F}">${f[0]}</button>`).join("")}</div>
-      <div class="lab-t tc-reps">${L.map(x => `<div><span>${x.r} rep${x.r > 1 ? "s" : ""}</span><b>${x.kg.toFixed(1)} kg</b><span>${r0(x.pct)}%</span></div>`).join("")}</div>
+      <div class="lab-t tc-reps">${L.map(x => `<div><span>${x.r} rep${x.r > 1 ? "s" : ""}</span><span class="faint">${r0(x.pct)}%</span><b>${x.kg.toFixed(1)} kg</b></div>`).join("")}</div>
       <div class="faint" style="font-size:12.5px;line-height:1.5">Fitted on free-weight lifts at 2 to 10 reps: ${r > 10 ? "<b>above 10 reps the formulas drift apart, read it as a rough guide</b>" : "the closer to 5 reps and the fewer the reps in reserve, the better the estimate"}. With a body weight the load is body weight + the kg you typed and the result is the added kg, as in your records.</div>`; }
   const km = num(sh.d), sec = parseClock(sh.t), P = calcPace(km, sec); if (!P) return `<div class="faint" style="font-size:12.5px">Type a distance and a time (41:30 or 1:41:30), or tap a distance.</div>`;
   return `<div class="an-g"><div class="an-k"><b>${fmtClock(P.perKm)}</b><small>per km</small></div><div class="an-k"><b>${fmtClock(P.perMile)}</b><small>per mile</small></div><div class="an-k"><b>${r1(P.kmh)}</b><small>km/h</small></div></div>
@@ -14364,7 +14381,7 @@ const bwKg = () => r1(trendNow());
 const isBwEx = n => /pull|chin|dip|muscle|push|row|l-sit|handstand|ring/i.test(n || "");
 const tcLast = () => topSetTable().filter(t => t.last).map(t => ({ n: t.name, kg: +t.last.kg || 0, r: +t.last.reps || 0 }));
 const CALCS = [
-  { id: "rm", name: "1RM and loads", sub: "Six formulas side by side, loads for 1 to 12 reps", f: [["w", "Load", "kg"], ["r", "Reps", ""], ["b", "Body weight", "kg"]], def: { f: "Epley" },
+  { id: "rm", name: "1RM and loads", sub: "Six formulas side by side, loads for 1 to 12 reps", f: [["w", "Load", "kg"], ["r", "Reps", "reps"], ["b", "Body weight", "kg"]], def: { f: "Epley" },
     fill: () => { const L = tcLast()[0]; return L ? { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" } : null; },
     chips: () => tcLast().slice(0, 4).map(L => [`${L.n} ${L.kg ? "+" + L.kg : "BW"}×${L.r}`, { w: String(L.kg), r: String(L.r), b: isBwEx(L.n) ? String(bwKg()) : "" }]),
     out: s => { const R = calcRM(num(s.w), Math.round(num(s.r)), num(s.b) || 0); if (!R) return null; const F = s.f || "Epley", L = calcLoads(R.mean, F, num(s.b) || 0), r = Math.round(num(s.r));
@@ -14385,7 +14402,7 @@ const CALCS = [
       const rows = Z.map((z, k) => { const nx = Z[k + 1]; let from = k === 0 ? null : Math.round(z.hr * l), to = nx ? Math.round(nx.hr * l) - 1 : null; if (z.z === "Z5b") to = Math.min(to, mx); if (z.z === "Z5c") { to = mx; if (from > mx) from = null; }
         return [`${z.z} · ${z.name}`, from == null ? `below ${to + 1}` : to == null ? `${from}+` : `${from}–${to}`, z.use]; });
       return { html: tcOut(rows.map(r => [r[0], r[1] + " bpm", r[2]]), "Zones as fractions of the threshold heart rate (Friel). The threshold comes from your lactate test."), text: [`Heart-rate zones, threshold ${l} bpm, max ${mx} bpm`, ...rows.map(r => `${r[0]}: ${r[1]} bpm`)].join("\n") }; } },
-  { id: "plates", name: "Plates", sub: "What to load on each side of the bar, or on a dip belt", f: [["t", "Total weight", "kg"], ["bar", "Bar", "kg"], ["p", "Plates", "kg"]], def: { bar: "20", p: "25, 20, 15, 10, 5, 2.5, 1.25" },
+  { id: "plates", name: "Plates", sub: "What to load on each side of the bar, or on a dip belt", f: [["t", "Total weight", "kg"], ["bar", "Bar", "kg"], ["p", "Plates", "kg", "wide"]], def: { bar: "20", p: "25, 20, 15, 10, 5, 2.5, 1.25" },
     fill: () => { const L = tcLast()[0]; return L ? { t: String(isBwEx(L.n) ? L.kg : L.kg + 20), bar: isBwEx(L.n) ? "0" : "20" } : null; },
     chips: () => [["Barbell 20 kg", { bar: "20" }], ["Belt, no bar", { bar: "0" }]],
     out: s => { const t = num(s.t), bar = num(s.bar) || 0, pl = String(s.p || "").split(/[ ,;]+/).map(Number).filter(x => x > 0).sort((a, b) => b - a); if (!(t > 0) || !pl.length || t < bar) return null;
@@ -14397,13 +14414,13 @@ const CALCS = [
     fill: () => { const L = tcLast().find(x => !isBwEx(x.n)); return L ? { w: String(L.kg) } : null; },
     out: s => { const w = num(s.w), bar = num(s.bar) || 0; if (!(w > 0)) return null; const steps = [[.4, 6], [.6, 4], [.75, 3], [.9, 1]], rows = [...(bar && w > bar * 1.5 ? [[`Empty bar`, `${fmtKg2(bar)} kg × 10`]] : []), ...steps.map(([f, r]) => [`${r0(f * 100)}%`, `${fmtKg2(Math.max(bar, roundTo(w * f, 2.5)))} kg × ${r}`])];
       return { html: tcOut(rows, "A common ramp: fewer reps as the weight rises, so the warm-up does not tire you. Rounded to 2.5 kg. It is a rule of thumb, not a result of a study."), text: [`Warm-up for ${fmtKg2(w)} kg`, ...rows.map(r => `${r[0]}: ${r[1]}`)].join("\n") }; } },
-  { id: "rel", name: "Relative strength", sub: "Calisthenics: added weight as a share of body weight, and your level", f: [["b", "Body weight", "kg"], ["k", "Added weight", "kg"], ["r", "Reps", ""]], def: { x: "pull" },
+  { id: "rel", name: "Relative strength", sub: "Calisthenics: added weight as a share of body weight, and your level", f: [["b", "Body weight", "kg"], ["k", "Added weight", "kg"], ["r", "Reps", "reps"]], def: { x: "pull" },
     fill: () => { const L = tcLast().find(x => isBwEx(x.n)); return { b: String(bwKg()), ...(L ? { k: String(L.kg), r: String(L.r), x: /dip/i.test(L.n) ? "dip" : "pull" } : {}) }; },
     chips: () => [["Pull-up", { x: "pull" }], ["Dip", { x: "dip" }]],
     out: s => { const b = num(s.b), k = num(s.k) || 0, r = Math.round(num(s.r)); if (!(b > 20) || !(r >= 1)) return null; const e = (b + k) * (1 + r / 30) - b, pct = e / b * 100, X = s.x || "pull", pos = lvPos(pct, LV_STR[X]), lvl = LV_NAMES[Math.min(5, Math.floor(pos))];
       const at = n => (b + e) / (1 + n / 30) - b, rows = [["Estimated 1RM, added", `${e >= 0 ? "+" : ""}${r1(e)} kg`, `${r0(pct)}% of body weight`], ["Level on the Strength scale", lvl, `${X === "dip" ? "Dip" : "Pull-up"}, position ${pos.toFixed(1)} on the Level lines`], ...[3, 5, 8].map(n => [`For ${n} reps`, `${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`])];
       return { html: tcOut(rows, "e1RM = (body weight + added) × (1 + reps/30) − body weight, the one the Records use."), text: [`${X === "dip" ? "Dip" : "Pull-up"}: +${k} kg × ${r} at ${b} kg → 1RM ${e >= 0 ? "+" : ""}${r1(e)} kg (${r0(pct)}% of body weight, ${lvl})`, ...[3, 5, 8].map(n => `${n} reps: ${at(n) >= 0 ? "+" : ""}${r1(at(n))} kg`)].join("\n") }; } },
-  { id: "fuel", name: "Fuel for a long session", sub: "Carbs, fluid and sodium by duration", f: [["m", "Duration", "min"], ["g", "Gel size", "g carbs"]], def: { g: "25" },
+  { id: "fuel", name: "Fuel for a long session", sub: "Carbs, fluid and sodium by duration", f: [["m", "Duration", "min"], ["g", "Carbs per gel", "g"]], def: { g: "25" },
     fill: () => { const w = daySessions(todayISO()).filter(x => x.st === "planned").map(x => x.w).sort((a, b) => (+b.min || 0) - (+a.min || 0))[0]; return w?.min ? { m: String(r0(w.min)) } : null; },
     chips: () => [["1 h", { m: "60" }], ["90 min", { m: "90" }], ["2 h", { m: "120" }], ["3 h", { m: "180" }], ["4 h", { m: "240" }]],
     out: s => { const m = num(s.m), g = num(s.g) || 25; if (!(m > 0)) return null; const [lo, hi] = m < 45 ? [0, 0] : m < 75 ? [0, 30] : m <= 150 ? [30, 60] : [60, 90], h = m / 60, mid = (lo + hi) / 2, gels = mid ? Math.ceil(mid * h / g) : 0;
@@ -14419,7 +14436,7 @@ const calcState = c => { const s = tcs(c.id); for (const [k, v] of Object.entrie
 function calcCard(c) {
   const open = UI.toolOpen === c.id, s = calcState(c), R = open ? c.out(s) : null, chips = open && c.chips ? c.chips() : [];
   return `<section class="rec-sec${open ? " open" : ""}"><button class="rec-h" data-act="calc-tog" data-k="${c.id}" aria-expanded="${open}"><span><b>${c.name}</b><small>${c.sub}</small></span>${ic(open ? "chevU" : "chevD", "sm")}</button>
-    ${open ? `<div class="rec-b"><div class="tc-f">${c.f.map(([k, l, u]) => `<div class="field"><label for="tc-${c.id}-${k}">${l}</label><div class="unit-inp"><input id="tc-${c.id}-${k}" class="inp" inputmode="${k === "t" && c.id === "pace" || k === "p" ? "text" : "decimal"}" value="${esc(s[k] ?? "")}" data-in="tc" data-c="${c.id}" data-k="${k}">${u ? `<span>${u}</span>` : ""}</div></div>`).join("")}</div>
+    ${open ? `<div class="rec-b"><div class="tc-f" style="--n:${c.f.length};--nm:${c.f.length > 3 || c.f.some(x => x[3]) ? 2 : c.f.length}">${c.f.map(([k, l, u, wd]) => `<div class="field${wd ? " tc-w" : ""}"><label for="tc-${c.id}-${k}">${l}</label><div class="unit-inp"><input id="tc-${c.id}-${k}" class="inp" inputmode="${k === "t" && c.id === "pace" || k === "p" ? "text" : "decimal"}" value="${esc(s[k] ?? "")}" data-in="tc" data-c="${c.id}" data-k="${k}">${u ? `<span>${u}</span>` : ""}</div></div>`).join("")}</div>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="tc-fill" data-c="${c.id}">${ic("spark", "sm")}Use my data</button>${chips.map(([l, v], i) => `<button class="chip sm" data-act="tc-chip" data-c="${c.id}" data-i="${i}">${esc(l)}</button>`).join("")}</div>
       <div id="tc-out-${c.id}" class="tc-out">${R ? R.html : tcHint("Fill the fields, or tap «Use my data».")}</div>
       <div class="row" style="gap:8px"><button class="btn soft sm" data-act="tc-copy" data-c="${c.id}">${ic("copy", "sm")}Copy as text</button>${navigator.share ? `<button class="btn text sm" data-act="tc-share" data-c="${c.id}">Share</button>` : ""}</div></div>` : ""}</section>`;
