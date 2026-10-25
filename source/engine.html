@@ -49,6 +49,7 @@ body.nav-top .fuel-sticky{top:0}
 .nut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 18px}
 .nut-t{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
 .nut-t b{color:var(--ink);font-weight:600}
+.nut-n{font-size:12.5px}
 .nut-bar{position:relative;height:6px;border-radius:3px;background:var(--surface-2);margin-top:5px;overflow:visible}
 .nut-bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--good)}
 .nut.warn .nut-bar i{background:var(--warn)}.nut.bad .nut-bar i{background:var(--bad)}
@@ -2958,7 +2959,7 @@ function normalizeSettings(s) {
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
   // calibration v2 starts on a fixed date for a profile saved before it existed (its past keeps the legacy factor); a new profile uses it from the first day. A constant, not "today", so a sync or a second device can't move it
-  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom", "bmrAutoFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
+  if (s?.fit) for (const k of ["calV2From", "netFrom", "hrFrom", "neatFrom", "bmrAutoFrom", "nutrFrom"]) if (s.fit.energy?.[k] === undefined) o.fit.energy[k] = ALGO_START;
   // the lean bonus is no part of the published Harris-Benedict equation (F-01): off for a new profile, left on for one saved before the switch so its numbers do not move
   if (s?.fit && s.fit.energy?.hbBonusOn === undefined) o.fit.energy.hbBonusOn = "on";
   if (!Array.isArray(o.fit.run.zones) || o.fit.run.zones.length !== 7) o.fit.run.zones = clone(DEF_ZONES);
@@ -3057,8 +3058,15 @@ function allRecipes() {
   for (const [id, r] of Object.entries(S.recipes)) { if (r.hidden) delete m[id]; else m[id] = r; }
   return Object.values(m);
 }
-const ZERO = () => ({ kcal: 0, p: 0, c: 0, f: 0, fib: 0 });
-function addM(a, b, k = 1) { a.kcal += (b.kcal || 0) * k; a.p += (b.p || 0) * k; a.c += (b.c || 0) * k; a.f += (b.f || 0) * k; a.fib += (b.fib || 0) * k; return a; }
+const ZERO = () => ({ kcal: 0, p: 0, c: 0, f: 0 });
+function addM(a, b, k = 1) { a.kcal += (b.kcal || 0) * k; a.p += (b.p || 0) * k; a.c += (b.c || 0) * k; a.f += (b.f || 0) * k; return a; }
+/* F-09 / D12: fibre, sugars, saturated fat and salt can be missing. Missing (null or absent) is UNKNOWN, not 0: totals add the known values and
+   carry their coverage (see foodNut / dayNut). A 0 the user typed, or the label gives, is a known 0. kcal, protein, carbs and fat stay mandatory.
+   The switch is Settings › Nutrition extras; the days before its start date keep the old presentation. */
+const NUTCOV_MIN = 0.6, NUT_OPT = ["fib", "sug", "sat", "salt"];
+const nutrCovOn = (date = todayISO()) => { const E = FIT().energy; return E.nutrCoverage !== "off" && (!E.nutrFrom || date >= E.nutrFrom); };
+/* an optional nutrient from a reading, an import or the editor: not given / not a number = unknown (null; 0 with the switch off), never a made-up 0 */
+const optN = (v, dp = 1) => { const n = v == null || String(v).trim() === "" ? NaN : parseFloat(String(v).replace(",", ".")); return isFinite(n) ? Math.max(0, Math.round(n * 10 ** dp) / 10 ** dp) : nutrCovOn() ? null : 0; };
 function recipeTotals(r) {
   const t = ZERO(); let g = 0;
   for (const ing of r.ingredients || []) { const f = getFood(ing.food) || (S.foods[ing.food]?.hidden ? BUILTIN[ing.food] : null); if (!f) continue; addM(t, f.per, ing.g / 100); g += ing.g; }
@@ -3542,7 +3550,7 @@ function defaultFit() {
     },
     energy: { bmr: "Mifflin-St Jeor", watchMode: "active", neat: 350, tef: 0.1, kcalPerKg: 7000, kcalPerKgMode: "auto", bmrAutoFrom: "", hbBonus: 27.5, hbThr: 16, hbBonusOn: "off", minWatchNeat: 150,
       calMinIntake: 10, calMinWeigh: 6, calLo: 0.75, calHi: 1.1,
-      warn: "on", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
+      warn: "on", nutrCoverage: "on", nutrFrom: "", netKcal: "on", netFrom: "", hrLearn: "on", hrFrom: "", neatMode: "on", neatFrom: "", neatRefSteps: 6540, calMode: "v2", calManual: null, calTargetPct: 5, calV2From: "", calWin: 28, calWinMin: 21, calMinWeigh2: 8, calMinCov: 0.7, calPrior: 0.08, calBand: 0.2, calWeekKcal: 100, kcalStep: 75, dietBreakWeeks: 6, minWeighWeek: 4 },
     sports: [{ name: "Calisthenics", met: 5 }, { name: "Running", met: 9 }, { name: "Strength training", met: 5 }, { name: "Football", met: 8 }, { name: "Cycling", met: 7 }, { name: "Walking", met: 3.5 }, { name: "Other", met: 5 }],
     intMult: { Light: 0.75, Moderate: 1, Hard: 1.25 },
     runSport: "Running", runKcalKgKm: 1.0,
@@ -4375,7 +4383,7 @@ function eatenFor(date) {
   const d = S.days[date]; const t = d ? dayTotals(d, true) : ZERO();
   if (t.kcal > 0) return t;
   const L = logGet(date);
-  if (L && L.kcal > 0) return { kcal: +L.kcal, p: +L.p || 0, c: +L.c || 0, f: +L.f || 0, fib: 0, manual: true, hasMacros: L.p > 0 || L.c > 0 || L.f > 0 };
+  if (L && L.kcal > 0) return { kcal: +L.kcal, p: +L.p || 0, c: +L.c || 0, f: +L.f || 0, manual: true, hasMacros: L.p > 0 || L.c > 0 || L.f > 0 };
   return t;
 }
 function ringPct(date) {
@@ -4619,7 +4627,9 @@ VIEWS.stats = function (embedded) {
   const basis = UI.statsBasis || (anyEaten ? "eaten" : "planned");
   const rows = dates.map(d => { const day = S.days[d]; const T = targetsFor(d); const tot = basis === "eaten" ? eatenFor(d) : day ? dayTotals(day) : ZERO(); return { d, T, tot, has: tot.kcal > 0 }; });
   const has = rows.filter(r => r.has);
-  const setFor = k => k === "kcal" ? has : k === "fib" ? has.filter(r => r.tot.fib > 0) : has.filter(r => r.tot.p > 0 || r.tot.c > 0 || r.tot.f > 0);
+  const setFor = k => k === "kcal" ? has : has.filter(r => r.tot.p > 0 || r.tot.c > 0 || r.tot.f > 0);
+  /* fibre comes from the nutrient figures: only the days whose food has the value enough (F-09), not days where an unknown counted as 0 */
+  const fibD = has.map(r => dayNut(r.d, basis === "eaten" ? "eaten" : "plan")).filter(a => nutrCovOn(end) ? a.kcal > 0 && nutCov(a, "fib") >= NUTCOV_MIN : (a.v.fib || 0) > 0);
   const avg = k => { const rr = setFor(k); return rr.length ? rr.reduce((a, r) => a + (r.tot[k] || 0), 0) / rr.length : 0; };
   const avgT = k => { const rr = setFor(k); return rr.length ? rr.reduce((a, r) => a + r.T[k], 0) / rr.length : 0; };
   const onTarget = has.filter(r => Math.abs(r.tot.kcal - r.T.kcal) <= r.T.kcal * 0.1).length;
@@ -4635,9 +4645,9 @@ VIEWS.stats = function (embedded) {
     <div class="stat"><b>${onTarget}/${has.length}</b><small>days within ±10%</small></div></div>`;
   h += `<div class="section-h"><h2>Calories vs target</h2><span class="faint" style="font-size:12.5px">${basis === "eaten" ? "eaten" : "planned"} per day</span></div><div class="card pad">${kcalChart(rows)}</div>`;
   h += `<div class="section-h"><h2>Average macros vs target</h2></div><div class="card pad">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"], ["Fibre", "fib", "good"]].map(([l, k, c]) => {
-    const a = avg(k), t = k === "fib" ? 30 : avgT(k); const pct = a / (t || 1) * 100;
-    return `<div class="adh" style="--c:var(--${c})"><span>${l}</span><span class="bar"><i style="width:${clamp(pct / 1.3, 0, 100)}%"></i><u style="left:${100 / 1.3}%"></u></span><span class="v">${r0(a)} g<br><small class="faint">${r0(pct)}%</small></span></div>`; }).join("")}
-    <div class="faint" style="font-size:12px;margin-top:4px">Marker = target. Fibre target is a general 30 g guideline.</div></div>`;
+    const a = k === "fib" ? (fibD.length ? fibD.reduce((s, x) => s + x.v.fib, 0) / fibD.length : null) : avg(k), t = k === "fib" ? 30 : avgT(k); const pct = (a || 0) / (t || 1) * 100;
+    return `<div class="adh" style="--c:var(--${c})"><span>${l}</span><span class="bar"><i style="width:${a == null ? 0 : clamp(pct / 1.3, 0, 100)}%"></i><u style="left:${100 / 1.3}%"></u></span><span class="v">${a == null ? "—" : `${r0(a)} g<br><small class="faint">${r0(pct)}%</small>`}</span></div>`; }).join("")}
+    <div class="faint" style="font-size:12px;margin-top:4px">Marker = target. Fibre target is a general 30 g guideline${fibD.length < has.length ? `; fibre uses ${fibD.length} of ${has.length} days, the others lack data` : ""}.</div></div>`;
   h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Where calories come from</h2></div><div class="card pad">${splitDonut(avg("p"), avg("c"), avg("f"))}</div></div>
     <div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Protein by day</h2></div><div class="card pad">${proteinChart(rows, w)}</div></div></div>`;
   h += topFoods(dates, basis);
@@ -5317,12 +5327,12 @@ SHEETS.qty = sh => {
 };
 
 /* ---------- food editor ---------- */
-function blankFood(name = "") { return { id: "", name, brand: "", barcode: "", unit: "g", per: { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, sat: 0, salt: 0 }, servings: [], pack: 0, cat: "pantry", role: "P", meals: ["m"], fav: false, noPlan: false, source: "custom" }; }
+function blankFood(name = "") { return { id: "", name, brand: "", barcode: "", unit: "g", per: { kcal: 0, p: 0, c: 0, f: 0, fib: optN(), sug: optN(), sat: optN(), salt: optN() }, servings: [], pack: 0, cat: "pantry", role: "P", meals: ["m"], fav: false, noPlan: false, source: "custom" }; }
 SHEETS.food = sh => {
   const d = sh.draft; if (sh.isNew && !d._roleSet && (!d.source || d.source === "custom") && (num(d.per.p) || num(d.per.c) || num(d.per.f))) { const g = guessRoleMeals({ kcal: num(d.per.kcal), p: num(d.per.p), c: num(d.per.c), f: num(d.per.f), sug: num(d.per.sug) }, d.cat, d.name); d.role = g.role; d.meals = g.meals; }
   if (d.autoKcal == null) d.autoKcal = !!sh.isNew && !num(d.per.kcal) && !["off", "label", "ocr"].includes(d.source); if (d.autoKcal) d.per.kcal = kcalFromMacros(d.per);
   const isBuiltinEdit = BUILTIN[d.id] && !sh.isNew, orig = d.orig, u = d.unit || "g", checkValues = ["off", "label", "ocr", "ai"].includes(d.source);
-  const nf = (k, l, color) => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? "" : ""}" ${k === "kcal" && d.autoKcal ? "readonly " : ""}data-in="fd-per" data-k="${k}"></div>`;
+  const nf = (k, l, color) => `<div class="field"><label class="mlabel" for="fd-${k}" ${color ? `style="--c:var(--${color})"` : ""}>${color ? "<i></i>" : ""}${l}</label><input id="fd-${k}" class="inp" inputmode="decimal" value="${d.per[k] ?? ""}" placeholder="${["fib", "sug", "sat", "salt"].includes(k) ? BUILTIN_MX[d.id]?.[k] ?? (nutrCovOn() ? "unknown" : "") : ""}" ${k === "kcal" && d.autoKcal ? "readonly " : ""}data-in="fd-per" data-k="${k}"></div>`;
   const sec = (k, dflt, title, hint, inner) => `<details class="fd-more" data-k="${k}" ${(UI.fdOpen?.[k] ?? dflt) ? "open" : ""}><summary><b>${title}</b><small class="faint">${hint}</small></summary><div class="fd-in">${inner}</div></details>`;
   const v = k => d.per[k] > 0 ? d.per[k] : "", more = [["Fibre", "fib"], ["Sugars", "sug"], ["Sat.", "sat"], ["Salt", "salt"]].filter(([, k]) => v(k) !== "").map(([l, k]) => `${l} ${r1(v(k))}`).join(" · ");
   const pr = d.id ? priceViews(d.id) : null, pTxt = pr ? `${fmtEur(pr.perKg)}/${u === "ml" ? "l" : "kg"}${pr.perPack != null ? ` · ${fmtEur(pr.perPack)}/pack` : ""}` : "", home = S.shop.pantry[d.id]?.g > 0 ? (q => `${q.v} ${q.u} at home`)(pantryQty(d, S.shop.pantry[d.id])) : "", pu = d._pu || "kg";
@@ -5872,7 +5882,7 @@ const clean0 = o => { for (const k of Object.keys(o)) if (o[k] == null) delete o
 function offToFood(code, p) {
   const n = p.nutriments || {}; const g = k => { const v = n[k]; return v == null || v === "" ? null : +v; };
   let kcal = g("energy-kcal_100g"); if (kcal == null && g("energy_100g") != null) kcal = g("energy_100g") / 4.184;
-  const per = { kcal: r0(kcal || 0), p: r1(g("proteins_100g") || 0), c: r1(g("carbohydrates_100g") || 0), f: r1(g("fat_100g") || 0), fib: r1(g("fiber_100g") || 0), sug: r1(g("sugars_100g") || 0), sat: r1(g("saturated-fat_100g") || 0), salt: r1(g("salt_100g") || 0) };
+  const per = { kcal: r0(kcal || 0), p: r1(g("proteins_100g") || 0), c: r1(g("carbohydrates_100g") || 0), f: r1(g("fat_100g") || 0), fib: optN(g("fiber_100g")), sug: optN(g("sugars_100g")), sat: optN(g("saturated-fat_100g")), salt: optN(g("salt_100g") ?? (g("sodium_100g") != null ? g("sodium_100g") * 2.5 : null)) };
   const incomplete = kcal == null && g("proteins_100g") == null && g("carbohydrates_100g") == null && g("fat_100g") == null;   // a name and nothing else
   if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f);
   // vitamins and minerals, when the product has them (Open Food Facts stores them in grams)
@@ -6060,8 +6070,8 @@ function parseLabelText(txt) {
     for (const ln of lines) {
       if (/\d\s*(k\s*[jJ)}]|k?\s*[a-z]?cal\b)/i.test(ln) || /energ|brennwert/i.test(ln)) { started = true; continue; } if (!started) continue;
       const tok = tokIn(ln)[0]; if (tok == null) continue;
-      const at = T.indexOf(ln), hit = H.filter(h => ORD.includes(h.k) && at >= 0 && h.a >= at && h.a < at + ln.length).pop();
-      if (hit) { ptr = ORD.indexOf(hit.k) + 1; continue; }
+      const at = T.indexOf(ln), hit = H.filter(h => (ORD.includes(h.k) || h.k === "sod") && at >= 0 && h.a >= at && h.a < at + ln.length).pop();
+      if (hit) { if (hit.k !== "sod") ptr = ORD.indexOf(hit.k) + 1; continue; }   // a named sodium row is read below (x 2.5), never as the salt row
       if (/[a-z]{3}/i.test(ln.split(tok)[0] || "") || ln.trim().startsWith(tok)) {
         let k = ORD[ptr]; if (!k) break;
         if (/di\s*cu|of\s*which|dont|davon/i.test(ln) && !["sat", "sug"].includes(k)) k = ptr <= 1 ? "sat" : "sug";
@@ -6092,7 +6102,7 @@ function parseLabelText(txt) {
   if ((!(out.kcal > 0) || out.kcal > 950) && calc > 0) out.kcal = Math.round(calc);
   const unit = /100\s*ml/i.test(T) && !/100\s*g(?![a-z])/i.test(T) ? "ml" : "g";
   const found = ["kcal", "p", "c", "f"].filter(k => out[k] != null).length;
-  return { per: { kcal: r0(out.kcal || 0), p: r1(out.p || 0), c: r1(out.c || 0), f: r1(out.f || 0), fib: r1(out.fib || 0), sug: r1(out.sug || 0), sat: r1(out.sat || 0), salt: Math.round((out.salt || 0) * 100) / 100 }, unit, found, raw };
+  return { per: { kcal: r0(out.kcal || 0), p: r1(out.p || 0), c: r1(out.c || 0), f: r1(out.f || 0), fib: optN(out.fib), sug: optN(out.sug), sat: optN(out.sat), salt: optN(out.salt, 2) }, unit, found, raw };
 }
 
 /* on-device reading of the photo: Tesseract (Italian model) served from this page's own files, loaded only when you use it.
@@ -6265,7 +6275,7 @@ async function handleLabelAI(files, fallback) {
     const j = await aiLabel(files);
     if (UI.sheet !== sh) return;
     if (!j || j.kcal == null) { if (fallback) { toast("AI found no table: trying the on-device reader…"); return ocrLabelFiles(files); } toast("No nutrition table found in the photo. Try again closer to the label."); sh.stage = sh.code ? "missing" : sh.labelOnly ? "label" : "start"; renderSheet(); return; }
-    const per = { kcal: r0(num(j.kcal)), p: r1(num(j.protein)), c: r1(num(j.carbs)), f: r1(num(j.fat)), fib: r1(num(j.fiber)), sug: r1(num(j.sugars)), sat: r1(num(j.satFat)), salt: r1(num(j.salt)) };
+    const per = { kcal: r0(num(j.kcal)), p: r1(num(j.protein)), c: r1(num(j.carbs)), f: r1(num(j.fat)), fib: optN(j.fiber), sug: optN(j.sugars), sat: optN(j.satFat), salt: optN(j.salt) };
     const cat = AISLE_NAME[j.category] ? j.category : "pantry";
     const { role, meals } = guessRoleMeals(per, cat, j.name || "");
     const code = (sh.code || String(j.barcode || "").replace(/\D/g, "")) || "";
@@ -6855,9 +6865,9 @@ ACT["fd-dup-open"] = el => { const sh = S_(), f = getFood(el.dataset.id); if (!f
 ACT["fd-label"] = () => { const ed = S_(); if (ed?.type !== "food") return; UI.labelFor = ed; openSheet("scan", { stage: "label", labelOnly: true, date: UI.date, meal: suggestMeal() }); };
 const LC_ROWS = [["kcal", "Energy", "kcal"], ["c", "Carbs", "g"], ["p", "Protein", "g"], ["f", "Fat", "g"], ["fib", "Fibre", "g"], ["sug", "Sugars", "g"], ["sat", "Saturated", "g"], ["salt", "Salt", "g"]];
 SHEETS.labelcmp = sh => { const d = UI.labelFor?.draft, L = sh.label; if (!d) return { title: "Label", body: `<div class="empty slim"><p>Nothing to update.</p></div>`, foot: `<button class="btn primary" data-act="close-sheet">Close</button>` };
-  const rows = LC_ROWS.filter(([k]) => num(L.per[k]) > 0 || num(d.per[k]) > 0), diff = rows.filter(([k]) => Math.abs(num(L.per[k]) - num(d.per[k])) > .05).length;
+  const rows = LC_ROWS.filter(([k]) => num(L.per[k]) > 0 || num(d.per[k]) > 0), fv = v => v == null ? "—" : r1(v), diff = rows.filter(([k]) => Math.abs(num(L.per[k]) - num(d.per[k])) > .05).length;
   return { title: "Update from the label", body: `<div class="note">${diff ? `<b>${diff}</b> value${diff === 1 ? "" : "s"} differ${diff === 1 ? "s" : ""} from what ${esc(d.name || "this food")} has now.` : "The label matches what this food already has."} Per 100 ${L.unit === "ml" ? "ml" : "g"}.</div>
-    <div class="card lc-t"><div class="lc-r lc-h"><span></span><span>Now</span><span>Label</span></div>${rows.map(([k, l, u]) => { const a = num(d.per[k]), b = num(L.per[k]), ch = Math.abs(a - b) > .05; return `<div class="lc-r${ch ? " ch" : ""}"><span>${l}</span><span>${r1(a)} ${u}</span><span><b>${r1(b)}</b> ${u}</span></div>`; }).join("")}</div>
+    <div class="card lc-t"><div class="lc-r lc-h"><span></span><span>Now</span><span>Label</span></div>${rows.map(([k, l, u]) => { const a = num(d.per[k]), b = num(L.per[k]), ch = Math.abs(a - b) > .05; return `<div class="lc-r${ch ? " ch" : ""}"><span>${l}</span><span>${fv(d.per[k])}${d.per[k] == null ? "" : " " + u}</span><span><b>${fv(L.per[k])}</b>${L.per[k] == null ? "" : " " + u}</span></div>`; }).join("")}</div>
     ${L.name && L.name !== d.name ? `<small class="faint">Name on the label: ${esc(L.name)}. The name stays as it is.</small>` : ""}`,
     foot: `<button class="btn soft" data-act="lc-back">Keep mine</button><button class="btn primary" data-act="lc-apply">${ic("check", "sm")}Use label values</button>` }; };
 ACT["lc-back"] = () => { const ed = UI.labelFor; UI.labelFor = null; if (ed) { UI.sheet = ed; renderSheet(); } else closeSheet(); };
@@ -6888,7 +6898,7 @@ ACT["fd-save"] = () => {
   const sh = S_(); const d = clone(sh.draft); delete d.ocrText;
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the food a name."); $("#fd-name")?.focus(); return; }
   if (sh.isNew && !sh.dupOk) { const X = foodDupes(d), first = X.barcode || X.name[0]; if (first) { sh.dupOk = true; toast(`“${first.name}” is already in your foods: tap Save again to add this one anyway`); return; } }
-  for (const k of Object.keys(d.per)) d.per[k] = num(d.per[k]);
+  for (const k of Object.keys(d.per)) d.per[k] = NUT_OPT.includes(k) ? optN(d.per[k], 4) : num(d.per[k]);
   if (!d.per.kcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
   if (d.mx) { for (const k of Object.keys(d.mx)) { if (d.mx[k] === "" || d.mx[k] == null) delete d.mx[k]; else d.mx[k] = num(d.mx[k]); } if (!Object.keys(d.mx).length) delete d.mx; }
   d.servings = (d.servings || []).map(s => ({ l: (s.l || "").trim() || "1 portion", g: num(s.g) })).filter(s => s.g > 0);
@@ -6960,7 +6970,7 @@ function deleteRecipe(id) {
 
 /* quick add */
 ACT["qk-save"] = () => {
-  const sh = S_(); const m = { p: num(sh.p), c: num(sh.c), f: num(sh.f) }; m.kcal = num(sh.kcal) || r0(4 * m.p + 4 * m.c + 9 * m.f); m.fib = 0;
+  const sh = S_(); const m = { p: num(sh.p), c: num(sh.c), f: num(sh.f) }; m.kcal = num(sh.kcal) || r0(4 * m.p + 4 * m.c + 9 * m.f);
   if (!(m.kcal > 0)) { toast("Enter calories or macros."); return; }
   if (sh.itemId) {
     mutateDay(sh.date, d => { for (const [mid, items] of Object.entries(d.meals)) { const i = items.findIndex(x => x.id === sh.itemId); if (i >= 0) { const [it] = items.splice(i, 1); it.m = m; it.name = sh.name || "Quick add"; (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); break; } } });
@@ -7519,7 +7529,7 @@ ACT["ch-ai"] = async () => {
 };
 ACT["ch-save"] = () => {
   const sh = S_(), d = sh.draft; const kcal = num(d.kcal); if (!(kcal > 0)) { toast("Enter the estimated calories."); return; }
-  const m = { kcal, p: num(d.p), c: num(d.c), f: num(d.f), fib: 0 };
+  const m = { kcal, p: num(d.p), c: num(d.c), f: num(d.f) };
   const touched = new Set([sh.date]);
   const id = sh.itemId || uid(); const plan = cheatPlan(sh.date, sh.meal, kcal, d.strategy);
   for (const k of Object.keys(plan.per)) touched.add(k);
@@ -10052,7 +10062,7 @@ If it is a specific brand product, use that product's label values as best you k
 Reply with only JSON: {"name": "clean product name", "brand": "brand or empty", "unit": "g" or "ml", "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number, "sugar": number, "salt": number, "serving_g": number or null, "serving_label": "e.g. 1 pot" or null, "confidence": "high" | "medium" | "low"}`;
   try {
     const j = await Sync.sample.json(prompt); if (UI.sheet !== sh) return;
-    const per = { kcal: r0(num(j.kcal)), p: r1(num(j.protein)), c: r1(num(j.carbs)), f: r1(num(j.fat)), fib: r1(num(j.fiber)), sug: r1(num(j.sugar)), sat: 0, salt: r1(num(j.salt)) };
+    const per = { kcal: r0(num(j.kcal)), p: r1(num(j.protein)), c: r1(num(j.carbs)), f: r1(num(j.fat)), fib: optN(j.fiber), sug: optN(j.sugar), sat: optN(), salt: optN(j.salt) };
     if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f);
     const name = String(j.name || sh.q).slice(0, 80), { role, meals } = guessRoleMeals(per, "pantry", name);
     const draft = { ...blankFood(name), brand: String(j.brand || "").slice(0, 60), unit: j.unit === "ml" ? "ml" : "g", per, orig: clone(per), role, meals, source: "ai", servings: num(j.serving_g) > 0 ? [{ l: String(j.serving_label || "1 serving").slice(0, 30), g: num(j.serving_g) }] : [] };
@@ -10842,7 +10852,7 @@ function nutTargets(kcal) {
 function foodNut(f) {
   if (!f) return {};
   const per = f.per || {}, mx = f.mx || {}, b = BUILTIN_MX[f.id] || null, o = {};
-  for (const k of ["fib", "sug", "sat", "salt"]) o[k] = per[k] != null && (per[k] !== 0 || !b || f.source === "off" || f.source === "label" || f.source === "ocr") ? +per[k] : b ? b[k] : null;
+  for (const k of NUT_OPT) o[k] = per[k] != null && (per[k] !== 0 || !b || f.source === "off" || f.source === "label" || f.source === "ocr") ? +per[k] : b ? b[k] : null;
   const mono = mx.mono ?? b?.mono, poly = mx.poly ?? b?.poly;
   o.unsat = mono != null && poly != null ? mono + poly : o.sat != null && per.f != null ? Math.max(0, per.f - o.sat) * 0.95 : null;
   for (const k of ["om3", "k", "ca", "fe", "mg", "vitc", "vitd", "b12", "fol"]) o[k] = mx[k] != null ? +mx[k] : b ? b[k] : null;
@@ -10875,9 +10885,22 @@ function weekNut(end, n = 7) {
 function nutStatus(k, v, t) { const N = NUT[k]; if (t == null || !(t > 0)) return "info"; const r = v / t;
   return N.kind === "min" ? (r < 0.7 ? "bad" : r < 0.9 ? "warn" : "good") : (r > 1.15 ? "bad" : r > 1 ? "warn" : "good"); }
 const fmtNut = (v, u) => v == null ? "—" : u === "g" ? (v < 10 ? r1(v) : fmtN(r0(v))) : fmtN(r0(v));
-function nutRows(a, T, keys) {
-  return keys.map(k => { const N = NUT[k], v = a.v[k] || 0, t = T[k], st = nutStatus(k, v, t), cov = a.kcal ? (a.cov[k] || 0) / a.kcal : 0, pct = t ? clamp(v / t * 100, 0, 100) : 0;
-    return `<div class="nut ${st}"><div class="nut-t"><span>${N.l}${cov < 0.6 && a.kcal ? `<small class="faint" title="Values known for ${r0(cov * 100)}% of the calories"> · partial</small>` : ""}</span><span><b>${fmtNut(v, N.u)}</b>${t ? ` / ${N.kind === "max" ? "≤ " : ""}${fmtNut(t, N.u)}` : ""} ${N.u}</span></div>${t ? `<div class="nut-bar"><i style="width:${pct}%"></i>${N.kind === "max" ? `<em style="left:100%"></em>` : ""}</div>` : ""}</div>`; }).join("");
+/* share of the kcal whose food has the value; a figure is a total only from 60 % (always, before the F-09 start date or with the switch off) */
+const nutCov = (a, k) => a.kcal > 0 ? (a.cov[k] || 0) / a.kcal : 0;
+const nutShown = (a, k, date) => !nutrCovOn(date) || nutCov(a, k) >= NUTCOV_MIN;
+/* one line for the figures that are partial: how much of the food has data for each, the same share said once */
+function nutNote(a, keys) {
+  const by = {}; for (const k of keys) { const c = nutCov(a, k); if (a.kcal && c < NUTCOV_MIN) (by[Math.floor(c * 100)] = by[Math.floor(c * 100)] || []).push(NUT[k].l.toLowerCase()); }
+  const list = n => n.length > 1 ? `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}` : n[0];
+  const parts = Object.entries(by).sort((x, y) => y[0] - x[0]).map(([pc, n]) => +pc ? `${pc}% of the food has data for ${list(n)}` : `no food has data for ${list(n)}`);
+  return parts.length ? `<div class="faint nut-n">${parts.join("; ").replace(/^./, c => c.toUpperCase())}.</div>` : "";
+}
+const nutGrid = (a, T, keys, strict) => `${strict ? nutNote(a, keys) : ""}<div class="nut-grid">${nutRows(a, T, keys, strict)}</div>`;
+function nutRows(a, T, keys, strict) {
+  return keys.map(k => { const N = NUT[k], v = a.v[k] || 0, t = T[k], cov = nutCov(a, k);
+    if (strict && a.kcal && cov < NUTCOV_MIN) return `<div class="nut"><div class="nut-t"><span>${N.l}${cov > 0 ? `<small class="faint"> · partial</small>` : ""}</span><span>${cov > 0 ? `<b>${fmtNut(v, N.u)}</b> ${N.u}` : `<b>—</b>`}</span></div></div>`;
+    const st = nutStatus(k, v, t), pct = t ? clamp(v / t * 100, 0, 100) : 0;
+    return `<div class="nut ${st}"><div class="nut-t"><span>${N.l}${cov < NUTCOV_MIN && a.kcal ? `<small class="faint" title="Values known for ${r0(cov * 100)}% of the calories"> · partial</small>` : ""}</span><span><b>${fmtNut(v, N.u)}</b>${t ? ` / ${N.kind === "max" ? "≤ " : ""}${fmtNut(t, N.u)}` : ""} ${N.u}</span></div>${t ? `<div class="nut-bar"><i style="width:${pct}%"></i>${N.kind === "max" ? `<em style="left:100%"></em>` : ""}</div>` : ""}</div>`; }).join("");
 }
 /* foods worth adding for a nutrient: dense per 100 kcal, ones you already eat first */
 function nutBoosters(k, n = 3) {
@@ -10885,10 +10908,10 @@ function nutBoosters(k, n = 3) {
   return allFoods().filter(f => f.per?.kcal > 15 && dietOK(f) && !f.noPlan).map(f => { const v = foodNut(f)[k]; return v ? { f, s: v / f.per.kcal * 100 * (1 + 0.35 * Math.log1p(h["*|" + f.id] || 0)) } : null; })
     .filter(Boolean).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.f.name.toLowerCase());
 }
-function nutTips(w, T) {
+function nutTips(w, T, strict) {
   const tips = [];
   if (!w.days) return tips;
-  for (const k of Object.keys(NUT)) { const N = NUT[k]; if (N.micro && !proMicro()) continue; const v = w.v[k] || 0, t = T[k]; if (!t || (w.cov[k] || 0) < w.kcal * 0.5) continue; const st = nutStatus(k, v, t); if (st === "good") continue;
+  for (const k of Object.keys(NUT)) { const N = NUT[k]; if (N.micro && !proMicro()) continue; const v = w.v[k] || 0, t = T[k]; if (!t || (w.cov[k] || 0) < w.kcal * (strict ? NUTCOV_MIN : 0.5)) continue; const st = nutStatus(k, v, t); if (st === "good") continue;
     if (N.kind === "min") tips.push({ k, st, r: v / t, t: `${N.l}: ${fmtNut(v, N.u)} of ${fmtNut(t, N.u)} ${N.u} a day`, d: `Low on ${w.days} logged day${w.days > 1 ? "s" : ""}. Easy adds: ${nutBoosters(k).join(", ")}.` });
     else { const top = Object.entries(w.src[k] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3), tot = Object.values(w.src[k] || {}).reduce((a, b) => a + b, 0) || 1;
       tips.push({ k, st, r: t / Math.max(v, 0.01), t: `${N.l}: ${fmtNut(v, N.u)} ${N.u} a day, limit ${fmtNut(t, N.u)} ${N.u}`, d: `Most of it came from ${top.map(([n, x]) => `${esc(n.toLowerCase())} (${r0(x / tot * 100)}%)`).join(", ")}. Smaller portions or a swap there make the difference.` }); } }
@@ -10900,13 +10923,13 @@ function nutCard(date) {
   const seg = UI.nutSeg || "day", end = date > todayISO() ? todayISO() : date;
   const a = seg === "week" ? weekNut(end) : dayNut(date), T = nutTargets(seg === "week" ? (a.kcal || targetsFor(date).kcal) : targetsFor(date).kcal);
   const main = ["fib", "sug", "sat", "unsat", "salt"], micro = proMicro() ? NUTS.filter(n => n[4]).map(n => n[0]) : [];
-  const empty = seg === "week" ? !a.days : !a.kcal;
-  const tips = seg === "week" ? nutTips(a, T) : [];
+  const empty = seg === "week" ? !a.days : !a.kcal, strict = nutrCovOn(seg === "week" ? end : date);
+  const tips = seg === "week" ? nutTips(a, T, strict) : [];
   return `<section class="card pad nut-card" aria-label="Nutrients"><div class="nut-h"><span class="flabel">Nutrients</span><div class="seg sm">${[["day", date === todayISO() ? "Today" : fmtDM(date)], ["week", "Last 7 days"]].map(([k, l]) => `<button data-act="nut-seg" data-k="${k}" aria-pressed="${seg === k}">${l}</button>`).join("")}</div></div>
     ${empty ? `<div class="faint" style="font-size:13px">${seg === "week" ? "No days with food logged in the last week yet." : "Nothing planned or eaten yet."}</div>` : `
     <div class="faint" style="font-size:12.5px">${seg === "week" ? `Average of ${a.days} logged day${a.days > 1 ? "s" : ""}` : a.src === "eaten" ? "What you've ticked as eaten" : "From the plan"}</div>
-    <div class="nut-grid">${nutRows(a, T, main)}</div>
-    ${micro.length ? `<details class="nut-more" ${UI.nutMore ? "open" : ""}><summary data-act="nut-more">Vitamins and minerals</summary><div class="nut-grid">${nutRows(a, T, micro)}</div></details>` : ""}
+    ${nutGrid(a, T, main, strict)}
+    ${micro.length ? `<details class="nut-more" ${UI.nutMore ? "open" : ""}><summary data-act="nut-more">Vitamins and minerals</summary>${nutGrid(a, T, micro, strict)}</details>` : ""}
     ${tips.length ? `<div class="nut-tips">${tips.map(x => `<div class="tip" style="--c:var(--${x.st === "bad" ? "bad" : "warn"})"><span class="tip-ic">${ic(NUT[x.k].kind === "min" ? "plus" : "minus", "sm")}</span><div class="tip-b"><b>${esc(x.t)}</b><span>${x.d}</span></div></div>`).join("")}</div>` : seg === "week" ? `<div class="note">Everything within the reference intakes this week.</div>` : ""}
     ${seg === "week" && AIF("tips") ? `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal sm" data-act="nut-ai" ${UI.nutAi === "busy" ? "disabled" : ""}>${ic("spark", "sm")}${UI.nutAi === "busy" ? "Thinking…" : "Ask the AI coach"}</button></div>${UI.nutAi && UI.nutAi !== "busy" ? `<div class="note ai-coach">${UI.nutAi}</div>` : ""}` : ""}`}
     <div class="faint" style="font-size:11.5px">Reference intakes for an active adult (LARN/EFSA, salt WHO). Built-in foods use typical values; packaged foods use their label or Open Food Facts.</div></section>`;
@@ -10918,7 +10941,7 @@ ACT["nut-ai"] = async () => {
   const mac = { p: 0, c: 0, f: 0 }; let n = 0; for (let i = 0; i < 7; i++) { const dt = addDays(todayISO(), -i), e = eatenFor(dt); if (e.kcal > 400) { mac.p += e.p; mac.c += e.c; mac.f += e.f; n++; } }
   const tops = Object.entries(w.src.salt || {}).concat(Object.entries(w.src.sat || {})).sort((a, b) => b[1] - a[1]).slice(0, 6).map(x => x[0]);
   const usual = allFoods().filter(f => buildHabits()["*|" + f.id]).sort((a, b) => (buildHabits()["*|" + b.id] || 0) - (buildHabits()["*|" + a.id] || 0)).slice(0, 40).map(f => f.name);
-  const lines = Object.keys(NUT).filter(k => T[k]).map(k => `${NUT[k].l}: ${fmtNut(w.v[k] || 0, NUT[k].u)} ${NUT[k].u}/day (reference ${NUT[k].kind === "max" ? "max " : ""}${fmtNut(T[k], NUT[k].u)}; data for ${r0((w.cov[k] || 0) / (w.kcal || 1) * 100)}% of calories)`);
+  const lines = Object.keys(NUT).filter(k => T[k]).map(k => nutShown(w, k, todayISO()) ? `${NUT[k].l}: ${fmtNut(w.v[k] || 0, NUT[k].u)} ${NUT[k].u}/day (reference ${NUT[k].kind === "max" ? "max " : ""}${fmtNut(T[k], NUT[k].u)}; data for ${r0(nutCov(w, k) * 100)}% of calories)` : `${NUT[k].l}: not enough data (known for ${r0(nutCov(w, k) * 100)}% of calories), no judgement`);
   UI.nutAi = "busy"; scheduleRender();
   try {
     const r = await Sync.sample(`You are a sports nutritionist. An athlete (${FIT().profile?.sex || "Male"}, goal: ${S.settings.goal || "maintain"}) logged ${w.days} days. Daily averages: ${r0(w.kcal)} kcal, protein ${r0(mac.p / (n || 1))} g, carbs ${r0(mac.c / (n || 1))} g, fat ${r0(mac.f / (n || 1))} g.
@@ -10935,7 +10958,9 @@ function proSettingsCard() {
   const sw = (k, on, l, s) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="pro-toggle" data-k="${k}" aria-label="${esc(l)}"></button><span>${l}<small class="faint" style="display:block;font-size:12.5px">${s}</small></span></label>`;
   return `<section class="card pad" style="display:flex;flex-direction:column;gap:6px"><span class="flabel">Pro nutrients</span>
     ${sw("on", !!P.on, "Track fibre, sugars, fats and salt", "A Nutrients card at the end of Fuel, for the day and the week, with tips when you're off.")}
-    ${P.on ? sw("micro", P.micro !== false, "Vitamins and minerals", "Potassium, calcium, iron, magnesium, vitamins C, D, B12, folate and omega-3.") : ""}</section>`;
+    ${P.on ? sw("micro", P.micro !== false, "Vitamins and minerals", "Potassium, calcium, iron, magnesium, vitamins C, D, B12, folate and omega-3.") : ""}
+    <div class="grid2">${fitSel("energy.nutrCoverage", "Missing is not zero", [["on", "On"], ["off", "Off"]])}${FIT().energy.nutrCoverage !== "off" ? fitIn("energy.nutrFrom", "Starts on", "", "date") : "<div></div>"}</div>
+    <div class="faint" style="font-size:12.5px">A fibre, sugar, saturated fat or salt value a food does not list stays unknown instead of counting as 0. Below ${r0(NUTCOV_MIN * 100)}% of the food with data a figure is shown as partial. Days before the start date look as they did (an empty date means from the first day).</div></section>`;
 }
 ACT["pro-toggle"] = el => { const k = el.dataset.k, P = S.settings.pro || {}; S.settings.pro = { ...P, [k]: k === "micro" ? P.micro === false : !P[k] }; saveSettings(); scheduleRender(); };
 
@@ -12155,7 +12180,7 @@ periodStats = function (P) {
   let planned = 0, done = 0, missed = []; for (let d = P.a; d <= end; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.p || x.st !== "done") { planned++; if (x.st === "done") done++; else if (d < todayISO()) missed.push(d); } }
   R.plan = planned; R.planDone = done; R.missed = missed.length;
   let due = 0, ok = 0; for (let d = P.a; d <= end; d = addDays(d, 1)) { if (d >= todayISO()) continue; for (const s of suppSlots(d)) { due++; if (suppTaken(d, s.k)) ok++; } } R.supp = due ? ok / due : null;
-  if (proOn()) { try { const N = weekNut(end, R.days), T = nutTargets(R.avgT || 2200); R.fib = N.days ? [N.v.fib, T.fib] : null; R.salt = N.days ? [N.v.salt, T.salt] : null; } catch (e) {} }
+  if (proOn()) { try { const N = weekNut(end, R.days), T = nutTargets(R.avgT || 2200); R.fib = N.days && nutShown(N, "fib", end) ? [N.v.fib, T.fib] : null; R.salt = N.days && nutShown(N, "salt", end) ? [N.v.salt, T.salt] : null; } catch (e) {} }
   if (typeof waterStats === "function") { const w = waterStats(P.a, end); if (w) R.water = w; }
   return R;
 };
@@ -13445,12 +13470,12 @@ ACT["hm-est"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if
   sh.busy = true; sh.est = null; renderSheet();
   const prompt = `Estimate the nutrition values PER 100 g of this homemade or unlabelled food: """${text.slice(0, 800)}""". If ingredient amounts are given, compute from them (account for water lost in cooking when it matters); otherwise assume a typical Italian home recipe. Reply with only JSON: {"name":"short name, in the language of the description","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"portion_g":number,"confidence":"low|medium|high"}`;
   try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (UI.sheet !== sh) return;
-    const k = +j?.kcal; if (k > 0 && k < 950) { sh.est = { name: String(j.name || text).slice(0, 60), kcal: r0(k), p: r1(+j.protein || 0), c: r1(+j.carbs || 0), f: r1(+j.fat || 0), fib: r1(+j.fibre || 0), portion: clamp(r0(+j.portion_g || 0), 0, 1500), conf: String(j.confidence || "") }; sh.name = sh.est.name; }
+    const k = +j?.kcal; if (k > 0 && k < 950) { sh.est = { name: String(j.name || text).slice(0, 60), kcal: r0(k), p: r1(+j.protein || 0), c: r1(+j.carbs || 0), f: r1(+j.fat || 0), fib: optN(j.fibre), portion: clamp(r0(+j.portion_g || 0), 0, 1500), conf: String(j.confidence || "") }; sh.name = sh.est.name; }
     else toast("No estimate came back: say a bit more about what's in it."); }
   catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
   sh.busy = false; if (UI.sheet === sh) renderSheet(); };
 function homeFood(sh) { const E = sh.est, f = blankFood((sh.name || E?.name || "").trim() || "Homemade"); f.source = "homemade"; f.cat = "other";
-  if (E) { f.est = true; f.per = { ...f.per, kcal: E.kcal, p: E.p, c: E.c, f: E.f, fib: E.fib || 0 }; f.role = homeRole(E); if (E.portion) f.servings = [{ l: "1 portion", g: E.portion }]; f.note = (sh.desc || "").trim().slice(0, 300); }
+  if (E) { f.est = true; f.per = { ...f.per, kcal: E.kcal, p: E.p, c: E.c, f: E.f, fib: E.fib }; f.role = homeRole(E); if (E.portion) f.servings = [{ l: "1 portion", g: E.portion }]; f.note = (sh.desc || "").trim().slice(0, 300); }
   return f; }
 ACT["hm-save"] = () => { const sh = S_(); if (!sh.est) return; const f = homeFood(sh); f.id = "f-" + uid(); put("foods", f.id, f); const d = UI.dest;
   toast(`${f.name} saved to your foods`); if (d) { UI.dest = d; destPick(f); } else closeSheet(); };
@@ -13497,7 +13522,7 @@ Reply with only JSON: {"items":[{"id": "known id or null", "name": "string", "gr
     const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : {}); if (UI.sheet !== sh) return;
     const raw = (j?.items || []).filter(x => x && x.grams > 0).slice(0, 15).map(x => {
       const f = x.id && getFood(x.id); if (f) return { on: true, name: f.name, g: r0(x.grams), food: f };
-      const p = x.per100 || {}, per = { kcal: r0(num(p.kcal)), p: r1(num(p.protein)), c: r1(num(p.carbs)), f: r1(num(p.fat)), fib: 0 }, { role, meals } = guessRoleMeals(per, "pantry", x.name || "");
+      const p = x.per100 || {}, per = { kcal: r0(num(p.kcal)), p: r1(num(p.protein)), c: r1(num(p.carbs)), f: r1(num(p.fat)), fib: optN(p.fibre ?? p.fiber) }, { role, meals } = guessRoleMeals(per, "pantry", x.name || "");
       return { on: true, name: x.name || "Food", g: r0(x.grams), isNew: true, food: { id: "ai-" + uid(), name: x.name || "Food", brand: "", unit: "g", per, servings: [], pack: 0, cat: "other", role, meals, source: "ai", orig: clone(per) } }; });
     sh.items = snapPreferUsual(raw, U);
     if (!sh.items.length) { sh.items = null; toast("No foods came back: say a bit more, or try another photo."); }
@@ -13886,7 +13911,7 @@ ACT["sc-ai"] = async () => { const sh = S_(), text = (sh.desc || "").trim(); if 
   const prompt = `A packaged food product with barcode ${sh.code} is not in any database. The user describes it: """${text.slice(0, 600)}""". Estimate its nutrition per 100 g (per 100 ml if it's a drink) as printed on a typical label for this kind of product in Italy, and the usual pack and serving size. Reply with only JSON: {"name":"short product name","brand":"brand or empty","unit":"g or ml","kcal":number,"protein":number,"carbs":number,"fat":number,"fibre":number,"sugars":number,"saturated":number,"salt":number,"pack":number,"serving":number,"confidence":"low|medium|high"}`;
   try { const j = await Sync.sample.json(prompt, { modelTier: "quick" }); if (UI.sheet !== sh) return; const k = +j?.kcal;
     if (!(k > 0 && k < 950)) { toast("No estimate came back: add the brand, flavour and size."); }
-    else { const n = v => Math.max(0, r1(+v || 0)), per = { kcal: r0(k), p: n(j.protein), c: n(j.carbs), f: n(j.fat), fib: n(j.fibre), sug: n(j.sugars), sat: n(j.saturated), salt: n(j.salt) };
+    else { const n = v => Math.max(0, r1(+v || 0)), per = { kcal: r0(k), p: n(j.protein), c: n(j.carbs), f: n(j.fat), fib: optN(j.fibre), sug: optN(j.sugars), sat: optN(j.saturated), salt: optN(j.salt) };
       const name = String(j.name || text).slice(0, 60), f = { ...blankFood(name), brand: String(j.brand || "").slice(0, 40), barcode: sh.code, unit: j.unit === "ml" ? "ml" : "g", per, orig: clone(per), pack: n(j.pack), source: "ai", est: true, note: text.slice(0, 300) };
       if (n(j.serving) > 0) f.servings = [{ l: "1 serving", g: n(j.serving) }]; Object.assign(f, guessRoleMeals(per, "pantry", name));
       const d = UI.dest; toast(`Estimated (${j.confidence || "?"} confidence): check before saving`); openSheet("food", { draft: f, isNew: true, then: "qty", date: sh.date, meal: sh.meal }); UI.dest = d; return; } }
@@ -15228,7 +15253,7 @@ Reply with only JSON: {"name": "recipe name", "servings": number, "time_min": nu
   try { const j = await Sync.sample.json(prompt, sh.photo ? { images: [sh.photo] } : {}); if (UI.sheet !== sh) return;
     const rows = (Array.isArray(j?.ingredients) ? j.ingredients : []).slice(0, 40).filter(x => x && String(x.name || "").trim() && num(x.grams) > 0).map(x => {
       const n = String(x.name).trim().slice(0, 60), hits = foodSearch(n, "all").filter(o => o.t === "food").slice(0, 4), good = hits[0] && hits[0].s >= RI_GOOD;
-      return { n, g: r0(num(x.grams)), u: x.unit === "ml" ? "ml" : "g", cands: hits.map(o => ({ id: o.x.id, name: o.x.name, brand: o.x.brand || "" })), sel: good ? hits[0].x.id : "__new", est: { kcal: r0(num(x.kcal)), p: r1(num(x.protein)), c: r1(num(x.carbs)), f: r1(num(x.fat)), fib: r1(num(x.fiber)) } }; });
+      return { n, g: r0(num(x.grams)), u: x.unit === "ml" ? "ml" : "g", cands: hits.map(o => ({ id: o.x.id, name: o.x.name, brand: o.x.brand || "" })), sel: good ? hits[0].x.id : "__new", est: { kcal: r0(num(x.kcal)), p: r1(num(x.protein)), c: r1(num(x.carbs)), f: r1(num(x.fat)), fib: optN(x.fiber) } }; });
     if (!rows.length) toast("No ingredients came back: paste the list of ingredients too and try again.");
     else sh.res = { name: String(j.name || "Imported recipe").slice(0, 80), servings: Math.max(0.25, num(j.servings) || 1), time: num(j.time_min) > 0 ? r0(num(j.time_min)) : null, rows, note: (Array.isArray(j.steps) ? j.steps : []).map(x => String(x).trim()).filter(Boolean).slice(0, 40).join("\n").slice(0, 4000) };
   } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
@@ -15236,7 +15261,7 @@ Reply with only JSON: {"name": "recipe name", "servings": number, "time_min": nu
 /* the review is confirmed: foods the AI had to invent are created (marked, editable), then the recipe opens in its editor to be saved */
 ACT["ri-make"] = () => { const sh = S_(), R = sh.res; if (!R) return; const ings = []; let made = 0;
   for (const r of R.rows) { if (r.sel === "__skip" || !(num(r.g) > 0)) continue; let id = r.sel;
-    if (id === "__new") { const per = { kcal: r.est.kcal, p: r.est.p, c: r.est.c, f: r.est.f, fib: r.est.fib, sug: 0, sat: 0, salt: 0 }; if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f); const { role, meals } = guessRoleMeals(per, "pantry", r.n);
+    if (id === "__new") { const per = { kcal: r.est.kcal, p: r.est.p, c: r.est.c, f: r.est.f, fib: r.est.fib, sug: optN(), sat: optN(), salt: optN() }; if (!per.kcal) per.kcal = r0(4 * per.p + 4 * per.c + 9 * per.f); const { role, meals } = guessRoleMeals(per, "pantry", r.n);
       const f = { ...blankFood(r.n), id: "ai-" + uid(), unit: r.u, per, orig: clone(per), role, meals, source: "ai" }; put("foods", f.id, f); id = f.id; made++; }
     ings.push({ food: id, g: num(r.g) }); }
   if (!ings.length) { toast("No ingredient left: pick a food for at least one."); return; }
