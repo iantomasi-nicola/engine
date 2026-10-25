@@ -59,6 +59,30 @@ test("Energy and the other charts: y labels are unique, equally spaced and round
   }
 });
 
+/* Train › Calendar: below 1100 px nothing changes (totals in the line above the grid); from 1100 px the side column starts level with the grid, carries the day, its meals and the month's totals,
+   ends close to the grid's bottom, and the totals are not shown twice */
+test("Train calendar: side column fills the grid height on a PC, totals shown once, header on one line", async () => {
+  const fill = () => { const t = todayISO(), M = activeMeals(), fl = allFoods().filter(f => f.per && f.per.kcal > 0); let n = 0;
+    M.forEach((m, mi) => { const its = []; for (let k = 0; k < 1 + mi % 3; k++) its.push(newItem("food", fl[(n++ * 7) % fl.length].id, defaultQty(fl[(n * 7) % fl.length]))); mutateDay(t, day => { day.meals[m.id] = its; }); });
+    for (let i = 0; i < 20; i++) { const d = addDays(t, -i), mk = d.slice(0, 7); S.logm[mk] = S.logm[mk] || { month: mk, days: {} }; S.logm[mk].days[d] = Object.assign(S.logm[mk].days[d] || {}, { workouts: [{ sport: FIT().runSport, min: 30 + (i % 7) * 8, km: 5 + (i % 5), int: "Hard" }] }); }
+    DATA_V++; Object.assign(UI, { tab: "train", trainSeg: "cal", calView: "month", calOff: 0, calSel: t }); render(); };
+  const measure = async page => { await page.evaluate(fill); await page.waitForTimeout(250);
+    return page.evaluate(() => { const vis = el => !!el && getComputedStyle(el).display !== "none" && el.getBoundingClientRect().height > 0, box = s => document.querySelector(s)?.getBoundingClientRect(), g = box(".cv"), sd = box(".cv-side"), c = x => Math.round(x.top + x.height / 2);
+      const head = [".cv-nav", ".cv-kpi .cv-tools", ".cv-top .subseg"].map(s => box(s)), counts = [...document.querySelectorAll(".cv-kpi .cv-mt")].filter(vis).length;
+      return { gridTop: Math.round(g.top), sideTop: Math.round(sd.top), gridBottom: Math.round(g.bottom), sideBottom: Math.round(sd.bottom), month: vis(document.querySelector(".cv-month")), meals: vis(document.querySelector(".cv-meals")), counts, head: head.map(c), main: document.querySelector("#main").scrollWidth <= innerWidth }; }); };
+  for (const vp of [H.VIEWPORTS.desktop, wide]) {
+    const page = await start(vp), m = await measure(page);
+    assert.equal(m.sideTop, m.gridTop, "side column level with the grid"); assert.ok(m.gridBottom - m.sideBottom < 60 && m.sideBottom - m.gridBottom < 60, `side ${m.sideBottom} vs grid ${m.gridBottom}`);
+    assert.ok(m.month && m.meals, "month card and meals shown"); assert.equal(m.counts, 0, "totals not repeated above the grid"); assert.ok(Math.max(...m.head) - Math.min(...m.head) <= 2, "header on one line " + m.head);
+    assert.deepEqual(app.errors, []); await app.close(); app = null;
+  }
+  for (const vp of [H.VIEWPORTS.tablet, H.VIEWPORTS.phone]) {
+    const page = await start(vp), m = await measure(page);
+    assert.ok(!m.month && !m.meals && m.counts >= 3, "tablet and phone keep the line of totals: " + JSON.stringify(m)); assert.ok(m.main);
+    await app.close(); app = null;
+  }
+});
+
 /* every calculator (on a phone the plate list is a text field and takes a row of its own): the fields of a card sit on one grid (same width, same top in a row), every unit label on the same axis inside its field, and no field is cut */
 test("Tools calculators: fields on one grid, unit labels on one axis, 1RM output on one right axis", async () => {
   for (const vp of [H.VIEWPORTS.phone, H.VIEWPORTS.tablet, H.VIEWPORTS.desktop, wide]) {

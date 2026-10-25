@@ -201,8 +201,9 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 @media (max-width:380px){.seg[role]:not(.many) button{padding:0 10px!important;font-size:13px!important}header.top .seg[role]{gap:6px!important}header.top .seg[role] button{padding:0 11px!important}.subseg[role] button{padding:0 12px}header.top .seg.many[role] button{padding:0 11px!important}}
 /* expanded (computer): calendar and the open day side by side */
 .cv-split{display:flex;flex-direction:column;gap:14px}
-.cv-next{display:none}
-@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
+.cv-next,.cv-month,.cv-meals{display:none}.cv-head{display:contents}
+@media (min-width:1100px){.cv-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}.cv-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}.cv-month{display:flex;flex-direction:column;gap:10px;padding:14px 16px}.cv-month .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.cv-meals{display:flex;flex-direction:column;margin-top:8px}.cv-meals .flabel{padding:0 0 2px}.cv-meals .lrow{padding:7px 0!important;min-height:0;font-size:14px}.cv-meals .lrow .t{font-size:14px}.cv-meals .lrow .num{font-size:13.5px}.cv-meals .flabel+.lrow{border-top:0}.cv-kpi .cv-mt{display:none}.cv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cv-head .cv-top{display:contents}.cv-head .cv-kpi{order:1;margin-left:auto}.cv-head .subseg{order:2}.cv-next{display:flex;flex-direction:column;gap:2px;padding:14px 16px 4px}.cv-next .flabel{padding:0 0 6px}.cv-next .lrow{padding-inline:0!important}.cv-next .flabel+.lrow{border-top:0}}
+@media (min-width:1500px){.cv-split{grid-template-columns:minmax(0,1fr) 380px!important}}
 /* expanded: settings groups in two columns */
 @media (min-width:1280px){.set-group:has(.set-grp){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.set-group:has(.set-grp)>*{min-width:0}}
 
@@ -7981,6 +7982,11 @@ function calItem(d, x, k, narrow) {
   if (narrow) return `<span class="cv-bar ${x.st}" style="--c:${calColor(x)}"${drag}></span>`;
   return `<span class="cv-s ${x.st}" data-act="wo-open" ${dsAttr(d, x, k)}${drag} role="button" tabindex="0" style="--c:${calColor(x)}"><b>${esc(shortSport(w.sport))}</b><i>${w.min ? r0(w.min) + "′" : ""}${w.km ? ` ${r1(w.km)}k` : ""}</i></span>`;
 }
+/* PC only (the side column has the room): what the day holds at the table, one row per meal with food, opening that day in Fuel */
+function calMealRows(d) {
+  const day = S.days[d], ml = day ? activeMeals().map(m => [m.name, mealTotals(day.meals?.[m.id] || []), (day.meals?.[m.id] || []).length]).filter(x => x[2]) : [];
+  return ml.length ? `<div class="cv-meals"><span class="flabel">Meals</span>${ml.map(([n, t, c]) => `<button class="lrow" data-act="open-day-plan" data-date="${d}"><span style="min-width:0"><span class="t">${esc(n)}</span><span class="s">${c} food${c > 1 ? "s" : ""}</span></span><span class="end num">${fmtN(r0(t.kcal))} kcal</span></button>`).join("")}</div>` : "";
+}
 function calDayPanel(d) {
   const today = todayISO(), its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d), L = logGet(d) || {};
   const rows = its.map((x, k) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null;
@@ -7991,9 +7997,12 @@ function calDayPanel(d) {
       <div class="row" style="gap:6px">${d >= today ? `<button class="btn tonal sm" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}">${ic(UI.clip ? "copy" : "plus", "sm")}${UI.clip ? "Paste" : "Plan"}</button>` : ""}${d > today ? `<button class="btn soft sm" data-act="rc-new" data-date="${d}">${ic("flag", "sm")}Race</button>` : ""}<button class="btn soft sm" data-act="open-checkin" data-date="${d}">${ic("edit", "sm")}${d <= today ? "Log" : "Edit"}</button></div></div>
     ${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${esc(r.sport || "Race")}${r.km ? ` · ${r1(r.km)} km` : ""}${r.goal ? ` · goal ${esc(r.goal)}` : ""}</small></span><span class="cv-st">${r.pri || ""}-race</span></button>`).join("")}
     ${rows || `<div class="cv-empty">${d < today ? "Nothing logged · rest day" : "Rest day"}</div>`}
-    <button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
+    ${calMealRows(d)}<button class="btn text sm" data-act="open-day-plan" data-date="${d}" style="align-self:flex-start">${ic("plate", "sm")}Meals of this day</button></section>`;
 }
-/* the right-hand column of the calendar on a PC: the open day, then the sessions still to come */
+/* the right-hand column of the calendar on a PC: the open day, the month's totals (the line above the grid shows them on smaller screens), then the sessions still to come */
+function calMonthCard(done, plan, future, min, km, tl) {
+  return `<section class="card cv-month" aria-label="This month"><span class="flabel">This month</span>${done || plan ? `<div class="stat-grid">${kpi(`${done}${plan && future ? ` / ${plan}` : ""}`, "sessions")}${kpi(hmOf(min), "time")}${kpi(km ? r1(km) : "0", "km")}${kpi(fmtN(r0(tl)), "load")}</div>` : `<div class="faint" style="font-size:13px">No sessions this month</div>`}</section>`;
+}
 function calNextCard(sel) {
   const today = todayISO(), L = [];
   for (let i = 0; i <= 14 && L.length < 5; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 5) L.push([d, x]); }
@@ -8009,9 +8018,9 @@ function trainCalendar() {
   // month totals
   let mMin = 0, mKm = 0, mTl = 0, mDone = 0, mPlan = 0;
   for (let d = ms; d <= me; d = addDays(d, 1)) for (const x of daySessions(d)) { if (x.st !== "missed") { mMin += +x.w.min || 0; mTl += tlOf(x.w); if (x.w.sport === fit.runSport) mKm += +x.w.km || 0; } if (x.st === "done") mDone++; if (x.st !== "done" || x.p) mPlan++; }
-  let h = clipBar() + `<div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
+  let h = clipBar() + `<div class="cv-head"><div class="cv-top"><div class="cv-nav"><button class="icon-btn" data-act="cal-off" data-d="-1" aria-label="Previous month">${ic("chevL")}</button><b>${m0.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</b><button class="icon-btn" data-act="cal-off" data-d="1" aria-label="Next month">${ic("chevR")}</button>${off ? `<button class="chip sm" data-act="cal-today">Today</button>` : ""}</div>
     ${subBar("cal-view", view, [["week", "Week"], ["month", "Month"], ["agenda", "Agenda"]])}</div>
-    <div class="cv-kpi">${mDone || mPlan ? `<span><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span><b>${r1(mKm)}</b> km</span>` : ""}<span><b>${fmtN(r0(mTl))}</b> load</span>` : `<span>No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div>`;
+    <div class="cv-kpi">${mDone || mPlan ? `<span class="cv-mt"><b>${mDone}</b>${mPlan && ms >= weekStartOf(today) ? ` / ${mPlan}` : ""} sessions</span><span class="cv-mt"><b>${hmOf(mMin)}</b> time</span>${mKm ? `<span class="cv-mt"><b>${r1(mKm)}</b> km</span>` : ""}<span class="cv-mt"><b>${fmtN(r0(mTl))}</b> load</span>` : `<span class="cv-mt">No sessions this month</span>`}<span class="cv-tools"><label class="btn text sm" title="Import a GPX, TCX or FIT file">${ic("download", "sm")}Route${routeInput()}</label>${icuChip()}${icuLinked() ? "" : `<button class="btn text sm" data-act="icu-open">${ic("download", "sm")}Import</button>`}</span></div></div>`;
   if (view === "agenda") {
     h += `<div class="cv-agenda" data-calswipe>`;
     for (let ws = weekStartOf(ms); ws <= me; ws = addDays(ws, 7)) {
@@ -8034,7 +8043,7 @@ function trainCalendar() {
     const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)];
     h += `<div class="cv-w">${cells}<div class="cv-sum">${phPill(weekPhase(ws).ph, true)}${T.n ? `<b>${hmOf(T.min)}</b><small>${T.n} sess.</small>${T.km ? `<small>${r1(T.km)} km</small>` : ""}<small>load ${r0(T.tl)}</small>` : ""}${fe ? `<small>fitness ${r0(fe.ctl)}</small>` : ""}</div></div>`;
   }
-  h += `</div><div class="cv-side">${calDayPanel(sel)}${calNextCard(sel)}</div></div>`;
+  h += `</div><div class="cv-side">${calDayPanel(sel)}${calMonthCard(mDone, mPlan, ms >= weekStartOf(today), mMin, mKm, mTl)}${calNextCard(sel)}</div></div>`;
   return h + `<div class="cv-leg"><span><i class="cv-dot done" style="--c:var(--fat)"></i>Done</span><span><i class="cv-dot planned" style="--c:var(--fat)"></i>Planned</span><span><i class="cv-dot missed" style="--c:var(--bad)"></i>Missed</span><span><i style="background:var(--fat)"></i>Light</span><span><i style="background:var(--carb)"></i>Moderate</span><span><i style="background:var(--pro)"></i>Hard</span></div>
     <div class="faint" style="font-size:12.5px">Tap a day to open it. Drag a session to another day to move it (long-press on the phone, Alt while dropping to copy). Swipe the month sideways to change it.</div>`;
 }
