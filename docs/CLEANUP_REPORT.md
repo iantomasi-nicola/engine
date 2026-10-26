@@ -467,3 +467,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `bfAt`/`bfGap` al posto delle letture dirette di `logGet(d).bf` in `energySeries`, `leanEst`, Progress › Body, report, obiettivi, foto, esportazione; l'import in `icu-direct.js` e `icuApplyWellness` scrive `bfIcu`; `saveWeighIn` marca `bfSrc`.
 - **Eliminato**: `scale-test.html` (sorgente e copia in root), `tests/scale-test.test.js`, la riga di copia in `build-web.js` (il peso arriva da intervals.icu).
 - **Aperto**: scarto costante (vedi L199); `ciDone` non conta più un grasso solo importato come check-in fatto; nei file di root la build va rigenerata alla pubblicazione.
+
+## Consistency & Cleanup Report: M14b gruppo D, Fuel (27/10/2026)
+- **Verificato**: `tests/m14b-fuel.test.js` (9 test, tutti rossi sul sorgente di partenza e verdi dopo: dispensa e Undo, Clear, copia giorno, treat, abitudini, nome piatto, pasto spento, giorni passati), `meal-plan`, `planner-quick`, `planner-range`, `m5c` verdi (44 in tutto).
+- **Cambiato**: tutti gli Undo del Fuel usano `undoDays(snap)` (giorni e giacenza), `mutateDay` accetta `opts.onUndo`; copie e incolla passano da `putClones`; `habitSrc` (con cache) sotto `habitItems`; `pwWhere` condiviso da «Copy/Move to…» e dal nuovo foglio `pwadd`.
+- **Eliminato**: le tre copie del filtro «cibo esistente» e del blocco giorno/pasto dei fogli (ora `itemExists`, `pwWhere`), i cancellamenti diretti di `d.meals = {}` sostituiti da `removeItems`.
+- **Aperto**: vedi R1c in `docs/PRODUCT_REQUIREMENTS.md`.
