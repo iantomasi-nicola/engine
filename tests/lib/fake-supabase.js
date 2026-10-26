@@ -25,11 +25,15 @@ window.supabase = { createClient: () => {
 } };`;
 
 /* the server: rows per user (data, and the updated_at the client wrote or the server stamped), kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
+/* timestamps as Postgres returns timestamptz through PostgREST: microseconds and +00:00, whatever notation the client wrote (…123Z or …123456+00:00); equality is by instant */
+let tsSeq = 0;
+const canonTs = x => { const m = /^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d+))?(?:Z|[+-]00:?00)$/.exec(String(x || "")); return m ? `${m[1]}.${(m[2] || "").padEnd(6, "0").slice(0, 6)}+00:00` : String(x || ""); };
+const stampTs = () => canonTs(new Date().toISOString().slice(0, 23) + String(100 + (tsSeq++ % 900)) + "Z");
 function server({ maxRows = 1000 } = {}) {
   const S = { users: new Map(), log: [], maxRows, devs: [], reject: null, onPage: null };
   S.rows = uid => S.users.get(uid) || S.users.set(uid, new Map()).get(uid);
   S.get = (uid, path) => { const r = S.rows(uid).get(path); return r ? JSON.parse(JSON.stringify(r.data)) : undefined; };
-  S.set = (uid, path, data, ua) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: JSON.parse(JSON.stringify(data)), at: Date.now(), ua: ua || new Date().toISOString() }); };
+  S.set = (uid, path, data, ua) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: JSON.parse(JSON.stringify(data)), at: Date.now(), ua: ua ? canonTs(ua) : stampTs() }); };
   const tell = (dev, row) => { for (const d of S.devs) if (d !== dev && d.uid === dev.uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "UPDATE", new: r }), { path: row.path, data: row.data }).catch(() => {}); };
   S.handle = async (dev, spec) => {
     if (dev.down) return { data: null, error: { message: "TypeError: Failed to fetch" }, status: 0 };
@@ -58,7 +62,7 @@ function server({ maxRows = 1000 } = {}) {
     }
     if (spec.op === "update") {
       const row = spec.row, path = spec.eq?.path, cur = T.get(path);
-      if (!cur || ("updated_at" in (spec.eq || {}) && cur.ua !== spec.eq.updated_at) || (spec.is && "updated_at" in spec.is && cur.ua != null)) return { data: [], error: null, status: 200 };
+      if (!cur || ("updated_at" in (spec.eq || {}) && cur.ua !== canonTs(spec.eq.updated_at)) || (spec.is && "updated_at" in spec.is && cur.ua != null)) return { data: [], error: null, status: 200 };
       if (S.reject && S.reject(path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
       S.set(uid, path, row.data, row.updated_at); S.log.push([dev.name, "update", path]); tell(dev, { path, data: row.data });
       return { data: [{ path }], error: null, status: 200 };
@@ -107,4 +111,4 @@ async function device(srv, name, { dir, uid = "u1", seed = null, local = null, v
   await dev.open();
   return dev;
 }
-module.exports = { server, device, STUB };
+module.exports = { server, device, STUB, canonTs };
