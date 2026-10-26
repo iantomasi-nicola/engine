@@ -492,3 +492,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `let PCNT` spostato prima di `VIEWS.live` (nessun rischio TDZ); `.pc-box` raggruppa tile, −1 e Stop alla stessa larghezza.
 - **Eliminato**: nulla. Nessun coefficiente energetico aggiunto (MET di futsal/nuoto non presenti nel codice).
 - **Aperto**: prova del sensore sul telefono e taratura delle soglie; MET di default per futsal e nuoto (serve fonte primaria e approvazione del proprietario); «10 reps» compare sopra e nello stepper Reps (preesistente).
+
+## Consistency & Cleanup Report: L202 Indietro e chiusura alla schermata giusta (27/10/2026)
+- **Fatto**: livello cronologia (`NAV`, `navSync`, `navPop`, `navRestore` vicino a `closeSheet`): `navSync()` gira a fine `render()`, `renderSheet()` e `closeSheet()`; `popstate` ripristina vista, segmento e catena di fogli. `openSheet` mette `_ret` a ogni foglio aperto da un foglio (prima solo catene `keep`), `keep:false` lo esclude; `ACT.tab` taglia la catena. I `history.replaceState(null…)` dei deep link (`?a=`, `?supp=`, `#report`) ora conservano `history.state`.
+- **Verificato**: `tests/l202-back.test.js` (7, falliscono sul vecchio albero con `ENGINE_L202_REF=HEAD`), nav-return, shop-quick, pre-start, m13a, 15 file di test di fogli/liste/negozi/cibi (105 verdi), smoke 3 viewport.
+- **Eliminato**: la condizione `keep || _ret` in `openSheet` (sostituita dalla regola generale).
+- **Aperto**: posizione di scorrimento delle viste non ripristinata; dopo un reload le voci di cronologia precedenti non hanno istantanea (Indietro lì chiude solo l'eventuale foglio); suite completa non eseguita in questo ramo.
