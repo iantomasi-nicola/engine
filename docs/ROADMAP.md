@@ -5,6 +5,8 @@ Regola: una milestone alla volta, approvata dall'utente prima di iniziare, branc
 Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate su `main`** (build 202610241056). **In corso (approvate): M4 e M7a2 (AEE P0/P1).** Proposta in attesa: **M4b Daily Journal.** Baseline `cae350d` (vedi `BASELINE_AND_AUDIT.md`).
 
 ## Ordine (dipendenze → impatto → rischio)
+
+**REGOLA D'ORDINE (decisa dall'utente il 26/10): M13 (redesign totale, con Today dashboard L201 e armonia delle schermate L200) è l'ULTIMA milestone di sviluppo, da fare dopo tutte le altre (funzioni, M19, M7d/M7e, M8c, M16, audit M14b, ecc.) e subito prima di M14 (revisione critica) e M15 (audit finale e pulizia repo). Nessuna milestone nuova va messa dopo M13; le richieste nuove vanno prima di M13.**
 | Milestone | Contenuto (ID) | C | Rischio | Stato |
 |---|---|---|---|---|
 | **M0 Rete di sicurezza** | ENG-01, 02 (base), 04, 05, 08 | M | Basso | **Completata** (da `tests/`, report all'utente) |

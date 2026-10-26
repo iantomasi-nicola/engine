@@ -29,6 +29,8 @@ COME LAVORI (velocita': l'utente trova il ritmo lento)
 - A OGNI pubblicazione scrivi in italiano: cosa e' stato pubblicato e DOVE provarlo a mano passo passo (menu/schermata/azione), SHA di rollback, cosa manca e perche'. Annuncia una novita' SOLO se e' provabile dal sito su GitHub Pages (gia' in main con i file di root ricostruiti); mai annunciare lavoro non pubblicato. Rispondi a ogni punto del messaggio dell'utente (fatto / dove / cosa manca).
 - Aggiorna PRODUCT_REQUIREMENTS e ROADMAP nello stesso commit; a fine gruppo il "Consistency & Cleanup Report" in CLEANUP_REPORT; prima di fermarti aggiorna HANDOFF §1.
 
+REGOLA D'ORDINE (utente, 26/10): M13 redesign totale e' l'ULTIMA milestone di sviluppo, subito prima di M14 e M15; ogni richiesta nuova va prima di M13.
+
 PROSSIMI PASSI (ordine e modello consigliato; mai impegno max, xhigh solo se davvero necessario e dichiarato; nessun modello con crediti extra senza l'ok dell'utente)
 1. M14b revisione integrale a gruppi piccoli di 3-4 aree per volta con area-auditor (sicurezza, dati/sync/offline, nutrizione per prime; docs/REVIEW_PLAN.md), poi correzioni a gruppi con milestone-builder: Opus 5.5 high per le aree critiche, Sonnet 5.5 high per il resto.
 2. M7d (BMR e target flessibili, D10 resto, D13) e M7e (micronutrienti con AI L16, idratazione D14, EA D15): le formule NUOVE vanno proposte e approvate dall'utente prima del codice (la sua approvazione «le nuove formule te le approvo tutte» copre solo quelle già in NUTRITION_AUDIT/L155): Opus 5.5 high.
