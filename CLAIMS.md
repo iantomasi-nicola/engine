@@ -16,3 +16,4 @@
 | SHIP | released | pubblicazione M17 + docs audit | other | claude/bf-icu-guard | 2026-10-26 18:14Z | 2026-10-26 18:14Z | main = 2ec0391, rollback 93068ae (M17 + docs audit) |
 | L211-sync | active | L211 sync: difetti gravi dell'audit | sync | claude/l211-sync | 2026-10-26 18:31Z | 2026-10-27 00:31Z |  |
 | L211-sec | active | L211 XSS data-*, day.adj, restore malformato | foods,fuel,shopping | claude/l211-sec | 2026-10-26 18:31Z | 2026-10-27 00:31Z |  |
+| L211-nav | active | L211 navigazione: Indietro, fotocamera | other,pwa | claude/l211-nav | 2026-10-26 18:31Z | 2026-10-27 00:31Z |  |
