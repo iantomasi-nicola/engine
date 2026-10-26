@@ -10,4 +10,4 @@
 | M14b-C | active | M14b gruppo C PWA + R2 | pwa,tests | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 16:54Z |  |
 | M14b-EF | active | M14b gruppi E Shopping+L189 e F Foods | foods,shopping | claude/m14b-ef | 2026-10-26 13:35Z | 2026-10-26 19:35Z |  |
 | L202 | released | Indietro e chiusura tornano alla schermata giusta | other | claude/l202-back | 2026-10-26 13:42Z | 2026-10-26 14:43Z | Fatto e unito in claude/awesome-goldberg-ontswx; in pubblicazione |
-| SHIP | active | pubblicazione M14b A-F, M12, L188, L189, L202 | other | claude/awesome-goldberg-ontswx | 2026-10-26 14:43Z | 2026-10-26 15:43Z |  |
+| SHIP | released | pubblicazione M14b A-F, M12, L188, L189, L202 | other | claude/awesome-goldberg-ontswx | 2026-10-26 14:43Z | 2026-10-26 14:58Z | main = bbc135a, rollback 86f14f4 |
