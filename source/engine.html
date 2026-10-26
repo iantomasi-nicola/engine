@@ -5452,7 +5452,7 @@ function closeSheet(all) { navBlur(); camRelease(); for (const k in DRAFT) delet
 const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0, sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };   // sid: entries carry the page load that made them, so a reload never confuses the numbers
 const navDepth = () => { let n = 0; for (let x = UI.sheet; x; x = x._ret) n++; return n; };
 function navKey() { const t = UI.tab; return [t, FUEL_TABS.includes(t) ? UI.fuelTab : "", t === "train" ? UI.trainSeg : t === "progress" ? UI.progSeg : t === "foods" ? UI.foodsSeg : "", navDepth() + (document.querySelector(".chfs") ? .5 : 0)].join("|"); }   // a full-screen chart is half a step on top of the screen
-function navSnap() { return { key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
+function navSnap() { return { dv: DATA_V, key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
 function navSync() {
   try {
     if (NAV.busy) return;
@@ -5461,7 +5461,7 @@ function navSync() {
     const view = k.slice(0, k.lastIndexOf("|")); let j = NAV.i - 1;   // the same place a few sheets down in this view (a sheet chain closed in one go): step back to it, not onto a new entry
     for (; j >= 0; j--) { const e = NAV.snaps[NAV.stack[j]]; if (!e || e.key.slice(0, e.key.lastIndexOf("|")) !== view) { j = -1; break; } if (e.key === k) break; }
     if (j >= 0) { const d = NAV.i - j; NAV.i = j; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.go(-d); return; }
-    const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id, sid: NAV.sid }, "");
+    const id = ++NAV.seq; for (const old of NAV.stack.slice(NAV.i + 1)) delete NAV.snaps[old]; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); if (NAV.stack.length > 50) delete NAV.snaps[NAV.stack[NAV.stack.length - 51]]; history.pushState({ eng: id, sid: NAV.sid }, "");   // the browser keeps ~50 entries: older snapshots (photos, drafts) are not kept
   } catch (e) {}
 }
 function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
@@ -5475,9 +5475,9 @@ function navRestore(snap) {
 function navPop(e) {
   if (NAV.busy) { navSettled(); return; }
   if (!e.state || e.state.eng == null) return;
-  if (e.state.sid !== NAV.sid) { try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (x) {} NAV.stack = [0]; NAV.i = 0; NAV.snaps = {}; if (UI.sheet) UI.sheet = null; navRestore(navSnap()); NAV.snaps[0] = navSnap(); return; }   // an entry of an earlier page load: it can't be restored, it becomes the first screen
-  const id = e.state.eng, at = NAV.stack.indexOf(id), snap = NAV.snaps[id];
-  if (at < 0 || !snap) { if (UI.sheet) { UI.sheet = null; navRestore(navSnap()); } return; }
+  const id = e.state.eng, at = NAV.stack.indexOf(id); let snap = NAV.snaps[id];
+  if (e.state.sid !== NAV.sid || at < 0 || !snap) { try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (x) {} NAV.stack = [0]; NAV.i = 0; NAV.snaps = {}; UI.sheet = null; navRestore(navSnap()); NAV.snaps[0] = navSnap(); return; }   // an entry of an earlier page load, or one whose snapshot is gone: it can't be restored, it becomes the first screen
+  if (at > NAV.i && snap.sheet && snap.dv !== DATA_V) { const k = snap.key.slice(0, snap.key.lastIndexOf("|")) + "|0"; snap = NAV.snaps[id] = { ...snap, sheet: null, key: k }; }   // forward onto a sheet after the data changed (a deleted food's editor): the screen without the sheet
   NAV.i = at; snap.key = snap.key.replace(/\.5$/, ""); navRestore(snap);   // forward onto a full-screen chart entry shows the screen without it
 }
 window.addEventListener("popstate", navPop);

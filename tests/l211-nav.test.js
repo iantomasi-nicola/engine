@@ -150,3 +150,30 @@ test("a home-screen shortcut (?a=) opens its screen once: the first entry no lon
   assert.equal(/[?&]a=/.test(page.url()), false);
   await app.reload(); assert.equal(await app.page.evaluate(() => UI.sheet?.type ?? null), null);
 });
+
+test("Forward reopens a closed sheet only if nothing changed meanwhile: a deleted food's editor does not come back (and Save cannot resurrect it)", async () => {
+  /* Foods > editor(t-oil) > Delete > Forward: no editor, the food stays deleted. Control: Back from the list sheet then Forward with no change = the list again */
+  const page = await start();
+  await go(page, () => ACT["shopq-open"]()); await back(page); await page.evaluate(() => history.forward()); await page.waitForTimeout(400);
+  assert.equal((await where(page)).sheet, "shopq", "plain redo still works");
+  await go(page, () => ACT["close-sheet"]());
+  await go(page, () => ACT["tab"]({ dataset: { tab: "foods" } })); await go(page, () => ACT["edit-food"]({ dataset: { id: "t-oil" } }));
+  await go(page, () => ACT["fd-del"]());
+  assert.equal(await page.evaluate(() => !!S.foods["t-oil"].hidden), true);
+  await page.evaluate(() => history.forward()); await page.waitForTimeout(500);
+  assert.equal((await where(page)).sheet, null, "the editor of the deleted food is not reopened");
+  await go(page, () => { try { ACT["fd-save"](); } catch (e) {} });
+  assert.equal(await page.evaluate(() => !!S.foods["t-oil"].hidden), true, "still deleted");
+  assert.deepEqual(app.errors, []);
+});
+
+test("the history snapshots are pruned: after 70 view changes at most ~50 are kept and Back still works", async () => {
+  const page = await start(); const tabs = ["plan", "train", "progress"];
+  for (let k = 0; k < 70; k++) { await page.evaluate(t => ACT["tab"]({ dataset: { tab: t } }), tabs[k % 3]); await page.waitForTimeout(50); }
+  assert.ok(await page.evaluate(() => NAV.stack.length) >= 60, "the loop really made the entries");
+  await page.waitForTimeout(500);
+  assert.ok(await page.evaluate(() => Object.keys(NAV.snaps).length) <= 52, "bounded");
+  await back(page); await back(page);
+  assert.equal(await page.evaluate(() => UI.tab), tabs[(69 - 2) % 3]);
+  assert.deepEqual(app.errors, []);
+});
