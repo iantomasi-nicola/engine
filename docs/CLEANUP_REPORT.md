@@ -560,3 +560,8 @@ Verified: 14 review defects (phone day header, Paste accent, week cell icon orde
 - **Verificato**: i tre gruppi di test di sync, sicurezza/Fuel e navigazione/PWA sul ramo unito, smoke, build normale e minificata (ogni `<script>` inline ha il suo hash nella CSP, nessun `'unsafe-inline'` in `script-src`).
 - **Cambiato**: una sola `cleanDay(d, id)` per i giorni del piano (struttura del sync + id sicuri di sec: al posto di `cleanDays` e `cleanDayIds`); `docShape` applica `DOC_INNER` e poi `cleanShopIds`; `shapeDoc`, `bkClean`, `rs-go` e `applyCollection` usano `docShape`/`cleanColl(…, kind)`/`unionDone()`/`normalizeRecords`. `DOC_INNER.shop` teneva le `stores` solo se stringhe, ma sono oggetti `{id, name}`: le scartava tutte (difetto del ramo sync, trovato dall'unione); `tests/l211-sync-restore.test.js` usava stringhe e ora usa la forma vera.
 - **Eliminato**: `cleanDays`, `cleanDayIds`, la vecchia `shapeDoc` di sec con i valori predefiniti ripetuti.
+
+## Consistency & Cleanup Report: menu notifiche più corto (L213, 26/10/2026)
+- **Verificato**: `tests/reminders-fold.test.js` (2), `m11c`, `settings-typing`, `ux-habits`, `m7c` verdi; screenshot a 390 px prima/dopo (gruppo Reminders 2239 → 1325 px).
+- **Cambiato**: `remFold` (sezione ripiegabile chiusa con riga di stato, stesso markup `.set-det.fx` e stessa memoria `UI.setDet`), `prePrefs`, `checkPrefs` e `reminderPrefs`; i wrapper che aggiungono rapporto settimanale e push continuano a inserirsi prima del tasto del calendario, ora dentro la terza sezione.
+- **Aperto**: i blocchi Supplements, Water and caffeine, Daily journal e Daily check-in restano schede separate dentro lo stesso gruppo (valutare di ripiegarli in M19/M13); revisione grafica a 820/1440 e in scuro.
