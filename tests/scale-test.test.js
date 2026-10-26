@@ -26,3 +26,29 @@ test("the page lists what the browser supports and shows a frame it receives (st
   assert.equal(await pg.textContent("#w"), "70 kg"); assert.match(await pg.textContent("#d"), /impedance 500 ohm · stable/);
   assert.deepEqual(errs, []); await br.close();
 });
+
+test("without scanning support the page asks for any nearby device (no name filter), then listens to it and can probe the connection (stubbed)", async () => {
+  const dir = H.build(H.tmp("scale-build2")); const { chromium } = require("playwright"), br = await chromium.launch(), pg = await br.newPage(), errs = []; pg.on("pageerror", e => errs.push(String(e)));
+  await pg.addInitScript(() => { const dev = Object.assign(new EventTarget(), { name: "MIBFS", watchAdvertisements: async () => {}, gatt: { connect: async () => ({ getPrimaryServices: async () => [{ uuid: "0000181b-0000-1000-8000-00805f9b34fb", getCharacteristics: async () => [{ uuid: "00002a9c-0000-1000-8000-00805f9b34fb", properties: { indicate: true }, addEventListener() {}, startNotifications: async () => {} }] }] }) } });
+    navigator.bluetooth = Object.assign(new EventTarget(), { requestDevice: async o => { window.__opts = o; return dev; } }); window.__dev = dev; });
+  await pg.goto("file://" + path.join(dir, "scale-test.html"));
+  await pg.click("#go"); await pg.waitForFunction(() => /Listening/.test(document.getElementById("log").textContent));
+  assert.equal(await pg.evaluate(() => window.__opts.acceptAllDevices), true);
+  await pg.click("#gatt"); await pg.waitForFunction(() => /Connected: 1 services/.test(document.getElementById("d").textContent));
+  assert.match(await pg.textContent("#log"), /service 0000181b.*2a9c\[indicate\]/); assert.match(await pg.textContent("#log"), /subscribed to 2a9c/);
+  assert.deepEqual(errs, []); await br.close();
+});
+
+test("Stop really stops (aborts the watch and ignores later frames); an encrypted Xiaomi frame (FE95) is shown as unreadable", async () => {
+  const dir = H.build(H.tmp("scale-build3")); const { chromium } = require("playwright"), br = await chromium.launch(), pg = await br.newPage(), errs = []; pg.on("pageerror", e => errs.push(String(e)));
+  await pg.addInitScript(() => { const dev = Object.assign(new EventTarget(), { name: "Xiaomi Scale S400 89B9", watchAdvertisements: async o => { window.__sig = o.signal; } });
+    navigator.bluetooth = Object.assign(new EventTarget(), { requestDevice: async () => dev }); window.__dev = dev; });
+  await pg.goto("file://" + path.join(dir, "scale-test.html"));
+  await pg.click("#go"); await pg.waitForFunction(() => /Listening/.test(document.getElementById("log").textContent));
+  const send = () => pg.evaluate(() => { const sd = new Map([["0000fe95-0000-1000-8000-00805f9b34fb", new DataView(Uint8Array.from([0x30, 0x58, 0x5b, 0x05, 0x01, 0x02, 0x03]).buffer)]]); __dev.dispatchEvent(Object.assign(new Event("advertisementreceived"), { serviceData: sd, rssi: -50, device: { name: "Xiaomi Scale S400 89B9" } })); });
+  await send(); assert.match(await pg.textContent("#log"), /other service fe95[\s\S]*ENCRYPTED/);
+  await pg.click("#stop"); assert.equal(await pg.evaluate(() => window.__sig.aborted), true); assert.equal(await pg.textContent("#d"), "Stopped.");
+  const before = await pg.textContent("#log"); await pg.evaluate(() => { const sd = new Map([["0000fe95-0000-1000-8000-00805f9b34fb", new DataView(Uint8Array.from([9, 9, 9]).buffer)]]); __dev.dispatchEvent(Object.assign(new Event("advertisementreceived"), { serviceData: sd, rssi: -50, device: {} })); });
+  assert.equal(await pg.textContent("#log"), before, "no frame is logged after Stop"); assert.equal(await pg.isDisabled("#go"), false);
+  assert.deepEqual(errs, []); await br.close();
+});
