@@ -87,6 +87,7 @@ for (const [name, part] of Object.entries(BAD())) test("A2 device copy with " + 
 test("A2 a screen that still throws leaves an emergency way out (Restore points) instead of a blank page", async () => {
   const app = await H.startApp({ dir, seed: F.seed({ withPlan: true }) });
   try {
+    app.allowRenderFailed();   // this test WANTS the emergency card
     await app.page.evaluate(() => { VIEWS.today = () => { throw new Error("boom"); }; UI.tab = "today"; render(); });
     const t = await app.page.evaluate(() => document.querySelector("#main").innerText);
     assert.match(t, /couldn.t be drawn/i);
