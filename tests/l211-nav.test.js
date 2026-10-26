@@ -94,3 +94,16 @@ test("after Swap is done, Back does not reopen the confirmation that was already
   await back(page); assert.equal((await where(page)).sheet, null, "Back leaves the list, it does not reopen the swap");
   assert.deepEqual(app.errors, []);
 });
+
+test("a tab change from inside a sheet chain: the chain closes in the history too, and Back goes to the view the chain was opened from", async () => {
+  /* Today > shopq(1) > buy(2) > tab Foods: history = [Today, Foods]; Back = Today with no sheet, never a half-restored buy */
+  const page = await start();
+  await go(page, () => ACT["shopq-open"]()); await go(page, () => ACT["shop-buy"]({ dataset: { id: "t-chicken" } }));
+  await go(page, () => ACT["tab"]({ dataset: { tab: "foods" } })); await page.waitForTimeout(500);
+  assert.deepEqual(await where(page), { tab: "foods", sheet: null, dom: null });
+  assert.equal(await page.evaluate(() => NAV.i), 1);
+  await back(page); assert.deepEqual(await where(page), { tab: "today", sheet: null, dom: null });
+  await page.evaluate(() => history.forward()); await page.waitForTimeout(400);
+  assert.deepEqual(await where(page), { tab: "foods", sheet: null, dom: null });
+  assert.deepEqual(app.errors, []);
+});

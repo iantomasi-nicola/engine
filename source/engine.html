@@ -5445,7 +5445,7 @@ function sheetClosed() {
 const navBlur = () => { if (typingBusy()) document.activeElement.blur(); };
 /* the camera (the only open stream) and the handler waiting for its barcode never outlive the sheet they were opened for */
 const camRelease = () => { CAM.onCode = null; camClose(); };
-function closeSheet() { navBlur(); camRelease(); for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
+function closeSheet(all) { navBlur(); camRelease(); for (const k in DRAFT) delete DRAFT[k]; const r = all ? null : UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
 /* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
    a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
    popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
@@ -6833,7 +6833,8 @@ const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
 
 ACT["fuel-tab"] = el => { UI.tab = UI.fuelTab = el.dataset.k; scheduleRender(); window.scrollTo(0, 0); };
-ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; if (UI.sheet) UI.sheet._ret = null; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
+ACT.tab = el => { if (UI.sheet) closeSheet(true);   // the whole chain closes while the history is still at the old view; the snapshots keep their parents
+  UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; scheduleRender(); window.scrollTo(0, 0); };
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
 ACT["close-sheet"] = () => { const ed = UI.labelFor; if (ed) { UI.labelFor = null; if (UI.sheet !== ed) { camClose(); UI.sheet = ed; renderSheet(); return; } }
