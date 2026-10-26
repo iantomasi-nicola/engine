@@ -30,6 +30,7 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   /* static assets (icons, libraries, label reader, schema) live at the repository root; copy them for other outputs */
   if (OUT !== ROOT) for (const d of ["icons", "vendor", "ocr", "supabase"]) cpdir(path.join(ROOT, d), path.join(OUT, d));
   if (!fs.existsSync(OUT + "/config.js")) fs.copyFileSync(W + "/config.js", OUT + "/config.js");
+  fs.copyFileSync(W + "/pushup-test.html", OUT + "/pushup-test.html");   // standalone motion-sensor check for the push-up counter (docs/PRODUCT_REQUIREMENTS.md I4, L27)
   fs.writeFileSync(OUT + "/.nojekyll", "");
   console.log("built", OUT, "index", s.length, "build", build);
 })();

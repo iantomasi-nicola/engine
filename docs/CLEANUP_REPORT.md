@@ -467,3 +467,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `bfAt`/`bfGap` al posto delle letture dirette di `logGet(d).bf` in `energySeries`, `leanEst`, Progress › Body, report, obiettivi, foto, esportazione; l'import in `icu-direct.js` e `icuApplyWellness` scrive `bfIcu`; `saveWeighIn` marca `bfSrc`.
 - **Eliminato**: `scale-test.html` (sorgente e copia in root), `tests/scale-test.test.js`, la riga di copia in `build-web.js` (il peso arriva da intervals.icu).
 - **Aperto**: scarto costante (vedi L199); `ciDone` non conta più un grasso solo importato come check-in fatto; nei file di root la build va rigenerata alla pubblicazione.
+
+## Consistency & Cleanup Report: M12 (parziale, 27/10/2026)
+- **Verificato**: niente. `tests/m12-pushups.test.js` (13 test, valori attesi nei commenti) non è mai arrivato in fondo: il run è rimasto appeso e il lavoro si è fermato per il limite d'uso. Nessun avvio dell'app, nessuno screenshot 390/820/1440, né layout-audit, né suite.
+- **Cambiato**: `repCounter`/`PCNT`/`repsRow`/`lv-pc` nel player, `PLAYER().pushCount` + selettore in `playerSettings`, CSS `.pc-tile`; `distText`/`isSwimSport`/`isTeamSport` al posto di `r1(w.km) + " km"` in 8 punti, campo «Metres» nel foglio sessione; `source/web/pushup-test.html` copiata dalla build.
+- **Eliminato**: nulla.
+- **Aperto**: eseguire il test file e correggere; `PCNT` è un `let` dichiarato dopo `VIEWS.live` (verificare l'assenza di TDZ all'avvio); design-reviewer; prova del sensore sul telefono; decisione sui MET di default per futsal e nuoto.

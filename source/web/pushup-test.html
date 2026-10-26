@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Push-up sensor test</title>
+<style>:root{--bg:#fff;--ink:#1c1b1f;--mut:#625b71;--sf:#f3edf7;--ac:#6750a4;--ok:#1b6e3a;--bad:#b3261e}@media(prefers-color-scheme:dark){:root{--bg:#141218;--ink:#e6e0e9;--mut:#cac4d0;--sf:#211f26;--ac:#d0bcff;--ok:#7fd99a;--bad:#f2b8b5}}
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif;max-width:760px;margin-inline:auto}h1{font-size:20px;margin:0 0 4px}p{margin:6px 0;color:var(--mut)}
+button{font:inherit;padding:10px 16px;border-radius:20px;border:0;background:var(--ac);color:var(--bg);margin:4px 8px 4px 0;min-height:40px}button.soft{background:var(--sf);color:var(--ink)}button:disabled{opacity:.5}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:12px;padding:8px 10px;box-sizing:border-box}input{width:100%;margin:4px 0}
+.card{background:var(--sf);border-radius:16px;padding:12px 14px;margin:10px 0}.big{font-size:30px;font-weight:600}.ok{color:var(--ok)}.bad{color:var(--bad)}
+textarea{width:100%;height:220px;font:12px/1.35 ui-monospace,monospace}</style></head><body>
+<h1>Push-up sensor test</h1><p>Records what this phone's motion sensors report while you do push-ups, so a rep counter can be checked on the real device. Nothing is saved or sent anywhere: copy the log and send it back.</p>
+<div class="card" id="sup"></div>
+<p><b>How to test:</b> press 1, put the phone where you want to try (in a hand, in a front pocket, strapped to the upper arm, on the floor under your chest), do a set, then type how many you really did and press 2. Repeat for each placement, with the place written in the box.</p>
+<div class="card"><label for="where">Where is the phone?</label><input id="where" placeholder="e.g. armband, pocket, hand, floor under chest"><label for="reps">Push-ups you really did</label><input id="reps" inputmode="numeric" placeholder="10"></div>
+<div><button id="go">1 · Start recording</button><button class="soft" id="mark" disabled>2 · Mark the set</button><button class="soft" id="stop" disabled>Stop</button><button class="soft" id="copy">Copy log</button></div>
+<div class="card"><div id="d">Press 1 to start.</div><div class="big" id="w">–</div></div>
+<div class="card"><textarea id="log" readonly spellcheck="false" aria-label="Recorded samples (CSV)"></textarea></div>
+<script>
+const $ = id => document.getElementById(id), rows = ["t_ms,ax,ay,az,label"], r2 = v => Math.round(v * 1000) / 1000;
+let on = false, n = 0, t0 = 0, last = 0, dirty = false;
+const nav = typeof navigator !== "undefined" ? navigator : {}, DM = window.DeviceMotionEvent;
+const sup = [["Secure page (https)", window.isSecureContext], ["Motion events (DeviceMotionEvent)", !!DM], ["Motion needs a permission tap (iPhone)", !!(DM && typeof DM.requestPermission === "function")],
+  ["Accelerometer sensor API", typeof Accelerometer !== "undefined"], ["Proximity sensor (ProximitySensor / deviceproximity)", typeof ProximitySensor !== "undefined" || "ondeviceproximity" in window], ["Ambient light sensor", typeof AmbientLightSensor !== "undefined"], ["Camera", !!nav.mediaDevices?.getUserMedia]];
+$("sup").innerHTML = sup.map(([k, v]) => `<div>${v ? "✓" : "✗"} ${k}</div>`).join("");
+const stamp = () => Math.round(performance.now() - t0);
+function onMotion(e) {
+  const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+  rows.push([stamp(), r2(a.x), r2(a.y), r2(a.z), ""].join(",")); n++; dirty = true;
+  const now = performance.now(); if (now - last > 250) { last = now; $("w").textContent = r2(Math.hypot(a.x, a.y, a.z)) + " m/s²"; $("d").textContent = `${n} samples · ${r2(n / Math.max(0.001, (now - t0) / 1000))} per second`; }
+}
+function onProx(e) { rows.push([stamp(), "", "", "", "proximity=" + (e.value ?? e.near ?? "")].join(",")); dirty = true; }
+const show = () => { if (!dirty) return; dirty = false; const t = $("log"); t.value = rows.join("\n"); t.scrollTop = t.scrollHeight; };
+setInterval(show, 500);
+$("go").onclick = async () => {
+  try {
+    if (!DM) throw new Error("This browser has no motion events.");
+    if (typeof DM.requestPermission === "function" && (await DM.requestPermission()) !== "granted") throw new Error("Motion access was refused.");
+    t0 = performance.now(); n = 0; on = true; window.addEventListener("devicemotion", onMotion); window.addEventListener("deviceproximity", onProx); window.addEventListener("userproximity", onProx);
+    $("go").disabled = true; $("stop").disabled = false; $("mark").disabled = false; $("d").textContent = "Recording… do your set, then type the count and press 2.";
+  } catch (e) { $("d").innerHTML = `<span class="bad">${String(e.message || e)}</span>`; }
+};
+$("mark").onclick = () => {
+  const where = $("where").value.replace(/[,;\n]/g, " ").trim(), reps = Math.max(0, parseInt($("reps").value, 10) || 0);
+  rows.push([stamp(), "", "", "", `reps=${reps}${where ? ";at=" + where : ""}`].join(",")); dirty = true; show(); $("d").textContent = `Marked ${reps} push-ups${where ? " (" + where + ")" : ""}. Move the phone for the next placement, or copy the log.`;
+};
+$("stop").onclick = () => { window.removeEventListener("devicemotion", onMotion); window.removeEventListener("deviceproximity", onProx); window.removeEventListener("userproximity", onProx); on = false; $("go").disabled = false; $("stop").disabled = true; $("mark").disabled = true; $("d").textContent = "Stopped."; show(); };
+$("copy").onclick = async () => { try { await navigator.clipboard.writeText(rows.join("\n")); $("copy").textContent = "Copied"; } catch (e) { $("copy").textContent = "Select the log and copy"; } setTimeout(() => $("copy").textContent = "Copy log", 1800); };
+</script></body></html>
