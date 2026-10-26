@@ -121,3 +121,16 @@ test("5. Changing the amount of an item eaten more than 3 days ago leaves the pa
   assert.deepEqual(q, [400, 440, '{"t-rice":60}']);
   assert.deepEqual(app.errors, []);
 });
+
+test("6. A small need with nothing at home is one pack, never a «0×» row", async () => {
+  const page = await start();
+  /* oil 8 g planned, nothing at home, pack 500 g: buy 8 g = 1.6 % of a pack; ceil(8/500 - 0.02) = 0 used to give 0 packs. Expected: 1 pack (500 g) and the row says 1×.
+     With 5 g of it at home the 3 g left is within the pack tolerance of the stock: no row at all (unchanged). */
+  await page.evaluate(() => { const T = todayISO(); S.days[T] = { date: T, meals: { lunch: [newItem("food", "t-oil", 8)] } }; S.shop.pantry = {}; DATA_V++; UI.shopStart = T; S.shop.range = 7; UI.tab = UI.fuelTab = "shop"; render(); });
+  await page.waitForTimeout(300);
+  const r = await page.evaluate(() => ({ rows: shoppingRows(todayISO(), 7).map(x => [x.id, x.need, x.buy, x.packs]), dom: [...document.querySelectorAll(".shop-row")].map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(x => /oil/i.test(x)) }));
+  assert.deepEqual(r.rows, [["t-oil", 8, 8, 1]]); assert.equal(r.dom.length, 1); assert.match(r.dom[0], /1×500 g/); assert.doesNotMatch(r.dom[0], /(^|\D)0×/);
+  const s = await page.evaluate(() => { S.shop.pantry = { "t-oil": { g: 5 } }; DATA_V++; return shoppingRows(todayISO(), 7).length; });
+  assert.equal(s, 0);
+  assert.deepEqual(app.errors, []);
+});

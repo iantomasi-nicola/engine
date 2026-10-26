@@ -11592,7 +11592,7 @@ function shoppingRows(start, n) {
     const buy = r0(g - P.cov[id]); if (buy <= 0) continue;
     const covered = r0(P.cov[id]), free = Math.max(0, r0(P.free[id] || 0));
     if (f.pack > 0 && covered > 0 && buy <= f.pack * 0.02) continue;   // a whole pack of the stock covers it within the pack tolerance: no «0×» row
-    const packs = f.pack && buy > 0 ? Math.ceil(buy / f.pack - 0.02) : 0, left = packs ? r0(packs * f.pack - buy) : 0, usedLater = Math.min(left, r0(P.later[id] || 0));
+    const packs = f.pack && buy > 0 ? Math.max(1, Math.ceil(buy / f.pack - 0.02)) : 0, left = packs ? r0(packs * f.pack - buy) : 0, usedLater = Math.min(left, r0(P.later[id] || 0));
     rows.push({ id, f, need: r0(g), covered, have: covered + free, free, buy, packs, left, usedLater, cat: f.cat || "other", src: [...(P.buyWhy[id] || [])] });
   }
   return rows;
