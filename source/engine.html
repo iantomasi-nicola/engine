@@ -347,6 +347,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:36px;height:36px;min-width:36px;background:var(--v-fill,var(--surface2))}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
+.pill.home{--c:var(--accent);gap:4px;padding:1px 8px 1px 6px;margin-right:2px;vertical-align:middle}.pill.home::before{display:none}.pill.home .ic{width:13px;height:13px;color:var(--accent)}.by-plan{font-size:13px;line-height:1.7}
 .shop-covered{margin-top:8px;font-size:13px}.shop-covered summary{cursor:pointer;color:var(--muted);padding:6px 0}
 .glance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media (min-width:640px){.glance{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .gl-t{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 14px 12px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);min-width:0;text-align:left;color:var(--ink)}
@@ -7311,13 +7312,24 @@ ACT["fd-restore"] = () => { const id = S_().draft.id; const prev = clone(S.foods
 /* recipes */
 ACT["new-recipe"] = () => openSheet("recipe", { draft: { id: "", name: "", servings: 1, meals: ["m"], ingredients: [], note: "", fav: false, source: "custom" }, isNew: true });
 ACT["edit-recipe"] = el => { const r = getRecipe(el.dataset.id); if (!r) return; openSheet("recipe", { draft: clone(r), isNew: false }); };
-/* «½ pack», «1 pack», «1½ packs»: how many packs a quantity is, when it is close to a simple fraction */
-function packTxt(g, pack) {
-  if (!(g > 0) || !(pack > 0)) return ""; const x = g / pack;
-  const F = [[.25, "¼"], [1 / 3, "⅓"], [.5, "½"], [2 / 3, "⅔"], [.75, "¾"]];
-  for (let w = 0; w <= 10; w++) for (const [f, t] of [[0, ""], ...F]) if (w + f > 0 && Math.abs(x - (w + f)) < .02) { const lab = (w ? w : "") + t; return `= ${lab} pack${w + f > 1 ? "s" : ""}`; }
+/* the one language of amounts in packs (docs/PACK_QUANTITIES.md): «½», «1½», «2» when x packs is within 2 % of a pack of a simple fraction, "" otherwise */
+function packFrac(x) {
+  if (!(x > 0)) return "";
+  for (let w = 0; w <= 10; w++) for (const [f, t] of [[0, ""], [.25, "¼"], [1 / 3, "⅓"], [.5, "½"], [2 / 3, "⅔"], [.75, "¾"]]) if (w + f > 0 && Math.abs(x - (w + f)) < .02) return (w ? w : "") + t;
   return "";
 }
+/* «½ pack», «1 pack», «1½ packs» */
+function packWords(g, pack) { if (!(g > 0) || !(pack > 0)) return ""; const t = packFrac(g / pack); return t ? `${t} pack${g / pack > 1.02 ? "s" : ""}` : ""; }
+function packTxt(g, pack) { const w = packWords(g, pack); return w ? "= " + w : ""; }
+/* the real stock of a food in that language: «½ pack · 500 g», «3 pcs · 180 g», «50 g» (short: «½ pack», «3 pcs», «50 g»). Reads S.shop.pantry only, never a projection */
+function homeAmt(id, short) {
+  const f = getFood(id) || BUILTIN[id], p = S.shop.pantry?.[id]; if (!f || !(p?.g > 0)) return "";
+  const U = pantryUnits(f, p), g = p.g, n = U.pw > 0 ? Math.round(g / U.pw) : 0, ex = `${fmtN(g)} ${U.base}`;
+  const w = p.u === "pz" && n > 0 && Math.abs(g / U.pw - n) < .05 ? `${n} pc${n > 1 ? "s" : ""}` : U.pack > 0 && !varPack(f) ? packWords(g, U.pack) : "";
+  return short ? w || ex : w ? `${w} · ${ex}` : ex;
+}
+/* the stock as a pill (the jar is «at home» everywhere in the app); short in the narrow shopping row, the exact grams in its label */
+function homePill(id, short) { const a = homeAmt(id); return a ? `<span class="pill home" role="img" aria-label="At home: ${esc(a)}">${ic("jar", "sm")}${esc(short ? homeAmt(id, true) : a + " at home")}</span>` : ""; }
 const recipeCostHTML = d => { const c = recipeCost({ servings: d.servings, ingredients: d.ingredients }); return c.priced ? `≈ ${fmtEur(c.perServing)} a serving${c.partial ? ` <small class="faint">(${c.priced} of ${c.of} priced)</small>` : ""}` : `<span class="faint">no prices yet</span>`; };
 ACT["rc-pack"] = el => { const sh = S_(), i = sh.draft.ingredients[+el.dataset.i], f = getFood(i.food); if (!f?.pack) return; i.g = r0(f.pack * +el.dataset.f * 10) / 10; renderSheet(); };
 ACT["rc-scale"] = el => { const sh = S_(), k = +el.dataset.k, d = sh.draft; if (!(k > 0)) return; d.servings = Math.max(0.25, Math.round(num(d.servings) * k * 100) / 100); d.ingredients.forEach(i => { i.g = Math.round(num(i.g) * k * 10) / 10; }); renderSheet(); };
@@ -11617,9 +11629,9 @@ ACT["shopq-open"] = () => openSheet("shopq", { live: true, keep: true });
 SHEETS.buy = sh => {
   const r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === sh.id); const f = getFood(sh.id) || BUILTIN[sh.id]; if (!f) return { title: "Not found", body: "" };
   const u = f.unit || "g", p = priceOf(sh.id), k = eurPerG(sh.id), g = num(sh.g), est = k != null && g ? k * g : null;
-  const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtN(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean);
+  const chips = [r && r.buy ? [r.buy, `What the plan needs · ${fmtN(r.buy)} ${u}`] : null, f.pack ? [f.pack, `1 pack · ${fmtN(f.pack)} ${u}`] : null, f.pack ? [f.pack * 2, `2 packs`] : null].filter(Boolean), home = homePill(sh.id);
   return { title: f.name, titleHTML: `${esc(f.name)}${brandOf(f) ? ` <small class="bd-t">${esc(brandOf(f))}</small>` : ""}`, head: `<button class="icon-btn" data-act="by-edit" aria-label="Edit ${esc(f.name)}" title="Edit food">${ic("edit")}</button>`, focus: "by-g",
-    body: `${r ? `<div class="faint" style="font-size:13px">Planned: ${fmtN(r.need)} ${u}${r.have ? ` · ${fmtN(r.have)} ${u} at home` : ""}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}</div>` : ""}
+    body: `${r || home ? `<div class="faint by-plan">${home}${home && r ? " " : ""}${r ? `Planned: ${fmtN(r.need)} ${u}${r.src.length ? ` · for ${esc(r.src.join(", "))}` : ""}` : ""}</div>` : ""}
       <div class="grid2"><div class="field"><label for="by-g">You're taking</label><div class="unit-inp"><input id="by-g" class="inp" inputmode="decimal" value="${sh.g ?? ""}" data-in="by" data-k="g"><span>${u}</span></div></div>
       <div class="field"><label for="by-eur">Price paid</label><div class="unit-inp"><input id="by-eur" class="inp" inputmode="decimal" value="${sh.eur ?? ""}" placeholder="${est != null ? est.toFixed(2) : ""}" data-in="by" data-k="eur"><span>€</span></div></div></div>
       <div class="chips">${chips.map(([v, l]) => `<button class="chip" data-act="by-set" data-v="${v}">${l}</button>`).join("")}</div>
@@ -16060,14 +16072,15 @@ ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab 
 /* ================= one shopping list: the same compact list in Fuel › Groceries and in the cart sheet ================= */
 /* a row: tick = in the cart; packs get a − n + stepper for when you take more or fewer than the plan needs */
 function shopRowHTML(r) {
-  const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g;
-  const sub = [r.covered ? `${fmtN(r.covered)} ${u} from home` : r.free ? `${fmtN(r.free)} ${u} at home` : "", !got && r.left - r.usedLater >= 10 ? `${fmtN(r.left - r.usedLater)} ${u} left over` : "", !got && r.usedLater >= 10 ? `${fmtN(r.usedLater)} ${u} for later days` : ""].filter(Boolean).join(" · ");
+  const ck = S.shop.checked?.[r.id], done = !!ck, u = r.f.unit || "g", cost = rowCost(r), got = ck && ck.g, home = homePill(r.id, true), stock = S.shop.pantry?.[r.id]?.g || 0;
+  // the pill is the real stock; the part of it these days use is said only when earlier days take some of it (otherwise it is the same number)
+  const sub = [r.covered && Math.abs(r.covered - stock) >= 1 ? `${fmtN(r.covered)} ${u} of it for these days` : "", !got && r.left - r.usedLater >= 10 ? `${fmtN(r.left - r.usedLater)} ${u} left over` : "", !got && r.usedLater >= 10 ? `${fmtN(r.usedLater)} ${u} for later days` : ""].filter(Boolean).map(x => `<span class="nw">${esc(x)}</span>`).join(" · ");
   let q;
   if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack), dn = got ? n - r.packs : 0;
     q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${esc(r.id)}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${esc(r.id)}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${esc(r.id)}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
   else q = `<button class="shop-q" data-act="shop-buy" data-id="${esc(r.id)}"><b>${fmtN(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
   return `<div class="shop-row ${done ? "done" : ""}" data-id="${esc(r.id)}"><button class="chk" data-act="shop-check" data-id="${esc(r.id)}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
-    <button class="shop-main" data-act="shop-buy" data-id="${esc(r.id)}"><span class="t">${esc(r.f.name)}</span>${sub || brandOf(r.f) ? `<span class="s">${brandOf(r.f) ? `<span class="bd">${esc(brandOf(r.f))}</span>${sub ? " · " : ""}` : ""}${esc(sub)}</span>` : ""}</button>${q}</div>`;
+    <button class="shop-main" data-act="shop-buy" data-id="${esc(r.id)}"><span class="t">${esc(r.f.name)}</span>${sub || home || brandOf(r.f) ? `<span class="s">${brandOf(r.f) ? `<span class="bd">${esc(brandOf(r.f))}</span>${sub || home ? " · " : ""}` : ""}${home}${home && sub ? " " : ""}${sub}</span>` : ""}</button>${q}</div>`;
 }
 ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id); if (!r?.f.pack) return; S.shop.checked = S.shop.checked || {};
   const c = S.shop.checked[id], cur = c && c.g ? c.g : buyG(r), next = Math.max(0, cur + +el.dataset.d * r.f.pack);
