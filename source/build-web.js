@@ -24,6 +24,9 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   const head = `<meta name="theme-color" content="#18181B"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Engine"><meta name="engine-build" content="${build}"><script src="config.js"></script><script src="vendor/supabase.js"></script>`;
   s = s.replace("<head>", "<head>" + head);
   fs.mkdirSync(OUT, { recursive: true });
+  /* the page runs its own inline scripts by hash instead of 'unsafe-inline': markup that slips in (an event attribute in a hostile id or name) cannot run code */
+  const sha = c => "'sha256-" + require("crypto").createHash("sha256").update(c, "utf8").digest("base64") + "'";
+  R("script-src 'self' 'unsafe-inline'", "script-src 'self' " + [...s.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => sha(m[1])).join(" "));
   fs.writeFileSync(OUT + "/index.html", s);
   /* the heavy cache (libraries, label reader, icons) is named after what is in those folders: a changed file reaches installed copies, an unchanged one is not downloaded again */
   const hash = require("crypto").createHash("sha1"), walk = d => { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else hash.update(path.relative(ROOT, p) + "\0").update(fs.readFileSync(p)); } };

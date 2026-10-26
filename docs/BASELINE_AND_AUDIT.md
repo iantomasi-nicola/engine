@@ -43,7 +43,7 @@ L'utente ha dichiarato il rollback fatto, ma `origin/main` è ancora `02f43a9`. 
 | R5 | Chiavi API (AI, intervals.icu, mappe) salvate nel documento `settings` su Supabase e incluse negli export (`o.keys`) | Medio-alto | Verificare cifratura/escludere dagli export; documentare; decisione utente |
 | R6 | Scritture verso intervals.icu dal browser (sync bidirezionale automatica): rischio di modifiche remote indesiderate | Alto | Audit dedicato prima di toccare G5/F3; modalità dry-run |
 | R7 | `OFF_UNREACHABLE` latch: un errore di rete disattiva OFF fino al reload | Medio | A5 |
-| R8 | CSP con `connect-src https:` ampio e `'unsafe-inline'` per gli script | Medio | Audit sicurezza finale |
+| R8 | CSP con `connect-src https:` ampio (`'unsafe-inline'` per gli script: tolto in L211, ora hash per script) | Medio | Audit sicurezza finale |
 | R9 | Nessun backup verificato end-to-end (esiste "backups: restore points" ma mai testato) | Alto prima di migrazioni dati | M0: test backup/restore su dati sintetici |
 | R10 | Dati reali accessibili dal progetto Supabase configurato in `config.js` | Alto | Test solo con fixture locali, Supabase bloccato |
 

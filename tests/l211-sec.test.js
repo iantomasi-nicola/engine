@@ -83,3 +83,22 @@ test("4. Defence in depth: hostile ids already in memory (any path) never leave 
     await app.close(); app = null;
   }
 });
+
+test("5. The built page allows its own inline scripts by hash, not by 'unsafe-inline': an injected event attribute cannot run (plain and minified build)", async () => {
+  const crypto = require("crypto"), fs = require("fs"), path = require("path");
+  for (const min of [false, true]) {
+    const d = min ? H.build(H.tmp("l211-csp-min"), { min: true }) : dir, html = fs.readFileSync(path.join(d, "index.html"), "utf8");
+    const csp = (html.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || "", scripts = (csp.match(/script-src ([^;]*)/) || [])[1] || "";
+    assert.ok(!/unsafe-inline/.test(scripts), `${min ? "min" : "plain"}: ${scripts.slice(0, 120)}`);
+    const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => "'sha256-" + crypto.createHash("sha256").update(m[1], "utf8").digest("base64") + "'");
+    assert.ok(inline.length >= 3); for (const h of inline) assert.ok(scripts.includes(h), "no hash for an inline script");
+    assert.ok(!/\son(load|error|click)=/.test(html.replace(/<script[\s\S]*?<\/script>/g, "")), "an inline event attribute is left in the markup (the policy would block it)");
+    app = await H.startApp({ dir: d, seed: F.seed({ withPlan: true, withPantry: true }), viewport: H.VIEWPORTS.desktop });
+    const r = await app.page.evaluate(async () => { const x = document.createElement("div"); x.innerHTML = '<img src=x onerror="window.__csp=1">'; document.body.appendChild(x);
+      const bad = document.createElement("div"); bad.innerHTML = '<img data-rmerr src="nope-404.png">'; document.body.appendChild(bad); await new Promise(r => setTimeout(r, 600));
+      return { ran: window.__csp || 0, removed: !bad.querySelector("img"), booted: !!document.querySelector("#main") && document.body.innerText.length > 50 }; });
+    assert.deepEqual(r, { ran: 0, removed: true, booted: true }, min ? "min" : "plain");
+    assert.deepEqual(app.errors.filter(e => !/inline event handler/.test(e)), []);   // the blocked handler of the positive control is the only report expected
+    await app.close(); app = null;
+  }
+});

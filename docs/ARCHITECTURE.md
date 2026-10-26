@@ -4,7 +4,7 @@
 - PWA statica, servita da GitHub Pages. Nessun framework né bundler: HTML+CSS+un `<script>` in `source/engine.html` (~12.6k righe), UI generata come stringhe HTML e inserita con `setHTML`; eventi delegati tramite `data-act` (→ `ACT[...]`), `data-in` (→ `INP[...]`), `data-chg` (→ `CHG[...]`), `data-form`.
 - Build (`source/build-web.js`): sostituisce testi "Claude"→"AI", minifica CSS/JS (lightningcss, terser), antepone `source/web/shim.js` (layer Supabase), appende `icu-direct.js` e `after.js`, scrive `index.html`, `sw.js` (con id build), manifest. Gli artefatti sono committati nella root.
 - Service worker: network-first con timeout, cache separata per `vendor/`, `ocr/`, `icons/`; push e notification click.
-- CSP in `<meta>`: `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:` (nessun host esterno: SheetJS, ZXing, Tesseract e Supabase sono in `vendor/`); `connect-src https: wss: localhost`.
+- CSP in `<meta>`: nel sorgente `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:` (per aprire il file a mano); `source/build-web.js` sostituisce `'unsafe-inline'` con l'hash sha256 di ogni `<script>` inline (L211): un attributo evento iniettato nel markup non puo' girare, e il sorgente non ha attributi evento inline (immagini che falliscono: `data-rmerr`, gestito in `look-boot`). Nessun host esterno per gli script (SheetJS, ZXing, Tesseract e Supabase sono in `vendor/`); `connect-src https: wss: localhost`.
 
 ## Dati
 - Stato in memoria `S = {settings, foods, recipes, days, queue, logm, shop, body, train}`; salvataggio `put(kind,id,data)` → `localStorage["fuelplanner.v1"]` + coda verso Supabase (`engine_docs(user_id, path, data jsonb)` con RLS per proprietario, realtime). Debounce 380 ms, retry su `unavailable`, errore di quota segnalato.
