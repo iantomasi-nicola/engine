@@ -6969,10 +6969,11 @@ function moveItem(from, to, copy = false) {
   const src = (getDay(from.date).meals[from.meal] || []).find(x => x.id === from.id); if (!src) return false;
   if (src.eaten && !copy) return false;
   if (!copy && from.date === to.date && from.meal === to.meal) return false;
-  const snap = snapshotDays([...new Set([from.date, to.date])]), it = clone(src);
+  const mc = copy ? null : moveCheats([src], to.date, to.meal), snap = snapshotDays([...new Set([from.date, to.date, ...(mc?.dates || [])])]), it = clone(src);
   if (copy) { it.id = uid(); it.eaten = false; delete it.took; delete it.snap; delete it.cheat; delete it.out; }
   if (!copy) mutateDay(from.date, d => { d.meals[from.meal] = (d.meals[from.meal] || []).filter(x => x.id !== from.id); if (d.dish && !d.meals[from.meal].length) delete d.dish[from.meal]; });
   mutateDay(to.date, d => { (d.meals[to.meal] = d.meals[to.meal] || []).push(it); if (d.dish) delete d.dish[to.meal]; });
+  mc?.run();
   toast(`${copy ? (from.date === to.date && from.meal === to.meal ? "Duplicated" : "Copied") : "Moved"} to ${from.date === to.date ? mealName(to.meal) : `${DOW[dow(to.date)]} ${fmtDM(to.date)}`}`, undoDays(snap));
   return true;
 }
@@ -7051,9 +7052,12 @@ function putClones(d, m, its, dish) {
 function transferMeals(from, to, pairs, copy, what) {
   const src = S.days[from]?.meals || {}, pick = pairs.map(([fm, tm]) => ({ fm, tm, its: (src[fm] || []).filter(x => copy || !x.eaten) })).filter(o => o.its.length);
   if (!pick.length || (!copy && from === to && pick.every(o => o.fm === o.tm))) return false;
-  const snap = snapshotDays([...new Set([from, to])]), dishes = { ...(S.days[from]?.dish || {}) }, made = pick.map(o => ({ ...o, ids: new Set(o.its.map(x => x.id)), cl: o.its.map(cloneItem) }));
+  const mcs = copy ? [] : pick.map(o => moveCheats(o.its, to, o.tm)), snap = snapshotDays([...new Set([from, to, ...mcs.flatMap(m => m.dates)])]), dishes = { ...(S.days[from]?.dish || {}) };
+  /* a moved treat stays the same treat (same id, compensation planned again around the new place); a copy is a plain quick-add */
+  const made = pick.map(o => ({ ...o, ids: new Set(o.its.map(x => x.id)), cl: o.its.map(x => !copy && x.cheat ? clone(x) : cloneItem(x)) }));
   if (!copy) mutateDay(from, d => { for (const o of made) { d.meals[o.fm] = (d.meals[o.fm] || []).filter(x => !o.ids.has(x.id)); if (d.dish && !d.meals[o.fm].length) delete d.dish[o.fm]; } });
   mutateDay(to, d => { for (const o of made) { const had = (d.meals[o.tm] || []).length; d.meals[o.tm] = (d.meals[o.tm] || []).concat(o.cl); if (d.dish) delete d.dish[o.tm]; if (!had && dishes[o.fm]) (d.dish = d.dish || {})[o.tm] = dishes[o.fm]; } });
+  for (const m of mcs) m.run();
   toast(`${copy ? "Copied" : "Moved"} ${what} to ${DOW[dow(to)]} ${fmtDM(to)}`, undoDays(snap)); return true;
 }
 const moveMeal = (from, to, copy = false) => transferMeals(from.date, to.date, [[from.meal, to.meal]], copy, mealName(from.meal).toLowerCase());
@@ -7931,6 +7935,17 @@ SHEETS.cheat = sh => {
     foot: `${sh.itemId ? `<button class="btn danger" data-act="ch-del" style="flex:0 0 auto" aria-label="Remove treat">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="ch-save">${sh.out ? "Log it" : sh.itemId ? "Save" : "Add treat"}</button>`
   };
 };
+/* the compensation of a treat, under its id: the days it takes from (-) and, on the treat's own day, a raise by what is compensated elsewhere (or by the whole excess when free) */
+function applyCheatAdj(id, plan, date) {
+  for (const [day, v] of Object.entries(plan.per)) mutateDay(day, x => { x.adj = { ...(x.adj || {}), [id]: v }; });
+  const raise = plan.strategy === "none" ? plan.excess : -Object.values(plan.per).reduce((a, b) => a + b, 0);
+  if (raise > 0) mutateDay(date, x => { x.adj = { ...(x.adj || {}), [id]: r0(raise) }; });
+}
+/* a treat moved to another day or meal stays the same treat: its compensation is worked out again around the new place. Returns the days it will touch (for the Undo snapshot) and the step to run. */
+function moveCheats(items, date, meal) {
+  const cheats = items.filter(x => x.cheat), plans = cheats.map(x => cheatPlan(date, meal, num(x.m?.kcal), x.strategy || "none"));
+  return { dates: [...cheatDays(cheats), ...plans.flatMap(p => Object.keys(p.per))], run: () => cheats.forEach((x, i) => { clearCheatAdj(x.id); applyCheatAdj(x.id, plans[i], date); }) };
+}
 function clearCheatAdj(id) { for (const [d, day] of Object.entries(S.days)) if (day.adj && day.adj[id] != null) mutateDay(d, x => { delete x.adj[id]; }); }
 function rebalanceDayFn(date, skipIds) {
   const T = targetsFor(date);
@@ -7975,10 +7990,7 @@ ACT["ch-save"] = () => {
   const snap = snapshotDays([...touched]);
   if (sh.itemId) { clearCheatAdj(id); for (const [day, dd] of Object.entries(S.days)) if (Object.values(dd.meals || {}).flat().some(it => it.id === id)) mutateDay(day, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); }); }
   mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
-  for (const [day, v] of Object.entries(plan.per)) mutateDay(day, x => { x.adj = { ...(x.adj || {}), [id]: v }; });
-  // the cheat day itself keeps its other meals normal: its target rises by what is compensated elsewhere (or by the whole excess when free)
-  const raise = plan.strategy === "none" ? plan.excess : -Object.values(plan.per).reduce((a, b) => a + b, 0);
-  if (raise > 0) mutateDay(sh.date, x => { x.adj = { ...(x.adj || {}), [id]: r0(raise) }; });
+  applyCheatAdj(id, plan, sh.date);
   // shrink the rest of the cheat day, and the compensation days, if they are already planned
   const skip = new Set([id]); for (const day of touched) if (dayItems(getDay(day)).length) rebalanceDayFn(day, skip);
   closeSheet(); UI.date = sh.date;

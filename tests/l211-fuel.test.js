@@ -48,3 +48,46 @@ test("2c. Clear the week: a treat on the last day compensates days of the next w
   assert.deepEqual(r, [true, 0, true, true, true]);
   assert.deepEqual(app.errors, []);
 });
+
+/* B3: moving a treat (item, meal or whole day) keeps it a treat and moves its compensation with it; a copy is a plain quick-add that owns no compensation.
+   Invariant used below: every key of every day.adj belongs to a cheat item that is still in the plan. */
+const ORPH = `const orphans = () => { const ids = new Set(Object.values(S.days).flatMap(d => dayItems(d).filter(([, i]) => i.cheat).map(([, i]) => i.id))); return Object.values(S.days).flatMap(d => Object.keys(d.adj || {})).filter(k => !ids.has(k)); };`;
+
+test("3a. Moving a meal with a treat to another day: still a treat with the same id, compensation re-planned around the new day, nothing orphaned, Undo restores", async () => {
+  const page = await start();
+  /* treat 1800 kcal at dinner of T = today+2, "after": adj on T (+) and T+1..T+3 (-). Move dinner to N = T+5: the treat is still cheat, adj sits on N and N+1..N+3, T has none; base targets of T..T+3 are back. */
+  const r = await page.evaluate(`(() => { ${TREAT("addDays(todayISO(), 2)", "after")} ${ORPH}
+    const N = addDays(T, 5), id = treat.id; moveMeal({ date: T, meal: "dinner" }, { date: N, meal: "dinner" }, false);
+    const it = getDay(N).meals.dinner[0], adjDays = Object.keys(adjs());
+    const out = { cheat: !!it.cheat, sameId: it.id === id, strategy: it.strategy, adjDays, orphans: orphans().length, oldBack: [T, addDays(T, 1), addDays(T, 2), addDays(T, 3)].every(d => targetsFor(d).kcal === base[d]) };
+    ACT.undo(); out.undone = JSON.stringify(adjs()) === withTreat.adj && JSON.stringify(tgt()) === withTreat.tgt; out.back = !!getDay(T).meals.dinner; return Object.assign(out, { N, T }); })()`);
+  assert.equal(r.cheat, true); assert.equal(r.sameId, true); assert.equal(r.strategy, "after"); assert.equal(r.orphans, 0);
+  assert.deepEqual(r.adjDays, [0, 1, 2, 3].map(i => { const d = new Date(r.N + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10); }));
+  assert.equal(r.oldBack, true); assert.equal(r.undone, true); assert.equal(r.back, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("3b. Moving the whole day with a treat (moveDay) and moving the single item (moveItem) keep the treat and its compensation together", async () => {
+  const page = await start();
+  const r = await page.evaluate(`(() => { ${TREAT("addDays(todayISO(), 2)", "after")} ${ORPH}
+    const N = addDays(T, 5), id = treat.id; moveDay(T, N, false);
+    const a = [getDay(N).meals.dinner.some(x => x.cheat && x.id === id), orphans().length, getDay(N).adj?.[id] > 0, !getDay(T).adj];
+    ACT.undo(); a.push(JSON.stringify(adjs()) === withTreat.adj);
+    moveItem({ date: T, meal: "dinner", id }, { date: N, meal: "dinner" }, false);
+    a.push(getDay(N).meals.dinner.some(x => x.cheat && x.id === id), orphans().length, getDay(N).adj?.[id] > 0, !getDay(T).adj);
+    ACT.undo(); a.push(JSON.stringify(adjs()) === withTreat.adj && JSON.stringify(tgt()) === withTreat.tgt);
+    return a; })()`);
+  assert.deepEqual(r, [true, 0, true, true, true, true, 0, true, true, true]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("3c. A copy of a treat (Duplicate, Copy meal) is a plain quick-add with the same calories, owns no compensation and leaves the original untouched", async () => {
+  const page = await start();
+  const r = await page.evaluate(`(() => { ${TREAT("addDays(todayISO(), 2)", "after")} ${ORPH}
+    const id = treat.id, N = addDays(T, 5); moveItem({ date: T, meal: "dinner", id }, { date: T, meal: "dinner" }, true); moveMeal({ date: T, meal: "dinner" }, { date: N, meal: "dinner" }, true);
+    const dup = getDay(T).meals.dinner.filter(x => x.id !== id), cp = getDay(N).meals.dinner;
+    return { orig: getDay(T).meals.dinner.some(x => x.id === id && x.cheat), dups: dup.map(x => [!!x.cheat, x.m.kcal]), cps: cp.map(x => [!!x.cheat, x.m.kcal]), same: JSON.stringify(adjs()) === withTreat.adj, orphans: orphans().length }; })()`);
+  assert.equal(r.orig, true); assert.equal(r.same, true); assert.equal(r.orphans, 0);
+  assert.ok(r.dups.length >= 1 && r.dups.every(x => x[0] === false && x[1] === 1800)); assert.ok(r.cps.length >= 1 && r.cps.every(x => x[0] === false && x[1] === 1800));
+  assert.deepEqual(app.errors, []);
+});
