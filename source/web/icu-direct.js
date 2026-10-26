@@ -1,5 +1,5 @@
 /* ================= intervals.icu, direct from the app (web version) =================
-   Same merge rules as the sync script (bridge v2): pulls planned workouts, activities, wellness (sleep, HRV, resting HR, steps; never weight) and races,
+   Same merge rules as the sync script (bridge v2): pulls planned workouts, activities, wellness (sleep, HRV, resting HR, steps, and weight on days with none) and races,
    pushes Engine workouts, plan changes, check-ins and races. The result is applied as day/field patches,
    so edits made while it runs are kept. */
 const ICU_API = "https://intervals.icu/api/v1";
@@ -126,7 +126,8 @@ async function icuSyncDirect(opts = {}) {
   const WELL = await req(`/athlete/${AID}/wellness?oldest=${add(TODAY, -back)}&newest=${TODAY}`) || [];
   for (const x of WELL) { if (!x || typeof x !== "object") continue; const date = String(x.id || x.date || "").slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     const cur = day(date, false) || {}, ch = {}, rhr = x.restingHR ?? x.resting_hr, sl = x.sleepSecs ?? x.sleep_secs;
-    // weight is never taken from intervals.icu: the scale number you type is the one that counts
+    // weight (for example from the scale through Zepp) fills only days with none: a weight typed in Engine is never overwritten
+    const wt = +x.weight; if (icu.pullWeight !== false && wt >= 30 && wt <= 300 && !((cur.weight || 0) > 0)) ch.weight = r1_(wt);
     const st = x.steps; if (st > 0 && cur.steps !== Math.round(st)) ch.steps = Math.round(st); if (rhr > 20 && !((cur.rhr || 0) > 0)) ch.rhr = r0_(rhr); if (sl > 600 && !((cur.sleep || 0) > 0)) ch.sleep = r1_(sl / 3600);
     for (const k of ["ctl", "atl"]) { const v = x[k]; if (typeof v === "number" && r1_(v) !== cur[k]) ch[k] = r1_(v); }
     if (x.hrv > 5 && !((cur.hrv || 0) > 0)) ch.hrv = r0_(x.hrv);
