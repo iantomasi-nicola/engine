@@ -121,3 +121,22 @@ test("after a reload, Back never reopens screens of the previous page load: thos
   assert.equal(await app.page.evaluate(() => NAV.i), 0, "that entry is the new first screen");
   assert.deepEqual(app.errors, []);
 });
+
+test("full-screen chart: Back closes only the chart (page scroll unlocked); closing it with Esc leaves no stale entry", async () => {
+  /* Today > Progress(1) > chart(2): Back = Progress without chart and overflow free; chart again + Esc = Progress, then one Back = Today */
+  const page = await start();
+  await go(page, () => ACT["tab"]({ dataset: { tab: "progress" } }));
+  await go(page, () => { if (!document.querySelector("main svg.chart")) document.querySelector("#main").insertAdjacentHTML("beforeend", '<svg class="chart" viewBox="0 0 300 150" aria-label="Test chart" width="300" height="150"><rect width="300" height="150" fill="#ccc"/></svg>'); });
+  const st = () => page.evaluate(() => ({ fs: !!document.querySelector(".chfs"), tab: UI.tab, ov: document.body.style.overflow, i: NAV.i }));
+  await page.click("main svg.chart"); await page.waitForTimeout(400);
+  assert.deepEqual(await st(), { fs: true, tab: "progress", ov: "hidden", i: 2 });
+  await back(page); assert.deepEqual(await st(), { fs: false, tab: "progress", ov: "", i: 1 });
+  await page.evaluate(() => history.forward()); await page.waitForTimeout(500);
+  assert.deepEqual(await st(), { fs: false, tab: "progress", ov: "", i: 2 }, "forward does not reopen the chart and does not loop");
+  await back(page); assert.deepEqual(await st(), { fs: false, tab: "progress", ov: "", i: 1 });
+  await page.click("main svg.chart"); await page.waitForTimeout(400); assert.equal((await st()).fs, true);
+  await page.keyboard.press("Escape"); await page.waitForTimeout(500);
+  assert.deepEqual(await st(), { fs: false, tab: "progress", ov: "", i: 1 });
+  await back(page); assert.equal((await st()).tab, "today");
+  assert.deepEqual(app.errors, []);
+});
