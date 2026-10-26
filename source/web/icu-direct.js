@@ -127,7 +127,7 @@ async function icuSyncDirect(opts = {}) {
   for (const x of WELL) { if (!x || typeof x !== "object") continue; const date = String(x.id || x.date || "").slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     const cur = day(date, false) || {}, ch = {}, rhr = x.restingHR ?? x.resting_hr, sl = x.sleepSecs ?? x.sleep_secs;
     // weight (for example from the scale through Zepp) fills only days with none: a weight typed in Engine is never overwritten
-    const wt = +x.weight; if (icu.pullWeight === true && wt >= 30 && wt <= 300 && !((cur.weight || 0) > 0)) ch.weight = r1_(wt);
+    const wt = +x.weight; if (icu.pullWeight === true && wt >= 30 && wt <= 300 && !((cur.weight || 0) > 0)) { ch.weight = r1_(wt); ch.weightSrc = "icu"; }   // weightSrc: the check-in says where the number came from
     const st = x.steps; if (st > 0 && cur.steps !== Math.round(st)) ch.steps = Math.round(st); if (rhr > 20 && !((cur.rhr || 0) > 0)) ch.rhr = r0_(rhr); if (sl > 600 && !((cur.sleep || 0) > 0)) ch.sleep = r1_(sl / 3600);
     for (const k of ["ctl", "atl"]) { const v = x[k]; if (typeof v === "number" && r1_(v) !== cur[k]) ch[k] = r1_(v); }
     if (x.hrv > 5 && !((cur.hrv || 0) > 0)) ch.hrv = r0_(x.hrv);

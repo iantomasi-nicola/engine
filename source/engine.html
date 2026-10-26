@@ -956,9 +956,10 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
 .pw-day{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:3px;padding:6px 8px 8px;border-radius:12px;background:none;color:var(--ink);min-width:0;cursor:pointer;text-align:left}.pw-day:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
 .pw-dn{display:flex;align-items:baseline;gap:6px}.pw-day small{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.pw-day .pw-dn b{font-family:var(--display);font-stretch:108%;font-size:20px;font-weight:720;line-height:1.1}.pw-day.now .pw-dn small,.pw-day.now .pw-dn b{color:var(--accent)}
 .pw-kcal{display:flex;align-items:baseline;gap:0;white-space:nowrap;font-variant-numeric:tabular-nums}.pw-kcal b{font-size:14px;font-weight:650}.pw-kcal small{margin-left:4px;font-size:12px;font-weight:450;letter-spacing:0;text-transform:none;color:var(--muted)}
-.pw-bar{display:block;width:100%;height:4px;border-radius:2px;background:color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden}.pw-bar i{display:block;height:100%;border-radius:2px;background:var(--accent)}.pw-bar.over i{background:var(--warn)}
+.pw-bar{display:block;width:100%;height:4px;border-radius:2px;background:color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden}.pw-bar i{display:block;height:100%;border-radius:2px;background:var(--accent)}.pw-bar.over i{background:var(--bad)}
 .pw-mac{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:5px;font-variant-numeric:tabular-nums}.pw-mc{display:block;min-width:0;white-space:nowrap}.pw-mc i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--c);margin-right:3px}.pw-mc b{font-size:13px;font-weight:650}.pw-mc small{display:block;font-size:11px;font-weight:450;letter-spacing:0;text-transform:none;color:var(--muted)}
 .pw-mb{display:block;height:3px;margin-top:2px;border-radius:2px;background:color-mix(in srgb,var(--c) 16%,transparent);overflow:hidden}.pw-mb>span{display:block;height:100%;border-radius:2px;background:var(--c)}
+.pw-ov{font-style:normal;font-weight:650;font-size:11.5px;color:var(--bad);font-variant-numeric:tabular-nums}.pw-kcal.over b,.pw-mc.over b{color:var(--bad)}.pw-mc.over .pw-mb{background:color-mix(in srgb,var(--bad) 16%,transparent)}.pw-mc.over .pw-mb>span{background:var(--bad)}.pw-kcal .pw-ov{margin-left:6px}
 .pw-cell{container:pwc/inline-size;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;padding:5px;border-radius:14px;background:var(--surface-2)}.pw-cell.over,.pw-day.over{outline:2px dashed var(--accent);outline-offset:-3px}
 .pw-cell.vac{flex-direction:row;align-items:center;gap:4px;padding:4px 4px 4px 9px;background:color-mix(in srgb,var(--ink) 4%,transparent)}.pw-dr.now .pw-cell.vac{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .pw-e{flex:1;display:flex;align-items:center;gap:6px;height:34px;padding:0 6px 0 0;border-radius:9px;background:none;color:var(--muted);font-size:12.5px;font-weight:600}.pw-e:hover,.pw-e:focus-visible{background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--accent)}
@@ -4644,9 +4645,11 @@ function kRing(planned, eaten, target) {
     <circle cx="66" cy="66" r="${R}" fill="none" stroke="${over ? "var(--bad)" : "var(--accent)"}" stroke-opacity="${over ? 0.45 : 0.28}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C * pp} ${C}"/>
     ${ep > 0 ? `<circle cx="66" cy="66" r="${R}" fill="none" stroke="${eOver ? "var(--bad)" : "var(--accent)"}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C * ep} ${C}"/>` : ""}</svg>`;
 }
+/* one rule for "over the day's target" (bars, week planner): more than 8 % + 3 above it */
+function overTarget(v, target) { return target > 0 && v > target * 1.08 + 3; }
 function macroBar(label, key, color, planned, eaten, target) {
   const pp = clamp(planned / (target || 1) * 100, 0, 100), ep = clamp(eaten / (target || 1) * 100, 0, 100);
-  const over = planned > target * 1.08 + 3;
+  const over = overTarget(planned, target);
   return `<div style="--c:var(--${color})"><div class="mbar-top"><span class="k"><i></i>${label}</span><span class="v"><b>${r0(planned)}</b> / ${r0(target)} g</span></div>
     <div class="track ${over ? "over" : ""}"><span class="pl" style="width:${pp}%"></span><span class="ea" style="width:${ep}%"></span></div></div>`;
 }
@@ -5883,7 +5886,7 @@ SHEETS.checkin = sh => {
   if (past) {
     // the three numbers you type; the rest comes from intervals.icu and the plan. The strip shows the subtraction really made (#14): AEE minus the workouts the watch counted, not the EAT with what is still planned
     const aee = r.neatSrc === "watch" && r.nx?.mode === "active", stillK = (r.sess.items || []).reduce((a, x, i) => a + (x.st !== "done" ? r.kcals[i] || 0 : 0), 0);
-    body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>
+    body += `<div class="grid3 ci-main">${fld("weight", "Weight", "kg")}${fld("bf", "Body fat", "%")}${fld("watch", wl, "kcal")}</div>${L.weightSrc === "icu" && L.weight > 0 ? `<div class="ci-src"><span class="pill" style="--c:var(--accent)">Weight${L.bfIcu > 0 ? " and body fat" : ""} from intervals.icu</span></div>` : ""}
       <div class="ci-calc">${aee ? `<span><small>AEE</small><b>${fmtN(L.watch)}</b></span><span class="op">−</span><span><small>Workouts</small><b>${fmtN(r.nx.sub)}</b></span><span class="op">=</span>` : `<span><small>Training (EAT)</small><b>${fmtN(r.eat)}</b></span><span class="op">+</span>`}<span><small>NEAT${{ avg: " (7-day)", default: " (default)" }[r.neatSrc] || ""}</small><b>${fmtN(r.neat)}</b></span><span class="ci-tdee"><small>TDEE</small><b>${fmtN(r.tdee)}</b></span></div>
       <small class="faint">${logged.length ? `EAT from ${logged.length} workout${logged.length > 1 ? "s" : ""} (${esc(logged.map(w => shortSport(w.sport)).join(", "))})` : "No workouts logged"}${stillK > 0 ? ` · ${fmtN(stillK)} kcal of training still planned` : ""}${aee ? " · NEAT = AEE − the workouts the watch counted" : !sh.energy ? ` · NEAT ${/^steps/.test(r.neatSrc) ? `from your ${fmtN(L.steps)} steps${{ steps: " plus your usual extra movement", stepsProj: " so far, a typical rest of the day and your usual extra movement", stepsRef: ": the default NEAT counts as an average day of steps", stepsRefProj: " so far plus a typical rest of the day" }[r.neatSrc] || ""}` : NEAT_SRC[r.neatSrc] || NEAT_SRC.avg}` : ""}.</small>`;
     const more = [L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : "", L.rhr ? `RHR ${L.rhr}` : "", L.steps ? `${fmtN(L.steps)} steps` : "", logged.length ? `${logged.length} workout${logged.length > 1 ? "s" : ""}` : "", food.kcal ? `${fmtN(food.kcal)} kcal eaten` : ""].filter(Boolean).join(" · ");
@@ -6937,12 +6940,12 @@ function weekPlanView() {
   const t = todayISO(), ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), M = activeMeals(), now = ws <= t && t < addDays(ws, 7), stack = pwStack(M.length);
   const mac = m => `C ${fmtN(m.c)} · P ${fmtN(m.p)} · F ${fmtN(m.f)}`;
   const nameOf = d => `${DOW[dow(d)]} ${+d.slice(8)}`;
-  const dayHead = d => { const day = getDay(d), tot = dayTotals(day), TT = targetsFor(d), T = TT.kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0, filled = dayItems(day).length,
+  const dayHead = d => { const day = getDay(d), tot = dayTotals(day), TT = targetsFor(d), T = TT.kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0, kOver = overTarget(tot.kcal, T), filled = dayItems(day).length,
       gaps = d >= t && M.some(m => !day.lock?.[m.id] && !(day.meals?.[m.id] || []).length && habitSrc(d, m.id));
     const tool = (act, ico, label) => `<button class="pw-add pw-ic" data-act="${act}" data-date="${d}" aria-label="${label} (${nameOf(d)})" title="${label}">${ic(ico, "sm")}</button>`;
-    return `<div class="pw-dh"><span class="pw-dt">${gaps ? tool("day-fill", "spark", "Fill the empty meals from your habits") : ""}${clipBtns(d, null, "pw-add pw-ic", `the day (${esc(nameOf(d))})`)}${filled ? tool("clear-day", "trash", "Clear the whole day") : ""}</span><button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal, carbs ${fmtN(tot.c)} of ${fmtN(TT.c)} g, protein ${fmtN(tot.p)} of ${fmtN(TT.p)} g, fat ${fmtN(tot.f)} of ${fmtN(TT.f)} g">
-      <span class="pw-dn"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b></span><span class="pw-kcal"><b>${fmtN(tot.kcal)}</b><small> / ${fmtN(T)} kcal</small></span><i class="pw-bar${T && tot.kcal > T * 1.08 + 3 ? " over" : ""}"><i style="width:${pct}%"></i></i>
-      <span class="pw-mac">${[["C", "carb", tot.c, TT.c, "Carbs"], ["P", "pro", tot.p, TT.p, "Protein"], ["F", "fat", tot.f, TT.f, "Fat"]].map(([l, c, v, g, n]) => `<span class="pw-mc" style="--c:var(--${c})" title="${n}: eaten or planned / target, in grams"><i>${l}</i><b>${fmtN(v)}</b><small> / ${fmtN(g)} g</small><span class="pw-mb"><span style="width:${g ? clamp(v / g * 100, 0, 100) : 0}%"></span></span></span>`).join("")}</span></button></div>`; };
+    return `<div class="pw-dh"><span class="pw-dt">${gaps ? tool("day-fill", "spark", "Fill the empty meals from your habits") : ""}${clipBtns(d, null, "pw-add pw-ic", `the day (${esc(nameOf(d))})`)}${filled ? tool("clear-day", "trash", "Clear the whole day") : ""}</span><button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal${kOver ? ` (over by ${fmtN(tot.kcal - T)})` : ""}, carbs ${fmtN(tot.c)} of ${fmtN(TT.c)} g${overTarget(tot.c, TT.c) ? " (over)" : ""}, protein ${fmtN(tot.p)} of ${fmtN(TT.p)} g${overTarget(tot.p, TT.p) ? " (over)" : ""}, fat ${fmtN(tot.f)} of ${fmtN(TT.f)} g${overTarget(tot.f, TT.f) ? " (over)" : ""}">
+      <span class="pw-dn"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b></span><span class="pw-kcal${kOver ? " over" : ""}"><b>${fmtN(tot.kcal)}</b><small> / ${fmtN(T)} kcal</small>${kOver ? `<em class="pw-ov">+${fmtN(tot.kcal - T)}</em>` : ""}</span><i class="pw-bar${kOver ? " over" : ""}"><i style="width:${pct}%"></i></i>
+      <span class="pw-mac">${[["C", "carb", tot.c, TT.c, "Carbs"], ["P", "pro", tot.p, TT.p, "Protein"], ["F", "fat", tot.f, TT.f, "Fat"]].map(([l, c, v, g, n]) => `<span class="pw-mc${overTarget(v, g) ? " over" : ""}" style="--c:var(--${c})" title="${n}: eaten or planned / target, in grams${overTarget(v, g) ? `, over by ${fmtN(v - g)} g` : ""}"><i>${l}</i><b>${fmtN(v)}</b><small>${overTarget(v, g) ? `<em class="pw-ov">+${fmtN(v - g)} g</em>` : ` / ${fmtN(g)} g`}</small><span class="pw-mb"><span style="width:${g ? clamp(v / g * 100, 0, 100) : 0}%"></span></span></span>`).join("")}</span></button></div>`; };
   const cell = (d, m) => { const day = getDay(d), items = day.meals[m.id] || [], nm = `${esc(m.name)} on ${DOW[dow(d)]}`, at = `data-date="${d}" data-meal="${m.id}"`;
     const cp = clipBtns(d, m.id, "pw-add pw-ic", nm);
     const more = `<button class="pw-add pw-ic pw-x" data-act="pw-cm" ${at} aria-label="Meal options: ${nm}" title="Meal options: copy to other days, save as recipe, clear">${ic("more", "sm")}</button>`;
@@ -7713,7 +7716,7 @@ ACT["ss-move"] = el => { const sh = S_(); sh.moveTo = el.dataset.date; renderShe
 INP.rs = (v, el) => { S_().draft[el.dataset.k] = v; };
 ACT["ci-more"] = () => { const sh = S_(); sh.more = !sh.more; renderSheet(); };
 ACT["ci-energy"] = () => { const sh = S_(); sh.energy = true; renderSheet(); };
-CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); if (k === "bf") day.bfSrc = day.bf > 0 ? "man" : null; }); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
+CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); if (k === "bf") day.bfSrc = day.bf > 0 ? "man" : null; if (k === "weight") day.weightSrc = day.weight > 0 ? "man" : null; }); if (k === "weight") $(".sheet .ci-src")?.remove(); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
 CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.dataset.k] = v.trim() || null; }); };
 /* fields whose value has a valid range (#1, #17) or whose empty value means the default (#20): a height must be in cm, the lean share of the loss stays under 90 %, TEF and Default NEAT are never an empty zero */
 const FIT_RANGE = { "profile.height": { lo: 120, hi: 230, refuse: "Height in cm, between 120 and 230" }, "goal.leanShare": { lo: 0, hi: 0.9, hold: "Lean share is kept between 0 and 90%" }, "energy.tef": { def: true }, "energy.neat": { def: true } };
@@ -10360,7 +10363,7 @@ function saveWeighIn(wv, bfv) {
   const w = num(wv), bfRaw = String(bfv ?? "").trim(), bf = num(bfRaw);
   if (!(w > 20 && w < 400)) { toast("Enter your weight in kg."); return false; }
   if (bfRaw && !(bf >= 3 && bf <= 60)) { toast("Body fat goes from 3 to 60 %. Leave it empty if you didn't measure it."); return false; }
-  mutateLog(todayISO(), d => { d.weight = r1(w); if (bfRaw) { d.bf = r1(bf); d.bfSrc = "man"; } });
+  mutateLog(todayISO(), d => { d.weight = r1(w); d.weightSrc = "man"; if (bfRaw) { d.bf = r1(bf); d.bfSrc = "man"; } });
   S.settings.weight = r1(w); saveSettings();
   toast(`Logged ${r1(w)} kg${bfRaw ? ` · ${r1(bf)}% body fat` : ""} · trend updated`);
   return true;
@@ -11475,7 +11478,7 @@ ACT["pro-toggle"] = el => { const k = el.dataset.k, P = S.settings.pro || {}; S.
 /* ================= Fuel: the day's sums stay in view while you scroll the meals ================= */
 function fuelSticky(date, tot, eat, T) {
   const bar = (l, k, c) => { const pp = clamp(tot[k] / (T[k] || 1) * 100, 0, 100), ep = clamp(eat[k] / (T[k] || 1) * 100, 0, 100);
-    return `<div class="fs-m" style="--c:var(--${c})"><span><b>${r0(tot[k])}</b>/${r0(T[k])}${l}</span><div class="track ${tot[k] > T[k] * 1.08 + 3 ? "over" : ""}"><span class="pl" style="width:${pp}%"></span><span class="ea" style="width:${ep}%"></span></div></div>`; };
+    return `<div class="fs-m" style="--c:var(--${c})"><span><b>${r0(tot[k])}</b>/${r0(T[k])}${l}</span><div class="track ${overTarget(tot[k], T[k]) ? "over" : ""}"><span class="pl" style="width:${pp}%"></span><span class="ea" style="width:${ep}%"></span></div></div>`; };
   const kp = clamp(tot.kcal / (T.kcal || 1) * 100, 0, 100), ke = clamp(eat.kcal / (T.kcal || 1) * 100, 0, 100);
   return `<div id="fuel-sticky" class="fuel-sticky" aria-hidden="true"><div class="fs-k"><span><b>${fmtN(tot.kcal)}</b> / ${fmtN(T.kcal)} kcal</span><div class="track ${tot.kcal > T.kcal * 1.03 ? "over" : ""}"><span class="pl" style="width:${kp}%"></span><span class="ea" style="width:${ke}%"></span></div></div>${bar("C", "c", "carb")}${bar("P", "p", "pro")}${bar("F", "f", "fat")}</div>`;
 }
@@ -16051,7 +16054,7 @@ function yesterdayCard() { const G = yGaps(); if (!G) return ""; const d = G.d, 
     ${G.food ? row("plate", "Food", `<span class="faint yd-x">${G.food === "planned" ? "Planned, nothing ticked" : "Nothing logged"}</span><span class="yd-a">${G.food === "planned" ? `<button class="btn tonal sm" data-act="yd-eaten">Eaten as planned</button>` : ""}<button class="btn text sm" data-act="yd-food">Open</button></span>`) : ""}
     ${G.wo.map(x => row(isStrength(x.w.sport) ? "fitness" : "run", esc(x.p?.note || x.w.note || x.w.sport), `<span class="faint yd-x">planned, not logged</span><span class="yd-a"><button class="btn tonal sm" data-act="done-as-planned" data-date="${d}">Done</button><button class="btn text sm" data-act="wo-skip" data-date="${d}" data-k="${esc(planKey(x.p || x.w))}">Skipped</button>${(() => { const to = freeDayFor(x.w, d); return to ? `<button class="btn soft sm" data-act="wo-move-free" data-date="${d}" data-k="${esc(planKey(x.p || x.w))}">Move to ${to === todayISO() ? "today" : to === addDays(todayISO(), 1) ? "tomorrow" : DOW[dow(to)]}</button>` : ""; })()}</span>`)).join("")}</section>`; }
 FORMS["yd-w"] = () => { const v = num($("#yd-w")?.value), d = addDays(todayISO(), -1); if (!(v > 20 && v < 400)) { toast("Enter your weight in kg."); return; }
-  mutateLog(d, day => { day.weight = r1(v); }); toast(`${r1(v)} kg logged for yesterday`); scheduleRender(); };
+  mutateLog(d, day => { day.weight = r1(v); day.weightSrc = "man"; }); toast(`${r1(v)} kg logged for yesterday`); scheduleRender(); };
 ACT["yd-ok"] = () => { mutateLog(addDays(todayISO(), -1), day => { day.yok = true; }); scheduleRender(); };
 ACT["yd-eaten"] = () => { const d = addDays(todayISO(), -1); mutateDay(d, day => { for (const [, it] of dayItems(day)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, d); } }, { undo: "Yesterday marked as eaten" }); scheduleRender(); };
 ACT["yd-food"] = () => { UI.date = addDays(todayISO(), -1); UI.tab = UI.fuelTab = "plan"; scheduleRender(); window.scrollTo(0, 0); };
