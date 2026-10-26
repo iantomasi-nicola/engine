@@ -12,4 +12,4 @@
 | L202 | released | Indietro e chiusura tornano alla schermata giusta | other | claude/l202-back | 2026-10-26 13:42Z | 2026-10-26 14:43Z | Fatto e unito in claude/awesome-goldberg-ontswx; in pubblicazione |
 | SHIP | released | pubblicazione M14b A-F, M12, L188, L189, L202 | other | claude/awesome-goldberg-ontswx | 2026-10-26 14:43Z | 2026-10-26 14:58Z | main = bbc135a, rollback 86f14f4 |
 | M18 | active | Quantità a confezioni | foods,shopping | worktree-agent-aecde006764ad9076 | 2026-10-26 17:45Z | 2026-10-26 21:56Z |  |
-| M17 | active | Check-in sorgente peso e settimana in rosso | fuel,progress | worktree-agent-a3b8a0b2ca1bff91e | 2026-10-26 17:45Z | 2026-10-26 20:45Z |  |
+| M17 | active | Check-in sorgente peso e settimana in rosso | fuel,progress | worktree-agent-a3b8a0b2ca1bff91e | 2026-10-26 17:45Z | 2026-10-26 21:57Z |  |
