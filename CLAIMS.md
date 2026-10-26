@@ -8,3 +8,4 @@
 | M14b-D | active | M14b gruppo D Fuel + Copy/Paste L188 | fuel | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 19:31Z |  |
 | M12 | active | M12 verifica contaflessioni | strength,train | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 19:31Z | WIP non verificato su claude/m12-pushups aee3d54, resta eseguire tests/m12-pushups.test.js, screenshot, design-reviewer, decisione MET futsal/nuoto |
 | M14b-C | active | M14b gruppo C PWA + R2 | pwa,tests | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 19:31Z |  |
+| M14b-EF | active | M14b gruppi E Shopping+L189 e F Foods | foods,shopping | claude/m14b-ef | 2026-10-26 13:35Z | 2026-10-26 19:35Z |  |
