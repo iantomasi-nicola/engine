@@ -3123,7 +3123,7 @@ function syncEvent(st) {
 function syncSent(path, data, merged) {
   const key = keyOfPath(path), [kind] = splitKey(key);
   if (MERGED(kind) && data !== undefined && (!merged || !Sync.pending.has(key))) Sync.seen[key] = clone(data);
-  if (Sync.dirty.delete(key)) saveDirtyLater();
+  if (!Sync.pending.has(key) && Sync.dirty.delete(key)) saveDirtyLater();   // a newer edit still in the debounce stays unsent
 }
 
 function put(kind, id, data) {
@@ -3154,7 +3154,7 @@ function flush(key) {
 function flushNow() { for (const key of [...Sync.pending.keys()]) flush(key); window.ENGINE?.persist?.(); }
 addEventListener("pagehide", flushNow);
 document.addEventListener("visibilitychange", () => { if (document.hidden) flushNow(); });
-if (window.ENGINE) Object.assign(window.ENGINE, { onStatus: syncEvent, onSent: syncSent, merge: (path, base, l, r) => syncMerge(path, base, l, r, "l") });
+if (window.ENGINE) Object.assign(window.ENGINE, { onStatus: syncEvent, onSent: syncSent, merge: (path, base, l, r) => syncMerge(path, base, l, r, "l"), noKeys });
 /* one-time clean-ups run on the account's own data: signed in, that means the first answer from the server, not the copy kept on this device */
 const dataReady = (...kinds) => !Sync.db || (Sync.ready && kinds.every(k => Sync.fresh[k]));
 
@@ -10433,6 +10433,7 @@ function claimLocal(id) {
   const owner = Sync.owner, mine = owner ? owner === id : !snaps.some(k => k !== "engine.snap." + id);
   Sync.union = mine && !owner && !snaps.includes("engine.snap." + id);
   if (!mine) {
+    if (!owner) restorePoint("before sign-in (this device's data)");   // data of no account, about to be cleared for this one: kept as a restore point (the copy is taken now, before the reset)
     if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
     Sync.dirty = new Set();
     Object.assign(S, { settings: withKeys(normalizeSettings(null), keyStore()[id]), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
@@ -13301,9 +13302,7 @@ function fillIn(cur, add, d = 0) {
 ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0;
   try {
     if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
-      if (cur.intervals?.key && !s.intervals?.key) s.intervals = { ...(s.intervals || {}), key: cur.intervals.key };
-      if (cur.mapKey && !s.mapKey) s.mapKey = cur.mapKey;
-      if (cur.ai && !(s.ai?.services || []).some(x => x.key)) s.ai = cur.ai;
+      const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
       put("settings", "", s); n++; }
     const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
     if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");

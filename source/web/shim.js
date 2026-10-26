@@ -72,12 +72,12 @@
   function loadQ(uid) {
     const own = LS.get("engine.q." + uid, null); if (Array.isArray(own)) return own.map(q => ({ ...q, bad: false }));
     const legacy = LS.get("engine.q", null), snaps = snapKeys();
-    if (Array.isArray(legacy) && (snaps.includes("engine.snap." + uid) || !snaps.length)) { LS.set("engine.q." + uid, legacy); LS.del("engine.q"); return legacy; }
+    if (Array.isArray(legacy) && (snaps.includes("engine.snap." + uid) || !snaps.length)) { if (LS.set("engine.q." + uid, legacy)) LS.del("engine.q"); else legacyQ = true; return legacy; }
     return [];
   }
-  let qT = 0;
+  let qT = 0, legacyQ = false;   // legacyQ: the older single queue is deleted only once this account's queue was saved
   function persistQ() { clearTimeout(qT); qT = 0; if (!E.uid) return;
-    const ok = LS.set("engine.q." + E.uid, queue);
+    const ok = LS.set("engine.q." + E.uid, queue); if (ok && legacyQ) { LS.del("engine.q"); legacyQ = false; }
     if (ok === st.storageFull) { st.storageFull = !ok; emit(); } }
   const saveQ = () => { if (!qT) qT = setTimeout(persistQ, 250); };
   /* changes made on this device while it was signed out of account uid: kept in that account's queue for its next sign-in */
@@ -145,6 +145,7 @@
         else {
           if (q.mb && E.merge) { const g = await sb.from(T).select("data").eq("user_id", E.uid).eq("path", q.path).maybeSingle();
             if (g.error) r = g; else if (g.data && !same(g.data.data, q.base)) data = E.merge(q.path, q.base, q.data, g.data.data); }
+          if (q.path === "settings" && E.noKeys) data = E.noKeys(data);   // an entry queued by an older version may still hold the keys (S-1)
           if (!r) r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
         }
         if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }

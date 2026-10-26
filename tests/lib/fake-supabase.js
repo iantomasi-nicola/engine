@@ -60,13 +60,15 @@ function server({ maxRows = 1000 } = {}) {
 }
 
 /* one device = one browser context with its own localStorage; signed in as uid (null = signed out) */
-async function device(srv, name, { dir, uid = "u1", seed = null, local = null, viewport = H.VIEWPORTS.desktop, browser } = {}) {
+async function device(srv, name, { dir, uid = "u1", seed = null, local = null, viewport = H.VIEWPORTS.desktop, browser, down = false, init = null } = {}) {
   const { chromium } = H.loadPlaywright();
   const own = !browser; browser = browser || await chromium.launch();
   const http = await H.serve(dir), ctx = await browser.newContext({ viewport, serviceWorkers: "block" });
-  const dev = { name, uid, down: false, asleep: false, errors: [], srv, ctx, url: http.url };
+  const dev = { name, uid, down, asleep: false, errors: [], srv, ctx, url: http.url };
   /* seed = the app's localStorage file, local = any other keys, both written only on the very first load of this device */
   await ctx.addInitScript(([k, v, extra]) => { try { if (!localStorage.getItem("__dev")) { localStorage.setItem("__dev", "1"); if (v) localStorage.setItem(k, v); for (const [a, b] of Object.entries(extra || {})) localStorage.setItem(a, b); } } catch (e) {} }, [H.LS_KEY, seed ? JSON.stringify(seed) : "", local]);
+  /* init = an extra script run before the app on every load (e.g. a storage that refuses one key) */
+  if (init) await ctx.addInitScript(init);
   /* every toast from the first moment (boot included): read off the #toast element */
   await ctx.addInitScript(() => { window.__toasts = []; document.addEventListener("DOMContentLoaded", () => { const el = document.getElementById("toast"); if (el) new MutationObserver(() => { const t = el.querySelector(".toast span")?.textContent; if (t && __toasts[__toasts.length - 1] !== t) __toasts.push(t); }).observe(el, { childList: true, subtree: true }); }); });
   await ctx.route("**/vendor/supabase.js", r => r.fulfill({ contentType: "text/javascript", body: STUB }));

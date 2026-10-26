@@ -210,3 +210,40 @@ test("S-1 migration: keys already in the synced settings move to the device once
   assert.deepEqual(await B.page.evaluate(() => [S.settings.intervals?.key || "", S.settings.mapKey || "", S.settings.ai?.services?.[0]?.key || "", S.settings.ai?.services?.length]), ["", "", "", 1]);
   assert.deepEqual([...A.errors, ...B.errors], []);
 });
+
+/* code-guard review of group A (26/10): four ways an unsent edit or a key could still be lost */
+test("an edit still waiting in the debounce stays marked unsent when an earlier send of the same document is confirmed", async () => {
+  const srv = FS.server(), A = await dev(srv, "A", { seed: F.seed({ withPlan: false }) }); await A.settle();
+  const r = await A.page.evaluate(() => { Sync.dirty.add("body|"); Sync.pending.set("body|", 1); syncSent("body", clone(S.body), false); const kept = Sync.dirty.has("body|"); Sync.pending.delete("body|"); Sync.dirty.delete("body|"); return kept; });
+  assert.equal(r, true);
+});
+
+test("signing in on a device whose data belongs to no account, while another account's copy is also there, saves a restore point before the device is cleared", async () => {
+  const srv = FS.server(), seed = F.seed({ withPlan: false });
+  const A = await dev(srv, "A", { uid: null, seed, local: { "engine.snap.other": "[]" } });
+  const r = await A.page.evaluate(async () => { const before = (await BKDB.keys("pts")).length, n = Object.keys(S.foods).length; claimLocal("u9"); await new Promise(r => setTimeout(r, 300));
+    const ks = (await BKDB.keys("pts")).sort(), pt = ks.length > before ? await BKDB.get("pts", ks[ks.length - 1]) : null; return { n, after: Object.keys(S.foods).length, why: pt?.why || "", kept: Object.keys(pt?.data?.foods || {}).length }; });
+  assert.ok(r.n > 0 && r.after === 0, "the device was cleared for the other account");
+  assert.match(r.why, /sign-in/); assert.equal(r.kept, r.n, "the restore point holds the device's own data");
+});
+
+test("the queue of an older version is not deleted when the device can't save it under the account's name", async () => {
+  const srv = FS.server(), legacy = [{ op: "set", path: "lib/foods/old1", data: food("old1", "Synthetic oats") }];
+  const A = await dev(srv, "A", { down: true, seed: F.seed({ withPlan: false }), local: { "engine.q": JSON.stringify(legacy) },
+    init: () => { const set = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === "engine.q.u1") throw new Error("QuotaExceededError"); return set.call(this, k, v); }; } });
+  assert.match(await A.page.evaluate(() => localStorage.getItem("engine.q") || ""), /old1/);
+});
+
+test("a restore from a file without keys keeps every key of this device, AI services included", async () => {
+  const srv = FS.server(), seed = F.seed({ withPlan: false }); seed.settings = KEYED();
+  const A = await dev(srv, "A", { seed }); await A.settle(); await wait(800);
+  const r = await A.page.evaluate(async () => { const j = backupData(); restoreOpen(j, "file"); const sh = S_(); sh.mode = "replace"; await ACT["rs-go"](); await new Promise(r => setTimeout(r, 300));
+    return [S.settings.intervals?.key, S.settings.mapKey, S.settings.ai?.services?.[0]?.key, keyStore()["u1"]?.svc && Object.values(keyStore()["u1"].svc)[0]]; });
+  assert.deepEqual(r, ["SYNTH-ICU", "SYNTH-MAP", "SYNTH-AI", "SYNTH-AI"]);
+});
+
+test("a settings change queued by an older version goes to the account without its keys", async () => {
+  const srv = FS.server(), legacy = [{ op: "set", path: "settings", data: KEYED() }];
+  const A = await dev(srv, "A", { seed: F.seed({ withPlan: false }), local: { "engine.q": JSON.stringify(legacy) } }); await A.settle(); await wait(800);
+  assert.doesNotMatch(JSON.stringify([...srv.rows("u1")]), /SYNTH-/);
+});
