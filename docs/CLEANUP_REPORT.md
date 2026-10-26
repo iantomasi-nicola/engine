@@ -523,3 +523,6 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Aggiornato**: `m14b-ef3` (un cibo senza `per.kcal` ora resta senza, non 0).
 - **Eliminato**: nulla.
 - **Aperto**: `normalizeRecords` non copre ancora i record in arrivo dalla sync; una voce di dispensa cambiata dopo un acquisto e annullata perde eventuali campi diversi da `g` solo se era assente (usa i campi attuali); i campi non numerici di `shop`/`train` più in profondità del primo livello non sono validati.
+
+## Design fixes, round 2 (claude/design-fixes-2)
+Verified: 14 review defects (phone day header, Paste accent, week cell icon order, touch day tools in flow, Paste visible on hover devices, clipboard pill under the title, buy sheet home section without inner card, Reps/Load labels on PC, push-up counter setting, singular session and dimmed agenda days outside the month, switch row padding, `.train .lvl` scope, texts and icons of Copy to…, Foods «Show more»). Removed: dead 34 px/muted rule of `.meal-cp .icon-btn`, `foldOne` use in the home swap (own `.hm-*` markup). Open: none from this list. Tests: `tests/design-fixes-2.test.js`.
