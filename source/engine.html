@@ -772,7 +772,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .set-det summary::after{content:"+";font-size:20px;color:var(--muted)}
 .set-det[open] summary::after{content:"–"}.ex .lrow .t,.ex .lrow .s{white-space:normal;overflow:visible;text-overflow:clip}.ex .lrow .s{overflow-wrap:break-word}.set-det.fx>summary{gap:10px}.set-det.fx>summary b{display:block;font-size:14.5px;font-weight:600;font-family:inherit;font-stretch:100%}.set-det.fx>summary small{display:block;font-size:12.5px;color:var(--muted);font-weight:450;margin-top:2px;font-family:var(--body,inherit);font-stretch:100%}@media(max-width:600px){.grid2>.fld-wide{grid-column:1/-1}}
 .set-in{display:flex;flex-direction:column;gap:12px;margin-top:14px}
-.rem-f>summary{padding:10px 0}.rem-f>.set-in{margin-top:4px;padding-bottom:6px}
+.rem-f>summary{padding:10px 0}.rem-f>summary b{font-weight:500;font-size:14px}.rem-f>summary::after{opacity:.8}.rem-f>.set-in{margin-top:4px;padding-bottom:6px}
+.rem-f[open]{background:var(--surface-2);border-radius:14px;padding:0 12px;margin-inline:-12px}.rem-f[open]>summary small{display:none}.rem-f+.rem-f{margin-top:8px}.rem-f[open]>.set-in{padding-bottom:14px}
+@media(min-width:1000px){.rem-f>summary,.rem-f .opt-row{max-width:560px}}
+@media(max-width:600px){.rem-f .ck-row{grid-template-columns:auto minmax(0,1fr)}.rem-f .ck-row>:last-child{grid-column:2;justify-self:start}}
 details.card>summary{cursor:pointer;list-style:none}
 details.card>summary::-webkit-details-marker{display:none}
 details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-right:6px;transition:transform .15s}
@@ -12540,7 +12543,7 @@ function reminderPrefs() {
     <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rem-xp" style="font-size:13px">Pantry check at</label><input id="rem-xp" class="inp" type="time" value="${esc(R.pantryAt || "18:00")}" data-chg="rem-xp" style="max-width:130px"></div>
     ${prePrefs()}
     ${checkPrefs()}
-    ${remFold("rem-more", "Weekly report, app closed, calendar", "Monday report · push · calendar file", `<button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
+    ${remFold("rem-more", "Weekly report and calendar", `Monday ${(S.settings.report || {}).at || "08:30"}${typeof pushOn === "function" ? ` · push ${pushOn() ? "on" : "off"}` : ""}`, `<button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
     <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating), the use-by dates in your pantry and the next check-ups: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div>`)}</div>`;
 }
 ACT["rem-toggle"] = async () => { const R = S.settings.reminders || {};
@@ -13047,7 +13050,7 @@ reminderTick = function () { _reminderTick();
 navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-tab" && e.data.tab === "report") ACT["rep-open"](); });
 const _reminderPrefs = reminderPrefs;
 reminderPrefs = function () { const RP = S.settings.report || {};
-  return _reminderPrefs().replace('<button class="btn soft sm" data-act="rem-ics"', `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rep-at" style="font-size:13px">Weekly report on Monday at</label><input id="rep-at" class="inp" type="time" value="${esc(RP.at || "08:30")}" data-chg="rep-at" style="max-width:130px"></div>
+  return _reminderPrefs().replace('<button class="btn soft sm" data-act="rem-ics"', `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rep-at" style="font-size:13px">Monday report at</label><input id="rep-at" class="inp" type="time" value="${esc(RP.at || "08:30")}" data-chg="rep-at" style="max-width:130px"></div>
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${RP.today !== false}" data-act="rep-today" aria-label="Weekly report on Today"></button><span>Last week in review on Today<small class="faint" style="display:block;font-size:12.5px">Monday to Wednesday, until you close it</small></span></label>
     <button class="btn soft sm" data-act="rem-ics"`); };
 CHG["rep-at"] = v => { S.settings.report = { ...(S.settings.report || {}), at: v || "08:30" }; saveSettings(); };
