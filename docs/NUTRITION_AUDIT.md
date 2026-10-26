@@ -140,3 +140,6 @@ Solo requisiti, nessuna modifica ora. Proteine su *range* in g/kg con distinzion
 3. **D18 (AEE senza kcal orologio)** dentro M7b, dopo F-03 e F-06, con interruttore `neatMode`.
 4. **M7c–M7e:** trasparenza «Come calcolato» (D3), BMR opzionali (F-01), micronutrienti/idratazione (F-09/F-10).
 5. Risposte alle domande aperte di F-03 e F-12 e la tua scelta se tenere Mifflin come default (consigliato fino a un confronto sui tuoi dati).
+
+## Approvata il 26/10/2026: correzione del grasso corporeo da intervals.icu (L199)
+Scarto = media pesata di (grasso scritto dall'utente − grasso di intervals.icu) nei giorni che hanno entrambi; peso 0,5^(età in giorni/30), ultimi 120 giorni; valore usato = grasso di intervals.icu + scarto, limitato a 3–60 %; senza coppie non si usa. Approvata dall'utente scegliendo «Interruttore + calibrazione»; i coefficienti 30 e 120 sono scelte di progetto (non da letteratura) da confermare con dati reali; è disattivabile in Settings › intervals.icu. Il peso è relativo a oggi, non alla data del giorno corretto. Dettagli: `docs/BODY_COMPOSITION.md`.

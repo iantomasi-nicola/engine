@@ -5799,7 +5799,7 @@ SHEETS.result = sh => {
 /* ================= your profile in one message: who you are, what you do, your records, your volume ================= */
 function profileSummary() {
   const f = FIT(), P = f.profile, t = todayISO(), L = [], num0 = v => fmtN(Math.round(v));
-  const nm = [P.name, P.surname].filter(Boolean).join(" "), kg = trendAt(t), bf = lastBf();
+  const nm = [P.name, P.surname].filter(Boolean).join(" "), kg = trendAt(t), bf = lastBf(true);
   L.push([nm || "Athlete", P.dob ? `${ageAt(t)} y` : "", heightCm(true) ? `${heightCm(true)} cm` : "", kg ? `${r1(kg)} kg` : "", bf ? `${r1(bf[1])}% body fat` : ""].filter(Boolean).join(" · "));
   const sports = f.sports.map(x => x.name).filter(n => n && n !== "Rest" && n !== "Other" && (logSports().has(n) || n === f.runSport)); if (sports.length) L.push("Sports: " + sports.join(", "));
   // calisthenics and strength: best bodyweight reps and best weighted set of each exercise you track
@@ -7454,7 +7454,7 @@ ACT["ss-move"] = el => { const sh = S_(); sh.moveTo = el.dataset.date; renderShe
 INP.rs = (v, el) => { S_().draft[el.dataset.k] = v; };
 ACT["ci-more"] = () => { const sh = S_(); sh.more = !sh.more; renderSheet(); };
 ACT["ci-energy"] = () => { const sh = S_(); sh.energy = true; renderSheet(); };
-CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); }); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
+CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); if (k === "bf") day.bfSrc = day.bf > 0 ? "man" : null; }); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
 CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.dataset.k] = v.trim() || null; }); };
 /* fields whose value has a valid range (#1, #17) or whose empty value means the default (#20): a height must be in cm, the lean share of the loss stays under 90 %, TEF and Default NEAT are never an empty zero */
 const FIT_RANGE = { "profile.height": { lo: 120, hi: 230, refuse: "Height in cm, between 120 and 230" }, "goal.leanShare": { lo: 0, hi: 0.9, hold: "Lean share is kept between 0 and 90%" }, "energy.tef": { def: true }, "energy.neat": { def: true } };
@@ -10039,7 +10039,8 @@ SHEETS.weigh = () => { const last = weightsSeries().pop(), lb = lastBf(); return
 ACT["weigh-open"] = () => openSheet("weigh", {});
 FORMS.weighsheet = f => { if (saveWeighIn($("#qw-in")?.value, $("#qw-bf")?.value)) closeSheet(); };
 /* morning weigh-in: weight required, body fat optional (only on the days you measure it) */
-function lastBf() { const ds = allLogDates().filter(d => logGet(d)?.bf > 0).sort(); const d = ds[ds.length - 1]; return d ? [d, +logGet(d).bf] : null; }
+/* the last body fat you typed (the weigh-in suggests it); any = the last the app computes with, intervals.icu corrected included (bfAt) */
+function lastBf(any = false) { const at = d => any ? bfAt(d) : +logGet(d)?.bf, ds = allLogDates().filter(d => at(d) > 0).sort(); const d = ds[ds.length - 1]; return d ? [d, at(d)] : null; }
 function saveWeighIn(wv, bfv) {
   const w = num(wv), bfRaw = String(bfv ?? "").trim(), bf = num(bfRaw);
   if (!(w > 20 && w < 400)) { toast("Enter your weight in kg."); return false; }

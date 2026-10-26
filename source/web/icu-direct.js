@@ -133,7 +133,7 @@ async function icuSyncDirect(opts = {}) {
     if (x.hrv > 5 && !((cur.hrv || 0) > 0)) ch.hrv = r0_(x.hrv);
     // body fat from intervals.icu is kept in bfIcu and never in bf (what you type): the app corrects it with your own readings (bfAt). An old import (same value, no marker) moves to bfIcu once;
     // the value Engine itself sent (bfPush) coming back is not a second reading
-    const bf = r1_(+x.bodyFat); if (bf >= 3 && bf <= 60 && cur.bfPush !== bf) { if (cur.bfIcu !== bf) ch.bfIcu = bf; if (!icu.bfMig && cur.bf === bf && cur.bfSrc == null && cur.bfPush == null) ch.bf = null; }
+    const bf = r1_(+x.bodyFat); if (bf >= 3 && bf <= 60 && cur.bfPush !== bf) { if (cur.bfIcu !== bf) ch.bfIcu = bf; if (!icu.bfMig && cur.bf === bf && cur.bfSrc == null && cur.bfPush == null) { ch.bfWas = cur.bf; ch.bf = null; } }
     if (Object.keys(ch).length) { Object.assign(day(date), ch); res.well++; } }
   // Engine -> intervals.icu: check-ins intervals.icu doesn't have
   if (icu.pushWell !== false) { const remote = Object.fromEntries(WELL.filter(x => x && typeof x === "object").map(x => [String(x.id).slice(0, 10), x]));

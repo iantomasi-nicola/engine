@@ -97,3 +97,31 @@ test("Settings › intervals.icu: the two switches work and say why a value is n
   assert.equal(r.a, false); assert.equal(r.b, true); assert.equal(r.c, false);
   assert.deepEqual(app.errors, []);
 });
+
+test("a body fat typed in the check-in is marked as yours, so it is never taken for an import; the moved value is kept in bfWas", async () => {
+  const page = await start();
+  const [d1, d2] = await page.evaluate(() => [1, 2].map(i => addDays(todayISO(), -i)));
+  await page.evaluate(d => { openSheet("checkin", { date: d, live: true }); CHG.ci("21", { dataset: { k: "bf" } }); }, d1);
+  assert.equal((await dayOf(page, d1)).bfSrc, "man");
+  await page.evaluate(d => { CHG.ci("", { dataset: { k: "bf" } }); }, d1);
+  assert.deepEqual(await dayOf(page, d1), { bf: null, bfIcu: null, bfSrc: null, bfPush: null, at: 0 }, "cleared: the marker goes with it");
+  await page.evaluate(([d]) => { mutateLog(d, x => { x.bf = 8; }); }, [d2]);
+  await page.evaluate(async ([s, d]) => { eval(s); await icuSyncDirect(); }, [SETUP({ wellness: [{ id: d2, bodyFat: 8 }] }, {}), d2]);
+  assert.deepEqual(await page.evaluate(d => { const L = logGet(d); return { bf: L.bf ?? null, bfIcu: L.bfIcu, bfWas: L.bfWas }; }, d2), { bf: null, bfIcu: 8, bfWas: 8 });
+  assert.deepEqual(app.errors, []);
+});
+
+test("the file import (JSON) keeps body fat in bfIcu; with the source switched off the sync still mirrors it but nothing uses it; the corrected value stays within 3–60", async () => {
+  const page = await start();
+  const [d1, d2] = await page.evaluate(() => [1, 2].map(i => addDays(todayISO(), -i)));
+  const r = await page.evaluate(async ([s, d1, d2]) => { eval(s);
+    const n = icuApplyWellness([{ id: d1, bodyFat: 9.04 }, { id: d2, bodyFat: 1 }]);
+    const a = { n, d1: logGet(d1).bfIcu, d2: logGet(d2)?.bfIcu ?? null, bf: logGet(d1).bf ?? null };
+    S.settings.intervals.pullBf = false; await icuSyncDirect(); const off = { mirrored: logGet(d1).bfIcu, at: bfAt(d1) };
+    S.settings.intervals.pullBf = true; mutateLog(addDays(todayISO(), -6), x => { x.bf = 60; x.bfIcu = 3; x.bfSrc = "man"; }); mutateLog(d1, x => { x.bfIcu = 59; });
+    return { a, off, top: bfAt(d1) }; }, [SETUP({ wellness: [{ id: d1, bodyFat: 9 }] }, { bfMig: true }), d1, d2]);
+  assert.deepEqual(r.a, { n: 1, d1: 9, d2: null, bf: null });
+  assert.deepEqual(r.off, { mirrored: 9, at: 0 });
+  assert.equal(r.top, 60, "3 → 60 is a gap of +57: 59 + 57 is clamped to 60");
+  assert.deepEqual(app.errors, []);
+});
