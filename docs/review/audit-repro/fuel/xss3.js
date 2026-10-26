@@ -1,0 +1,27 @@
+const { run } = require("./lib");
+const P = `"><img src=x onerror="window.__xss=(window.__xss||0)+1"><b x="`;
+run(async page => {
+  await page.evaluate(`(async () => { window.__xss=0; const P = ${JSON.stringify(P)}; const T = todayISO();
+    S.foods["x1"] = { id:"x1", name:P, brand:P, unit:"g", per:{kcal:100,p:1,c:1,f:1,fib:0}, servings:[{l:P,g:50}], pack:500, cat:"pantry", role:"P", meals:["m"], source:"custom" };
+    S.foods["x2"] = { id:"x2", name:P+"2", brand:"", unit:"g", per:{kcal:100,p:1,c:1,f:1,fib:0}, servings:[], pack:500, cat:"pantry", role:"P", meals:["m"], source:"custom" };
+    S.shop.pantry["x2"] = {g:900};
+    S.days[T] = { date:T, meals:{ lunch:[newItem("food","x1",300)], dinner:[{ id:"tr", kind:"quick", cheat:true, name:P, m:{kcal:300,p:0,c:0,f:0}, eaten:false }] } };
+    S.shop.checked = {x1:{g:500}};
+    DATA_V++; UI.shopStart = T; S.shop.range = 7;
+    const base = () => document.querySelectorAll("[onerror]").length;
+    const res = {};
+    UI.tab=UI.fuelTab="plan"; UI.planView="week"; UI.pwLib=true; UI.pwSeg="foods"; render(); await new Promise(r=>setTimeout(r,200)); res.week = base();
+    ACT["pw-lib-add"]({dataset:{nm:P, t:"food", ref:"x1", qty:100}}); await new Promise(r=>setTimeout(r,100)); res.pwadd = base(); closeSheet();
+    UI.planView="day"; copyToClip("day", T); UI.mclip && (UI.mclip.label = "the day of "+P); render(); await new Promise(r=>setTimeout(r,100)); res.clip = base();
+    UI.tab=UI.fuelTab="shop"; render(); await new Promise(r=>setTimeout(r,100)); res.shop = base();
+    openSheet("buy",{id:"x1"}); await new Promise(r=>setTimeout(r,100)); res.buy = base(); closeSheet();
+    ACT["home-swap"]; openSheet("swapfood",{from:"x1", to:"x2"}); await new Promise(r=>setTimeout(r,100)); res.swap = base(); closeSheet();
+    UI.tab=UI.fuelTab="pantry"; render(); await new Promise(r=>setTimeout(r,100)); res.pantry = base();
+    openSheet("pantry",{food:"x2", g:900}); await new Promise(r=>setTimeout(r,100)); res.pasheet = base(); closeSheet();
+    UI.tab=UI.fuelTab="foods"; render(); await new Promise(r=>setTimeout(r,100)); res.foods = base();
+    S.foods["x1"].hidden = true; S.foods["x1"].delAt = todayISO(); UI.foodsSeg="hidden"; render(); await new Promise(r=>setTimeout(r,100)); res.bin = base();
+    openCheat({date:T, meal:"dinner", itemId:"tr"}); await new Promise(r=>setTimeout(r,100)); res.cheat = base(); closeSheet();
+    window.__res = res; })()`);
+  await page.waitForTimeout(500);
+  return await page.evaluate(() => ({ res: window.__res, xss: window.__xss }));
+});
