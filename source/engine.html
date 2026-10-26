@@ -3015,7 +3015,8 @@ const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty";
 let SAVE_WARNED = false;
 function saveLocal() {
   DATA_V++;
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: S.settings, foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
+  saveKeys();
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: noKeys(S.settings), foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
   catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db && window.ENGINE?.status?.().online ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
 }
 /* put() saves the device copy once per task: a burst of writes (a restore, a week of plans) costs one save, and the copy is on disk before the tab can close */
@@ -3033,8 +3034,34 @@ function loadLocal() {
   S.body = { w: {}, m: {}, ...(S.body || {}) };
   S.train = { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...(S.train || {}) };
   try { Sync.owner = localStorage.getItem(OWNER_KEY) || ""; const d = JSON.parse(localStorage.getItem(DIRTY_KEY) || "null"); if (Sync.owner && d?.uid === Sync.owner) Sync.dirty = new Set(d.keys || []); } catch (e) {}
+  if (S.settings) withKeys(S.settings, keyStore()[Sync.owner]);   // keys still inside an older device copy stay in memory and move to the key store at the next save
   DATA_V++;
 }
+/* ================= API keys: on this device only (S-1) =================
+   The intervals.icu, MapTiler and AI keys are in memory inside S.settings (everything reads them there) and on disk only in "engine.keys"
+   ({ owner uid, or "" before any sign-in: keys }). They never reach the synced settings document, the device copy, the snapshot or a restore point;
+   another device starts with the fields empty. A backup file has them only when asked (backupData({ keys: true })). */
+const KEYS_KEY = "engine.keys";
+function keysOf(st) {
+  const k = {}; if (!st) return k;
+  if (st.intervals?.key) k.icu = st.intervals.key; if (st.mapKey) k.map = st.mapKey; if (st.ai?.key) k.ai = st.ai.key;
+  for (const x of st.ai?.services || []) if (x?.key && x.id) (k.svc = k.svc || {})[x.id] = x.key;
+  return k;
+}
+function noKeys(st) {
+  if (!st) return st; const o = clone(st);
+  delete o.mapKey; if (o.intervals) delete o.intervals.key;
+  if (o.ai) { delete o.ai.key; for (const x of o.ai.services || []) if (x) delete x.key; }
+  return o;
+}
+function withKeys(st, k) {
+  if (!st || !k) return st;
+  if (k.icu) st.intervals = { ...(st.intervals || {}), key: k.icu }; if (k.map) st.mapKey = k.map; if (k.ai) st.ai = { ...(st.ai || {}), key: k.ai };
+  if (k.svc) for (const x of st.ai?.services || []) if (x && k.svc[x.id]) x.key = k.svc[x.id];
+  return st;
+}
+function keyStore() { try { const j = JSON.parse(localStorage.getItem(KEYS_KEY) || "{}"); return isPlain(j) ? j : {}; } catch (e) { return {}; } }
+function saveKeys() { const all = keyStore(), k = keysOf(S.settings), o = Sync.owner || ""; if (deq(all[o] || {}, k)) return; all[o] = k; try { localStorage.setItem(KEYS_KEY, JSON.stringify(all)); } catch (e) {} }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
 const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm";
 const keyOf = (kind, id) => kind + "|" + (id || "");
@@ -3066,7 +3093,12 @@ function syncEvent(st) {
   if (st.blocked > SYNC_MSG.blocked) toast(`A change couldn't be saved to your account (${st.lastError || "refused by the server"}). It stays on this device and is tried again the next time you open the app.`);
   SYNC_MSG.blocked = st.blocked;
 }
-function syncSent(path) { if (Sync.dirty.delete(keyOfPath(path))) saveDirtyLater(); }
+/* the account confirmed a write: no longer dirty, and (sent as it was) it is the copy the next edit of that document starts from */
+function syncSent(path, data, merged) {
+  const key = keyOfPath(path), [kind] = splitKey(key);
+  if (MERGED(kind) && data !== undefined && (!merged || !Sync.pending.has(key))) Sync.seen[key] = clone(data);
+  if (Sync.dirty.delete(key)) saveDirtyLater();
+}
 
 function put(kind, id, data) {
   setLocal(kind, id, data);
@@ -3088,7 +3120,8 @@ function flush(key) {
   Sync.pending.delete(key); clearTimeout(Sync.timers.get(key)); Sync.timers.delete(key);
   if (!Sync.db) return;
   const ref = refFor(job.kind, job.id);
-  Promise.resolve(job.data === null ? ref.delete() : ref.set(clone(job.data), MERGED(job.kind) ? { base: Sync.seen[key] ?? null } : undefined)).catch(() => {});
+  const data = job.kind === "settings" ? noKeys(job.data) : clone(job.data);
+  Promise.resolve(job.data === null ? ref.delete() : ref.set(data, MERGED(job.kind) ? { base: Sync.seen[key] ?? null } : undefined)).catch(() => {});
   syncState();
 }
 /* the tab is hidden or closing: nothing waits for its timer */
@@ -9845,7 +9878,7 @@ function icuSettingsCard() {
   const sw = (act, on, label, sub) => `<label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="${esc(label)}"></button><span>${label}${sub ? `<small class="faint" style="display:block;font-size:12.5px">${sub}</small>` : ""}</span></label>`;
   if (!s.key) return `<section class="card pad icu-card"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">Your training calendar, synced both ways: planned workouts, activities, sleep, resting HR, HRV, steps and body fat (weight only from what you type).</div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="API key (intervals.icu → Settings → Developer)" style="flex:1;min-width:200px"><input id="icu-aid" class="inp" style="max-width:150px" placeholder="Athlete ID (i123456)" data-chg="icu-aid"><button class="btn primary" data-act="icu-save-key">Save</button></div>
-    <div class="faint" style="font-size:12.5px">The key stays in your account. Syncs by itself, both ways, straight from this app.</div></section>`;
+    <div class="faint" style="font-size:12.5px">The key stays on this device (add it on each device). Syncs by itself, both ways, straight from this app.</div></section>`;
   return `<section class="card pad icu-card">
     <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">intervals.icu</b><div class="muted" style="font-size:13px">${b ? `${esc(b.athlete || s.athlete || "Connected")} · ${s.aid ? esc(s.aid) + " · " : ""}${icuAgo()}` : "Key saved · first sync in a moment"}</div></div><span class="status ${F ? "bad" : b ? "ok" : "warn"}">${F ? "Failed" : b ? "Synced" : "Pending"}</span></div>
     ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
@@ -10291,19 +10324,23 @@ const HAS_LOCAL = {
 };
 /* first sign-in of a device with its own data into an account that has data: both are kept (the account wins a clash), after a restore point of this device */
 let JOIN_NOTE = false;
-function joinNote() { if (JOIN_NOTE) return; JOIN_NOTE = true; restorePoint("before sign-in"); toast("This device's data was merged into your account · a restore point was saved first (Settings → Backups → Restore points)"); }
+function joinNote() { if (JOIN_NOTE) return; JOIN_NOTE = true;
+  restorePoint("before sign-in").then(ok => toast(ok ? "This device's data was merged into your account · a restore point was saved first (Settings → Backups → Restore points)" : "This device's data was merged into your account, but the restore point couldn't be saved: export a backup now if something looks wrong")); }
 function applyDoc(kind, snap) {
   const key = keyOf(kind);
   if (Sync.pending.has(key)) return;
-  const fc = !!snap.metadata?.fromCache, remote = snap.exists ? snap.data() : null;
+  const fc = !!snap.metadata?.fromCache, raw = snap.exists ? snap.data() : null, set = kind === "settings";
+  /* settings: compared and merged without the keys; keys still in the account's copy (from before S-1) are taken by this device and then removed from it */
+  const remote = set && raw ? noKeys(raw) : raw, local = set ? noKeys(S.settings) : S[kind], had = set ? keysOf(raw) : null, own = set ? keysOf(S.settings) : null;
   let next = remote ? clone(remote) : null, send = false;
-  if (!Sync.known[kind] && Sync.dirty.has(key) && !deq(S[kind], remote)) { next = clone(S[kind]); send = true; }   // an edit never sent (the tab closed first): kept, and merged with the account's copy when sent
-  else if (!fc && !Sync.fresh[kind] && Sync.union && HAS_LOCAL[kind](S[kind])) {
-    const m = remote ? syncMerge(kind, null, S[kind], remote, "r") : clone(S[kind]);
+  if (!Sync.known[kind] && Sync.dirty.has(key) && !deq(local, remote)) { next = clone(local); send = true; }   // an edit never sent (the tab closed first): kept, and merged with the account's copy when sent
+  else if (!fc && !Sync.fresh[kind] && Sync.union && HAS_LOCAL[kind](local)) {
+    const m = remote ? syncMerge(kind, null, local, remote, "r") : clone(local);
     if (!deq(m, remote)) { if (remote) joinNote(); next = m; send = true; }
   }
-  Sync.seen[key] = remote ? clone(remote) : null;
+  Sync.seen[key] = raw ? clone(raw) : null;
   if (next) S[kind] = shapeDoc(kind, next);
+  if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc } }); if (!fc && Object.keys(had).length) send = true; }
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
   saveLocal(); scheduleRender();
   if (send) put(kind, "", S[kind]);
@@ -10348,10 +10385,11 @@ function claimLocal(id) {
   if (!mine) {
     if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
     Sync.dirty = new Set();
-    Object.assign(S, { settings: normalizeSettings(null), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
-    saveLocal(); scheduleRender();
+    Object.assign(S, { settings: withKeys(normalizeSettings(null), keyStore()[id]), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
   }
   Sync.owner = id; try { localStorage.setItem(OWNER_KEY, id); } catch (e) {}
+  if (!mine) { saveLocal(); scheduleRender(); }
+  else if (!owner) { const all = keyStore(); if (all[""]) { delete all[""]; try { localStorage.setItem(KEYS_KEY, JSON.stringify(all)); } catch (e) {} } saveKeys(); }   // the keys of a device used without an account become this account's keys on this device
   saveDirty();
 }
 function subscribe() {
@@ -13136,7 +13174,8 @@ async function photosData() { const out = {}; for (const x of S.body.photos || [
 async function backupJSON(o = BKP()) { const j = backupData(o); if (o.photos) j.photos = await photosData(); return JSON.stringify(j); }
 const bkName = () => `engine-backup-${todayISO()}.json`;
 /* restore points */
-async function restorePoint(why = "daily") { try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData({ keys: true }) }); const ks = (await BKDB.keys("pts")).sort(); for (const old of ks.slice(0, Math.max(0, ks.length - 14))) await BKDB.del("pts", old); } catch (e) {} }
+/* true once it is stored; API keys never go in (they stay in this device's own key store, S-1) */
+async function restorePoint(why = "daily") { try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData() }); const ks = (await BKDB.keys("pts")).sort(); for (const old of ks.slice(0, Math.max(0, ks.length - 14))) await BKDB.del("pts", old); return true; } catch (e) { return false; } }
 async function dailyPoint() { try { const ks = (await BKDB.keys("pts")).sort(), last = ks[ks.length - 1]; if (!last || last.slice(0, 10) !== new Date().toISOString().slice(0, 10)) await restorePoint("daily"); } catch (e) {} }
 /* the file on a schedule */
 const bkLast = () => S.settings.backup?.last || null;

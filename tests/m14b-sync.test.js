@@ -77,9 +77,13 @@ test("#2 an edit made just before the tab closes is kept and sent at the next op
 test("#3 first sign-in of a device with its own data into an account with data: both kept, restore point first", async () => {
   const srv = FS.server();
   srv.set("u1", "settings", SETTINGS("1985-01-01")); srv.set("u1", "lib/foods/t-a", food("t-a", "Account food")); srv.set("u1", "body", { w: { [F.plus(-2)]: 80 }, m: {} });
-  const seed = { settings: SETTINGS("1999-09-09"), foods: { "t-b": food("t-b", "Device food") }, recipes: {}, days: {}, body: { w: { [F.plus(-1)]: 75 }, m: {} } };
-  const B = await dev(srv, "B", { seed }); await B.settle(); await wait(600);
-  const s = await B.page.evaluate(async () => { const ks = await BKDB.keys("pts"), why = []; for (const k of ks) why.push((await BKDB.get("pts", k))?.why); return { foods: Object.keys(S.foods).sort(), w: S.body.w, dob: S.settings.fit.profile.dob, why, toasts: __toasts }; });
+  const seed = { settings: { ...SETTINGS("1999-09-09"), intervals: { key: "SYNTH-ICU-B", aid: "0" }, mapKey: "SYNTH-MAP-B" }, foods: { "t-b": food("t-b", "Device food") }, recipes: {}, days: {}, body: { w: { [F.plus(-1)]: 75 }, m: {} } };
+  const B = await dev(srv, "B", { seed }); await B.settle();
+  await B.page.waitForFunction(() => __toasts.some(t => /merged/i.test(t)), null, { timeout: 5000 }).catch(() => {});
+  const s = await B.page.evaluate(async () => { const ks = await BKDB.keys("pts"), why = []; for (const k of ks) why.push((await BKDB.get("pts", k))?.why); return { foods: Object.keys(S.foods).sort(), w: S.body.w, dob: S.settings.fit.profile.dob, key: S.settings.intervals?.key, why, toasts: __toasts }; });
+  /* the device's own keys stay on the device (S-1): usable here, never uploaded */
+  assert.equal(s.key, "SYNTH-ICU-B");
+  assert.doesNotMatch(JSON.stringify([...srv.rows("u1")]), /SYNTH-/);
   /* expected: the union of foods and weighings; on a clash the account wins (its date of birth), this device's copy is in the restore point */
   assert.deepEqual(s.foods, ["t-a", "t-b"]);
   assert.deepEqual(s.w, { [F.plus(-2)]: 80, [F.plus(-1)]: 75 });
@@ -176,5 +180,33 @@ test("#24 a device that missed live updates while asleep catches up when it come
   await B.page.waitForFunction(() => Date.now() - (ENGINE.status().loadedAt || 0) > 10500, null, { timeout: 15000 }).catch(() => {});
   B.asleep = false; await B.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange"))); await wait(1500);
   assert.equal(await B.page.evaluate(d => S.body.w[d], F.plus(-1)), 69);
+  assert.deepEqual([...A.errors, ...B.errors], []);
+});
+
+/* S-1: API keys live in this device's key store (engine.keys) and in memory only */
+const KEYED = () => ({ ...SETTINGS("1990-06-15"), intervals: { key: "SYNTH-ICU", aid: "0" }, mapKey: "SYNTH-MAP", ai: { key: "SYNTH-OLD", services: [{ id: "s1", provider: "gemini", key: "SYNTH-AI", on: true }] } });
+test("S-1 keys stay on the device: not in the account, the device copy, the snapshot or a restore point, and still there after a reload", async () => {
+  const srv = FS.server(), seed = F.seed({ withPlan: false }); seed.settings = KEYED();
+  const A = await dev(srv, "A", { seed }); await A.settle(); await wait(1500);
+  const r = await A.page.evaluate(async () => { await restorePoint("test"); const ks = (await BKDB.keys("pts")).sort(), pt = await BKDB.get("pts", ks[ks.length - 1]);
+    return { local: localStorage.getItem("fuelplanner.v1"), snap: localStorage.getItem("engine.snap.u1"), q: localStorage.getItem("engine.q.u1") || "", point: JSON.stringify(pt), store: localStorage.getItem("engine.keys"), mem: [S.settings.intervals.key, S.settings.mapKey, S.settings.ai.services[0].key, S.settings.ai.key] }; });
+  for (const k of ["local", "snap", "q", "point"]) assert.doesNotMatch(r[k], /SYNTH-/, k);
+  assert.doesNotMatch(JSON.stringify([...srv.rows("u1")]), /SYNTH-/);
+  assert.match(r.store, /SYNTH-ICU/); assert.deepEqual(r.mem, ["SYNTH-ICU", "SYNTH-MAP", "SYNTH-AI", "SYNTH-OLD"]);
+  await A.page.reload(); await A.page.waitForFunction(() => typeof S !== "undefined" && Sync.ready); await A.settle(); await wait(400);
+  assert.deepEqual(await A.page.evaluate(() => [S.settings.intervals.key, S.settings.mapKey, S.settings.ai.services[0].key]), ["SYNTH-ICU", "SYNTH-MAP", "SYNTH-AI"]);
+  /* a backup asked with its keys still has them; the default one does not */
+  assert.deepEqual(await A.page.evaluate(() => [/SYNTH-ICU/.test(JSON.stringify(backupData({ keys: true }))), /SYNTH-/.test(JSON.stringify(backupData()))]), [true, false]);
+  assert.deepEqual(A.errors, []);
+});
+
+test("S-1 migration: keys already in the synced settings move to the device once and leave the account; another device sees them empty", async () => {
+  const srv = FS.server(); srv.set("u1", "settings", KEYED());
+  const A = await dev(srv, "A"); await A.settle(); await wait(1200);
+  assert.deepEqual(await A.page.evaluate(() => [S.settings.intervals?.key, S.settings.mapKey, S.settings.ai?.services?.[0]?.key]), ["SYNTH-ICU", "SYNTH-MAP", "SYNTH-AI"]);
+  assert.doesNotMatch(JSON.stringify(srv.get("u1", "settings")), /SYNTH-/);
+  assert.equal(srv.get("u1", "settings").fit.profile.dob, "1990-06-15");
+  const B = await dev(srv, "B"); await B.settle(); await wait(400);
+  assert.deepEqual(await B.page.evaluate(() => [S.settings.intervals?.key || "", S.settings.mapKey || "", S.settings.ai?.services?.[0]?.key || "", S.settings.ai?.services?.length]), ["", "", "", 1]);
   assert.deepEqual([...A.errors, ...B.errors], []);
 });

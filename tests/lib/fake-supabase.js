@@ -67,7 +67,8 @@ async function device(srv, name, { dir, uid = "u1", seed = null, local = null, v
   const dev = { name, uid, down: false, asleep: false, errors: [], srv, ctx, url: http.url };
   /* seed = the app's localStorage file, local = any other keys, both written only on the very first load of this device */
   await ctx.addInitScript(([k, v, extra]) => { try { if (!localStorage.getItem("__dev")) { localStorage.setItem("__dev", "1"); if (v) localStorage.setItem(k, v); for (const [a, b] of Object.entries(extra || {})) localStorage.setItem(a, b); } } catch (e) {} }, [H.LS_KEY, seed ? JSON.stringify(seed) : "", local]);
-  await ctx.addInitScript(() => { window.__toasts = []; });
+  /* every toast from the first moment (boot included): read off the #toast element */
+  await ctx.addInitScript(() => { window.__toasts = []; document.addEventListener("DOMContentLoaded", () => { const el = document.getElementById("toast"); if (el) new MutationObserver(() => { const t = el.querySelector(".toast span")?.textContent; if (t && __toasts[__toasts.length - 1] !== t) __toasts.push(t); }).observe(el, { childList: true, subtree: true }); }); });
   await ctx.route("**/vendor/supabase.js", r => r.fulfill({ contentType: "text/javascript", body: STUB }));
   await ctx.route(u => { const h = new URL(u).hostname; return h !== "127.0.0.1" && h !== "localhost"; }, r => r.abort());
   dev.attach = async page => {
@@ -80,7 +81,6 @@ async function device(srv, name, { dir, uid = "u1", seed = null, local = null, v
   dev.open = async () => {
     const page = await ctx.newPage(); await dev.attach(page); await page.goto(http.url);
     await page.waitForFunction(() => typeof S !== "undefined" && S.settings && Sync.ready, null, { timeout: 20000 });
-    await page.evaluate(() => { const t = toast; toast = (m, u) => { __toasts.push(String(m)); try { t(m, u); } catch (e) {} }; });
     return page;
   };
   /* waits until this device has nothing left to send and the server has answered */

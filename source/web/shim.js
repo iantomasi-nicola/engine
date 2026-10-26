@@ -102,11 +102,15 @@
     for (const [c, ls] of colL) for (const l of ls) l.cb(snapCol(c, l.w, fromCache));
   }
   /* pages by path (keyset): stable when rows change between two pages, and complete whatever page size the project allows */
+  /* what changed while a full read was on its way (our sends, live updates): newer than the pages already read, so it wins over them */
+  let during = null; const note = (p, d) => { if (during) during.set(p, d); };
   async function loadAll() {
-    const out = new Map(); let last = null;
+    const out = new Map(), mine = during = new Map(); let last = null;
     for (;;) { let q = sb.from(T).select("path,data").order("path").limit(1000); if (last !== null) q = q.gt("path", last);
       const { data, error } = await q; if (error) throw error; if (!data?.length) break;
       for (const r of data) out.set(r.path, r.data); last = data[data.length - 1].path; }
+    if (during === mine) during = null;
+    for (const [p, d] of mine) d === undefined ? out.delete(p) : out.set(p, d);
     apply(out, false); loadedAt = Date.now(); st.online = true; saveSnap(); emit();
     live();
   }
@@ -114,7 +118,7 @@
     if (loadP) return loadP;
     if (!loaded && E.uid) { try { const raw = localStorage.getItem(snapKey()); if (raw) apply(new Map(JSON.parse(raw)), true); } catch (e) {} }
     loading = true;
-    loadP = loadAll().catch(e => { loadP = null; st.online = false; st.lastError = errText(e); emit(); if (!loaded) fail({ code: "unavailable", message: errText(e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); }).finally(() => { loading = false; });
+    loadP = loadAll().catch(e => { loadP = null; during = null; st.online = false; st.lastError = errText(e); emit(); if (!loaded) fail({ code: "unavailable", message: errText(e) }); setTimeout(ensureLoad, navigator.onLine ? 15000 : 30000); }).finally(() => { loading = false; });
     return loadP;
   }
   /* back in the foreground or online: read the account again (live updates missed while asleep are not replayed) */
@@ -122,6 +126,7 @@
   function live() {
     if (chan || !E.uid) return;
     chan = sb.channel("engine-" + E.uid).on("postgres_changes", { event: "*", schema: "public", table: T, filter: "user_id=eq." + E.uid }, p => {
+      note(p.new?.path || p.old?.path, p.eventType === "DELETE" ? undefined : p.new?.data);
       if (qPaths.has(p.new?.path || p.old?.path)) return; // a change of ours not sent yet: it is merged with the server's copy when it goes
       if (p.eventType === "DELETE") { if (!p.old?.path || !cache.has(p.old.path)) return; cache.delete(p.old.path); notify(p.old.path); return; }
       const r = p.new; if (!r?.path) return; if (same(cache.get(r.path), r.data)) return; cache.set(r.path, r.data); notify(r.path); saveSnap();
@@ -143,7 +148,7 @@
           if (!r) r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
         }
         if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
-        st.online = true;
+        st.online = true; note(q.path, q.op === "del" ? undefined : data);
         const i = queue.indexOf(q);   // -1: a newer edit of the same document replaced it meanwhile, and goes next
         if (i >= 0) { queue.splice(i, 1); qPaths.delete(q.path); if (data !== q.data) { cache.set(q.path, data); notify(q.path); saveSnap(); } sent(q.path, data, data !== q.data); }
         saveQ(); emit();
