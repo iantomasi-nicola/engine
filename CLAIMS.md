@@ -13,3 +13,4 @@
 | SHIP | released | pubblicazione M14b A-F, M12, L188, L189, L202 | other | claude/awesome-goldberg-ontswx | 2026-10-26 14:43Z | 2026-10-26 14:58Z | main = bbc135a, rollback 86f14f4 |
 | M18 | active | Quantità a confezioni | foods,shopping | worktree-agent-aecde006764ad9076 | 2026-10-26 17:45Z | 2026-10-26 21:56Z |  |
 | M17 | active | Check-in sorgente peso e settimana in rosso | fuel,progress | worktree-agent-a3b8a0b2ca1bff91e | 2026-10-26 17:45Z | 2026-10-26 21:57Z |  |
+| SYNCFIX | active | Correzioni sync e ripristino dall'audit | pwa,sync | claude/syncfix-audit | 2026-10-26 17:57Z | 2026-10-26 22:57Z |  |
