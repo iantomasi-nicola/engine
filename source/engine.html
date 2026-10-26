@@ -3091,6 +3091,10 @@ function cleanDay(d, id) {
   if (isObj(o.adj)) o.adj = safeKeys(o.adj);
   return o;
 }
+/* the numbers of a day that have a plausible largest value: a bigger one is a typo (or a bad file), not data, and would stretch every chart. A typed or imported one is refused, a stored one is dropped on load (R4) */
+const LOG_MAX = { kcal: 20000, watch: 20000, c: 2000, p: 2000, f: 2000, steps: 100000, sleep: 24, nap: 1440, hrv: 500, rhr: 300 };
+const LOG_NAME = { kcal: "Calories", watch: "Watch kcal", c: "Carbs", p: "Protein", f: "Fat", steps: "Steps", sleep: "Sleep", nap: "Nap", hrv: "HRV", rhr: "Resting HR" };
+const logNumOk = (k, n) => !(k in LOG_MAX) || (isFinite(n) && n >= 0 && n <= LOG_MAX[k]);
 /* a day of the daily log */
 function cleanLogDay(x) {
   const o = { ...x };
@@ -3098,7 +3102,8 @@ function cleanLogDay(x) {
   cleanList(o, "planned", isObj); cleanList(o, "caff", Array.isArray); cleanList(o, "skip", v => typeof v === "string");
   if (o.workouts) o.workouts = ensureKeys(o.workouts, "wid", false);
   for (const k of ["supp", "jr"]) cleanObj(o, k);
-  for (const k of ["water", "weight", "bf", "sleep"]) cleanNum(o, k);
+  for (const k of ["water", "weight", "bf", ...Object.keys(LOG_MAX)]) cleanNum(o, k);
+  for (const k of Object.keys(LOG_MAX)) if (typeof o[k] === "number" && !logNumOk(k, o[k])) delete o[k];
   return o;
 }
 /* the daily log keeps only real months and days (a stray key from a bad link, file or sync cannot reach the charts) */
@@ -3892,6 +3897,7 @@ function mutateLog(date, fn) {
   const doc = clone(S.logm[mk] || { month: mk, days: {} });
   const day = doc.days[date] || {};
   fn(day);
+  for (const k of Object.keys(LOG_MAX)) if (typeof day[k] === "number" && !logNumOk(k, day[k])) delete day[k];
   if (Array.isArray(day.workouts)) day.workouts = ensureKeys(day.workouts, "wid", true);
   for (const k of Object.keys(day)) if (day[k] === null || day[k] === "" || (Array.isArray(day[k]) && !day[k].length && k !== "planned")) delete day[k];
   if (Object.keys(day).length) doc.days[date] = day; else delete doc.days[date];
@@ -5057,11 +5063,11 @@ const dateAxis = (ticks, y) => ticks.map(([d, x], i) => `<text x="${x}" y="${y}"
 function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
 function kcalChart(rows) {
   const W = chartW(), H = 210, L = 40, R = 8, Tp = 10, B = 24, n = rows.length;
-  const top = Math.max(...rows.map(r => Math.max(r.tot.kcal, r.T.kcal))) * 1.05, stp = [100, 200, 250, 500, 1000, 2000].find(x => top / x <= 5) || 2000, mx = Math.max(stp, Math.ceil(top / stp) * stp);   // round steps (500, 1000…), never 1.3k
+  /* a fixed number of round ticks whatever the maximum (a huge typed value must not draw a line every 2000 kcal): the top is rounded up to a tick, then the ticks are drawn again on that range */
+  const top = Math.max(1, ...rows.map(r => Math.max(r.tot.kcal, r.T.kcal))) * 1.05, t1 = axisTicks(0, top, 4, true), stp = Math.max(1, t1[1] - t1[0]), mx = Math.ceil(top / stp) * stp, ticks = axisTicks(0, mx, 4, true);
   const y = v => Tp + (H - Tp - B) * (1 - v / mx);
   const bw = (W - L - R) / n; const barW = Math.max(2, bw * (n > 31 ? 0.7 : 0.58));
-  let g = "";
-  for (let v = 0; v <= mx + 1e-9; v += stp) { g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v >= 1000 ? (v % 1000 ? r1(v / 1000) : v / 1000) + "k" : r0(v)}</text>`; }
+  let g = axisGrid(ticks, y, L, W - R, v => v >= 1000 ? (v % 1000 ? r1(v / 1000) : v / 1000) + "k" : r0(v));
   const every = n <= 7 ? 1 : n <= 31 ? (W < 420 ? 7 : 5) : (W < 420 ? 30 : 15);
   rows.forEach((r, i) => {
     const x = L + i * bw + (bw - barW) / 2;
@@ -5079,8 +5085,7 @@ function proteinChart(rows, w) {
   const mx = Math.max(2.5, Math.ceil(Math.max(...vals.filter(v => v != null), ...tg) * 1.1 * 2) / 2);
   const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx);
-  let g = "";
-  for (let v = 0; v <= mx + 1e-9; v += mx > 3 ? 1 : 0.5) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+  let g = axisGrid(axisTicks(0, mx, 4), y, L, W - R, v => v);
   g += `<path d="${tg.map((v, i) => (i ? "L" : "M") + x(i) + " " + y(v)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 4"/>`;
   let d = "", pen = false;
   vals.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i) + " " + y(v) + " "; pen = true; });
@@ -7878,7 +7883,9 @@ ACT["ss-move"] = el => { const sh = S_(); sh.moveTo = el.dataset.date; renderShe
 INP.rs = (v, el) => { S_().draft[el.dataset.k] = v; };
 ACT["ci-more"] = () => { const sh = S_(); sh.more = !sh.more; renderSheet(); };
 ACT["ci-energy"] = () => { const sh = S_(); sh.energy = true; renderSheet(); };
-CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k; mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); if (k === "bf") day.bfSrc = day.bf > 0 ? "man" : null; if (k === "weight") day.weightSrc = day.weight > 0 ? "man" : null; }); if (k === "weight") $(".sheet .ci-src")?.remove(); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
+CHG.ci = (v, el) => { const d = S_().date; const k = el.dataset.k;
+  if (v.trim() !== "" && !logNumOk(k, num(v))) { toast(`${LOG_NAME[k]} must be between 0 and ${fmtN(LOG_MAX[k])}`); if ("value" in el) el.value = logGet(d)?.[k] ?? ""; return; }
+  mutateLog(d, day => { day[k] = v.trim() === "" ? null : num(v); if (k === "bf") day.bfSrc = day.bf > 0 ? "man" : null; if (k === "weight") day.weightSrc = day.weight > 0 ? "man" : null; }); if (k === "weight") $(".sheet .ci-src")?.remove(); if (["weight", "rhr", "sleep", "hrv", "steps"].includes(k) && typeof icuKick === "function") icuKick("check-in"); };
 CHG["ci-text"] = (v, el) => { const d = S_().date; mutateLog(d, day => { day[el.dataset.k] = v.trim() || null; }); };
 /* fields whose value has a valid range (#1, #17) or whose empty value means the default (#20): a height must be in cm, the lean share of the loss stays under 90 %, TEF and Default NEAT are never an empty zero */
 const FIT_RANGE = { "profile.height": { lo: 120, hi: 230, refuse: "Height in cm, between 120 and 230" }, "goal.leanShare": { lo: 0, hi: 0.9, hold: "Lean share is kept between 0 and 90%" }, "energy.tef": { def: true }, "energy.neat": { def: true } };
