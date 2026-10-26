@@ -343,7 +343,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .rm-t.done .rm-c{background:var(--good);border-color:var(--good);color:#fff}.rm-t.done .rm-x{opacity:.7}
 .rm-t.late .rm-c{border-color:var(--warn)}.rm-t.late .rm-w{color:var(--warn);font-weight:600}
 .rm-r>.btn{grid-column:3 / 5;justify-self:end}.rm-b{grid-column:3 / 5;justify-self:end;display:flex;align-items:center;gap:4px}
-.pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:30px;height:30px;min-width:30px;background:var(--v-fill,var(--surface2))}
+.pk-st{display:flex;align-items:center;gap:2px;flex:0 0 auto}.pk-st .icon-btn{width:36px;height:36px;min-width:36px;background:var(--v-fill,var(--surface2))}
 .pk-n{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1.1;padding:0 2px}.pk-n b{font-size:14px}.pk-n small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .pk-n em{font-style:normal;font-weight:700}.pk-n em.up{color:var(--good)}.pk-n em.dn{color:var(--warn)}
 .shop-covered{margin-top:8px;font-size:13px}.shop-covered summary{cursor:pointer;color:var(--muted);padding:6px 0}
@@ -580,7 +580,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .item{display:grid;grid-template-columns:36px minmax(0,1fr) auto 30px;align-items:center;gap:4px;padding:6px 6px 6px 10px;border-top:1px solid var(--line);background:var(--surface);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .item:first-child{border-top-color:transparent}
 .item.ghosting{opacity:.25}
-.chk{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+.chk{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}.shop-row .chk{width:36px;height:36px}.pan-q .icon-btn{width:36px;height:36px}
 .chk span{width:22px;height:22px;border-radius:50%;border:1.8px solid var(--surface-3);display:grid;place-items:center;transition:background .15s,border-color .15s}
 .chk span svg{width:13px;height:13px;stroke:var(--bg);stroke-width:3;opacity:0}
 .item.eaten .chk span{background:var(--ink);border-color:var(--ink)}
@@ -2552,7 +2552,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 }
 .day-pill.today:not([aria-current="date"]){background:color-mix(in srgb,var(--accent) 15%,transparent)}
 .day-pill.today:not([aria-current="date"]) small,.day-pill.today:not([aria-current="date"]) .ring b{color:var(--accent)!important}
-.shop-row .pk-st .icon-btn.sm{width:30px!important;height:30px!important;min-width:30px;padding:0}.shop-row .pk-st .icon-btn .ic{width:18px!important;height:18px!important}
+.shop-row .pk-st .icon-btn.sm{width:36px!important;height:36px!important;min-width:36px;padding:0}.shop-row .pk-st .icon-btn .ic{width:18px!important;height:18px!important}
 .shop-list .shop-row{padding-top:0;padding-bottom:0;min-height:44px;grid-template-columns:34px minmax(0,1fr) auto}
 .shop-list .shop-main{padding-top:6px;padding-bottom:6px}.shop-list .shop-main .s{font-size:11.5px}
 .shop-list .sq-h{padding-top:8px;padding-bottom:2px}
@@ -4636,7 +4636,7 @@ VIEWS.foods = function () {
     <div class="seg" role="group" aria-label="Filter">${[["all", "All"], ["mine", "Mine"], ["recipes", "Recipes"], ["fav", "Starred"], ...(hiddenFoods().length ? [["hidden", `${ic("trash", "sm")}<small class="bin-n">${hiddenFoods().length}</small>`]] : [])].map(([k, l]) => `<button data-act="foods-seg" data-seg="${k}" aria-pressed="${seg === k}"${k === "hidden" ? ` class="bin-b" aria-label="Bin: ${hiddenFoods().length} deleted" title="Deleted foods"` : ""}>${l}</button>`).join("")}</div>${seg === "hidden" ? "" : foodFilterBar()}</div></header>`;
   if (seg === "hidden") { const hf = hiddenFoods().filter(f => !q || matchScore(foodKeys(f), q) > 0).sort((a, b) => a.name.localeCompare(b.name));
     return h + `<div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px"><span class="faint" style="font-size:13px">Deleted foods stay here 3 days, then they're gone for good.</span>${hf.length > 1 ? `<button class="btn soft sm" data-act="fd-unhide-all">Restore all</button>` : ""}</div>
-      <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${f.id}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
+      <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${esc(f.id)}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
   if (queue.length) h += `<div class="note">${queue.length} barcode${queue.length > 1 ? "s" : ""} waiting for Open Food Facts: ${queue.map(x => esc(x.barcode)).join(", ")}. They import automatically when the sync runs; you can also photograph the label now.</div>`;
   if (!res.length) h += `<div class="empty"><h3>No matches</h3><p>${q ? `Nothing called “${esc(q)}” yet. Scan its barcode, photograph the label, or add it yourself.` : "You haven't saved anything here yet."}</p><div class="row"><button class="btn primary" data-act="new-food" data-name="${esc(q)}">Create “${esc(q || "new food")}”</button><button class="btn ghost" data-act="open-scan">${ic("scan", "sm")}Scan</button></div></div>`;
   else h += `<div class="card">${res.slice(0, 200).map(r => r.t === "food"
@@ -5279,7 +5279,7 @@ function openSheet(type, params = {}) {
   const cur = UI.sheet; let ret = null;
   if (cur && (cur.keep || cur._ret) && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
   UI.sheet = { type, ...params }; if (ret) UI.sheet._ret = ret; UI.sheet._new = true; renderSheet(); }
-function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; }
+function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; UI.rcLearn = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; }
 const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
@@ -5978,7 +5978,7 @@ const fdStores = sh => sh.draft.stores ?? (sh.isNew && curStore() ? [curStore()]
 function fdStoreHTML(sh) {
   const L = storeList(), on = fdStores(sh), names = L.filter(x => on.includes(x.id)).map(x => x.name);
   return `<div class="field fd-st"><span class="flabel">Bought at</span>
-    ${L.length ? `<div class="chips" role="group" aria-label="Stores where it is bought">${L.map(x => `<button class="chip sm" data-act="fd-store" data-id="${x.id}" aria-pressed="${on.includes(x.id)}">${on.includes(x.id) ? ic("check", "sm") : ""}${esc(x.name)}</button>`).join("")}</div>
+    ${L.length ? `<div class="chips" role="group" aria-label="Stores where it is bought">${L.map(x => `<button class="chip sm" data-act="fd-store" data-id="${esc(x.id)}" aria-pressed="${on.includes(x.id)}">${on.includes(x.id) ? ic("check", "sm") : ""}${esc(x.name)}</button>`).join("")}</div>
       <small class="fd-st-s">${names.length ? `On the list of: <b>${esc(names.join(", "))}</b>. The same product can be bought at several.` : "No store chosen: it is on the list of every store."}</small>`
     : `<small class="faint">No stores yet. Add them from the Shopping list, with the store button.</small>`}</div>`;
 }
@@ -6026,7 +6026,7 @@ function foodDupes(d) {
   out.values = out.values.slice(0, 3); out.name = out.name.slice(0, 3); return out;
 }
 function fdDupHTML(sh) {
-  const d = sh.draft, X = foodDupes(d), row = (f, t) => `<div class="note warn fd-dup"><span>${t} <b>${esc(f.name)}</b>${f.brand ? ` · ${esc(f.brand)}` : ""}</span><button class="link" data-act="fd-dup-open" data-id="${f.id}">Open it</button></div>`;
+  const d = sh.draft, X = foodDupes(d), row = (f, t) => `<div class="note warn fd-dup"><span>${t} <b>${esc(f.name)}</b>${f.brand ? ` · ${esc(f.brand)}` : ""}</span><button class="link" data-act="fd-dup-open" data-id="${esc(f.id)}">Open it</button></div>`;
   return [X.barcode ? row(X.barcode, "This barcode is already on") : "", ...X.name.map(f => row(f, "Already in your foods:")), ...X.values.map(f => row(f, "Same values as"))].join("");
 }
 function findByBarcode(code) { return Object.values(S.foods).find(f => !f.hidden && f.barcode === code) || null; }
@@ -7037,7 +7037,7 @@ ACT["fd-save"] = () => {
   if (d.orig) d.edited = ["kcal", "p", "c", "f"].some(k => Math.abs(num(d.orig[k]) - d.per[k]) > 0.05);
   if (BUILTIN[d.id] && !sh.isNew) d.source = "builtin-edit";
   if (!d.id) d.id = (d.barcode && !getFood("bc-" + d.barcode) && !S.foods?.["bc-" + d.barcode] ? "bc-" + d.barcode : "f-" + uid());   /* a second food with the same barcode must not overwrite the first */
-  if (UI.rcLearn && sh.isNew) { const L = UI.rcLearn; UI.rcLearn = null; S.shop.rcMap = { ...(S.shop.rcMap || {}), [L.key]: d.id };
+  if (UI.rcLearn && sh.isNew) { const L = UI.rcLearn; UI.rcLearn = null; S.shop.rcMap = { ...(S.shop.rcMap || {}), [L.key]: d.id }; S.shop.rcTodo = (S.shop.rcTodo || []).filter(x => x.id !== L.tid);
     if (L.eur != null && L.g > 0) { const rec = { eur: L.eur, g: L.g, at: todayISO() }; S.shop.prices = S.shop.prices || {}; S.shop.prices[d.id] = { ...rec, hist: [rec], ...(L.sid ? { st: { [L.sid]: { ...rec, hist: [rec] } } } : {}) }; if (L.sid) d.stores = [...new Set([...(d.stores || []), L.sid])]; } put("shop", "", S.shop); }
   delete d.hidden;
   if (d.stores == null && sh.isNew && curStore()) d.stores = [curStore()];
@@ -7182,9 +7182,9 @@ ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", p
   if (u === "pack" && !pk && !pantryUnits(F, S.shop.pantry[sh.food]).pack) { toast("Type how much one pack contains."); $("#pa-pk")?.focus(); return; }
   const old = S.shop.pantry[sh.food] || {};
   const had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null;
-  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop); STOCK_UNDO = { id: sh.food, old: had };
-  paDone(sh); toast(g > 0 ? `${F.name} · ${(q => `${q.v} ${q.u}`)(pantryQty(F, S.shop.pantry[sh.food]))} at home` : `${F.name} removed from the pantry`, undoStock); };
-ACT["pa-del"] = () => { const sh = S_(), had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null; delete S.shop.pantry[sh.food]; put("shop", "", S.shop); STOCK_UNDO = { id: sh.food, old: had }; paDone(sh); toast("Removed from the pantry", undoStock); };
+  if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop);
+  paDone(sh); toast(g > 0 ? `${F.name} · ${(q => `${q.v} ${q.u}`)(pantryQty(F, S.shop.pantry[sh.food]))} at home` : `${F.name} removed from the pantry`, stockUndoer(sh.food, had)); };
+ACT["pa-del"] = () => { const sh = S_(), had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null; delete S.shop.pantry[sh.food]; put("shop", "", S.shop); paDone(sh); toast("Removed from the pantry", stockUndoer(sh.food, had)); };
 function paDone(sh) { if (sh.back) openSheet(sh.back.type, sh.back); else closeSheet(); }
 
 /* stats */
@@ -11246,13 +11246,13 @@ const extraNames = () => Object.values(S.shop.xhist || {}).sort((a, b) => (b.cnt
 /* a recurring extra waits until it is due; it shows once the list window reaches that day */
 const visibleExtras = () => (S.shop.extras || []).filter(x => !x.due || x.due <= addDays(UI.shopStart, (S.shop.range || 7) - 1));
 const EXTRA_RECS = [7, 14, 30];
-const extraFormHTML = () => `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" list="extra-dl" placeholder="Add something else" autocomplete="off"><datalist id="extra-dl">${extraNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
+const extraFormHTML = () => `<form class="sq-add" data-form="extra"><input id="extra-in" class="inp" aria-label="Add something else" list="extra-dl" placeholder="Add something else" autocomplete="off"><datalist id="extra-dl">${extraNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist><button class="btn soft sm" type="submit">${ic("plus", "sm")}Add</button></form>`;
 function shopListHTML(rows, compact) {
   let h = extraFormHTML(); const ck = S.shop.checked || {};
   for (const [cat, label] of AISLES) { const g = rows.filter(r => r.cat === cat).sort((a, b) => (!!ck[a.id] - !!ck[b.id]) || a.f.name.localeCompare(b.f.name)); if (!g.length) continue;
     h += `<div class="sq"><div class="sq-h">${esc(label)}<span>${g.filter(r => !ck[r.id]).length}</span></div>${g.map(r => shopRowHTML(r, compact)).join("")}</div>`; }
   const ex = visibleExtras();
-  if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span>${x.rec ? `<span class="s">every ${x.rec === 7 ? "week" : x.rec === 14 ? "2 weeks" : "month"}</span>` : ""}</span><span class="shop-q">${x.eur != null && !x.est ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="${x.est ? "~" + fmtEur(+x.eur) : "€"}" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${x.id}">`}<button class="icon-btn sm ${x.rec ? "on" : ""}" data-act="extra-rec" data-id="${x.id}" aria-pressed="${!!x.rec}" aria-label="Repeat ${esc(x.text)}">${ic("sync", "sm")}</button><button class="icon-btn sm" data-act="extra-del" data-id="${x.id}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
+  if (ex.length) h += `<div class="sq"><div class="sq-h">Extras<span>${ex.filter(x => !x.done).length}</span></div>${ex.map(x => `<div class="shop-row ${x.done ? "done" : ""}"><button class="chk" data-act="extra-check" data-id="${esc(x.id)}" aria-pressed="${!!x.done}" aria-label="Bought ${esc(x.text)}"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(x.text)}</span>${x.rec ? `<span class="s">every ${x.rec === 7 ? "week" : x.rec === 14 ? "2 weeks" : "month"}</span>` : ""}</span><span class="shop-q">${x.eur != null && !x.est ? `<b>${fmtEur(+x.eur)}</b>` : `<input class="inp eur" inputmode="decimal" placeholder="${x.est ? "~" + fmtEur(+x.eur) : "€"}" aria-label="Price of ${esc(x.text)}" data-chg="extra-eur" data-id="${esc(x.id)}">`}<button class="icon-btn sm ${x.rec ? "on" : ""}" data-act="extra-rec" data-id="${esc(x.id)}" aria-pressed="${!!x.rec}" aria-label="Repeat ${esc(x.text)}">${ic("sync", "sm")}</button><button class="icon-btn sm" data-act="extra-del" data-id="${esc(x.id)}" aria-label="Remove">${ic("close", "sm")}</button></span></div>`).join("")}</div>`;
   return h;
 }
 function shopTotals(rows) { let est = 0, known = 0, inCart = 0; for (const r of rows) { const c = rowCost(r); if (c != null) { est += c; known++; if (S.shop.checked?.[r.id]) inCart += c; } }
@@ -11294,7 +11294,7 @@ ACT["stores-done"] = () => closeSheet();
 ACT["store-pick"] = el => { S.shop.store = el.dataset.k || null; put("shop", "", S.shop); if (UI.sheet?.type === "stores") closeSheet(); };
 ACT["store-new"] = () => { const i = $("#st-new"), id = storeAdd(i?.value); if (i) i.value = ""; if (id && !curStore() && storeList().length === 1) { S.shop.store = null; } renderSheet(); setTimeout(() => $("#st-new")?.focus(), 30); };
 CHG["store-name"] = (v, el) => { storeRename(el.dataset.id, v); renderSheet(); };
-ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); toast(`${nm} removed`, () => { S.shop = snap; put("shop", "", S.shop); if (UI.sheet?.type === "stores") renderSheet(); }); };
+ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); const after = clone(S.shop); toast(`${nm} removed`, () => { shopUndo(snap, after); if (UI.sheet?.type === "stores") renderSheet(); }); };
 ACT["shop-here"] = el => { const sid = curStore(); if (sid) addFoodStore(el.dataset.id, sid); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
 ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
@@ -11318,7 +11318,7 @@ ACT["shop-done"] = () => {
     if (c.eur != null && !c.offer) { const old = S.shop.prices[id]; S.shop.prices[id] = { ...(old?.st ? { st: old.st } : {}), eur: c.eur, g, at: today, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: c.eur, g, at: today }].slice(-8) };
       if (sid) { const pr = S.shop.prices[id], o = pr.st?.[sid]; pr.st = { ...(pr.st || {}), [sid]: { eur: c.eur, g, at: today, hist: [...(o?.hist || []), { eur: c.eur, g, at: today }].slice(-8) } }; } }
     if (sid) addFoodStore(id, sid);
-    S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null, ...(sid ? { sid } : {}), ...(c.offer ? { offer: true } : {}) }); if (eur != null) tot += eur; n++; }
+    S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null, ...(sid ? { sid } : {}), ...(c.offer ? { offer: true } : {}) }); if (c.eur != null) tot += eur; n++; }
   const again = [], xh = S.shop.xhist = S.shop.xhist || {};
   for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null, x: 1, ...(x.est ? { est: true } : {}), ...(curStore() ? { sid: curStore() } : {}) }); if (x.eur != null) tot += +x.eur; n++;
     const k = extraKey(x.text), h = xh[k]; xh[k] = { n: h?.n || x.text, eur: x.eur != null && !x.est ? x.eur : h?.eur ?? null, cnt: (h?.cnt || 0) + 1, last: today };
@@ -11326,11 +11326,27 @@ ACT["shop-done"] = () => {
   S.shop.buys = S.shop.buys.filter(b => b.d >= addDays(today, -730));
   S.shop.checked = {}; S.shop.extras = [...(S.shop.extras || []).filter(x => !x.done), ...again];
   put("shop", "", S.shop); if (UI.sheet?.type === "shopq") closeSheet();
-  UI.lastTrip = { snap: before, n, tot, at: Date.now() };
+  UI.lastTrip = { snap: before, after: clone(S.shop), n, tot, at: Date.now() };
   toast(`${n} item${n === 1 ? "" : "s"} in the pantry${tot ? ` · ${fmtEur(tot)} spent` : ""}`, undoTrip);
 };
+/* undo of an action on the shop document: put back only what that action changed (before → after), item by item; whatever changed since
+   (a meal eaten, another purchase, a price) is left as it is. Lists lose the entries the action added and get back the ones it took away. */
+function shopUndo(before, after) {
+  const J = JSON.stringify, cur = S.shop;
+  for (const k of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    const b = before[k], a = after[k]; if (J(a) === J(b)) continue;
+    if (Array.isArray(a) || Array.isArray(b)) { const out = [...(cur[k] || [])], bs = (b || []).map(J), as = (a || []).map(J);
+      for (const x of as) { const i = bs.indexOf(x); if (i >= 0) bs.splice(i, 1); else { const j = out.findIndex(y => J(y) === x); if (j >= 0) out.splice(j, 1); } }
+      const left = (a || []).map(J); for (const y of b || []) { const i = left.indexOf(J(y)); if (i >= 0) left.splice(i, 1); else out.push(clone(y)); }
+      cur[k] = out; }
+    else if (b && a && typeof b === "object" && typeof a === "object" || (!a && b && typeof b === "object") || (!b && a && typeof a === "object")) { const o = cur[k] = cur[k] || {};
+      for (const id of new Set([...Object.keys(b || {}), ...Object.keys(a || {})])) { if (J(a?.[id]) === J(b?.[id]) || J(o[id]) !== J(a?.[id])) continue; if (b && id in b) o[id] = clone(b[id]); else delete o[id]; } }
+    else if (J(cur[k]) === J(a)) { if (b === undefined) delete cur[k]; else cur[k] = b; }
+  }
+  put("shop", "", S.shop);
+}
 /* finishing by mistake: the toast undoes it, and so does a line on the list for half an hour (this session) */
-function undoTrip() { const t = UI.lastTrip; if (!t) return; UI.lastTrip = null; S.shop = clone(t.snap); put("shop", "", S.shop); toast("Back as it was: the shopping is not finished"); }
+function undoTrip() { const t = UI.lastTrip; if (!t) return; UI.lastTrip = null; shopUndo(t.snap, t.after); toast("Back as it was: the shopping is not finished"); }
 ACT["trip-undo"] = () => undoTrip();
 const tripHTML = () => { const t = UI.lastTrip; return t && Date.now() - t.at < 30 * 60000 ? `<div class="note trip"><span>${t.n} item${t.n === 1 ? "" : "s"} moved to the pantry${t.tot ? ` · ${fmtEur(t.tot)}` : ""}</span><button class="link" data-act="trip-undo">Undo</button></div>` : ""; };
 ACT["copy-list"] = async () => {
@@ -11343,7 +11359,7 @@ ACT["copy-list"] = async () => {
 /* spending: one sum over the purchase history for any range (food and extras apart, unpriced purchases counted aside, never as 0) */
 function spendIn(from, to) {
   const rows = {}, byStore = {}; let food = 0, extra = 0, unpriced = 0;
-  for (const b of S.shop.buys || []) { if (b.d < from || b.d > to) continue; if (b.eur == null) { unpriced++; continue; }
+  for (const b of S.shop.buys || []) { if (b.d < from || b.d > to) continue; if (b.eur == null || b.est) { unpriced++; continue; }
     const e = +b.eur; if (b.x) extra += e; else food += e; byStore[b.sid || ""] = (byStore[b.sid || ""] || 0) + e;
     const k = (b.x ? "x:" : "f:") + (b.id || b.n), r = rows[k] || (rows[k] = { n: b.n || (getFood(b.id) || BUILTIN[b.id])?.name || "", eur: 0, k: 0, x: !!b.x }); r.eur += e; r.k++; }
   const c = v => Math.round(v * 100) / 100;
@@ -11436,8 +11452,8 @@ VIEWS.pantry = function () {
   let lastCat = "";
   return h + `<div class="card">${ids.map(id => { const p = P[id], f = getFood(id) || BUILTIN[id], dl = p.exp ? daysBetween(today, p.exp) : null, u = f.unit || "g", sp = p.g - (need[id] || 0), c = f.cat || "other";
     const head = pref.sort === "cat" && c !== lastCat ? (lastCat = c, `<div class="lrow sub-h"><span class="s">${esc((AISLES.find(a => a[0] === c) || [0, c])[1])}</span></div>`) : "";
-    return head + `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${bdHTML(f)}${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by"}${need[id] ? ` · <span class="nw">${fmtN(r0(need[id]))} ${u} set aside</span>` : ""}${sp >= 20 && need[id] ? ` · <span class="nw">${fmtN(r0(sp))} spare</span>` : ""}</span></button>
-      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="-1" aria-label="Less">${ic("minus", "sm")}</button>${(q2 => `<b>${q2.v}<small>${q2.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${id}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
+    return head + `<div class="lrow pan-row"><button class="pan-main" data-act="pantry-edit" data-id="${esc(id)}"><span class="t">${esc(f.name)}</span><span class="s">${bdHTML(f)}${p.exp ? (dl < 0 ? `<span style="color:var(--bad)">Expired ${fmtDM(p.exp)}</span>` : dl <= 3 ? `<span style="color:var(--warn)">Use by ${fmtDM(p.exp)}</span>` : `Use by ${fmtDM(p.exp)}`) : "No use-by"}${need[id] ? ` · <span class="nw">${fmtN(r0(need[id]))} ${u} set aside</span>` : ""}${sp >= 20 && need[id] ? ` · <span class="nw">${fmtN(r0(sp))} spare</span>` : ""}</span></button>
+      <span class="pan-q"><button class="icon-btn sm" data-act="pan-step" data-id="${esc(id)}" data-d="-1" aria-label="Less ${esc(f.name)}">${ic("minus", "sm")}</button>${(q2 => `<b>${q2.v}<small>${q2.u}</small></b>`)(pantryQty(f, p))}<button class="icon-btn sm" data-act="pan-step" data-id="${esc(id)}" data-d="1" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }).join("")}</div>`;
 };
 INP["pantry-q"] = v => { UI.pantryQ = v; scheduleRender(); };
 INP["pa-fdate"] = v => { if (v) { UI.paDate = v; scheduleRender(); } };
@@ -11454,14 +11470,14 @@ function stockStepAmount(id, p) {
   if (f.countable && f.servings?.[0]?.g) return f.servings[0].g;
   return g >= 500 ? 50 : g >= 100 ? 25 : g > 0 ? 10 : (f.pack > 0 && f.pack <= 500 ? f.pack : 100);
 }
-let STOCK_UNDO = null;
+/* every stock change hands back its own undo (a function that restores that one item), so a later change of another item never mixes up */
+const stockUndoer = (id, old) => () => { if (old) S.shop.pantry[id] = old; else delete S.shop.pantry[id]; put("shop", "", S.shop); };
 function stockSet(id, g) {
-  g = Math.max(0, r0(g)); const old = S.shop.pantry[id] ? clone(S.shop.pantry[id]) : null; STOCK_UNDO = { id, old };
-  if (g > 0) S.shop.pantry[id] = clean0({ ...(old || {}), g }); else delete S.shop.pantry[id];
-  put("shop", "", S.shop);
+  g = Math.max(0, r0(g)); const old = S.shop.pantry[id] ? clone(S.shop.pantry[id]) : null;
+  if (g > 0) S.shop.pantry[id] = clean0({ ...(old || {}), g, ...(old && !(old.g > 0) ? { exp: null } : {}) }); else delete S.shop.pantry[id];   // a stock bought again after it ran out has no old use-by
+  put("shop", "", S.shop); return stockUndoer(id, old);
 }
 const stockAdd = (id, d) => stockSet(id, (S.shop.pantry[id]?.g || 0) + d);
-function undoStock() { if (!STOCK_UNDO) return; const { id, old } = STOCK_UNDO; STOCK_UNDO = null; if (old) S.shop.pantry[id] = old; else delete S.shop.pantry[id]; put("shop", "", S.shop); }
 ACT["pan-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!p || !(getFood(id) || BUILTIN[id])) return; stockAdd(id, stockStepAmount(id, p) * +el.dataset.d); };
 ACT["stock-step"] = el => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!(getFood(id) || BUILTIN[id])) return; stockAdd(id, stockStepAmount(id, p) * +el.dataset.d); if (UI.sheet) renderSheet(); };
 /* price of a food as typed: per kg (or l), per pack, per piece. Stored as what was paid for how much, nothing converted on the way in */
@@ -11483,13 +11499,13 @@ function stockBoxHTML(id) {
   const piece = f.countable && f.servings?.[0]?.g > 0 ? f.servings[0].g : 0, add = f.pack > 0 ? [[f.pack / 2, "½ pack"], [f.pack, "1 pack"], [f.pack * 2, "2 packs"]] : piece ? [[piece, "1"], [piece * 2, "2"], [piece * 6, "6"]] : [[100, `100 ${u}`], [250, `250 ${u}`], [500, `500 ${u}`]];
   const ends = g > 0 ? stockPlan(today, 14).endsOn[id] : null, packs = f.pack > 0 && g >= f.pack / 10 ? Math.round(g / f.pack * 10) / 10 : null;
   const facts = [packs != null && !(p?.u === "pack") ? `${packs} pack${packs === 1 ? "" : "s"}` : "", res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside by the plan` : "", ends ? `runs out ${ends === today ? "today" : fmtDM(ends)}` : g > 0 && !res ? "not in the plan" : ""].filter(Boolean).join(" · ");
-  return `<div class="stock-box" data-stock="${id}"><div class="sb-top"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${id}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${id}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span></div>
-    <div class="chips sb-add">${add.map(([v, l]) => `<button class="chip sm" data-act="stock-add" data-id="${id}" data-g="${v}">+ ${esc(l)}</button>`).join("")}${g > 0 ? `<button class="chip sm" data-act="stock-zero" data-id="${id}">Used up</button>` : ""}</div>
+  return `<div class="stock-box" data-stock="${id}"><div class="sb-top"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${esc(id)}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${esc(id)}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${esc(id)}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span></div>
+    <div class="chips sb-add">${add.map(([v, l]) => `<button class="chip sm" data-act="stock-add" data-id="${esc(id)}" data-g="${v}">+ ${esc(l)}</button>`).join("")}${g > 0 ? `<button class="chip sm" data-act="stock-zero" data-id="${esc(id)}">Used up</button>` : ""}</div>
     ${facts ? `<span class="faint sb-s">${esc(facts)}</span>` : ""}
     ${g > 0 ? `<label class="sb-exp"><span class="faint">Use by</span><input type="date" class="inp" value="${esc(p?.exp || "")}" data-chg="stock-exp" data-id="${id}" aria-label="Use by date"></label>` : ""}</div>`;
 }
 ACT["stock-add"] = el => { stockAdd(el.dataset.id, +el.dataset.g); if (UI.sheet) renderSheet(); };
-ACT["stock-zero"] = el => { const id = el.dataset.id; stockSet(id, 0); if (UI.sheet) renderSheet(); toast(`${(getFood(id) || BUILTIN[id])?.name || "Item"} used up`, () => { undoStock(); if (UI.sheet) renderSheet(); }); };
+ACT["stock-zero"] = el => { const id = el.dataset.id; const undo = stockSet(id, 0); if (UI.sheet) renderSheet(); toast(`${(getFood(id) || BUILTIN[id])?.name || "Item"} used up`, () => { undo(); if (UI.sheet) renderSheet(); }); };
 CHG["stock-exp"] = (v, el) => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!p) return; S.shop.pantry[id] = clean0({ ...p, exp: /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null }); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
 /* the exact amount, units, fractions and use-by date: the pantry sheet, from any screen, and back to where you were */
 ACT["stock-open"] = el => { const id = el.dataset.id, f = getFood(id) || BUILTIN[id], p = S.shop.pantry[id]; if (!f) return; const cur = S_(), back = cur && (cur.type === "qty" || cur.type === "food") ? cur : null;
@@ -11519,7 +11535,7 @@ const dlTxt = dl => dl < 0 ? `expired ${-dl === 1 ? "yesterday" : `${-dl} days a
 /* the card on Today, and on top of the pantry */
 function expiryCard(where) {
   const E = expiryList(); if (!E.expired.length && !E.soon.length) return "";
-  const row = x => `<div class="xp-row ${x.dl < 0 ? "bad" : "warn"}"><span class="xp-dot"></span><span class="xp-t"><b>${esc(x.f.name)}</b><small>${fmtN(x.g)} ${x.f.unit || "g"} · ${dlTxt(x.dl)}</small></span><span class="xp-acts">${x.dl < 0 ? `<button class="btn text sm" data-act="xp-toss" data-id="${x.id}">Thrown away</button><button class="btn text sm" data-act="xp-keep" data-id="${x.id}">Still good</button>` : `<button class="btn text sm" data-act="xp-use" data-id="${x.id}">Use it</button>`}</span></div>`;
+  const row = x => `<div class="xp-row ${x.dl < 0 ? "bad" : "warn"}"><span class="xp-dot"></span><span class="xp-t"><b>${esc(x.f.name)}</b><small>${fmtN(x.g)} ${x.f.unit || "g"} · ${dlTxt(x.dl)}</small></span><span class="xp-acts">${x.dl < 0 ? `<button class="btn text sm" data-act="xp-toss" data-id="${esc(x.id)}">Thrown away</button><button class="btn text sm" data-act="xp-keep" data-id="${esc(x.id)}">Still good</button>` : `<button class="btn text sm" data-act="xp-use" data-id="${esc(x.id)}">Use it</button>`}</span></div>`;
   return `<section class="card pad xp-card" aria-label="Use-by dates"><div class="nut-h"><span class="flabel">${E.expired.length ? `${E.expired.length} expired` : ""}${E.expired.length && E.soon.length ? " · " : ""}${E.soon.length ? `${E.soon.length} to use soon` : ""}</span>${where === "today" ? `<button class="link" data-act="tab" data-tab="pantry">Pantry</button>` : ""}</div>
     ${[...E.expired, ...E.soon].slice(0, where === "today" ? 4 : 50).map(row).join("")}
     ${E.soon.length ? `<button class="btn tonal sm" data-act="plan-pantry" style="align-self:flex-start">${ic("spark", "sm")}Plan meals with these</button>` : ""}</section>`;
@@ -15654,10 +15670,10 @@ function shopRowHTML(r) {
   const sub = [r.covered ? `${fmtN(r.covered)} ${u} from home` : r.free ? `${fmtN(r.free)} ${u} at home` : "", !got && r.left - r.usedLater >= 10 ? `${fmtN(r.left - r.usedLater)} ${u} left over` : "", !got && r.usedLater >= 10 ? `${fmtN(r.usedLater)} ${u} for later days` : ""].filter(Boolean).join(" · ");
   let q;
   if (r.f.pack > 0 && !r.vary) { const n = Math.round((got || buyG(r)) / r.f.pack), dn = got ? n - r.packs : 0;
-    q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${r.id}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${r.id}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
-  else q = `<button class="shop-q" data-act="shop-buy" data-id="${r.id}"><b>${fmtN(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
-  return `<div class="shop-row ${done ? "done" : ""}" data-id="${r.id}"><button class="chk" data-act="shop-check" data-id="${r.id}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
-    <button class="shop-main" data-act="shop-buy" data-id="${r.id}"><span class="t">${esc(r.f.name)}</span>${sub || brandOf(r.f) ? `<span class="s">${brandOf(r.f) ? `<span class="bd">${esc(brandOf(r.f))}</span>${sub ? " · " : ""}` : ""}${esc(sub)}</span>` : ""}</button>${q}</div>`;
+    q = `<span class="pk-st"><button class="icon-btn sm" data-act="shop-pk" data-id="${esc(r.id)}" data-d="-1" aria-label="One pack less">${ic("minus", "sm")}</button><button class="pk-n" data-act="shop-buy" data-id="${esc(r.id)}"><b>${n}×</b><small>${fmtN(r.f.pack)} ${u}${dn ? ` <em class="${dn > 0 ? "up" : "dn"}">${dn > 0 ? "+" : "−"}${Math.abs(dn)}</em>` : ""}</small></button><button class="icon-btn sm" data-act="shop-pk" data-id="${esc(r.id)}" data-d="1" aria-label="One pack more">${ic("plus", "sm")}</button></span>`; }
+  else q = `<button class="shop-q" data-act="shop-buy" data-id="${esc(r.id)}"><b>${fmtN(got || r.buy)} ${u}</b>${cost != null ? `<small>${fmtEur(cost)}</small>` : ""}</button>`;
+  return `<div class="shop-row ${done ? "done" : ""}" data-id="${esc(r.id)}"><button class="chk" data-act="shop-check" data-id="${esc(r.id)}" aria-pressed="${done}" aria-label="In the cart: ${esc(r.f.name)}"><span>${ic("check")}</span></button>
+    <button class="shop-main" data-act="shop-buy" data-id="${esc(r.id)}"><span class="t">${esc(r.f.name)}</span>${sub || brandOf(r.f) ? `<span class="s">${brandOf(r.f) ? `<span class="bd">${esc(brandOf(r.f))}</span>${sub ? " · " : ""}` : ""}${esc(sub)}</span>` : ""}</button>${q}</div>`;
 }
 ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id); if (!r?.f.pack) return; S.shop.checked = S.shop.checked || {};
   const c = S.shop.checked[id], cur = c && c.g ? c.g : buyG(r), next = Math.max(0, cur + +el.dataset.d * r.f.pack);
@@ -15695,7 +15711,7 @@ SHEETS.stores = sh => { const cur = curStore() || "", L = storeList();
   return { title: "Store", focus: L.length ? "" : "st-new",
   body: `${L.length ? `<div class="card">${[["", "All stores"], ...L.map(x => [x.id, x.name])].map(([k, l]) => `<button class="lrow" data-act="store-pick" data-k="${esc(k)}" aria-pressed="${cur === k}"><span class="t">${esc(l)}</span><span class="end">${cur === k ? ic("check", "sm") : ""}</span></button>`).join("")}</div>` : `<div class="note">Add the supermarkets you use: each keeps its own prices.</div>`}
     <div class="row st-add"><input id="st-new" class="inp" placeholder="New store" maxlength="30" autocomplete="off" aria-label="New store"><button class="btn soft" data-act="store-new">${ic("plus", "sm")}Add</button></div>
-    ${L.length ? `<details class="st-edit"${sh.edit ? " open" : ""}><summary>Rename or remove</summary><div class="card">${L.map(x => `<div class="lrow st-row"><input class="inp" value="${esc(x.name)}" data-chg="store-name" data-id="${x.id}" aria-label="Store name" maxlength="30"><button class="icon-btn" data-act="store-del" data-id="${x.id}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}</div></details>
+    ${L.length ? `<details class="st-edit"${sh.edit ? " open" : ""}><summary>Rename or remove</summary><div class="card">${L.map(x => `<div class="lrow st-row"><input class="inp" value="${esc(x.name)}" data-chg="store-name" data-id="${esc(x.id)}" aria-label="Store name" maxlength="30"><button class="icon-btn" data-act="store-del" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">${ic("trash", "sm")}</button></div>`).join("")}</div></details>
     <small class="faint">A store without a price for a product uses the usual price.</small>` : ""}`,
   foot: `<button class="btn primary" data-act="stores-done">Done</button>` }; };
 function shopPanel(inSheet) {
@@ -15708,8 +15724,8 @@ function shopPanel(inSheet) {
     <div class="sq-sum"><span><b>${here.filter(r => !ck[r.id]).length + visibleExtras().filter(x => !x.done).length}</b> to buy${elsewhere.length ? ` here (${elsewhere.filter(r => !ck[r.id]).length} elsewhere)` : ""}${T.est ? ` · ≈ <b>${fmtEur(T.est)}</b>${inCart}` : ""}</span>${storePillHTML()}</div></div>`;
   if (mode === "custom") h += `<div class="grid2 shop-custom"><div class="field"><label for="shop-from">From</label><input id="shop-from" type="date" class="inp" value="${S.shop.cFrom || start}" data-in="shop-from"></div><div class="field"><label for="shop-to">To</label><input id="shop-to" type="date" class="inp" value="${S.shop.cTo || addDays(start, n - 1)}" data-in="shop-to"></div></div>`;
   h += toBuy.length || visibleExtras().length ? `<div class="shop-list">${shopListHTML(here, true)}</div>` : `<div class="shop-list">${extraFormHTML()}</div><div class="note">Nothing to buy for these days: the list builds itself from the meals you plan, minus what's in your pantry.</div>`;
-  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${id}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${id}"><span class="t">${esc(f.name)}</span><span class="s">${esc([f.brand, "to the pantry"].filter(Boolean).join(" · "))}</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
-  if (elsewhere.length) h += `<details class="shop-other"><summary>At other stores · ${elsewhere.length}</summary><div class="shop-list">${elsewhere.map(r => `<div class="so-r">${shopRowHTML(r)}<div class="so-a"><span class="faint">at ${esc(foodStores(r.id).map(storeName).join(", "))}</span><button class="btn soft sm" data-act="shop-here" data-id="${r.id}">Buy it here</button></div></div>`).join("")}</div></details>`;
+  if (extraIds.length) h += `<div class="sq"><div class="sq-h">Bought, not on the list<span>${extraIds.length}</span></div>${extraIds.map(id => { const f = getFood(id) || BUILTIN[id], c = ck[id]; return `<div class="shop-row done-x"><button class="chk" data-act="shop-check" data-id="${esc(id)}" aria-pressed="true" aria-label="Take ${esc(f.name)} out"><span>${ic("check")}</span></button><button class="shop-main" data-act="shop-buy" data-id="${esc(id)}"><span class="t">${esc(f.name)}</span><span class="s">${esc([f.brand, "to the pantry"].filter(Boolean).join(" · "))}</span></button><span class="shop-q"><b>${fmtN(c.g || 0)} ${f.unit || "g"}</b></span></div>`; }).join("")}</div>`;
+  if (elsewhere.length) h += `<details class="shop-other"><summary>At other stores · ${elsewhere.length}</summary><div class="shop-list">${elsewhere.map(r => `<div class="so-r">${shopRowHTML(r)}<div class="so-a"><span class="faint">at ${esc(foodStores(r.id).map(storeName).join(", "))}</span><button class="btn soft sm" data-act="shop-here" data-id="${esc(r.id)}">Buy it here</button></div></div>`).join("")}</div></details>`;
   h += tickedHTML() + shopCoveredHTML(covered) + shopOutHTML(start, n);
   return { h, toBuy, T, anyCk: Object.values(ck).some(Boolean) || visibleExtras().some(x => x.done), left: toBuy.filter(r => !ck[r.id]).length + (S.shop.extras || []).filter(x => !x.done).length };
 }
@@ -16214,12 +16230,13 @@ ACT["rc-load"] = () => { const sh = S_(), R = sh.res; if (!R) return; const befo
   const todo = R.todo.map(t => ({ id: uid(), name: t.name, brand: t.brand, qty: t.qty, eur: t.eur, w: t.w, bw: t.bw, why: t.why, ...(sid ? { sid } : {}), d })); S.shop.rcTodo = [...(S.shop.rcTodo || []), ...todo].slice(-60);
   if (n) S.shop.receipts = [...(S.shop.receipts || []), { d: today, sid, tot: R.total ?? Math.round(tot * 100) / 100, n }].slice(-60);
   put("shop", "", S.shop); closeSheet(); scheduleRender(); haptic(12);
-  toast(`${n} in the pantry${tot ? ` · ${fmtEur(tot)}` : ""}${todo.length ? ` · ${todo.length} to add by hand` : ""}`, () => { S.shop = before; put("shop", "", S.shop); scheduleRender(); if (UI.sheet) renderSheet(); }); };
+  const after = clone(S.shop);
+  toast(`${n} in the pantry${tot ? ` · ${fmtEur(tot)}` : ""}${todo.length ? ` · ${todo.length} to add by hand` : ""}`, () => { shopUndo(before, after); scheduleRender(); if (UI.sheet) renderSheet(); }); };
 /* what the receipt could not load stays on the shopping page until you create the food or dismiss the line */
 function rcTodoCard() { const L = S.shop.rcTodo || []; if (!L.length) return "";
   return `<section class="card pad rc-todo"><div class="nut-h"><span class="flabel">From the receipt · ${L.length} to add by hand</span><span class="row" style="gap:6px"><button class="link" data-act="rc-copy">Copy</button><button class="link" data-act="rc-clear">Clear</button></span></div>
-    ${L.map(t => `<div class="rc-t"><span style="min-width:0"><b>${esc(t.name)}</b><small>${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : ""].filter(Boolean).map(esc).join(" · ")}</small></span><button class="btn tonal sm" data-act="rcp-new" data-id="${t.id}">New food</button><button class="icon-btn sm" data-act="rcp-del" data-id="${t.id}" aria-label="Dismiss ${esc(t.name)}">${ic("close", "sm")}</button></div>`).join("")}</section>`; }
-ACT["rcp-new"] = el => { const t = (S.shop.rcTodo || []).find(x => x.id === el.dataset.id); if (!t) return; S.shop.rcTodo = S.shop.rcTodo.filter(x => x.id !== t.id); put("shop", "", S.shop); UI.rcLearn = { key: rcKey(t), eur: t.eur, g: t.w ? rcGrams({ pack: 0 }, t) : 0, sid: t.sid || null };
+    ${L.map(t => `<div class="rc-t"><span style="min-width:0"><b>${esc(t.name)}</b><small>${[t.brand, t.qty > 1 ? "× " + t.qty : "", t.eur != null ? fmtEur(t.eur) : ""].filter(Boolean).map(esc).join(" · ")}</small></span><button class="btn tonal sm" data-act="rcp-new" data-id="${esc(t.id)}">New food</button><button class="icon-btn sm" data-act="rcp-del" data-id="${esc(t.id)}" aria-label="Dismiss ${esc(t.name)}">${ic("close", "sm")}</button></div>`).join("")}</section>`; }
+ACT["rcp-new"] = el => { const t = (S.shop.rcTodo || []).find(x => x.id === el.dataset.id); if (!t) return; UI.rcLearn = { tid: t.id, key: rcKey(t), eur: t.eur, g: t.w ? rcGrams({ pack: 0 }, t) : 0, sid: t.sid || null };
   openSheet("food", { draft: { ...blankFood([t.brand, t.name].filter(Boolean).join(" ")), pack: t.w ? rcGrams({ pack: 0 }, t) / t.qty : 0 }, isNew: true, then: null, date: UI.date, meal: suggestMeal() }); };
 ACT["rcp-del"] = el => { S.shop.rcTodo = (S.shop.rcTodo || []).filter(x => x.id !== el.dataset.id); put("shop", "", S.shop); scheduleRender(); };
 ACT["rc-clear"] = () => { const old = S.shop.rcTodo; S.shop.rcTodo = []; put("shop", "", S.shop); scheduleRender(); toast("List cleared", () => { S.shop.rcTodo = old; put("shop", "", S.shop); scheduleRender(); }); };
@@ -16227,7 +16244,7 @@ ACT["rc-copy"] = async () => { const t = (S.shop.rcTodo || []).map(x => `${x.nam
 /* what you ticked today stays on the list, so a wrong tick is taken back whenever you notice: the pantry and the history go back as they were */
 const tickedToday = () => (S.shop.buys || []).filter(b => b.tick && b.d === todayISO() && b.id);
 function tickedHTML() { const L = tickedToday(); if (!L.length) return "";
-  return `<div class="sq sq-got"><div class="sq-h">Ticked today · in the pantry<span>${L.length}</span></div>${L.map(b => { const f = getFood(b.id) || BUILTIN[b.id]; return `<div class="shop-row done"><button class="chk" data-act="shop-untick" data-id="${b.id}" data-g="${b.g}" aria-pressed="true" aria-label="Take back ${esc(b.n)}: not bought"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(b.n)}</span><span class="s">${esc([f?.brand, "tap the tick to take it back"].filter(Boolean).join(" · "))}</span></span><span class="shop-q"><b>${fmtN(b.g)} ${f?.unit || "g"}</b></span></div>`; }).join("")}</div>`; }
+  return `<div class="sq sq-got"><div class="sq-h">Ticked today · in the pantry<span>${L.length}</span></div>${L.map(b => { const f = getFood(b.id) || BUILTIN[b.id]; return `<div class="shop-row done"><button class="chk" data-act="shop-untick" data-id="${esc(b.id)}" data-g="${b.g}" aria-pressed="true" aria-label="Take back ${esc(b.n)}: not bought"><span>${ic("check")}</span></button><span class="shop-main"><span class="t">${esc(b.n)}</span><span class="s">${esc([f?.brand, "tap the tick to take it back"].filter(Boolean).join(" · "))}</span></span><span class="shop-q"><b>${fmtN(b.g)} ${f?.unit || "g"}</b></span></div>`; }).join("")}</div>`; }
 ACT["shop-untick"] = el => { const id = el.dataset.id, buys = S.shop.buys || [];
   let i = -1; for (let k = buys.length - 1; k >= 0; k--) if (buys[k].tick && buys[k].d === todayISO() && buys[k].id === id) { i = k; break; } if (i < 0) return;
   const b = buys[i], before = clone(S.shop.pantry[id] || null), old = [...buys], p = S.shop.pantry[id];

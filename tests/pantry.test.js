@@ -14,7 +14,7 @@ test("stockAdd / stockSet: quick steps, exact amounts, never negative, empty rem
     stockAdd("t-rice", 100); out.add = g();
     stockAdd("t-rice", -1000); out.floor = g();            // goes to zero → entry removed, never negative
     stockSet("t-rice", 37); out.exact = g();               // exact grams, no rounding to a pack or a step
-    const before = g(); stockSet("t-rice", 500); undoStock(); out.undo = [before, g()];
+    const before = g(); stockSet("t-rice", 500)(); out.undo = [before, g()];
     return out;
   });
   assert.deepEqual(r, { set: 250, add: 350, floor: null, exact: 37, undo: [37, 37] });

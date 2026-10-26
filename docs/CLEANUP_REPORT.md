@@ -473,3 +473,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `foodForItem` e `recipeTotals` leggono il record nascosto di un cibo cancellato; `binPurge` tiene (nascosto, `gone`) un cibo ancora usato (`foodUsed`); `priceSet` unisce storico e prezzi per negozio; `shop-done` conserva i campi della voce di dispensa; `shop-pk` scala il prezzo e conserva offerta/negozio; `shoppingRows` salta la riga entro il 2 % di una confezione coperta dalla scorta; `by-ok` non salva un prezzo non numerico; `swapFood` accetta `by`, `since`, `until`, `home`; `fold-tog` ridisegna il foglio aperto.
 - **Eliminato**: la variabile `shelf` inutilizzata in `shop-done`.
 - **Aperto**: undo condiviso `STOCK_UNDO`, undo di «Finish shopping» che ripristina l'intero `S.shop`, `esc()` sui `data-id`, prezzi stimati contati come spesi, clamp dell'editor Foods, validazione ricetta, import ricetta, catena AI, lista Foods oltre 200 righe (vedi `docs/review/area02-foods.md` e `area03-shopping.md`). Il 2 % di tolleranza fa sì che Σ(fabbisogno) differisca da Σ(coperto)+Σ(da comprare) al massimo del 2 % di una confezione.
+
+## Consistency & Cleanup Report: M14b E, secondo giro (ramo claude/m14b-ef)
+- **Verificato**: `tests/m14b-ef2.test.js` (9 test, 8 rossi prima), 103 test di spesa/dispensa/negozi/scontrino/prezzi verdi, `pantry.test.js` adattato al nuovo undo.
+- **Cambiato**: `stockSet` restituisce il proprio undo (`stockUndoer`), `shopUndo(before, after)` per Finish/scontrino/rimozione negozio, `spendIn` e il toast di Finish escludono i prezzi `est`, `closeSheet` azzera `rcLearn`, `esc()` sui `data-id` delle viste Spesa/Dispensa/Foods, tap target 36 px.
+- **Eliminato**: `STOCK_UNDO` e `undoStock`.
+- **Aperto**: la migrazione Lidl (una tantum) ripristina ancora l'intero `S.shop`; `data-id` fuori da Foods/Spesa/Dispensa non hanno `esc()` (altri gruppi: validazione degli id in import/sync); `shop-buy` 28 px di altezza.
