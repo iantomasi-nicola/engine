@@ -91,3 +91,15 @@ test("3c. A copy of a treat (Duplicate, Copy meal) is a plain quick-add with the
   assert.ok(r.dups.length >= 1 && r.dups.every(x => x[0] === false && x[1] === 1800)); assert.ok(r.cps.length >= 1 && r.cps.every(x => x[0] === false && x[1] === 1800));
   assert.deepEqual(app.errors, []);
 });
+
+test("4. The week table shows a meal that is off in Settings but holds foods, so the day's total is the sum of what is shown", async () => {
+  const page = await start();
+  /* rice 100 g (130 kcal in the fixture or whatever it is) in the switched-off snack and chicken in lunch: the row total equals the sum of the meal totals of the row, and the snack column exists */
+  await page.evaluate(() => { const T = todayISO(); S.days[T] = { date: T, meals: { snack: [newItem("food", "t-rice", 300)], lunch: [newItem("food", "t-chicken", 100)] } }; DATA_V++;
+    S.settings.meals.find(m => m.id === "snack").on = false; saveSettings(); UI.date = T; UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; render(); });
+  await page.waitForTimeout(400);
+  const r = await page.evaluate(() => { const T = todayISO(), row = document.querySelector(".pw-dr.now"), num = s => +String(s).replace(/[^\d.]/g, "");
+    return { cells: [...row.querySelectorAll(".pw-cell")].map(c => c.dataset.meal), head: num(row.querySelector(".pw-kcal b").textContent), sum: [...row.querySelectorAll(".pw-mt b")].reduce((a, b) => a + num(b.textContent), 0), total: Math.round(dayTotals(getDay(T)).kcal), th: [...document.querySelectorAll(".pw-th span")].map(x => x.textContent.trim()) }; });
+  assert.ok(r.cells.includes("snack")); assert.equal(r.head, r.total); assert.equal(r.sum, r.total); assert.ok(r.th.some(x => /snack/i.test(x) && /off/i.test(x)), JSON.stringify(r.th));
+  assert.deepEqual(app.errors, []);
+});
