@@ -17,8 +17,9 @@ test("weight from intervals.icu fills the days with none, never overwrites a typ
     await icuSyncDirect(); return [d1, d2, d3].map(d => S.logm[d.slice(0, 7)]?.days?.[d]?.weight ?? null); }, [SETUP(remote, link)]);
   const days = await page.evaluate(() => [addDays(todayISO(), -1), addDays(todayISO(), -2), addDays(todayISO(), -3)]);
   const remote = { wellness: [{ id: days[0], weight: 81.44 }, { id: days[1], weight: 82.9 }, { id: days[2], weight: 5 }] };
-  assert.deepEqual(await run(remote, {}), [81.4, 80, null], "filled / kept / implausible ignored");
-  const off = await page.evaluate(async ([s, d]) => { eval(s); S.settings.intervals.pullWeight = false; mutateLog(d, x => { delete x.weight; }); await icuSyncDirect(); return S.logm[d.slice(0, 7)]?.days?.[d]?.weight ?? null; }, [SETUP(remote, { pullWeight: false }), days[0]]);
+  assert.deepEqual(await run(remote, {}), [null, 80, null], "off by default: nothing is read");
+  assert.deepEqual(await run(remote, { pullWeight: true }), [81.4, 80, null], "switched on: filled / kept / implausible ignored");
+  const off = await page.evaluate(async ([s, d]) => { eval(s); mutateLog(d, x => { delete x.weight; }); await icuSyncDirect(); return S.logm[d.slice(0, 7)]?.days?.[d]?.weight ?? null; }, [SETUP(remote, { pullWeight: false }), days[0]]);
   assert.equal(off, null, "switched off: nothing is read");
   assert.deepEqual(app.errors, []);
 });
