@@ -4407,7 +4407,7 @@ const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
   const mw = side && innerWidth >= PW_MIN, mwOn = mw && cur === "plan" && UI.planView === "week";   /* PC: the weekly meal plan one click away */
-  return (side ? [TABS[0], TABS[1], ...(mw ? [["mealweek", "Meal week", "calendar"]] : []), ...TABS.slice(2), ["week", "Week", "calendar"], ["timer", "Tools", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = id === "mealweek" ? mwOn : cur === id && !(id === "plan" && mwOn), i = ic(on ? icon + "-f" : icon);
+  return (side ? [TABS[0], TABS[1], ...(mw ? [["mealweek", "Meal week", "calendar"]] : []), ...TABS.slice(2), ["timer", "Tools", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = id === "mealweek" ? mwOn : cur === id && !(id === "plan" && mwOn), i = ic(on ? icon + "-f" : icon);
     return `<button class="${side ? "side-btn" : ""}" data-act="${id === "mealweek" ? "go-week-plan" : "tab"}" ${id === "mealweek" ? "" : `data-tab="${tab}"`} ${on ? 'aria-current="page"' : ""}>${side ? i : `<span class="nav-ic">${i}</span>`}<span>${label}</span></button>`; }).join("");
 }
 

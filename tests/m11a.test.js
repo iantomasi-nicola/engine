@@ -51,7 +51,7 @@ test("the week board shows the food of the seven days on one aligned grid (no wo
       return { rows, cells, filled, work: /Day B|19:00/.test(txt), over, aligned, opened, sheet, next, back, link, side, tiles: document.querySelectorAll(".glance").length >= 0 }; });
     assert.equal(r.rows, 7, vp.width + "px"); assert.equal(r.cells, 7 * 3); assert.equal(r.filled, 1); assert.equal(r.work, false, "no workouts on this board"); assert.equal(r.over, false); assert.ok(r.aligned, "rows line up");
     assert.equal(r.opened, "plan"); assert.equal(r.sheet, "add"); assert.ok(r.next && r.back); assert.equal(r.link, "week");
-    if (vp.width >= 820) assert.equal(r.side, true, "the Week item is in the side menu");
+    assert.equal(r.side, false, "the Week item is no longer in the side menu (owner's request 27/10); the Today card opens it");
     await app.close(); app = null;
   }
 });
