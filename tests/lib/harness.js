@@ -39,6 +39,16 @@ function serve(dir) {
     }).listen(0, "127.0.0.1", () => ok({ url: `http://127.0.0.1:${srv.address().port}/index.html`, close: () => srv.close() }));
   });
 }
+/* A screen that could not be drawn shows an emergency card with data-render-failed (and render() logs console.error): both count as errors, unless the test WANTS the card and calls allowRenderFailed().
+   Returns the switch { ok, allow } (pass one in to share it between the pages of a device); the marker is watched from the first moment, boot included. */
+async function guardRender(page, errors, g = { ok: false }) {
+  g.allow = () => { g.ok = true; };
+  await page.exposeFunction("__renderFailed", () => { if (!g.ok) errors.push("render failed: the emergency card (data-render-failed) is on screen"); });
+  await page.addInitScript(() => { const seen = new WeakSet(), look = () => { for (const el of document.querySelectorAll("[data-render-failed]")) if (!seen.has(el)) { seen.add(el); window.__renderFailed(); } }; new MutationObserver(look).observe(document, { childList: true, subtree: true }); });
+  page.on("console", m => { if (m.type() === "error" && /^render failed:/.test(m.text()) && !g.ok) errors.push("console: " + m.text().slice(0, 200)); });
+  return g;
+}
+const IGNORED_CONSOLE = t => /Failed to load resource|^render failed:/.test(t);
 /* A running app. seed = object stored under the app's localStorage key before the first load (synthetic data only). */
 async function startApp({ dir, seed = { settings: { onboarded: true } }, viewport = VIEWPORTS.desktop, offline = false } = {}) {
   const { chromium } = loadPlaywright();
@@ -48,13 +58,14 @@ async function startApp({ dir, seed = { settings: { onboarded: true } }, viewpor
   await ctx.addInitScript(([k, v]) => { try { localStorage.setItem("engine.localOnly", "true"); if (v && !sessionStorage.getItem("__seeded")) { localStorage.setItem(k, v); sessionStorage.setItem("__seeded", "1"); } } catch (e) {} }, [LS_KEY, seed ? JSON.stringify(seed) : ""]);
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", e => errors.push("pageerror: " + e.message));
-  page.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push("console: " + m.text().slice(0, 200)); });
+  page.on("console", m => { if (m.type() === "error" && !IGNORED_CONSOLE(m.text())) errors.push("console: " + m.text().slice(0, 200)); });
+  const guard = await guardRender(page, errors);
   /* external hosts never reached: no Supabase (real data), no intervals.icu, no OFF, no AI, no weather */
   await page.route(u => { const h = new URL(u).hostname; return h !== "127.0.0.1" && h !== "localhost"; }, r => r.abort());
   await page.goto(srv.url); await page.waitForFunction(() => typeof S !== "undefined" && S.settings, null, { timeout: 15000 }).catch(() => {});
   await page.waitForTimeout(600);
   if (offline) await ctx.setOffline(true);
-  return { page, ctx, errors, url: srv.url, reload: async () => { await page.reload(); await page.waitForFunction(() => typeof S !== "undefined" && S.settings, null, { timeout: 15000 }); await page.waitForTimeout(400); },
+  return { page, ctx, errors, url: srv.url, allowRenderFailed: guard.allow, reload: async () => { await page.reload(); await page.waitForFunction(() => typeof S !== "undefined" && S.settings, null, { timeout: 15000 }); await page.waitForTimeout(400); },
     close: async () => { await browser.close(); srv.close(); } };
 }
-module.exports = { exportRef, ROOT, LS_KEY, VIEWPORTS, build, tmp, startApp, serve, loadPlaywright, findModules };
+module.exports = { guardRender, IGNORED_CONSOLE, exportRef, ROOT, LS_KEY, VIEWPORTS, build, tmp, startApp, serve, loadPlaywright, findModules };

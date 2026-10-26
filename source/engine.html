@@ -4710,9 +4710,10 @@ function restoreFocus(f) {
 const SIDE_KEY = "engine.side";
 function sideMode() { if (innerWidth < 600) return null; let p = null; try { p = localStorage.getItem(SIDE_KEY); } catch (e) {} return p === "rail" || p === "full" ? p : innerWidth >= 1024 ? "full" : "rail"; }
 function applySide() { const m = sideMode(); document.body.classList.toggle("side-rail", m === "rail"); document.body.classList.toggle("side-full", m === "full"); }
-/* a screen that cannot be drawn (data it did not expect) must not leave a blank page: the way out stays here, with the restore points and a backup of what is on this device */
+/* a screen that cannot be drawn (data it did not expect) must not leave a blank page: the way out stays here, with the restore points and a backup of what is on this device.
+   render() logs the cause with console.error and the card carries data-render-failed, so the tests (harness) and the smoke gate fail instead of passing with the card on screen */
 function renderFailed(e) {
-  return `<section class="card pad" style="display:flex;flex-direction:column;gap:12px;max-width:560px;margin:16px auto"><div><b>This screen couldn't be drawn.</b><div class="faint" style="font-size:13.5px;margin-top:4px">Your data is still on this device${e?.message ? ` (${esc(String(e.message).slice(0, 120))})` : ""}. Save a backup, or go back to an earlier copy.</div></div>
+  return `<section class="card pad" data-render-failed style="display:flex;flex-direction:column;gap:12px;max-width:560px;margin:16px auto"><div><b>This screen couldn't be drawn.</b><div class="faint" style="font-size:13.5px;margin-top:4px">Your data is still on this device${e?.message ? ` (${esc(String(e.message).slice(0, 120))})` : ""}. Save a backup, or go back to an earlier copy.</div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal" data-act="bk-save">${ic("download", "sm")}Save a backup now</button><button class="btn primary" data-act="bk-points">Restore points</button></div></section>`;
 }
 function render() {
@@ -4729,7 +4730,7 @@ function render() {
   const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && !(UI.tab === "timer" && TMR.phase !== "setup");
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
   if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
-  let page; try { page = v(); } catch (e) { page = renderFailed(e); }
+  let page; try { page = v(); } catch (e) { console.error("render failed:", e); page = renderFailed(e); }
   setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + page);
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
   $("#fab").hidden = UI.tab !== "plan";

@@ -90,7 +90,8 @@ async function device(srv, name, { dir, uid = "u1", seed = null, local = null, v
   dev.attach = async page => {
     dev.page = page;
     page.on("pageerror", e => dev.errors.push("pageerror: " + e.message));
-    page.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) dev.errors.push("console: " + m.text().slice(0, 200)); });
+    page.on("console", m => { if (m.type() === "error" && !H.IGNORED_CONSOLE(m.text())) dev.errors.push("console: " + m.text().slice(0, 200)); });
+    dev.guard = await H.guardRender(page, dev.errors, dev.guard); dev.allowRenderFailed = dev.guard.allow;
     await page.addInitScript(u => { window.__fakeUid = u; }, dev.uid);
     await page.exposeFunction("__srv", spec => srv.handle(dev, spec));
   };
