@@ -103,3 +103,21 @@ test("4. The week table shows a meal that is off in Settings but holds foods, so
   assert.ok(r.cells.includes("snack")); assert.equal(r.head, r.total); assert.equal(r.sum, r.total); assert.ok(r.th.some(x => /snack/i.test(x) && /off/i.test(x)), JSON.stringify(r.th));
   assert.deepEqual(app.errors, []);
 });
+
+test("5. Changing the amount of an item eaten more than 3 days ago leaves the pantry alone and keeps what it took, so un-eating gives back once", async () => {
+  const page = await start();
+  /* rice 500 g at home; an item eaten 5 days ago took 100 g (took {rice:100}). Edit 100 -> 50: stock stays 500, took stays 100 (it is what was taken then). Un-eat: +100 -> 600, once. */
+  const r = await page.evaluate(`(() => { const T = todayISO(), P = addDays(T, -5), out = {};
+    S.shop.pantry["t-rice"] = { g: 500 }; const it = { ...newItem("food", "t-rice", 100), eaten: true, took: { "t-rice": 100 } }; S.days[P] = { date: P, meals: { lunch: [it] } }; DATA_V++;
+    openSheet("qty", { kind: "food", ref: "t-rice", qty: 50, date: P, meal: "lunch", origMeal: "lunch", itemId: it.id }); ACT["qty-save"]();
+    out.g1 = S.shop.pantry["t-rice"].g; out.took = JSON.stringify(getDay(P).meals.lunch[0].took); out.qty = getDay(P).meals.lunch[0].qty;
+    UI.date = P; ACT["toggle-eaten"]({ dataset: { meal: "lunch", id: it.id } }); out.g2 = S.shop.pantry["t-rice"].g; return out; })()`);
+  assert.deepEqual(r, { g1: 500, took: '{"t-rice":100}', qty: 50, g2: 600 });
+  /* a recent day still follows the new amount: eaten today 100 g (took 100, stock 400 after), edit to 60 -> stock 440, took 60 */
+  const q = await page.evaluate(`(() => { const T = todayISO(); S.shop.pantry["t-rice"] = { g: 500 }; const it = newItem("food", "t-rice", 100); S.days[T] = { date: T, meals: { lunch: [it] } }; DATA_V++; UI.date = T;
+    ACT["toggle-eaten"]({ dataset: { meal: "lunch", id: it.id } }); const a = S.shop.pantry["t-rice"].g;
+    openSheet("qty", { kind: "food", ref: "t-rice", qty: 100, date: T, meal: "lunch", origMeal: "lunch", itemId: it.id }); $("#qty-in").value = "60"; ACT["qty-save"]();
+    return [a, S.shop.pantry["t-rice"].g, JSON.stringify(getDay(T).meals.lunch[0].took)]; })()`);
+  assert.deepEqual(q, [400, 440, '{"t-rice":60}']);
+  assert.deepEqual(app.errors, []);
+});

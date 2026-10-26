@@ -3407,11 +3407,12 @@ function itemStockLines(it) {
    remembers it (it.took), so un-eating gives back exactly that and never more. A day logged long after the fact (more than
    3 days ago) leaves today's stock alone: the stock says what is at home now. it.pan is an old flag: an item eaten under it
    without a record gives back its full amount. */
+const stockDay = date => !date || date >= addDays(todayISO(), -3);
 function pantryAdjust(it, sign, date) {
   if (!it || it.kind === "quick") return;
   let changed = false;
   if (sign > 0) {
-    if (date && date < addDays(todayISO(), -3)) return;
+    if (!stockDay(date)) return;
     const took = {};
     for (const [id, g] of itemStockLines(it)) { const p = S.shop.pantry[id]; if (!p || !(g > 0)) continue; const before = +p.g || 0; p.g = Math.max(0, r0(before - g)); const t = before - p.g; if (t > 0) { took[id] = (took[id] || 0) + t; changed = true; } }
     if (changed) it.took = took; else delete it.took;
@@ -7269,8 +7270,9 @@ ACT["qty-save"] = () => {
   if (sh.itemId) {
     mutateDay(sh.date, d => {
       const src = d.meals[sh.origMeal] || []; const i = src.findIndex(x => x.id === sh.itemId); if (i < 0) return;
-      const it = src[i]; if (it.eaten) pantryAdjust({ ...it }, -1);
-      it.qty = qty; if (it.eaten) pantryAdjust(it, 1, sh.date);
+      const it = src[i], live = stockDay(sh.date);   // a day past the window leaves the stock and its record of what was taken as they are
+      if (it.eaten && live) pantryAdjust({ ...it }, -1);
+      it.qty = qty; if (it.eaten && live) pantryAdjust(it, 1, sh.date);
       if (sh.meal !== sh.origMeal) { src.splice(i, 1); (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }
     });
     closeSheet(); return;
