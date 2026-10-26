@@ -25,10 +25,9 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   s = s.replace("<head>", "<head>" + head);
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(OUT + "/index.html", s);
-  /* the heavy cache (libraries, label reader, icons) is named after what is in those folders: a changed file reaches installed copies, an unchanged one is not downloaded again */
-  const hash = require("crypto").createHash("sha1"), walk = d => { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else hash.update(path.relative(ROOT, p) + "\0").update(fs.readFileSync(p)); } };
-  for (const d of ["vendor", "ocr", "icons"]) walk(path.join(ROOT, d));
-  fs.writeFileSync(OUT + "/sw.js", fs.readFileSync(W + "/sw.js", "utf8").replace("__BUILD__", build).replace("__HEAVY__", hash.digest("hex").slice(0, 10)));
+  /* the heavy caches (libraries, label reader, icons) are each named after what is in their folder: a changed file reaches installed copies, an unchanged group is not downloaded again (a new icon does not cost the ~9 MB label reader) */
+  const groupHash = d => { const hash = require("crypto").createHash("sha1"), walk = x => { for (const f of fs.readdirSync(x).sort()) { const p = path.join(x, f); if (fs.statSync(p).isDirectory()) walk(p); else hash.update(path.relative(ROOT, p) + "\0").update(fs.readFileSync(p)); } }; walk(path.join(ROOT, d)); return hash.digest("hex").slice(0, 10); };
+  fs.writeFileSync(OUT + "/sw.js", fs.readFileSync(W + "/sw.js", "utf8").replace("__BUILD__", build).replace("__LIB__", groupHash("vendor")).replace("__OCR__", groupHash("ocr")).replace("__ICO__", groupHash("icons")));
   cp(W + "/manifest.webmanifest", OUT + "/manifest.webmanifest");
   /* static assets (icons, libraries, label reader, schema) live at the repository root; copy them for other outputs */
   if (OUT !== ROOT) for (const d of ["icons", "vendor", "ocr", "supabase"]) cpdir(path.join(ROOT, d), path.join(OUT, d));
