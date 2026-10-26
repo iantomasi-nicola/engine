@@ -2,7 +2,7 @@
    App files: network first with a short timeout (the newest version when online, the saved one when not).
    Libraries, the label reader and icons: kept in their own cache, renamed by the build when one of those files changes (the old one is then deleted).
    The fonts of Google Fonts: saved the first time, so the app has its type offline too. */
-const V = "engine-202610261519", HEAVY = "engine-heavy-9f0338dcff", FONTS = "engine-fonts-1";
+const V = "engine-202610261814", HEAVY = "engine-heavy-9f0338dcff", FONTS = "engine-fonts-1";
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png", "icons/favicon-32.png", "icons/apple-180.png"];
 const WARM = ["vendor/zxing.min.js", "vendor/tesseract.min.js", "ocr/worker.min.js", "ocr/core/tesseract-core-simd-lstm.wasm.js", "ocr/core/tesseract-core-lstm.wasm.js", "ocr/lang/ita.wasm"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
