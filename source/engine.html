@@ -3976,7 +3976,7 @@ function energySeries() {
     for (let d = start; d <= end; d = addDays(d, 1)) {
       const L = logGet(d) || {};
       const real = L.weight > 0 && !L.estW ? +L.weight : null, trend = trendSimple(d);
-      if (L.bf > 0) bf = +L.bf;
+      const bfD = bfAt(d); if (bfD > 0) bf = bfD;
       const age = ageAt(d);
       const bmr = bmrOf(trend, bf, age, d);
       const sess = sessionsFor(d);
@@ -4115,7 +4115,7 @@ function weeklyTable() {
         const d = addDays(ws, i), r = s.rows[d]; if (!r) continue;
         if (r.real) { weigh++; wsum += r.real; }
         if (r.intake && d <= today) { bal += r.balance; ek += r.estKg; if (!r.intake.est) { nI++; iSum += r.intake.kcal; tSum += r.tdeeW; tgSum += r.target; } }
-        if (r.bf && logGet(d)?.bf) bfs.push(r.bf);
+        if (r.bf && bfAt(d)) bfs.push(r.bf);
         if (r.sess.src === "logged") { sess += r.sess.list.length; mins += r.sess.list.reduce((a, w) => a + (+w.min || 0), 0); kc += r.eat; km += r.sess.list.filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); }
       }
       const row = { ws, phase: phaseFor(ws).phase, weigh, avgW: weigh ? wsum / weigh : null, nI, avgI: nI ? iSum / nI : null, avgTdee: nI ? tSum / nI : null, avgTarget: nI ? tgSum / nI : null, balance: bal || nI ? bal : null, estKg: bal || nI ? ek : null,
@@ -5188,11 +5188,29 @@ function macroGkg() {
 }
 /* BMI = kg / m² (WHO bands: under 18.5, 18.5-24.9, 25-29.9, 30 and over). It cannot tell muscle from fat: shown with that note, never used in any target. */
 function bmiOf(kg, cm) { kg = +kg; cm = +cm; if (!(kg > 0) || !(cm > 50)) return null; const v = r1(kg / (cm / 100) ** 2); return { v, cat: v < 18.5 ? "Underweight" : v < 25 ? "Normal weight" : v < 30 ? "Overweight" : "Obesity" }; }   /* the band follows the number shown */
+/* Body fat from intervals.icu (Vitals → Open Health → intervals.icu) is not reliable yet: the scale says ≈ 21 %, Vitals ≈ 8 %. So the import keeps it apart in day.bfIcu and day.bf is only what you type
+   (bfSrc "man"; bfPush = the value Engine sent to intervals.icu, so its echo is not read as a second measure). What the app computes with is bfAt(date): what you typed, else the intervals.icu value
+   moved by the mean gap between your own readings and Vitals' on the days that have both (weight 0.5^(age/30 days), last 120 days; no pair yet = not used), else nothing (the profile value applies).
+   Settings › intervals.icu: "Body fat from intervals.icu" off = never used; "Correct it with my readings" off = the raw value. Docs: docs/BODY_COMPOSITION.md */
+const icuBfOn = () => S.settings?.intervals?.pullBf !== false, icuBfCal = () => S.settings?.intervals?.bfCal !== false;
+function bfGap() {
+  return memo("bfgap", () => {
+    const t = todayISO(); let sw = 0, sg = 0, n = 0; const gs = [];
+    for (let i = 0; i < 120; i++) { const L = logGet(addDays(t, -i)); if (!(L?.bf > 0) || !(L.bfIcu > 0)) continue; const w = Math.pow(.5, i / 30); sw += w; sg += w * (L.bf - L.bfIcu); gs.push(L.bf - L.bfIcu); n++; }
+    if (!n) return null; const gap = sg / sw, sd = n > 1 ? Math.sqrt(gs.reduce((a, g) => a + (g - gap) ** 2, 0) / (n - 1)) : null;
+    return { gap, n, sd };
+  });
+}
+function bfAt(d) {
+  const L = logGet(d); if (!L) return 0; if (L.bf > 0) return +L.bf;
+  const raw = +L.bfIcu; if (!(raw > 0) || !icuBfOn()) return 0;
+  if (!icuBfCal()) return raw; const g = bfGap(); return g ? r1(clamp(raw + g.gap, 3, 60)) : 0;
+}
 /* Lean mass in kg = trend weight × (1 − body fat). A scale or a caliper moves the fat % by a point or two from one day to the next, so the % used is the average of the readings of the last 28 days,
    recent ones counting more (weight 0.5^(age/10 days)), and the answer carries its uncertainty: the spread of the readings over the square root of their effective number, never under 0.4 points
    (one or two readings: 1.5 points, a typical device error). Docs: docs/BODY_COMPOSITION.md */
 function leanEst(d = todayISO()) {
-  const rs = []; for (let i = 0; i < 28; i++) { const x = +logGet(addDays(d, -i))?.bf; if (x > 0) rs.push({ v: x, w: Math.pow(.5, i / 10) }); }
+  const rs = []; for (let i = 0; i < 28; i++) { const x = bfAt(addDays(d, -i)); if (x > 0) rs.push({ v: x, w: Math.pow(.5, i / 10) }); }
   if (!rs.length) return null;
   const W = rs.reduce((a, r) => a + r.w, 0), bf = rs.reduce((a, r) => a + r.w * r.v, 0) / W, neff = W * W / rs.reduce((a, r) => a + r.w * r.w, 0);
   const sd = rs.length >= 3 ? Math.sqrt(rs.reduce((a, r) => a + r.w * (r.v - bf) ** 2, 0) / W) : 1.5, se = Math.max(.4, sd / Math.sqrt(neff)), w = trendSimple(d);
@@ -5220,7 +5238,7 @@ function bodyView() {
   h += `<div class="section-h"><h2>Measurements (cm)</h2><button class="link" data-act="open-result" data-type="measure">${ic("plus", "sm")} Add</button></div>
     ${M.dates.length ? tbl(["Site", "First", "Previous", "Latest", "vs prev", "vs first"], M.rows.filter(r => r.n).map(r => `<tr><td>${r.l}</td><td class="n">${r1(r.first)}</td><td class="n">${r.prev != null ? r1(r.prev) : "—"}</td><td class="n"><b>${r1(r.last)}</b></td><td class="n">${sgn(r.dPrev)}</td><td class="n">${sgn(r.dFirst)}</td></tr>`)) + `<div class="faint" style="font-size:12.5px">Latest ${fmtDM(M.lastD)}${M.prevD ? `, previous ${fmtDM(M.prevD)}` : ""}${M.wh ? ` · waist/height ${M.wh.toFixed(2)}` : ""}${M.whip ? ` · waist/hips ${M.whip.toFixed(2)}` : ""}</div>` : `<div class="note">No measurements yet.</div>`}`;
   if (M.dates.length) h += `<details class="card"><summary class="lrow"><span class="t">All measurement dates (${M.dates.length})</span></summary>${[...M.dates].reverse().map(d => `<button class="lrow" data-act="edit-result" data-type="measure" data-id="${d}"><span><span class="t">${fmtLong(d)}</span><span class="s">${M.sites.filter(([k]) => S.body.m[d][k]).map(([k, l]) => `${l} ${S.body.m[d][k]}`).join(" · ")}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</details>`;
-  const bfs = allLogDates().filter(d => logGet(d).bf > 0).map(d => [d, logGet(d).bf]);
+  const bfs = allLogDates().filter(d => bfAt(d) > 0).map(d => [d, bfAt(d)]);
   if (bfs.length) {
     h += `<div class="section-h"><h2>Body composition</h2></div><div class="stat-grid">${kpi(r1(bfs[bfs.length - 1][1]) + "%", "body fat (latest)", fmtDM(bfs[bfs.length - 1][0]))}</div>` + leanHTML(); }
   return h;
@@ -7704,7 +7722,7 @@ function daysView() {
       <span class="dr-main">
         <span class="dr-l1">${it ? `<b class="num">${fmtN(it.kcal)}</b><small> / ${fmtN(r.target)} kcal</small>${it.est ? ' <span class="tag">est.</span>' : it.src === "food" ? ' <span class="tag">foods</span>' : ""}` : `<span class="faint">No intake · target ${r ? fmtN(r.target) : "—"}</span>`}</span>
         <span class="dr-l2">${it && (it.p || it.c || it.f) ? `<i style="--c:var(--carb)">${r0(it.c)}C</i><i style="--c:var(--pro)">${r0(it.p)}P</i><i style="--c:var(--fat)">${r0(it.f)}F</i>` : ""}${sess.length ? `<span>${esc(sess.map(x => x.sport + (x.min ? " " + r0(x.min) + "′" : "") + (x.km ? " " + r1(x.km) + "km" : "")).join(" + "))} · ${fmtN(r?.eat || 0)} kcal</span>` : `<span class="faint">Rest</span>`}${food ? `<span class="faint">${dayItems(S.days[d]).length} foods</span>` : ""}${food && dayItems(S.days[d]).some(([, x]) => x.cheat) ? '<span class="tag cheat-tag">Treat</span>' : ""}</span>
-        <span class="dr-l3">${w ? `<span>${w} kg</span>` : ""}${r ? `<span>trend ${r1(r.trend)}</span>` : ""}${L.bf ? `<span>${r1(L.bf)}% BF</span>` : ""}${L.sleep ? `<span>${r1(L.sleep)} h sleep</span>` : ""}${L.rhr ? `<span>RHR ${L.rhr}</span>` : ""}${r && r.tdee !== r.target ? `<span>TDEE ${fmtN(r.tdee)}</span>` : ""}</span>
+        <span class="dr-l3">${w ? `<span>${w} kg</span>` : ""}${r ? `<span>trend ${r1(r.trend)}</span>` : ""}${bfAt(d) ? `<span>${r1(bfAt(d))}% BF</span>` : ""}${L.sleep ? `<span>${r1(L.sleep)} h sleep</span>` : ""}${L.rhr ? `<span>RHR ${L.rhr}</span>` : ""}${r && r.tdee !== r.target ? `<span>TDEE ${fmtN(r.tdee)}</span>` : ""}</span>
       </span>
       <span class="dr-bal ${bal == null ? "" : bal < 0 ? "neg" : "pos"}">${bal == null ? "" : `${bal > 0 ? "+" : "−"}${fmtN(Math.abs(bal))}<small>balance</small>`}</span><span class="dr-go">${ic("chevR", "sm")}</span></button>`;
   }).join("") || `<div class="lrow"><span class="s">No days yet.</span></div>`}</div>
@@ -7739,7 +7757,7 @@ function exportSheets() {
   for (let d = s.start; d <= today; d = addDays(d, 1)) {
     const r = s.rows[d], L = logGet(d) || {}; if (!r) continue;
     const ws = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest");
-    daily.push({ Date: xd(d), Day: DOW[dow(d)], "Weight (kg)": rd(L.weight, 10), "Weight estimated": L.estW ? "yes" : "", "Trend (kg)": rd(r.trend, 100), "Body fat %": rd(L.bf, 10), "Resting HR": rd(L.rhr), "HRV ms": rd(L.hrv), "Sleep (h)": rd(L.sleep, 10), Steps: rd(L.steps), "Watch kcal": rd(L.watch),
+    daily.push({ Date: xd(d), Day: DOW[dow(d)], "Weight (kg)": rd(L.weight, 10), "Weight estimated": L.estW ? "yes" : "", "Trend (kg)": rd(r.trend, 100), "Body fat %": rd(bfAt(d) || null, 10), "Body fat intervals.icu (raw) %": rd(L.bfIcu, 10), "Resting HR": rd(L.rhr), "HRV ms": rd(L.hrv), "Sleep (h)": rd(L.sleep, 10), Steps: rd(L.steps), "Watch kcal": rd(L.watch),
       "Intake kcal": rd(r.intake?.kcal), "Protein g": rd(r.intake?.p), "Carbs g": rd(r.intake?.c), "Fat g": rd(r.intake?.f), "Intake source": r.intake ? ({ food: "foods", manual: "typed / imported", est: "estimated" }[r.intake.src] || "") : "",
       Workouts: ws.map(sessionLabel).join(" + "), "Training kcal": rd(r.eat), BMR: rd(r.bmr), NEAT: rd(r.neat), TEF: rd(r.tef), "TDEE watch": rd(r.tdeeW), Calibration: rd(r.factor, 1000), TDEE: rd(r.tdee),
       Phase: r.phase.phase, "Phase kcal": rd(phaseKcal(r.phase, r.tdee)), "Target kcal": rd(r.target), "Target protein g": rd(r.p), "Target carbs g": rd(r.c), "Target fat g": rd(r.f), "Balance kcal": rd(r.balance), "Est. change (g)": r.estKg == null ? null : rd(r.estKg * 1000), Notes: L.notes || "" });
@@ -7814,7 +7832,7 @@ function periodStats(P) {
     if (S.days[d]) cheats += dayItems(S.days[d]).filter(([, x]) => x.cheat && !x.out).length;
   }
   const r0w = s.rows[addDays(P.a, -1)] || s.rows[P.a], r1w = s.rows[end];
-  const bfs = []; for (let d = P.a; d <= end; d = addDays(d, 1)) { const L = logGet(d); if (L?.bf > 0) bfs.push(+L.bf); }
+  const bfs = []; for (let d = P.a; d <= end; d = addDays(d, 1)) { const b = bfAt(d); if (b > 0) bfs.push(b); }
   const inRange = (x) => x.date >= P.a && x.date <= end;
   Object.assign(R, { nI, avgI: nI ? sI / nI : null, avgT: nI ? sT / nI : null, onT, bal, expKg: ek, trendA: r0w?.trend, trendB: r1w?.trend, trendChg: r0w && r1w ? r1w.trend - r0w.trend : null,
     nM, avgP: nM ? mp / nM : null, avgC: nM ? mc / nM : null, avgF: nM ? mf / nM : null, tP: nM ? tp / nM : null, tC: nM ? tc / nM : null, tF: nM ? tf / nM : null,
@@ -9732,7 +9750,7 @@ function icuApplyWellness(rows) {
     if (rhr > 20 && !(L.rhr > 0)) ch.rhr = r0(rhr);
     if (sl > 600 && !(L.sleep > 0)) ch.sleep = r1(sl / 3600);
     const hrv = +x.hrv; if (hrv > 5 && !(L.hrv > 0)) ch.hrv = r0(hrv);
-    const bf = +(x.bodyFat ?? x.body_fat); if (bf >= 3 && bf <= 60 && !(L.bf > 0)) ch.bf = r1(bf);
+    const bf = r1(+(x.bodyFat ?? x.body_fat)); if (bf >= 3 && bf <= 60 && L.bfPush !== bf && L.bfIcu !== bf) ch.bfIcu = bf;   // kept apart from what you type (bfAt)
     if (!Object.keys(ch).length) continue;
     n++; mutateLog(d, day => Object.assign(day, ch));
   }
@@ -9783,7 +9801,7 @@ function icuSettingsCard() {
     ${F ? `<div class="note warn">Last sync failed: ${esc(String(F.error || "unknown error"))}</div>` : b?.res ? `<div class="note">Last sync: ${esc(b.res)}</div>` : ""}
     <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><span class="faint" style="font-size:13px;flex:1">${busy ? "Syncing…" : P.n ? `${P.n} change${P.n > 1 ? "s" : ""} on the way` : "Up to date · syncs by itself when you open the app and after each change"}</span><button class="btn text sm" data-act="icu-now" ${busy ? "disabled" : ""}>${ic("sync", "sm")}Sync now</button></div>
     <div class="faint icu-full">Something missing or out of date? <button class="link" data-act="icu-force" ${busy ? "disabled" : ""}>Full sync</button> re-reads the last 90 days of activities and wellness and the plan from 30 days ago to 4 months ahead.</div>
-    <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts and races you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}${sw("icu-pullweight", S.settings.intervals?.pullWeight === true, "Weight source: intervals.icu", "Off: only your check-in. On: the check-in weight always wins; intervals.icu (for example your scale through Zepp) only fills days that have none")}</div>
+    <div class="icu-what">${sw("icu-plansrc", icuPlanMode(), "Plan from intervals.icu", "Your calendar there is the plan. Workouts and races you add, edit or delete here go back to it.")}${sw("icu-push", s.push, "Send finished workouts", "Sets, RIR and RPE go into the activity description")}${sw("icu-pushwell", S.settings.intervals?.pushWell !== false, "Send check-in data", "Weight, body fat, sleep, resting HR and HRV, only on days intervals.icu has none")}${sw("icu-pullweight", S.settings.intervals?.pullWeight === true, "Weight source: intervals.icu", "Off: only your check-in. On: the check-in weight always wins; intervals.icu (for example your scale through Zepp) only fills days that have none")}${sw("icu-pullbf", icuBfOn(), "Body fat from intervals.icu", "Off: only the body fat you type in the check-in. On: the value from intervals.icu fills days that have none")}${icuBfOn() ? sw("icu-bfcal", icuBfCal(), "Correct it with my readings", bfCalNote()) : ""}</div>
     <details class="icu-acc"><summary>Account and import</summary>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><label for="icu-aid" class="faint" style="font-size:13px">Athlete ID</label><input id="icu-aid" class="inp" style="max-width:150px" value="${esc(s.aid || "")}" placeholder="i123456" data-chg="icu-aid"></div>
       <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input id="icu-key2" class="inp" type="password" autocomplete="off" placeholder="New API key" style="flex:1;min-width:180px"><button class="btn tonal sm" data-act="icu-save-key">Change key</button></div>
@@ -9797,6 +9815,11 @@ ACT["icu-force"] = () => icuKick("Full sync", true, true);
 ACT["icu-save-key"] = () => { const k = ($("#icu-key2")?.value || "").trim(); if (!k) { toast("Paste the API key first."); return; } icuSet({ key: k }); toast("Key saved · syncing…"); icuKick("new key", true); };
 ACT["icu-plansrc"] = () => { icuSet({ planSource: !icuPlanMode() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pushwell"] = () => { icuSet({ pushWell: S.settings.intervals?.pushWell === false }); scheduleRender(); if (UI.sheet) renderSheet(); };
+function bfCalNote() {
+  const g = bfGap(); return !icuBfCal() ? "Off: the intervals.icu value is used as it is" : g ? `Moves it by ${sgn(g.gap, 1)} points, the mean gap to your ${g.n} reading${g.n > 1 ? "s" : ""}${g.n < 3 ? " (add more for a steadier figure)" : ""}` : "Until you type your scale's body fat once (Weigh-in), the intervals.icu value is not used";
+}
+ACT["icu-pullbf"] = () => { icuSet({ pullBf: !icuBfOn() }); scheduleRender(); if (UI.sheet) renderSheet(); };
+ACT["icu-bfcal"] = () => { icuSet({ bfCal: !icuBfCal() }); scheduleRender(); if (UI.sheet) renderSheet(); };
 ACT["icu-pullweight"] = () => { icuSet({ pullWeight: S.settings.intervals?.pullWeight !== true }); scheduleRender(); if (UI.sheet) renderSheet(); };
 /* a pasted link or "key=…" works too; the key is tested right away */
 CHG["map-key"] = v => { let k = String(v || "").trim(); const m = k.match(/[?&]key=([A-Za-z0-9_-]+)/); if (m) k = m[1]; k = k.replace(/[^A-Za-z0-9_-]/g, "");
@@ -10021,7 +10044,7 @@ function saveWeighIn(wv, bfv) {
   const w = num(wv), bfRaw = String(bfv ?? "").trim(), bf = num(bfRaw);
   if (!(w > 20 && w < 400)) { toast("Enter your weight in kg."); return false; }
   if (bfRaw && !(bf >= 3 && bf <= 60)) { toast("Body fat goes from 3 to 60 %. Leave it empty if you didn't measure it."); return false; }
-  mutateLog(todayISO(), d => { d.weight = r1(w); if (bfRaw) d.bf = r1(bf); });
+  mutateLog(todayISO(), d => { d.weight = r1(w); if (bfRaw) { d.bf = r1(bf); d.bfSrc = "man"; } });
   S.settings.weight = r1(w); saveSettings();
   toast(`Logged ${r1(w)} kg${bfRaw ? ` · ${r1(bf)}% body fat` : ""} · trend updated`);
   return true;
@@ -12512,7 +12535,7 @@ async function photoDel(id) { const x = PHOTOS().find(p => p.id === id); S.body.
 /* the numbers next to a photo: weight (trend), body fat and the measurements nearest to that date */
 function bodyAt(date) {
   const M = S.body.m || {}, md = Object.keys(M).filter(d => d <= addDays(date, 7)).sort().pop(), L = logGet(date) || {};
-  let bf = null; for (let i = 0; i < 14 && !bf; i++) bf = +logGet(addDays(date, -i))?.bf || null;
+  let bf = null; for (let i = 0; i < 14 && !bf; i++) bf = bfAt(addDays(date, -i)) || null;
   return { w: L.weight || trendAt(date) || null, trend: trendAt(date), bf, m: md && daysBetween(md, date) <= 21 ? M[md] : null, md };
 }
 function photoDates() { const by = {}; for (const p of PHOTOS()) (by[p.date] = by[p.date] || []).push(p); return Object.keys(by).sort().map(d => ({ d, ps: by[d] })); }
@@ -12871,7 +12894,7 @@ const GOALS = () => (S.train.goals = S.train.goals || []);
 const goalExs = () => [...new Set([...(FIT().exercises || []), ...(S.train.calis || []).map(c => c.ex)])];
 function goalSeries(g) {
   if (g.kind === "weight") return weightsSeries().map(([d]) => [d, trendAt(d)]).filter(x => x[1] > 0);
-  if (g.kind === "bf") return allLogDates().filter(d => logGet(d).bf > 0).map(d => [d, +logGet(d).bf]);
+  if (g.kind === "bf") return allLogDates().filter(d => bfAt(d) > 0).map(d => [d, bfAt(d)]);
   if (g.kind === "waist") return Object.keys(S.body.m || {}).sort().filter(d => S.body.m[d].waist > 0).map(d => [d, +S.body.m[d].waist]);
   if (g.kind === "run") return (runState().T || []).filter(t => t.vdot).map(t => [t.date, t.vdot]);
   const ss = strengthSeries(g.ex || ""); const k = g.kind === "reps" ? "reps" : g.kind === "hold" ? "hold" : "rm";

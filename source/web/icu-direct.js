@@ -123,7 +123,7 @@ async function icuSyncDirect(opts = {}) {
     lst = [...lst, ...neu];
     if (JSON.stringify(lst) !== before) { dd.workouts = lst; res.acts++; } tidy(date); }
   // wellness (fills empty days only)
-  const WELL = await req(`/athlete/${AID}/wellness?oldest=${add(TODAY, -back)}&newest=${TODAY}`) || [];
+  const WELL = await req(`/athlete/${AID}/wellness?oldest=${add(TODAY, -(icu.bfMig ? back : Math.max(back, 90)))}&newest=${TODAY}`) || [];   // the first run after the body-fat change reads 90 days once
   for (const x of WELL) { if (!x || typeof x !== "object") continue; const date = String(x.id || x.date || "").slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     const cur = day(date, false) || {}, ch = {}, rhr = x.restingHR ?? x.resting_hr, sl = x.sleepSecs ?? x.sleep_secs;
     // weight (for example from the scale through Zepp) fills only days with none: a weight typed in Engine is never overwritten
@@ -131,14 +131,16 @@ async function icuSyncDirect(opts = {}) {
     const st = x.steps; if (st > 0 && cur.steps !== Math.round(st)) ch.steps = Math.round(st); if (rhr > 20 && !((cur.rhr || 0) > 0)) ch.rhr = r0_(rhr); if (sl > 600 && !((cur.sleep || 0) > 0)) ch.sleep = r1_(sl / 3600);
     for (const k of ["ctl", "atl"]) { const v = x[k]; if (typeof v === "number" && r1_(v) !== cur[k]) ch[k] = r1_(v); }
     if (x.hrv > 5 && !((cur.hrv || 0) > 0)) ch.hrv = r0_(x.hrv);
-    const bf = x.bodyFat; if (bf >= 3 && bf <= 60 && !((cur.bf || 0) > 0)) ch.bf = r1_(bf);
+    // body fat from intervals.icu is kept in bfIcu and never in bf (what you type): the app corrects it with your own readings (bfAt). An old import (same value, no marker) moves to bfIcu once;
+    // the value Engine itself sent (bfPush) coming back is not a second reading
+    const bf = r1_(+x.bodyFat); if (bf >= 3 && bf <= 60 && cur.bfPush !== bf) { if (cur.bfIcu !== bf) ch.bfIcu = bf; if (!icu.bfMig && cur.bf === bf && cur.bfSrc == null && cur.bfPush == null) ch.bf = null; }
     if (Object.keys(ch).length) { Object.assign(day(date), ch); res.well++; } }
   // Engine -> intervals.icu: check-ins intervals.icu doesn't have
   if (icu.pushWell !== false) { const remote = Object.fromEntries(WELL.filter(x => x && typeof x === "object").map(x => [String(x.id).slice(0, 10), x]));
-    for (let k = 0; k < 15; k++) { const date = add(TODAY, -k); if (date < SINCE_LINK) continue; const dd = day(date, false) || {}, rx = remote[date] || {}, body = {};
+    for (let k = 0; k < 15; k++) { const date = add(TODAY, -k); if (date < SINCE_LINK) continue; const dd = day(date, false) || {}, rx = remote[date] || {}, body = {}; let bfSent = 0;
       if ((dd.weight || 0) > 0 && !dd.estW && !rx.weight) body.weight = dd.weight; if ((dd.rhr || 0) > 0 && !rx.restingHR) body.restingHR = dd.rhr; if ((dd.hrv || 0) > 0 && !rx.hrv) body.hrv = dd.hrv;
-      if ((dd.sleep || 0) > 0 && !rx.sleepSecs) body.sleepSecs = Math.trunc(dd.sleep * 3600); if ((dd.bf || 0) > 0 && !rx.bodyFat) body.bodyFat = dd.bf;
-      if (Object.keys(body).length) { try { await req(`/athlete/${AID}/wellness/${date}`, "PUT", { id: date, ...body }); res.sent_well++; } catch (e) { if (e.fatal) throw e; } } } }
+      if ((dd.sleep || 0) > 0 && !rx.sleepSecs) body.sleepSecs = Math.trunc(dd.sleep * 3600); if ((dd.bf || 0) > 0 && !rx.bodyFat) body.bodyFat = dd.bf, bfSent = dd.bf;
+      if (Object.keys(body).length) { try { await req(`/athlete/${AID}/wellness/${date}`, "PUT", { id: date, ...body }); res.sent_well++; if (bfSent) day(date).bfPush = bfSent; } catch (e) { if (e.fatal) throw e; } } } }
   // push finished Engine workouts (last 14 days)
   const stext = s => { const byEx = {}; for (const x of s.sets || []) (byEx[x.ex] = byEx[x.ex] || []).push(x);
     const lines = (s.emom || []).map(e => `${e.title}: ${e.done}/${e.of} min`);
@@ -183,7 +185,7 @@ async function icuSyncDirect(opts = {}) {
   if (JSON.stringify({ r: races, d: racesDel }) !== beforeR) { S.train = { ...S.train, races, racesDel }; put("train", "", S.train); }
   const sent = res.sent_plan + res.sent_well + res.pushed;
   const text = `${res.planned} planned · ${res.acts} activities · ${res.well} wellness days` + (sent ? ` · sent ${res.pushed} workouts, ${res.sent_plan} plan changes, ${res.sent_well} wellness days` : "");
-  const ni = { ...(S.settings.intervals || {}), bridge: { last: new Date().toISOString(), since: SINCE_LINK, athlete, sent, res: text } };
+  const ni = { ...(S.settings.intervals || {}), bfMig: true, bridge: { last: new Date().toISOString(), since: SINCE_LINK, athlete, sent, res: text } };
   if (athlete) ni.athlete = athlete; for (const k of ["blocked", "err", "ok", "connectedAt", "auto", "last"]) delete ni[k];
   S.settings.intervals = ni; saveSettings();
   return { ...res, athlete, patches, text };

@@ -62,7 +62,7 @@ test("the workout sheet of a recorded session has its own «Discard this recordi
 test("the intervals.icu «Full sync» button sits beside «Sync now» and reads further back and ahead than the normal sync", async () => {
   app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone }); const page = app.page;
   const r = await page.evaluate(async () => { window.__c = []; window.fetch = async (u, o = {}) => { __c.push(String(u).replace("https://intervals.icu/api/v1", "")); return { ok: true, status: 200, text: async () => (/\/athlete\/0$/.test(String(u)) ? "{}" : "[]") }; };
-    S.settings.intervals = { key: "TEST", aid: "0", bridge: { since: addDays(todayISO(), -30), last: new Date().toISOString() } }; openSheet("icuset");
+    S.settings.intervals = { key: "TEST", aid: "0", bfMig: true, bridge: { since: addDays(todayISO(), -30), last: new Date().toISOString() } }; openSheet("icuset");   // bfMig: the one-time 90-day wellness read (M16 body fat) already happened
     const btn = !!document.querySelector('[data-act="icu-force"]'), now = !!document.querySelector('[data-act="icu-now"]');
     await icuSyncDirect(); const normal = __c.filter(x => /oldest/.test(x)); __c.length = 0; await icuSyncDirect({ force: true }); const full = __c.filter(x => /oldest/.test(x));
     const days = u => { const m = u.match(/oldest=([\d-]+)&newest=([\d-]+)/); return [Math.round((new Date(todayISO()) - new Date(m[1])) / 864e5), Math.round((new Date(m[2]) - new Date(todayISO())) / 864e5)]; };
