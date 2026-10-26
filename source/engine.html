@@ -3050,10 +3050,13 @@ function cleanList(o, k, keep) { if (o[k] == null) return; if (Array.isArray(o[k
 function cleanNum(o, k) { if (o[k] == null || typeof o[k] === "number") return; const n = parseFloat(String(o[k]).replace(",", ".")); if (isFinite(n)) o[k] = n; else delete o[k]; }
 function cleanObj(o, k) { if (o[k] != null && !isObj(o[k])) delete o[k]; }
 /* Lists of records that had no unique id of their own (the workouts of a day: wid; the purchases of the shopping document: bid, as their id is the food's) get one, so two devices
-   can merge them record by record. A record made now gets a random id (fresh); one that arrives without (older data, a file) gets an id derived from its content and its place among
+   can merge them record by record. A record made now gets a random id (fresh); one that arrives without (older data, a file) gets an id derived from its content (keys in sorted order) and its place among
    identical records, so every device gives the same id to the same record. A repeated id (a copy made in the same day) is renamed the same way. Returns a new list. */
 const recKey = x => isObj(x) ? (typeof x.bid === "string" ? x.bid : typeof x.wid === "string" ? x.wid : typeof x.id === "string" || typeof x.id === "number" ? String(x.id) : undefined) : undefined;
 function fnv(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+/* the content as text with the keys of every object in sorted order: the same record gives the same text whatever order a device or the account (jsonb reorders keys) holds them in.
+   A record whose keys are already sorted gives exactly what JSON.stringify gave before, so ids derived earlier stay the same. */
+function canon(v) { return Array.isArray(v) ? v.map(canon) : isObj(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canon(v[k])])) : v; }
 function ensureKeys(list, f, fresh) {
   if (!Array.isArray(list)) return list;
   const taken = new Set(), count = {};
@@ -3062,7 +3065,7 @@ function ensureKeys(list, f, fresh) {
     let k = typeof x[f] === "string" ? x[f] : "";
     if (!k || taken.has(k)) {
       if (fresh) do k = uid(); while (taken.has(k));
-      else { const { [f]: was, ...rest } = x, base = k || fnv(JSON.stringify(rest)); do k = base + (k ? "~" : "-") + (count[base] = (count[base] || 0) + 1); while (taken.has(k)); }
+      else { const { [f]: was, ...rest } = x, base = k || fnv(JSON.stringify(canon(rest))); do k = base + (k ? "~" : "-") + (count[base] = (count[base] || 0) + 1); while (taken.has(k)); }
     }
     taken.add(k); return x[f] === k ? { ...x } : { ...x, [f]: k };
   });
