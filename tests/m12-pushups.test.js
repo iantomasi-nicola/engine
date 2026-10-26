@@ -93,6 +93,8 @@ test("live: Off hides the button; a non push-up exercise never shows it", async 
 test("auto: with a motion sensor the reps are counted from the signal, and a tap still adds one the sensor missed", async () => {
   const page = await open(); await begin(page);
   await page.evaluate(() => { FIT().player.pushCount = "auto"; scheduleRender(); }); await page.waitForTimeout(150);
+  /* recent Chromium answers requestPermission with "denied" when no user gesture grants it: stub the iPhone-style grant */
+  await page.evaluate(() => { DeviceMotionEvent.requestPermission = async () => "granted"; });
   await page.click('[data-act="lv-pc"]'); await page.waitForTimeout(200);
   assert.equal(await page.evaluate(() => PCNT.auto), true);
   assert.match(await page.evaluate(() => document.querySelector(".pc-tile small").innerText), /motion/i);
@@ -125,16 +127,19 @@ test("auto: no sensor, or permission refused, falls back to tap counting and say
 
 test("spike page: lists what the browser offers, records labelled sets from raw motion samples and gives the log back as CSV (stubbed sensors, no real device)", async () => {
   const built = path.join(dir, "pushup-test.html"); assert.ok(fs.existsSync(built), "the build copies the page");
-  const { chromium } = H.loadPlaywright(), br = await chromium.launch(), pg = await br.newPage(), errs = []; pg.on("pageerror", e => errs.push(String(e)));
+  const { chromium } = H.loadPlaywright(), br = await chromium.launch(), pg = await br.newPage(), errs = []; pg.on("pageerror", e => errs.push(String(e))); pg.setDefaultTimeout(5000);
+  try {
   await pg.goto("file://" + built);
   const sup = await pg.textContent("#sup"); assert.match(sup, /Motion events/); assert.match(sup, /Proximity/);
+  await pg.evaluate(() => { DeviceMotionEvent.requestPermission = async () => "granted"; });
   await pg.click("#go"); await pg.waitForTimeout(100);
   await pg.evaluate(() => { for (let i = 0; i < 100; i++) { const ev = new Event("devicemotion"); ev.accelerationIncludingGravity = { x: 0.1, y: 0.2, z: 9.8 + Math.sin(i / 8) }; ev.interval = 20; window.dispatchEvent(ev); } });
   await pg.fill("#reps", "10"); await pg.click("#mark"); await pg.waitForTimeout(100);
   const csv = await pg.inputValue("#log");
   const lines = csv.trim().split("\n"); assert.equal(lines[0], "t_ms,ax,ay,az,label");
   assert.ok(lines.length >= 101, "100 samples and the label row: " + lines.length); assert.match(lines[lines.length - 1], /,reps=10$/);
-  assert.deepEqual(errs, []); await br.close();
+  assert.deepEqual(errs, []);
+  } finally { await br.close(); }
 });
 
 test("sports: distance is metres for swimming and km elsewhere, in the label and in the Add workout sheet; the metres typed are stored as km", async () => {

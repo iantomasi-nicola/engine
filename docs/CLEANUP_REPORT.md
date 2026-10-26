@@ -468,8 +468,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Eliminato**: `scale-test.html` (sorgente e copia in root), `tests/scale-test.test.js`, la riga di copia in `build-web.js` (il peso arriva da intervals.icu).
 - **Aperto**: scarto costante (vedi L199); `ciDone` non conta più un grasso solo importato come check-in fatto; nei file di root la build va rigenerata alla pubblicazione.
 
-## Consistency & Cleanup Report: M12 (parziale, 27/10/2026)
-- **Verificato**: niente. `tests/m12-pushups.test.js` (13 test, valori attesi nei commenti) non è mai arrivato in fondo: il run è rimasto appeso e il lavoro si è fermato per il limite d'uso. Nessun avvio dell'app, nessuno screenshot 390/820/1440, né layout-audit, né suite.
-- **Cambiato**: `repCounter`/`PCNT`/`repsRow`/`lv-pc` nel player, `PLAYER().pushCount` + selettore in `playerSettings`, CSS `.pc-tile`; `distText`/`isSwimSport`/`isTeamSport` al posto di `r1(w.km) + " km"` in 8 punti, campo «Metres» nel foglio sessione; `source/web/pushup-test.html` copiata dalla build.
-- **Eliminato**: nulla.
-- **Aperto**: eseguire il test file e correggere; `PCNT` è un `let` dichiarato dopo `VIEWS.live` (verificare l'assenza di TDZ all'avvio); design-reviewer; prova del sensore sul telefono; decisione sui MET di default per futsal e nuoto.
+## Consistency & Cleanup Report: M12 contaflessioni, nuoto in metri, sport di squadra (27/10/2026)
+- **Verificato**: `tests/m12-pushups.test.js` 12/12, `m12`, `pre-start`, `preview-suggestions` (37 test verdi), `npm run smoke` sui tre viewport, `layout-audit` (0 problemi su 55 schermate x 4 viewport), screenshot del player con il contatore attivo su 390/820/1440 chiari e scuri.
+- **Causa del run appeso**: Chromium recente espone `DeviceMotionEvent.requestPermission` e risponde «denied» senza un gesto: la pagina spike restava con «Mark the set» disabilitato, il click aspettava 30 s e il browser lasciato aperto impediva al processo di uscire. Test ora con permesso simulato, `try/finally` sul browser, timeout 5 s sulla pagina.
+- **Cambiato**: `let PCNT` spostato prima di `VIEWS.live` (nessun rischio TDZ); `.pc-box` raggruppa tile, −1 e Stop alla stessa larghezza.
+- **Eliminato**: nulla. Nessun coefficiente energetico aggiunto (MET di futsal/nuoto non presenti nel codice).
+- **Aperto**: prova del sensore sul telefono e taratura delle soglie; MET di default per futsal e nuoto (serve fonte primaria e approvazione del proprietario); «10 reps» compare sopra e nello stepper Reps (preesistente).
