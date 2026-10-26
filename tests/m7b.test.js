@@ -142,27 +142,30 @@ function near(a, b, e) { assert.ok(Math.abs(a - b) <= e, `${a} vs ${b}`); }
 /* D20 (approved 26/10): the heart-rate-to-kcal factor of each sensor, learned from your own sessions that have both a heart rate and a real kcal figure.
    Keytel, male 80 kg, 30 y, 150 bpm: (-55.0969 + 0.6309 * 150 + 0.1988 * 80 + 0.2017 * 30) / 4.184 = 14.6967 kcal/min, 881.80 in 60 min.
    8 sessions of 60 min and 440 kcal (sensor counts net): ratio 440 / 881.80 = 0.49898. Pulled toward the global 0.794 with a weight of 6 sessions: (8 * 0.49898 + 6 * 0.794) / 14 = 0.62542.
-   A 30-minute session with heart rate and no kcal: 14.6967 * 0.62542 * 30 = 275.7 -> 276 on that sensor; 14.6967 * 0.794 * 30 = 350.1 -> 350 on a sensor without history. */
+   A 30-minute session with heart rate and no kcal: 14.6967 * 0.62542 * 30 = 275.7 -> 276 on that sensor; 14.6967 * 0.794 * 30 = 350.1 -> 350 on a sensor without history.
+   M14b #4 (approved): the heart-rate figure is net of rest (1780 / 1440 = 1.236111 kcal/min) and the factor learns real net + rest over Keytel: (440 + 74.1667) / 881.83 = 0.583066;
+   8 sessions: (8 * 0.583066 + 6 * 0.794) / 14 = 0.673466 -> 14.6972 * 0.673466 * 30 - 37.0833 = 259.86 -> 260; 6 sessions: 0.688533 -> 266.50 -> 267;
+   global factor: 350.087 - 37.083 = 313.00 -> 313. */
 const hrSetup = n => ev(n => { const t = todayISO(); S.logm = {}; FIT().energy.hrLearn = "on"; FIT().energy.hrFrom = ""; FIT().devices.find(x => x.id === "zepp").kcal = "net"; FIT().devices.find(x => x.id === "polar").kcal = "net";
   for (let i = 1; i <= n; i++) { const d = addDays(t, -i), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Cycling", min: 60, hr: 150, kcal: 440, src: "intervals", ext: "icu-a-" + i, dev: "zepp" }] }; } DATA_V++; }, n);
 const hrKcal = (dev, o = {}) => ev(([dev, o]) => { Object.assign(FIT().energy, o); DATA_V++; return sessionKcal({ sport: "Cycling", min: 30, hr: 150, dev }, todayISO(), 80); }, [dev, o]);
-test("D20: a sensor with 6+ sessions of its own gets its learned heart-rate factor (0.625), a sensor without history keeps the global one (0.794)", async () => {
+test("D20: a sensor with 6+ sessions of its own gets its learned heart-rate factor (0.673 with #4), a sensor without history keeps the global one (0.794)", async () => {
   await profile(); await hrSetup(8);
-  assert.deepEqual(await hrKcal("zepp"), { kcal: 276, how: "hr" });
-  assert.deepEqual(await hrKcal("polar"), { kcal: 350, how: "hr" });
+  assert.deepEqual(await hrKcal("zepp"), { kcal: 260, how: "hr" });
+  assert.deepEqual(await hrKcal("polar"), { kcal: 313, how: "hr" });
 });
-test("D20: strength sessions do not teach the factor (6 cycling at 0.499 and 6 strength at 0.34 give (6 * 0.49898 + 6 * 0.794) / 12 = 0.6465 -> 285 kcal, not the 0.42 of a mixed median)", async () => {
+test("D20: strength sessions do not teach the factor (6 cycling at 0.499 and 6 strength at 0.34 give (6 * 0.583 + 6 * 0.794) / 12 = 0.6885 -> 267 kcal net, not a mixed median)", async () => {
   await profile(); await hrSetup(6);
   await ev(() => { const t = todayISO(); for (let i = 1; i <= 6; i++) { const d = addDays(t, -i - 10), m = d.slice(0, 7); S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { workouts: [{ sport: "Strength training", min: 60, hr: 150, kcal: 300, src: "intervals", ext: "icu-s-" + i, dev: "zepp" }] }; } DATA_V++; });
-  assert.equal((await hrKcal("zepp")).kcal, 285);
+  assert.equal((await hrKcal("zepp")).kcal, 267);
 });
 test("D20: fewer than 6 sessions, the switch off, and days before hrFrom leave the global factor in use", async () => {
   await profile(); await hrSetup(5);
-  assert.equal((await hrKcal("zepp")).kcal, 350);
+  assert.equal((await hrKcal("zepp")).kcal, 313);
   await hrSetup(8);
-  assert.equal((await hrKcal("zepp", { hrLearn: "off" })).kcal, 350);
-  assert.equal((await hrKcal("zepp", { hrLearn: "on", hrFrom: "2999-01-01" })).kcal, 350);
-  assert.equal((await hrKcal("zepp", { hrFrom: "" })).kcal, 276);
+  assert.equal((await hrKcal("zepp", { hrLearn: "off" })).kcal, 313);
+  assert.equal((await hrKcal("zepp", { hrLearn: "on", hrFrom: "2999-01-01" })).kcal, 313);
+  assert.equal((await hrKcal("zepp", { hrFrom: "" })).kcal, 260);
 });
 
 /* D18 (approved 26/10): NEAT from the steps when no watch figure taught the app your usual extra movement. The default NEAT (350 kcal) stands for a day of 7000 steps (an assumption, set in Settings);
@@ -197,12 +200,12 @@ test("D18: today's steps are a projection: steps so far + the typical steps of t
    80 kg, 180 cm, 30 y male, BMR 1780 = 1.2361 kcal/min: a 60-minute Polar session of 600 kcal (gross) is 526 net; with 1000 active kcal that day, NEAT = 1000 - 526 = 474 (it was 400 when the gross 600 was taken off). */
 const watchDay = o => ev(o => { const t = todayISO(), d = addDays(t, -1), m = d.slice(0, 7); S.logm = {}; Object.assign(FIT().energy, { watchMode: o.mode || "active", netKcal: o.net || "on", netFrom: "", neatMode: "on", minWatchNeat: 150 }); FIT().devices.find(x => x.id === "polar").kcal = o.dev || "gross"; FIT().trackStart = addDays(t, -3);
   S.logm[m] = S.logm[m] || { days: {} }; S.logm[m].days[d] = { watch: o.watch, workouts: [{ sport: "Running", min: 60, kcal: 600, src: "intervals", ext: "icu-a-1" }] }; DATA_V++; const r = energyAt(d); FIT().devices.find(x => x.id === "polar").kcal = "gross"; return { neat: r.neat, src: r.neatSrc, eat: r.eat }; }, o);
-test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the sensor counts rest (1000 - 526 = 474), the gross value when it does not (net sensor, switch off), and total mode keeps BMR + gross", async () => {
+test("daily watch AEE: NEAT = active kcal minus the workout NET of rest when the sensor counts rest (1000 - 526 = 474), the gross value when it does not (net sensor, switch off), and total mode takes the session off net too (#3)", async () => {
   await profile();
   const a = await watchDay({ watch: 1000 }); assert.equal(a.neat, 474); assert.equal(a.src, "watch"); assert.equal(a.eat, 526);
   assert.equal((await watchDay({ watch: 1000, dev: "net" })).neat, 400);
   assert.equal((await watchDay({ watch: 1000, net: "off" })).neat, 400);
-  assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 600);   // total mode: the watch total holds the BMR and the gross session
+  assert.equal((await watchDay({ watch: 2600, mode: "total" })).neat, 2600 - 1780 - 526);   // total mode (M14b #3): the total holds the rest of the session once, in the BMR: the session comes off net, as in the EAT
 });
 
 test("calibration controls: a manual factor holds every day (0.9) and nothing is learned; Off keeps 1 whatever the data say", async () => {
