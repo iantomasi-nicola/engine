@@ -13591,7 +13591,7 @@ function bkClean(j) {
   for (const k of ["foods", "recipes"]) if (c[k]) c[k] = cleanColl(c[k]);
   if (c.days) c.days = cleanDays(c.days);
   if (c.logm) c.logm = cleanLogm(c.logm);
-  for (const k of Object.keys(DOC_INNER)) if (c[k]) c[k] = docShape(k, c[k]);
+  for (const k of Object.keys(DOC_INNER)) if (c[k]) { const d = docShape(k, c[k]); for (const key of Object.keys(d)) if (!(key in c[k])) delete d[key]; c[k] = d; }   // inner parts cut back; a part the file lacks stays absent, so a restore does not overwrite it with an empty default
   return { j: c, bad };
 }
 function restoreOpen(j, from) { if (!isObj(j) || (j.app !== "Fuel" && j.app !== "Engine" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
@@ -13620,6 +13620,12 @@ function fillIn(cur, add, d = 0) {
   if (isObj(cur) && isObj(add) && d < 4) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = cur[k] != null ? fillIn(cur[k], v, d + 1) : v; return o; }
   return cur;
 }
+/* «Replace»: what the file has overwrites what is here, down to a record (a log day, a weigh-in, a pantry line, a race); what it lacks stays. Lists of records with an id are joined by id */
+function overlay(cur, add, d = 0) {
+  if (isObj(cur) && isObj(add) && d < 2) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = k in cur ? overlay(cur[k], v, d + 1) : v; return o; }
+  if (Array.isArray(cur) && Array.isArray(add) && cur.length && cur.every(x => recKey(x) !== undefined) && add.every(x => recKey(x) !== undefined)) { const m = new Map(add.map(x => [recKey(x), x])); return [...cur.map(x => m.has(recKey(x)) ? m.get(recKey(x)) : x), ...add.filter(x => !cur.some(y => recKey(y) === recKey(x)))]; }
+  return add;
+}
 ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0, bad = 0;
   try {
     if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
@@ -13627,8 +13633,8 @@ ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh
       put("settings", "", s); n++; }
     const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
     if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
-    if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
-    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : docShape(k, j[k])); n++; }
+    if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else for (const [mk, doc] of Object.entries(j.logm || {})) { put("logm", mk, overlay(S.logm[mk], doc)); n++; } }
+    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : docShape(k, overlay(S[k], j[k]))); n++; }
     bad = normalizeRecords(); DATA_V++;
     if (P.photos && j.photos) for (const [id, url] of Object.entries(j.photos)) { const b = dataBlob(url); if (!b) { skipped++; continue; } try { await IDB.put(id, b); n++; } catch (e) { skipped++; } }
   } catch (e) { toast("The restore stopped halfway: " + String(e?.message || e).slice(0, 80) + ". The copy kept just before is under Settings → Backups → Restore points."); scheduleRender(); return; }
