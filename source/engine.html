@@ -16752,7 +16752,7 @@ ACT["check-update"] = async () => {
   try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "open-checkin", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } else if (a === "open-checkin") { UI.tab = "today"; UI.date = todayISO(); render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(history.state, "", location.pathname + location.hash); }, 900); } catch (e) {}
   if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(history.state, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
-  try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (e) {} NAV.snaps[0] = navSnap(); render();
+  try { history.replaceState({ eng: 0, sid: NAV.sid }, "", location.pathname + location.hash); } catch (e) {} NAV.snaps[0] = navSnap(); render();   // the shortcut's query was read above: the first entry drops it, so a reload does not run it again
   setTimeout(() => { try { storesMigrate(); } catch (e) {} }, 4000);
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }

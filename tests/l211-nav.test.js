@@ -140,3 +140,13 @@ test("full-screen chart: Back closes only the chart (page scroll unlocked); clos
   await back(page); assert.equal((await st()).tab, "today");
   assert.deepEqual(app.errors, []);
 });
+
+test("a home-screen shortcut (?a=) opens its screen once: the first entry no longer carries the query, so reloading it does not reopen the screen", async () => {
+  /* open with ?a=shopq-open: shopq on top of the first entry. Back = no sheet and a URL without a=; a reload there stays closed */
+  const page = await start();
+  await page.goto(app.url + "?a=shopq-open"); await page.waitForFunction(() => typeof S !== "undefined" && S.settings); await page.waitForTimeout(1800);
+  assert.equal((await where(page)).sheet, "shopq");
+  await back(page); assert.equal((await where(page)).sheet, null);
+  assert.equal(/[?&]a=/.test(page.url()), false);
+  await app.reload(); assert.equal(await app.page.evaluate(() => UI.sheet?.type ?? null), null);
+});
