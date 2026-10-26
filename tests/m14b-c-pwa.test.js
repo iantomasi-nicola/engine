@@ -4,7 +4,7 @@
    Expected values (by hand):
    - after the first visit the app's own cache holds vendor/supabase.js and the icons; with the server down, fetching them and reloading still works (supabase defined).
    - ?query copies are not kept: after fetching index.html?a=1 and ?supp=x the cache has no key with a search part.
-   - the heavy cache is named engine-heavy-<10 hex>, the same on two builds of the same files; within 20 s of idle the label reader files are in it (requestIdleCallback with a timeout).
+   - the heavy caches are named engine-lib-/engine-ocr-/engine-icons-<10 hex>, the same on two builds of the same files (tests/l211-pwa.test.js: independent per group); within 20 s of idle the label reader files are in them (requestIdleCallback with a timeout).
    - fonts: the sheet answers after 4 s, the first contentful paint stays under 2.5 s (blocking would make it >= 4 s). */
 const test = require("node:test"), assert = require("node:assert/strict"), fs = require("fs"), path = require("path"), http = require("http"), H = require("./lib/harness"), F = require("./fixtures/synthetic");
 let dir, min;
@@ -76,7 +76,7 @@ test("service worker: libraries and icons are there offline, nothing with a quer
     const caches2 = await cacheMap(t.page);
     assert.deepEqual(Object.values(caches2).flat().filter(u => /^\//.test(u) && u.includes("?")), [], "no copy of a request with a query");
     /* the label readers arrive by themselves once the page is idle (requestIdleCallback with a timeout) */
-    await t.page.waitForFunction(async () => (await caches.keys()).some(k => /^engine-heavy-[0-9a-f]{10}$/.test(k)) && (await (await caches.open((await caches.keys()).find(k => /^engine-heavy-/.test(k)))).keys()).length >= 6, null, { timeout: 25000, polling: 500 });
+    for (let k = 0; k < 50; k++) { const n = Object.entries(await cacheMap(t.page)).filter(([c]) => /^engine-(lib|ocr)-[0-9a-f]{10}$/.test(c)).flatMap(([, v]) => v).length; if (n >= 5) break; await t.page.waitForTimeout(500); }
     /* no signal */
     t.srv.st.down = true;
     const off = await t.page.evaluate(async () => { const o = {}; for (const u of ["vendor/supabase.js", "icons/icon-192.png", "vendor/zxing.min.js", "ocr/lang/ita.wasm"]) { try { o[u] = (await fetch(u)).ok; } catch (e) { o[u] = String(e); } } return o; });
@@ -99,11 +99,11 @@ test("service worker: the font sheet and files are kept for offline", async () =
   } finally { await t.close(); }
 });
 
-test("the heavy cache is named after its files, and the build replaces every placeholder", () => {
+test("the heavy caches are named after their files, and the build replaces every placeholder", () => {
   const sw = fs.readFileSync(path.join(dir, "sw.js"), "utf8");
-  assert.match(sw, /HEAVY = "engine-heavy-[0-9a-f]{10}"/); assert.doesNotMatch(sw, /__BUILD__|__HEAVY__/);
+  assert.match(sw, /LIB = "engine-lib-[0-9a-f]{10}", OCR = "engine-ocr-[0-9a-f]{10}", ICO = "engine-icons-[0-9a-f]{10}"/); assert.doesNotMatch(sw, /__[A-Z]+__/);
   const again = H.build(H.tmp("m14bc-pwa2")), sw2 = fs.readFileSync(path.join(again, "sw.js"), "utf8");
-  assert.equal(sw2.match(/engine-heavy-[0-9a-f]{10}/)[0], sw.match(/engine-heavy-[0-9a-f]{10}/)[0], "the same files give the same name");
+  assert.equal(sw2.match(/LIB = .*ICO = "[^"]+"/)[0], sw.match(/LIB = .*ICO = "[^"]+"/)[0], "the same files give the same names");
 });
 
 test("the minified build minifies every style block", () => {

@@ -5428,7 +5428,8 @@ const SHEETS = {};
 function openSheet(type, params = {}) {
   for (const k in DRAFT) delete DRAFT[k];
   const cur = UI.sheet; let ret = null;
-  if (cur && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
+  if (cur && params.keep !== false) { const base = cur.type === "scan" && type !== "scan" ? cur._ret || null : cur;   // a scan only finds a product: what it opens returns to where the scan was started, never to the scan screen
+    ret = base; for (let x = base; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
   UI.sheet = { type, ...params }; if (ret) UI.sheet._ret = ret; UI.sheet._new = true; renderSheet(); }
 /* a sheet is a dialog: the page behind it is inert while it is open, Tab stays inside, focus starts in it and goes back to the control that opened it */
 const SHEET_FROM = { el: null, act: null };
@@ -5440,39 +5441,47 @@ function sheetClosed() {
   const back = el?.isConnected ? el : act && document.querySelectorAll(`[data-act="${act}"]`).length === 1 ? document.querySelector(`[data-act="${act}"]`) : null;
   back?.focus({ preventScroll: true });
 }
-function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
+/* leaving a sheet on purpose (Back, Esc, close): the field with the cursor commits its value and lets go, otherwise renderSheet() would defer the redraw and the screen would keep showing the sheet that is already gone */
+const navBlur = () => { if (typingBusy()) document.activeElement.blur(); };
+/* the camera (the only open stream) and the handler waiting for its barcode never outlive the sheet they were opened for */
+const camRelease = () => { CAM.onCode = null; camClose(); };
+function closeSheet(all) { navBlur(); camRelease(); for (const k in DRAFT) delete DRAFT[k]; const r = all ? null : UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
 /* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
    a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
    popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
-const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0 };
+const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0, sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };   // sid: entries carry the page load that made them, so a reload never confuses the numbers
 const navDepth = () => { let n = 0; for (let x = UI.sheet; x; x = x._ret) n++; return n; };
-function navKey() { const t = UI.tab; return [t, FUEL_TABS.includes(t) ? UI.fuelTab : "", t === "train" ? UI.trainSeg : t === "progress" ? UI.progSeg : t === "foods" ? UI.foodsSeg : "", navDepth()].join("|"); }
-function navSnap() { return { key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
+function navKey() { const t = UI.tab; return [t, FUEL_TABS.includes(t) ? UI.fuelTab : "", t === "train" ? UI.trainSeg : t === "progress" ? UI.progSeg : t === "foods" ? UI.foodsSeg : "", navDepth() + (document.querySelector(".chfs") ? .5 : 0)].join("|"); }   // a full-screen chart is half a step on top of the screen
+function navSnap() { return { dv: DATA_V, key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
 function navSync() {
   try {
     if (NAV.busy) return;
-    const k = navKey(), cur = NAV.snaps[NAV.stack[NAV.i]], prev = NAV.snaps[NAV.stack[NAV.i - 1]];
+    const k = navKey(), cur = NAV.snaps[NAV.stack[NAV.i]];
     if (cur && cur.key === k) { NAV.snaps[NAV.stack[NAV.i]] = navSnap(); return; }
-    if (prev && prev.key === k && NAV.i > 0) { NAV.i--; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.back(); return; }
-    const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id }, "");
+    const view = k.slice(0, k.lastIndexOf("|")); let j = NAV.i - 1;   // the same place a few sheets down in this view (a sheet chain closed in one go): step back to it, not onto a new entry
+    for (; j >= 0; j--) { const e = NAV.snaps[NAV.stack[j]]; if (!e || e.key.slice(0, e.key.lastIndexOf("|")) !== view) { j = -1; break; } if (e.key === k) break; }
+    if (j >= 0) { const d = NAV.i - j; NAV.i = j; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.go(-d); return; }
+    const id = ++NAV.seq; for (const old of NAV.stack.slice(NAV.i + 1)) delete NAV.snaps[old]; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); if (NAV.stack.length > 50) delete NAV.snaps[NAV.stack[NAV.stack.length - 51]]; history.pushState({ eng: id, sid: NAV.sid }, "");   // the browser keeps ~50 entries: older snapshots (photos, drafts) are not kept
   } catch (e) {}
 }
 function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
 function navRestore(snap) {
-  for (const k in DRAFT) delete DRAFT[k];
+  document.querySelector(".chfs")?._close(true); navBlur(); camRelease(); UI.recipeSheet = UI.swapFrom = null; for (const k in DRAFT) delete DRAFT[k];
   UI.tab = snap.tab; UI.fuelTab = snap.fuelTab; UI.trainSeg = snap.trainSeg; UI.progSeg = snap.progSeg; UI.foodsSeg = snap.foodsSeg; UI.dest = null;
-  UI.sheet = snap.sheet; if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
+  UI.sheet = snap.sheet; { let keep = false; for (let x = UI.sheet; x; x = x._ret) if (x.type === "scan" || x.type === "labelcmp") keep = true; if (!keep) UI.labelFor = null; }
+  if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
   scheduleRender();
 }
 function navPop(e) {
   if (NAV.busy) { navSettled(); return; }
   if (!e.state || e.state.eng == null) return;
-  const id = e.state.eng, at = NAV.stack.indexOf(id), snap = NAV.snaps[id];
-  if (at < 0 || !snap) { if (UI.sheet) { UI.sheet = null; navRestore(navSnap()); } return; }
-  NAV.i = at; navRestore(snap);
+  const id = e.state.eng, at = NAV.stack.indexOf(id); let snap = NAV.snaps[id];
+  if (e.state.sid !== NAV.sid || at < 0 || !snap) { try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (x) {} NAV.stack = [0]; NAV.i = 0; NAV.snaps = {}; UI.sheet = null; navRestore(navSnap()); NAV.snaps[0] = navSnap(); return; }   // an entry of an earlier page load, or one whose snapshot is gone: it can't be restored, it becomes the first screen
+  if (at > NAV.i && snap.sheet && snap.dv !== DATA_V) { const k = snap.key.slice(0, snap.key.lastIndexOf("|")) + "|0"; snap = NAV.snaps[id] = { ...snap, sheet: null, key: k }; }   // forward onto a sheet after the data changed (a deleted food's editor): the screen without the sheet
+  NAV.i = at; snap.key = snap.key.replace(/\.5$/, ""); navRestore(snap);   // forward onto a full-screen chart entry shows the screen without it
 }
 window.addEventListener("popstate", navPop);
-const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
+const closeToRoot = () => { navBlur(); camRelease(); let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; sheetClosed(); return; }
@@ -5491,8 +5500,9 @@ function renderSheet() {
   navSync();
 }
 document.addEventListener("keydown", e => {
-  if (e.key !== "Tab" || !UI.sheet) return;
-  const box = $("#sheet-root .sheet"); if (!box) return;
+  const top = document.getElementById("cam") || document.querySelector(".chfs");   // the camera and the full-screen chart sit above the sheet: Tab stays in the topmost one
+  if (e.key !== "Tab" || !(UI.sheet || top)) return;
+  const box = top || $("#sheet-root .sheet"); if (!box) return;
   const items = [...box.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')].filter(x => !x.disabled && x.type !== "hidden" && x.tabIndex >= 0 && x.getClientRects().length), a = document.activeElement;
   if (!items.length || a?.closest?.("#toast")) return;
   const first = items[0], last = items[items.length - 1];
@@ -6825,7 +6835,8 @@ const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
 
 ACT["fuel-tab"] = el => { UI.tab = UI.fuelTab = el.dataset.k; scheduleRender(); window.scrollTo(0, 0); };
-ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; if (UI.sheet) UI.sheet._ret = null; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
+ACT.tab = el => { if (UI.sheet) closeSheet(true);   // the whole chain closes while the history is still at the old view; the snapshots keep their parents
+  UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; scheduleRender(); window.scrollTo(0, 0); };
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
 ACT["close-sheet"] = () => { const ed = UI.labelFor; if (ed) { UI.labelFor = null; if (UI.sheet !== ed) { camClose(); UI.sheet = ed; renderSheet(); return; } }
@@ -11654,7 +11665,7 @@ CHG["store-name"] = (v, el) => { storeRename(el.dataset.id, v); renderSheet(); }
 ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); const after = clone(S.shop); toast(`${nm} removed`, () => { shopUndo(snap, after); if (UI.sheet?.type === "stores") renderSheet(); }); };
 ACT["shop-here"] = el => { const sid = curStore(); if (sid) addFoodStore(el.dataset.id, sid); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
-ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
+ACT["by-ok"] = () => { const sh = S_(); if (sh?.type !== "buy") return; const g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
   S.shop.checked[sh.id] = { g: g || null, eur: eur > 0 ? Math.round(eur * 100) / 100 : null, ...((sh.sid ?? curStore()) ? { sid: sh.sid ?? curStore() } : {}), ...(sh.offer ? { offer: true } : {}) }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
 ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
 INP.by = (v, el) => { S_()[el.dataset.k] = v; };
@@ -16518,7 +16529,7 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
     const fs = document.createElement("div"); fs.className = "chfs"; fs.setAttribute("role", "dialog"); fs.setAttribute("aria-label", src.getAttribute("aria-label") || "Chart");
     fs.innerHTML = `<div class="chfs-h"><b>${esc(src.getAttribute("aria-label") || "Chart")}</b><span class="chfs-z"><button class="chip sm" data-z="1">All</button><button class="chip sm" data-z=".5">Recent ½</button><button class="chip sm" data-z=".25">Recent ¼</button><button class="icon-btn" data-z="out" aria-label="Zoom out">${ic("minus")}</button><button class="icon-btn" data-z="in" aria-label="Zoom in">${ic("plus")}</button></span><button class="icon-btn" data-z="x" aria-label="Close">${ic("close")}</button></div>
       <div class="chfs-b">${src.outerHTML}</div>${legend}<div class="chfs-n">Pinch or scroll to zoom · drag to move · touch the line for values</div>`;
-    document.body.appendChild(fs); document.body.style.overflow = "hidden";
+    document.body.appendChild(fs); document.body.style.overflow = "hidden"; navSync();
     const svg = fs.querySelector("svg.chart"), vb0 = (svg.getAttribute("viewBox") || "0 0 300 150").split(/\s+/).map(Number); let vb = [...vb0];
     // the chart fills the screen and zooms along time only; text, dots and lines keep their size
     svg.setAttribute("preserveAspectRatio", "none"); const texts = [...svg.querySelectorAll("text")], dots = [...svg.querySelectorAll("circle")];
@@ -16529,7 +16540,7 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
       for (const c of dots) { const x = c.cx.baseVal.value, y = c.cy.baseVal.value; c.setAttribute("transform", `translate(${x} ${y}) scale(${(1 / sx).toFixed(4)} ${(1 / sy).toFixed(4)}) translate(${-x} ${-y})`); } };
     const set = () => { svg.setAttribute("viewBox", vb.map(v => v.toFixed(2)).join(" ")); svg._mk = null; fix(); };
     const zoomAt = (k, fx = 1) => { const w = clamp(vb[2] * k, vb0[2] * .08, vb0[2]); vb[0] = clamp(vb[0] + (vb[2] - w) * fx, vb0[0], vb0[0] + vb0[2] - w); vb[2] = w; set(); };
-    const close = () => { fs.remove(); document.body.style.overflow = UI.sheet ? "hidden" : ""; hide(); removeEventListener("keydown", key); removeEventListener("resize", fix); };
+    const close = quiet => { fs.remove(); document.body.style.overflow = UI.sheet ? "hidden" : ""; hide(); removeEventListener("keydown", key); removeEventListener("resize", fix); if (quiet !== true) navSync(); }; fs._close = close;
     const key = e => { if (e.key === "Escape") close(); }; addEventListener("keydown", key); addEventListener("resize", fix); requestAnimationFrame(set);
     fs.addEventListener("click", e => { const z = e.target.closest("[data-z]")?.dataset.z; if (!z) return; if (z === "x") return close(); if (z === "in") return zoomAt(.7, .5); if (z === "out") return zoomAt(1 / .7, .5);
       vb = [...vb0]; if (+z < 1) zoomAt(+z, 1); else set(); });
@@ -16742,7 +16753,7 @@ ACT["check-update"] = async () => {
   try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "open-checkin", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } else if (a === "open-checkin") { UI.tab = "today"; UI.date = todayISO(); render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(history.state, "", location.pathname + location.hash); }, 900); } catch (e) {}
   if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(history.state, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
-  try { history.replaceState({ eng: 0 }, ""); } catch (e) {} NAV.snaps[0] = navSnap(); render();
+  try { history.replaceState({ eng: 0, sid: NAV.sid }, "", location.pathname + location.hash); } catch (e) {} NAV.snaps[0] = navSnap(); render();   // the shortcut's query was read above: the first entry drops it, so a reload does not run it again
   setTimeout(() => { try { storesMigrate(); } catch (e) {} }, 4000);
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }
