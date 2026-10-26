@@ -31,3 +31,15 @@ test("the dose a food was put in the plan with is remembered and offered next ti
   assert.equal(r.first, 100); assert.equal(r.after, 75); assert.equal(r.lib, 75); assert.equal(r.saved, 75); assert.equal(r.chicken, 180);
   assert.deepEqual(app.errors, []);
 });
+
+test("a real mouse drag of a recipe from the library onto a meal cell adds its ingredients (the drop used to be refused by the browser)", async () => {
+  const page = await start();
+  await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.pwLib = true; UI.pwSeg = "recipes"; UI.pwQ = "Test bowl"; render(); await new Promise(x => setTimeout(x, 300)); });
+  const t = await page.evaluate(() => addDays(weekStartOf(todayISO()), 4));
+  await page.dragAndDrop(".pw-lr[data-ref=t-bowl]", `.pw-cell[data-date="${t}"][data-meal="lunch"]`);
+  const got = await page.evaluate(d => (getDay(d).meals.lunch || []).map(x => [x.kind, x.ref, x.qty]), t);
+  assert.deepEqual(got, [["food", "t-rice", 100], ["food", "t-chicken", 150], ["food", "t-oil", 5]]);
+  const edit = await page.evaluate(d => { const it = getDay(d).meals.lunch[0]; openSheet("qty", { kind: "food", ref: it.ref, qty: it.qty, date: d, meal: "lunch", itemId: it.id, origMeal: "lunch" }); $("#qty-in").value = "5"; ACT["qty-save"](); return planQty(getFood("t-rice")); }, t);
+  assert.equal(edit, 100, "editing an existing item does not change the remembered dose");
+  assert.deepEqual(app.errors, []);
+});

@@ -3218,7 +3218,7 @@ function defaultQty(f) { return f.servings?.[0]?.g || (f.role === "F" ? 10 : 100
 function planQty(f) { const d = +S.settings.doses?.[f.id]; return d > 0 ? d : defaultQty(f); }
 function rememberDose(kind, ref, qty) { qty = +qty; if (kind !== "food" || !(qty > 0) || +S.settings.doses?.[ref] === qty) return; S.settings.doses = { ...(S.settings.doses || {}), [ref]: qty }; saveSettings(); }
 /* a recipe taken apart: one food item per ingredient, scaled to the servings asked for */
-function recipeToItems(r, servings) { const k = (+servings || 1) / (r.servings || 1); return (r.ingredients || []).filter(i => getFood(i.food) && i.g > 0).map(i => newItem("food", i.food, r1(i.g * k))); }
+function recipeToItems(r, servings) { const k = (+servings || 1) / (r.servings || 1); return (r.ingredients || []).filter(i => getFood(i.food)).map(i => newItem("food", i.food, r1(i.g * k))).filter(it => it.qty > 0); }
 
 /* pantry */
 /* what an item uses, per food: [[foodId, grams]]; a recipe item is scaled by its servings */
@@ -6738,7 +6738,7 @@ ACT["pw-del"] = () => { const sh = S_(), it = (getDay(sh.date).meals[sh.meal] ||
   mutateDay(sh.date, d => { if (it?.eaten) pantryAdjust({ ...it }, -1); d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== sh.id); }); toast(`${it ? itemName(it) : "Item"} removed`, () => restoreDays(snap)); };
 /* the mouse: drag an item onto a cell */
 document.addEventListener("dragstart", e => { const it = e.target.closest?.(".pw-it"); if (!it || it.getAttribute("draggable") !== "true") return; e.dataTransfer.setData("text/plain", JSON.stringify({ date: it.dataset.date, meal: it.dataset.meal, id: it.dataset.item })); e.dataTransfer.effectAllowed = "copyMove"; });
-document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x !== c && x.classList.remove("over")); if (c) { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
+document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x !== c && x.classList.remove("over")); if (c) { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = window.__dragKind === "lib" || e.altKey ? "copy" : "move"; } });
 document.addEventListener("drop", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x.classList.remove("over")); if (!c) return; e.preventDefault(); let f; try { f = JSON.parse(e.dataTransfer.getData("text/plain")); } catch (x) { return; } if (f?.id) moveItem(f, { date: c.dataset.date, meal: c.dataset.meal }, e.altKey); });
 /* ===== M5c: whole meals and whole days: move, copy, paste, drag (drag = move, Alt = copy, like a single item) ===== */
 const mealItemsOf = (date, mid) => S.days[date]?.meals?.[mid] || [];
@@ -6939,7 +6939,7 @@ ACT["item-del"] = () => {
 ACT["qty-save"] = () => {
   const sh = S_(); const qty = num($("#qty-in")?.value) || sh.qty;
   if (!(qty > 0)) { toast("Enter an amount above zero."); return; }
-  rememberDose(sh.kind, sh.ref, qty);
+  if (!sh.itemId) rememberDose(sh.kind, sh.ref, qty);
   if (sh.itemId) {
     mutateDay(sh.date, d => {
       const src = d.meals[sh.origMeal] || []; const i = src.findIndex(x => x.id === sh.itemId); if (i < 0) return;
