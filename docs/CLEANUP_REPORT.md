@@ -498,3 +498,21 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Verificato**: `tests/l202-back.test.js` (7, falliscono sul vecchio albero con `ENGINE_L202_REF=HEAD`), nav-return, shop-quick, pre-start, m13a, 15 file di test di fogli/liste/negozi/cibi (105 verdi), smoke 3 viewport.
 - **Eliminato**: la condizione `keep || _ret` in `openSheet` (sostituita dalla regola generale).
 - **Aperto**: posizione di scorrimento delle viste non ripristinata; dopo un reload le voci di cronologia precedenti non hanno istantanea (Indietro lì chiude solo l'eventuale foglio); suite completa non eseguita in questo ramo.
+
+## Consistency & Cleanup Report: M14b gruppi E/F, «Use something from home» (L189) e correzioni di Foods/Spesa (ramo claude/m14b-ef)
+- **Verificato**: `tests/m14b-ef.test.js` (11 test, scritti prima e rossi per il motivo giusto; valori calcolati a mano nei commenti), 115 test dei file shop-*, stock*, pantry*, stores*, food-*, foods-m8a, recipe-*, m14b-shop, m14b-foods verdi; layout-audit con la nuova schermata `sheet-buy-home`.
+- **Cambiato**: `foodForItem` e `recipeTotals` leggono il record nascosto di un cibo cancellato; `binPurge` tiene (nascosto, `gone`) un cibo ancora usato (`foodUsed`); `priceSet` unisce storico e prezzi per negozio; `shop-done` conserva i campi della voce di dispensa; `shop-pk` scala il prezzo e conserva offerta/negozio; `shoppingRows` salta la riga entro il 2 % di una confezione coperta dalla scorta; `by-ok` non salva un prezzo non numerico; `swapFood` accetta `by`, `since`, `until`, `home`; `fold-tog` ridisegna il foglio aperto.
+- **Eliminato**: la variabile `shelf` inutilizzata in `shop-done`.
+- **Aperto**: undo condiviso `STOCK_UNDO`, undo di «Finish shopping» che ripristina l'intero `S.shop`, `esc()` sui `data-id`, prezzi stimati contati come spesi, clamp dell'editor Foods, validazione ricetta, import ricetta, catena AI, lista Foods oltre 200 righe (vedi `docs/review/area02-foods.md` e `area03-shopping.md`). Il 2 % di tolleranza fa sì che Σ(fabbisogno) differisca da Σ(coperto)+Σ(da comprare) al massimo del 2 % di una confezione.
+
+## Consistency & Cleanup Report: M14b E, secondo giro (ramo claude/m14b-ef)
+- **Verificato**: `tests/m14b-ef2.test.js` (9 test, 8 rossi prima), 103 test di spesa/dispensa/negozi/scontrino/prezzi verdi, `pantry.test.js` adattato al nuovo undo.
+- **Cambiato**: `stockSet` restituisce il proprio undo (`stockUndoer`), `shopUndo(before, after)` per Finish/scontrino/rimozione negozio, `spendIn` e il toast di Finish escludono i prezzi `est`, `closeSheet` azzera `rcLearn`, `esc()` sui `data-id` delle viste Spesa/Dispensa/Foods, tap target 36 px.
+- **Eliminato**: `STOCK_UNDO` e `undoStock`.
+- **Aperto**: la migrazione Lidl (una tantum) ripristina ancora l'intero `S.shop`; `data-id` fuori da Foods/Spesa/Dispensa non hanno `esc()` (altri gruppi: validazione degli id in import/sync); `shop-buy` 28 px di altezza.
+
+## Consistency & Cleanup Report: M14b F, secondo giro (ramo claude/m14b-ef)
+- **Verificato**: `tests/m14b-ef3.test.js` (6 test, tutti rossi prima), 107 test di food-*, recipe-*, m14b-*, f09, off, ai-import, persistence, registry, nav-return, security verdi; layout-audit 0 problemi.
+- **Cambiato**: `fd-save` (clamp e rifiuto del testo non numerico), `rc-save` (validazione dopo il filtro, porzioni), tasto Esc (usa `close-sheet`), `VIEWS.foods` (`UI.foodsMax`, `foods-more`), `loadLocal` chiama `normalizeRecords`.
+- **Eliminato**: nulla.
+- **Aperto**: `normalizeRecords` non copre i record che arrivano dalla sync (da chiamare in `applyCollection`, ramo sync); Esc in un editor con dati digitati scarta senza conferma.
