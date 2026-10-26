@@ -5500,8 +5500,9 @@ function renderSheet() {
   navSync();
 }
 document.addEventListener("keydown", e => {
-  if (e.key !== "Tab" || !UI.sheet) return;
-  const box = $("#sheet-root .sheet"); if (!box) return;
+  const top = document.getElementById("cam") || document.querySelector(".chfs");   // the camera and the full-screen chart sit above the sheet: Tab stays in the topmost one
+  if (e.key !== "Tab" || !(UI.sheet || top)) return;
+  const box = top || $("#sheet-root .sheet"); if (!box) return;
   const items = [...box.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')].filter(x => !x.disabled && x.type !== "hidden" && x.tabIndex >= 0 && x.getClientRects().length), a = document.activeElement;
   if (!items.length || a?.closest?.("#toast")) return;
   const first = items[0], last = items[items.length - 1];

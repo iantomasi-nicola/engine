@@ -177,3 +177,17 @@ test("the history snapshots are pruned: after 70 view changes at most ~50 are ke
   assert.equal(await page.evaluate(() => UI.tab), tabs[(69 - 2) % 3]);
   assert.deepEqual(app.errors, []);
 });
+
+test("Tab stays inside the camera and inside the full-screen chart, not in the sheet hidden below", async () => {
+  const page = await camApp();
+  await go(page, () => ACT["shopq-open"]()); await camOn(page, () => ACT["shop-scan"]());
+  await page.focus("[data-act=cam-close]");
+  const where2 = () => page.evaluate(() => !!document.activeElement.closest("#cam"));
+  for (let k = 0; k < 8; k++) { await page.keyboard.press("Tab"); assert.equal(await where2(), true, "Tab " + (k + 1) + " is still in the camera"); }
+  await page.keyboard.press("Shift+Tab"); assert.equal(await where2(), true);
+  await go(page, () => ACT["cam-close"]());
+  await go(page, () => { ACT["close-sheet"](); ACT["tab"]({ dataset: { tab: "progress" } }); });
+  await go(page, () => { document.querySelector("#main").insertAdjacentHTML("beforeend", '<svg class="chart" viewBox="0 0 300 150" aria-label="Test chart" width="300" height="150"><rect width="300" height="150" fill="#ccc"/></svg>'); });
+  await page.click("main svg.chart"); await page.waitForTimeout(400);
+  for (let k = 0; k < 10; k++) { await page.keyboard.press("Tab"); assert.equal(await page.evaluate(() => !!document.activeElement.closest(".chfs")), true, "Tab " + (k + 1) + " is still in the chart"); }
+});
