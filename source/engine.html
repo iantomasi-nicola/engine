@@ -2553,7 +2553,7 @@ html.vt-l::view-transition-new(main){animation-name:vtInL}html.vt-r::view-transi
 }
 .day-pill.today:not([aria-current="date"]){background:color-mix(in srgb,var(--accent) 15%,transparent)}
 .day-pill.today:not([aria-current="date"]) small,.day-pill.today:not([aria-current="date"]) .ring b{color:var(--accent)!important}
-.shop-row .pk-st .icon-btn.sm{width:30px!important;height:30px!important;min-width:30px;padding:0}.shop-row .pk-st .icon-btn .ic{width:18px!important;height:18px!important}
+.shop-row .pk-st .icon-btn.sm{width:32px!important;height:32px!important;min-width:32px;padding:0}.shop-row .pk-st .icon-btn .ic{width:18px!important;height:18px!important}
 .shop-list .shop-row{padding-top:0;padding-bottom:0;min-height:44px;grid-template-columns:34px minmax(0,1fr) auto}
 .shop-list .shop-main{padding-top:6px;padding-bottom:6px}.shop-list .shop-main .s{font-size:11.5px}
 .shop-list .sq-h{padding-top:8px;padding-bottom:2px}
@@ -2630,10 +2630,11 @@ details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{width:18px
 .gl-t .gl-h{justify-content:flex-start;font-size:12.5px;font-weight:500;letter-spacing:.02em;text-transform:none}
 .td-say.big{font-size:14.5px}
 .td-vs{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
-/* M14b-C: small controls keep their look and reach at least 32 px (an invisible hit area), the selected tab has a text colour that reads on its tint, and the header gives way at a 200% zoom */
-.link,.pk-n,.add-tag button,[data-act=pantry-sort],.chk,.icon-btn.sm{position:relative}
-.link::after,.pk-n::after,.add-tag button::after,[data-act=pantry-sort]::after,.chk::after,.icon-btn.sm::after{content:"";position:absolute;inset:-6px}
-.link::after{inset:-8px -6px}
+/* M14b-C: small controls keep their look and reach at least 32 px (an invisible hit area that never widens the page, or a 32 px minimum), the selected tab has a text colour that reads on its tint, and the header gives way at a 200% zoom */
+.link,.pk-n,.add-tag button,[data-act=pantry-sort]{position:relative}
+.link::after,.pk-n::after,.add-tag button::after,[data-act=pantry-sort]::after{content:"";position:absolute;inset:-6px 0}
+.link::after{inset:-8px 0}.add-tag button::after{inset:-4px}
+.link,.chk,.icon-btn.sm{min-width:32px}.chk,.icon-btn.sm{min-height:32px}
 .week{grid-template-columns:32px repeat(7,minmax(0,1fr)) 32px}
 html .subseg button[aria-selected="true"]{color:var(--md-on-primary-container)!important}
 @media (max-width:359px){.sync{position:relative}.sync>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.top-row>.sync{flex:none;margin-top:6px}}
