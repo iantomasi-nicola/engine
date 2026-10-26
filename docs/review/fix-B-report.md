@@ -1,8 +1,10 @@
 # M14b gruppo B — numeri energetici (area 6): report delle correzioni
 
-Ramo `worktree-agent-a43f4aaa5cdc4914f` (base `04e2a7a`). Test nuovi: `tests/m14b-energy.test.js` (20 test, valori attesi calcolati a mano nei commenti). Prima del fix, sul sorgente `04e2a7a`: 19 su 20 rossi (resta verde solo l'avvio). Dopo: 20/20 verdi (ultimo giro: 19/20, il #18 aveva un selettore del test sbagliato, corretto dopo).
+Ramo `worktree-agent-a43f4aaa5cdc4914f` (base `04e2a7a`). Test nuovi: `tests/m14b-energy.test.js` (20 test, valori attesi calcolati a mano nei commenti). Prima del fix, sul sorgente `04e2a7a`: 19 su 20 rossi (resta verde solo l'avvio). Dopo: 20/20 verdi, avvio con `app.errors` vuoto.
 
-**Stato: LAVORO NON CONCLUSO.** 9 test vecchi (m7b, m7c, neat-steps) falliscono perché si aspettano il comportamento che le voci approvate cambiano; vanno riallineati (elenco sotto). Suite completa, layout-audit, screenshot e design-reviewer **non eseguiti**.
+Test dei file toccati, tutti verdi (212 + 62, anche dopo il cambio di data al 26/10): m14b-energy, m7b, m7b-bmr, m7b-data, m7c, nutrition-baseline, f09, neat-steps, domain, aee-shadow, intervals, m13a, m11c, scenario. Riallineati 9 test vecchi che fissavano il comportamento cambiato dalle voci approvate, con i nuovi valori calcolati a mano nei commenti: `m7b` D20 (276 → 260, 350 → 313, 285 → 267, per #4) e modalità total (2600 − 1780 − 600 → 2600 − 1780 − 526, per #3); `m7c` F-11 e D3 (registro ALGO con 10 voci); `neat-steps` (la nota del Check-in tiene il numero dei passi).
+
+**Non eseguiti:** suite completa (`npm run verify`), `layout-audit`, screenshot 390/820/1440 e tema scuro, `design-reviewer`. Cambiano a vista solo testi (Check-in, Day deficit, Energy, Weeks, Goal) e la tessera Form («—»).
 
 ## Voci
 
@@ -34,9 +36,9 @@ Ramo `worktree-agent-a43f4aaa5cdc4914f` (base `04e2a7a`). Test nuovi: `tests/m14
 | 25 | fatta | `weightsSeries` in memo (copia restituita) e `trendSimple` in memo per data | non misurato |
 
 ## Da finire (prossimo passo)
-- Riallineare 9 test vecchi che fissano il comportamento ora cambiato: `m7b.test.js` 34–36 (D20 + #4: nuovi attesi 260/267/313 da ricalcolare a mano), 40 (modalità total: «total mode keeps BMR + gross» → netto, #3); `m7c.test.js` 56–58, 60 (registro ALGO ora con 10 voci); `neat-steps.test.js` «Check-in … say where the NEAT comes from» (testo cambiato da #15: ora «NEAT from your steps and your usual extra movement», senza il numero dei passi).
 - Suite completa, `layout-audit`, screenshot 390/820/1440 e tema scuro (cambiano testi del Check-in, tessera Form, scheda Fitness), `design-reviewer`.
-- `docs/CLEANUP_REPORT.md` (non toccati PRODUCT_REQUIREMENTS/ROADMAP come chiesto).
+- `docs/CLEANUP_REPORT.md`, PRODUCT_REQUIREMENTS, ROADMAP (non toccati, come chiesto).
+- Pulizia: `trendAt` ora è solo un alias di `trendSimple` (lasciato per non toccare 13 chiamate e i test che lo usano).
 
 ## Domande per l'utente
 1. Data di attivazione delle voci v8–v10: uso `ALGO_START` (2026-10-25) per i profili esistenti; se la pubblicazione avviene più tardi i giorni intermedi vengono ricalcolati. Serve una data diversa?

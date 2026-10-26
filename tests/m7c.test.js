@@ -98,8 +98,8 @@ test("D7: the intervals.icu import keeps the start time, and merging two overlap
 /* ---------- F-11: one list of algorithm versions ---------- */
 test("F-11: one registry lists every formula version with its switch and its first-day setting; the version stamp is the newest entry", async () => {
   const r = await ev(() => ({ keys: ALGO.map(a => [a.v, a.k, a.from]), v: ALGO_VERSION, starts: [...new Set(ALGO.map(a => a.start))], defaults: ALGO.map(a => defaultFit().energy[a.from]) }));
-  assert.deepEqual(r.keys, [[1, "cal", "calV2From"], [2, "net", "netFrom"], [3, "hr", "hrFrom"], [4, "neat", "neatFrom"], [5, "bmr", "bmrAutoFrom"], [6, "nutr", "nutrFrom"], [7, "one", "oneFrom"]]);
-  assert.equal(r.v, 7); assert.deepEqual(r.starts, ["2026-10-25"]); assert.deepEqual(r.defaults, ["", "", "", "", "", "", ""]);
+  assert.deepEqual(r.keys, [[1, "cal", "calV2From"], [2, "net", "netFrom"], [3, "hr", "hrFrom"], [4, "neat", "neatFrom"], [5, "bmr", "bmrAutoFrom"], [6, "nutr", "nutrFrom"], [7, "one", "oneFrom"], [8, "hrnet", "hrNetFrom"], [9, "bmrramp", "bmrRampFrom"], [10, "kpk", "kpkFrom"]]);
+  assert.equal(r.v, 10); assert.deepEqual(r.starts, ["2026-10-25"]); assert.deepEqual(r.defaults, ["", "", "", "", "", "", "", "", "", ""]);
 });
 
 test("F-11: old settings keep loading: a profile saved before an entry gets its constant start, dates already saved stay, a new profile starts from the first day, and loading twice changes nothing", async () => {
@@ -108,8 +108,8 @@ test("F-11: old settings keep loading: a profile saved before an entry gets its 
     const a = normalizeSettings(prev).fit.energy, f = normalizeSettings(undefined).fit.energy, k = normalizeSettings({ fit: { energy: { oneFrom: "2026-11-02" } } }).fit.energy;
     const once = normalizeSettings({ fit: { energy: { bmr: "x" } } }), twice = normalizeSettings(JSON.parse(JSON.stringify(once)));
     return { a: [a.oneFrom, a.oneSrc, a.algoV, a.netFrom], f: [f.oneFrom, f.oneSrc, f.algoV], k: k.oneFrom, same: JSON.stringify(once.fit.energy) === JSON.stringify(twice.fit.energy) }; });
-  assert.deepEqual(r.a, ["2026-10-25", "on", 7, "2026-10-25"]);
-  assert.deepEqual(r.f, ["", "on", 7]);
+  assert.deepEqual(r.a, ["2026-10-25", "on", 10, "2026-10-25"]);
+  assert.deepEqual(r.f, ["", "on", 10]);
   assert.equal(r.k, "2026-11-02"); assert.ok(r.same, "stable across a save and a load (nothing drifts on sync)");
 });
 
@@ -117,9 +117,9 @@ test("F-11: the entries in force on a date follow the switches and the first day
   const r = await ev(() => { const t = todayISO(), E = { ...FIT().energy, calMode: "v2", calManual: null, netKcal: "on", hrLearn: "on", neatMode: "on", bmr: "Auto", nutrCoverage: "on", oneSrc: "on" };
     for (const a of ALGO) E[a.from] = "";
     const all = algoAt(t, E).map(a => a.k); E.bmr = "Mifflin-St Jeor"; E.neatFrom = addDays(t, 3); E.oneSrc = "off"; const some = algoAt(t, E).map(a => a.k); return { all, some, later: algoAt(addDays(t, 3), E).map(a => a.k) }; });
-  assert.deepEqual(r.all, ["cal", "net", "hr", "neat", "bmr", "nutr", "one"]);
-  assert.deepEqual(r.some, ["cal", "net", "hr", "nutr"]);
-  assert.deepEqual(r.later, ["cal", "net", "hr", "neat", "nutr"]);
+  assert.deepEqual(r.all, ["cal", "net", "hr", "neat", "bmr", "nutr", "one", "hrnet", "bmrramp", "kpk"]);
+  assert.deepEqual(r.some, ["cal", "net", "hr", "nutr", "hrnet", "kpk"]);
+  assert.deepEqual(r.later, ["cal", "net", "hr", "neat", "nutr", "hrnet", "kpk"]);
 });
 
 /* ---------- D3: How it is calculated ---------- */
@@ -143,7 +143,7 @@ test("D3: the steps show the engine's own numbers, each once; the BMR formula wr
   assert.equal(r.eat, 838);
   assert.ok(Math.abs(Function(`return ${r.formula}`)() - r.bmr) < 0.5, `${r.formula} vs ${r.bmr}`);
   assert.ok(r.dup, "the copy row says where it is counted");
-  assert.equal(r.vers, 7); assert.deepEqual(r.pills, ["In use", "In use", "In use", "In use", "Off", "In use", "In use"]);
+  assert.equal(r.vers, 10); assert.deepEqual(r.pills, ["In use", "In use", "In use", "In use", "Off", "In use", "In use", "In use", "Off", "In use"]);
 });
 
 test("D3: with the explanation open the app starts without errors and Settings shows it", async () => {
