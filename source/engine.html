@@ -3012,6 +3012,7 @@ function normalizeSettings(s) {
   o.meals = listOf(o.meals, m => isObj(m) && typeof m.id === "string", d.meals);
   o.intensity = listOf(o.intensity, x => isObj(x), d.intensity, 2);
   o.avoid = listOf(o.avoid, x => typeof x === "string", []); o.cuisines = listOf(o.cuisines, x => typeof x === "string", [], 0);
+  migrateAi(o);
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   for (const k of ["tef", "neat"]) { const v = o.fit.energy[k]; if (!(typeof v === "number" && v >= 0)) o.fit.energy[k] = defaultFit().energy[k]; }   // a field saved empty means the default (an empty TEF or NEAT was a silent zero)
   if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
@@ -3136,24 +3137,38 @@ function loadLocal() {
 /* ================= API keys: on this device only (S-1) =================
    The intervals.icu, MapTiler and AI keys are in memory inside S.settings (everything reads them there) and on disk only in "engine.keys"
    ({ owner uid, or "" before any sign-in: keys }). They never reach the synced settings document, the device copy, the snapshot or a restore point;
-   another device starts with the fields empty. A backup file has them only when asked (backupData({ keys: true })). */
+   another device starts with the fields empty. A backup file has them only when asked (backupData({ keys: true })).
+   Two more things that belong to this device only travel the same way: the result of the last Verify of a service (check: another device's result says nothing about this one)
+   and the services hidden here (ai.hidden: «Remove» on a device that does not have the key only hides the service there). */
 const KEYS_KEY = "engine.keys";
+/* the single key of older versions (settings.ai = { key, provider }) is service s1; done once, wherever it turns up (device copy, key store, account copy, file) */
+function migrateAi(st) {
+  const a = st?.ai; if (!isObj(a) || !a.key) return st;
+  if (!Array.isArray(a.services)) { st.ai = { services: [{ id: "s1", provider: a.provider || "gemini", key: a.key, model: a.model, on: true, models: a.models, check: a.check }] }; return st; }
+  const { key, ...rest } = a, svc = a.services.map(x => isObj(x) && x.id === "s1" && !x.key ? { ...x, key } : x);
+  if (!svc.some(x => isObj(x) && x.key === key)) svc.push({ id: "s0", provider: a.provider || "gemini", key, model: a.model, on: true });   // a key no service holds is never dropped
+  st.ai = { ...rest, services: svc };
+  return st;
+}
 function keysOf(st) {
   const k = {}; if (!st) return k;
   if (st.intervals?.key) k.icu = st.intervals.key; if (st.mapKey) k.map = st.mapKey; if (st.ai?.key) k.ai = st.ai.key;
-  for (const x of st.ai?.services || []) if (x?.key && x.id) (k.svc = k.svc || {})[x.id] = x.key;
+  for (const x of st.ai?.services || []) if (x?.id) { if (x.key) (k.svc = k.svc || {})[x.id] = x.key; if (isObj(x.check)) (k.chk = k.chk || {})[x.id] = x.check; }
+  if (Array.isArray(st.ai?.hidden) && st.ai.hidden.length) k.hide = st.ai.hidden.slice();
   return k;
 }
 function noKeys(st) {
   if (!st) return st; const o = clone(st);
   delete o.mapKey; if (o.intervals) delete o.intervals.key;
-  if (o.ai) { delete o.ai.key; for (const x of o.ai.services || []) if (x) delete x.key; }
+  if (o.ai) { delete o.ai.key; delete o.ai.hidden; for (const x of o.ai.services || []) if (x) { delete x.key; delete x.check; } }
   return o;
 }
 function withKeys(st, k) {
   if (!st || !k) return st;
   if (k.icu) st.intervals = { ...(st.intervals || {}), key: k.icu }; if (k.map) st.mapKey = k.map; if (k.ai) st.ai = { ...(st.ai || {}), key: k.ai };
-  if (k.svc) for (const x of st.ai?.services || []) if (x && k.svc[x.id]) x.key = k.svc[x.id];
+  if (k.hide) st.ai = { ...(st.ai || {}), hidden: k.hide };
+  migrateAi(st);
+  for (const x of st.ai?.services || []) if (x) { if (k.svc?.[x.id]) x.key = k.svc[x.id]; if (k.chk?.[x.id]) x.check = k.chk[x.id]; }
   return st;
 }
 function keyStore() { try { const j = JSON.parse(localStorage.getItem(KEYS_KEY) || "{}"); return isPlain(j) ? j : {}; } catch (e) { return {}; } }
@@ -10652,7 +10667,7 @@ function applyDoc(kind, snap) {
   }
   Sync.seen[key] = raw ? clone(raw) : null;
   if (next) S[kind] = shapeDoc(kind, next);
-  if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc } }); if (!fc && Object.keys(had).length) send = true; }
+  if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc }, chk: { ...had.chk, ...own.chk } }); if (!fc && Object.keys(had).length) send = true; }
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
   unionDone();
   saveLocal(); scheduleRender();
@@ -13538,7 +13553,7 @@ const BKDB = (() => { let p = null; const open = () => p || (p = new Promise((ok
   return { get: (st, k) => tx(st, "readonly", s => s.get(k)), put: (st, k, v) => tx(st, "readwrite", s => s.put(v, k)), del: (st, k) => tx(st, "readwrite", s => s.delete(k)), keys: st => tx(st, "readonly", s => s.getAllKeys()) }; })();
 function backupData(o = {}) {
   const st = clone(S.settings || {});
-  if (!o.keys) { delete st.mapKey; if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) delete x.key; delete st.ai.key; } }
+  if (!o.keys) { delete st.mapKey; if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) { delete x.key; delete x.check; } delete st.ai.key; delete st.ai.hidden; } }
   return { app: "Engine", version: BK_VERSION, exported: new Date().toISOString(), settings: st, foods: S.foods, recipes: S.recipes, days: S.days, logm: S.logm, train: S.train, body: S.body, shop: S.shop };
 }
 async function photosData() { const out = {}; for (const x of S.body.photos || []) { const b = await photoBlob(x); if (b) out[x.id] = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); } return out; }
@@ -13629,7 +13644,7 @@ function overlay(cur, add, d = 0) {
 ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0, bad = 0;
   try {
     if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
-      const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
+      const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) }, chk: { ...(mine.chk || {}), ...(got.chk || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
       put("settings", "", s); n++; }
     const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
     if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");

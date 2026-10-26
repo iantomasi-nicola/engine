@@ -222,10 +222,9 @@
   };
   E.AI_PRESETS = AI_PRESETS;
   const ST = () => (typeof S !== "undefined" && S.settings) || null;
-  /* settings.ai = { services: [{ id, provider, key, model, on, models, check }] } (older single-key settings are migrated) */
-  E.aiServices = () => { const st = ST(); if (!st) return []; const a = st.ai || {};
-    if (!a.services && a.key) st.ai = { services: [{ id: "s1", provider: a.provider || "gemini", key: a.key, model: a.model, on: true, models: a.models, check: a.check }] };
-    return (st.ai?.services || []).filter(s => s && (s.key || (s.provider === "custom" && s.base))); };
+  /* settings.ai = { services: [{ id, provider, key, model, on, models, check }] }; the app turns an older single key into service s1 when it reads the settings (migrateAi).
+     The list is shared between devices, key and check result are not: a service with no key on this device is listed in Settings but never asked. */
+  E.aiServices = () => { const st = ST(); if (!st) return []; return (st.ai?.services || []).filter(s => s && (s.key || (s.provider === "custom" && s.base))); };
   E.anyAI = () => E.aiServices().some(s => s.on !== false);
   E.aiCfg = () => { const s = E.aiServices().find(x => x.on !== false); return s ? svcCfg(s) : null; };
   const svcCfg = s => { const P = AI_PRESETS[s.provider] || AI_PRESETS.gemini; return { id: s.id, provider: s.provider, kind: P.kind, key: s.key, model: s.model || P.model, base: s.base || P.base, models: s.models || [], vision: s.vision ?? P.vision }; };

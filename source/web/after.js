@@ -26,19 +26,22 @@
   /* ---- AI services: every key you have, open and closed models, tried in your order ---- */
   const AIV = { busy: {}, newPr: "gemini", chain: null };
   const OPEN = ["groq", "openrouter", "mistral", "huggingface", "cerebras", "custom"], CLOSED = ["gemini", "anthropic", "openai"];
-  const svcs = () => { E.aiServices(); const a = S.settings.ai = S.settings.ai || {}; a.services = a.services || []; return a.services; };
+  const svcs = () => { const a = S.settings.ai = S.settings.ai || {}; a.services = a.services || []; return a.services; };
   const svcById = id => svcs().find(x => x.id === id);
+  /* the list is shared between devices, the keys are not: a service whose key is not on this device is listed as such, and «Remove» there only hides it on this device */
+  const hidden = () => S.settings.ai?.hidden || [], shown = () => svcs().filter(x => !hidden().includes(x.id));
+  const keyHere = x => !!x.key || (x.provider === "custom" && !!x.base);
   function aiReady() { const on = E.aiServices().filter(x => x.on !== false); Sync.sample = on.length ? E.sample : null; Sync.sampleImages = on.some(x => E.svcCfg(x).vision !== false); }
   function aiCard() {
-    const P = E.AI_PRESETS, list = svcs(), np = AIV.newPr, NP = P[np];
+    const P = E.AI_PRESETS, list = shown(), np = AIV.newPr, NP = P[np];
     const opt = k => `<option value="${k}" ${np === k ? "selected" : ""}>${P[k].label}${P[k].free ? " · free tier" : ""}</option>`;
     const row = (x, i) => { const p = P[x.provider] || P.custom, c = E.svcCfg(x), on = x.on !== false, busy = AIV.busy[x.id];
       return `<div class="ai-svc ${on ? "" : "off"}">
-        <div class="ai-h"><span class="ai-n">${i + 1}</span><span class="ai-t"><b>${esc(p.label)}</b><small>${p.open ? "Open models" : "Closed models"}${c.vision === false ? " · text only" : " · reads photos"}${x.key ? " · key …" + esc(String(x.key).slice(-4)) : ""}</small></span>
+        <div class="ai-h"><span class="ai-n">${i + 1}</span><span class="ai-t"><b>${esc(p.label)}</b><small>${p.open ? "Open models" : "Closed models"}${c.vision === false ? " · text only" : " · reads photos"}${x.key ? " · key …" + esc(String(x.key).slice(-4)) : keyHere(x) ? "" : " · key on another device"}</small></span>
           <button type="button" class="switch" role="switch" aria-checked="${on}" data-act="ai-on" data-id="${x.id}" aria-label="Use ${esc(p.label)}"></button></div>
         <div class="row ai-m"><label class="faint" for="ai-m-${x.id}">Model</label><input id="ai-m-${x.id}" class="inp" list="ai-ml-${x.id}" value="${esc(x.model || p.model || "")}" data-chg="ai-model" data-id="${x.id}" placeholder="model name"><datalist id="ai-ml-${x.id}">${(x.models || []).map(m => `<option value="${esc(m)}">`).join("")}</datalist></div>
         ${busy ? `<div class="result"><span class="spinner"></span><span>Checking ${esc(p.label)}…</span></div>` : x.check ? `<div class="note ${x.check.ok ? "" : "warn"}">${x.check.ok ? "✓ " : "✗ "}${esc(x.check.msg)}<small class="faint" style="display:block;font-size:12px">${esc(fmtDM(x.check.at.slice(0, 10)))} ${esc(x.check.at.slice(11, 16))}</small></div>` : ""}
-        <div class="row ai-acts"><button class="icon-btn sm" data-act="ai-up" data-id="${x.id}" aria-label="Try earlier" ${i ? "" : "disabled"}>${ic("chevU", "sm")}</button><button class="icon-btn sm" data-act="ai-down" data-id="${x.id}" aria-label="Try later" ${i < list.length - 1 ? "" : "disabled"}>${ic("chevD", "sm")}</button><span style="flex:1"></span><button class="btn soft sm" data-act="ai-verify" data-id="${x.id}" ${busy ? "disabled" : ""}>${ic("check", "sm")}Verify</button><button class="btn text sm" data-act="ai-del" data-id="${x.id}" style="color:var(--bad)">Remove</button></div></div>`; };
+        <div class="row ai-acts"><button class="icon-btn sm" data-act="ai-up" data-id="${x.id}" aria-label="Try earlier" ${i ? "" : "disabled"}>${ic("chevU", "sm")}</button><button class="icon-btn sm" data-act="ai-down" data-id="${x.id}" aria-label="Try later" ${i < list.length - 1 ? "" : "disabled"}>${ic("chevD", "sm")}</button><span style="flex:1"></span><button class="btn soft sm" data-act="ai-verify" data-id="${x.id}" ${busy || !keyHere(x) ? "disabled" : ""}>${ic("check", "sm")}Verify</button><button class="btn text sm" data-act="ai-del" data-id="${x.id}" style="color:var(--bad)">${keyHere(x) ? "Remove" : "Hide"}</button></div></div>`; };
     const lr = E.lastRun;
     return `<section class="card pad ai-card" style="display:flex;flex-direction:column;gap:12px"><span class="flabel">AI services</span>
       <div class="faint" style="font-size:13px">Add every key you have. Engine asks them in this order: if a model is busy, retired or fails, it tries the service's next model, then the next service. Used for label photos, meals you describe and restaurant meals. Without any key everything else works, labels included (read on this device).</div>
@@ -54,9 +57,11 @@
   CHG["ai-new-pr"] = v => { AIV.newPr = v; scheduleRender(); };
   CHG["ai-model"] = (v, el) => { const x = svcById(el.dataset.id); if (!x) return; x.model = v.trim(); saveSettings(); };
   ACT["ai-on"] = (el) => { const x = svcById((el || {}).dataset?.id); if (!x) return; x.on = x.on === false; saveSettings(); aiReady(); scheduleRender(); };
-  const mv = d => el => { const L = svcs(), i = L.findIndex(x => x.id === el?.dataset?.id), j = i + d; if (i < 0 || j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; saveSettings(); scheduleRender(); };
+  const mv = d => el => { const L = svcs(), V = shown(), i = V.findIndex(x => x.id === el?.dataset?.id), j = i + d; if (i < 0 || j < 0 || j >= V.length) return; const a = L.indexOf(V[i]), b = L.indexOf(V[j]); [L[a], L[b]] = [L[b], L[a]]; saveSettings(); scheduleRender(); };
   ACT["ai-up"] = mv(-1); ACT["ai-down"] = mv(1);
-  ACT["ai-del"] = el => { const id = el?.dataset?.id, x = svcById(id); if (!x) return; openSheet("confirm", { title: `Remove ${E.AI_PRESETS[x.provider]?.label || "this service"}?`, text: "Its key is deleted from this device. The other services keep working.", yes: "Remove", run: () => { S.settings.ai.services = svcs().filter(y => y.id !== id); saveSettings(); aiReady(); toast("Service removed"); scheduleRender(); } }); };
+  ACT["ai-del"] = el => { const id = el?.dataset?.id, x = svcById(id); if (!x) return; const mine = keyHere(x), name = E.AI_PRESETS[x.provider]?.label || "this service";
+  openSheet("confirm", { title: mine ? `Remove ${name}?` : `Hide ${name} on this device?`, text: mine ? "Its key is deleted from this device and the service leaves your list on every device. The other services keep working." : "Its key is on another device: there it keeps working. Here it just stops being listed.", yes: mine ? "Remove" : "Hide",
+    run: () => { if (mine) S.settings.ai = { ...S.settings.ai, services: svcs().filter(y => y.id !== id), hidden: hidden().filter(h => h !== id) }; else S.settings.ai = { ...S.settings.ai, hidden: [...new Set([...hidden(), id])] }; saveSettings(); aiReady(); toast(mine ? "Service removed" : "Hidden on this device"); scheduleRender(); } }); };
   /* check one service: the key is accepted, a model answers (switching model by itself if needed) */
   const why = (cfg, st, j) => { const m = String(j?.error?.message || j?.message || (typeof j?.error === "string" ? j.error : "") || ""), r = j?.error?.details?.find?.(d => d.reason)?.reason || j?.error?.status || j?.error?.type || "", G = cfg.provider === "gemini", L = E.AI_PRESETS[cfg.provider]?.label || "The service";
     if (st === 400 && /API_KEY_INVALID|API key not valid/i.test(m + r)) return "The key isn't valid: copy it again" + (G ? " from aistudio.google.com (Get API key)." : ".");
