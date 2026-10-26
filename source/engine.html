@@ -11204,7 +11204,7 @@ function storesMigrate() {
 const priceAt = (id, sid) => { const p = sid ? S.shop.prices?.[id]?.st?.[sid] : null; return p && p.g > 0 && p.eur >= 0 ? p : null; };
 /* price per gram: the middle of your last purchases (at that store when you are in one), so a cheap or dear week doesn't swing the estimate */
 const eurPerG = (id, sid = curStore()) => { const p = priceAt(id, sid) || priceOf(id); if (!p) return null; const h = (p.hist || []).filter(x => x.g > 0 && x.eur >= 0).slice(-5); if (h.length >= 2) { const v = h.map(x => x.eur / x.g).sort((a, b) => a - b); return v[v.length >> 1]; } return p.eur / p.g; };
-const fmtEur = v => v == null ? "" : "€" + (v < 100 ? v.toFixed(2) : fmtN(r0(v))).replace(".", ",");
+const fmtEur = v => { if (v == null) return ""; const [i, c] = Math.abs(+v).toFixed(2).split("."); return (v < 0 ? "-" : "") + "€" + i.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + c; };
 /* what you'd actually carry home: whole packs when the food comes in packs */
 const buyG = r => r.packs ? r.packs * r.f.pack : r.buy;
 function rowCost(r) { const c = S.shop.checked?.[r.id]; if (c && c.eur != null) return +c.eur; const k = eurPerG(r.id); return k == null ? null : k * buyG(r); }
