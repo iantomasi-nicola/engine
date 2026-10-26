@@ -3047,6 +3047,24 @@ const objs = a => a.filter(isObj);
 function cleanList(o, k, keep) { if (o[k] == null) return; if (Array.isArray(o[k])) o[k] = o[k].filter(keep); else delete o[k]; }
 function cleanNum(o, k) { if (o[k] == null || typeof o[k] === "number") return; const n = parseFloat(String(o[k]).replace(",", ".")); if (isFinite(n)) o[k] = n; else delete o[k]; }
 function cleanObj(o, k) { if (o[k] != null && !isObj(o[k])) delete o[k]; }
+/* Lists of records that had no unique id of their own (the workouts of a day: wid; the purchases of the shopping document: bid, as their id is the food's) get one, so two devices
+   can merge them record by record. A record made now gets a random id (fresh); one that arrives without (older data, a file) gets an id derived from its content and its place among
+   identical records, so every device gives the same id to the same record. A repeated id (a copy made in the same day) is renamed the same way. Returns a new list. */
+const recKey = x => isObj(x) ? (typeof x.bid === "string" ? x.bid : typeof x.wid === "string" ? x.wid : typeof x.id === "string" || typeof x.id === "number" ? String(x.id) : undefined) : undefined;
+function fnv(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function ensureKeys(list, f, fresh) {
+  if (!Array.isArray(list)) return list;
+  const taken = new Set(), count = {};
+  return list.map(x => {
+    if (!isObj(x)) return x;
+    let k = typeof x[f] === "string" ? x[f] : "";
+    if (!k || taken.has(k)) {
+      if (fresh) do k = uid(); while (taken.has(k));
+      else { const { [f]: was, ...rest } = x, base = k || fnv(JSON.stringify(rest)); do k = base + (k ? "~" : "-") + (count[base] = (count[base] || 0) + 1); while (taken.has(k)); }
+    }
+    taken.add(k); return x[f] === k ? { ...x } : { ...x, [f]: k };
+  });
+}
 /* a day of the meal plan: meals is { meal: [items] }, an item has a numeric quantity */
 function cleanDay(d, id) {
   if (!isObj(d)) return null;
@@ -3062,6 +3080,7 @@ function cleanLogDay(x) {
   const o = { ...x };
   for (const k of ["workouts", "wsess", "naps"]) cleanList(o, k, isObj);
   cleanList(o, "planned", isObj); cleanList(o, "caff", Array.isArray); cleanList(o, "skip", v => typeof v === "string");
+  if (o.workouts) o.workouts = ensureKeys(o.workouts, "wid", false);
   for (const k of ["supp", "jr"]) cleanObj(o, k);
   for (const k of ["water", "weight", "bf", "sleep"]) cleanNum(o, k);
   return o;
@@ -3094,6 +3113,7 @@ function docShape(k, v) {
 const DOC_INNER = {
   shop: o => { for (const k of ["extras", "buys", "receipts"]) cleanList(o, k, isObj); cleanList(o, "stores", v => typeof v === "string");
     for (const k of ["checked", "prices", "pref"]) cleanObj(o, k);
+    if (o.buys) o.buys = ensureKeys(o.buys, "bid", false);
     o.pantry = Object.fromEntries(Object.entries(o.pantry).filter(([, v]) => isObj(v))); return o; },
   body: o => { o.w = Object.fromEntries(Object.entries(o.w).filter(([d]) => isDay(d)).map(([d, v]) => { const c = { v }; cleanNum(c, "v"); return [d, c.v]; }).filter(([, v]) => v != null));
     o.m = Object.fromEntries(Object.entries(o.m).filter(([, v]) => isObj(v))); cleanList(o, "photos", isObj); return o; },
@@ -3194,6 +3214,7 @@ function syncSent(path, data, merged) {
 }
 
 function put(kind, id, data) {
+  if (kind === "shop" && data && Array.isArray(data.buys)) data.buys = ensureKeys(data.buys, "bid", true);
   setLocal(kind, id, data);
   const key = keyOf(kind, id);
   if (Sync.owner) Sync.dirty.add(key);
@@ -3238,20 +3259,33 @@ function deq(a, b) {
   for (const k of ka) if (!Object.prototype.hasOwnProperty.call(b, k) || !deq(a[k], b[k])) return false;
   return true;
 }
-const idList = a => Array.isArray(a) && a.every(x => isPlain(x) && (typeof x.id === "string" || typeof x.id === "number")) && new Set(a.map(x => String(x.id))).size === a.length;
-function merge3(b, l, r, win) {
+const idList = a => Array.isArray(a) && a.every(x => recKey(x) !== undefined) && new Set(a.map(recKey)).size === a.length;
+/* deleted races (and any such list of names) are a set: what one side added is kept, what one side removed stays removed */
+const SET_KEYS = ["racesDel"];
+function merge3(b, l, r, win, key) {
   if (deq(l, b)) return r;
   if (deq(r, b) || deq(l, r)) return l;
-  if (isPlain(l) && isPlain(r)) { const out = {}, bb = isPlain(b) ? b : {}; for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) { const v = merge3(bb[k], l[k], r[k], win); if (v !== undefined) out[k] = v; } return out; }
+  if (isPlain(l) && isPlain(r)) { const out = {}, bb = isPlain(b) ? b : {}; for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) { const v = merge3(bb[k], l[k], r[k], win, k); if (v !== undefined) out[k] = v; } return out; }
+  if (SET_KEYS.includes(key) && Array.isArray(l) && Array.isArray(r) && [...l, ...r].every(x => typeof x === "string")) {
+    const B = new Set(Array.isArray(b) ? b : []), L = new Set(l), R = new Set(r);
+    return [...new Set([...l, ...r])].filter(x => (L.has(x) && R.has(x)) || !B.has(x));
+  }
   if (idList(l) && idList(r) && (b == null || idList(b))) {
-    const m = a => new Map((a || []).map(x => [String(x.id), x])), B = m(b), L = m(l), R = m(r), out = [];
+    const m = a => new Map((a || []).map(x => [recKey(x), x])), B = m(b), L = m(l), R = m(r), out = [];
     for (const id of new Set([...L.keys(), ...R.keys()])) { const v = merge3(B.get(id), L.get(id), R.get(id), win); if (v !== undefined) out.push(v); }
     return out;
   }
   return win === "r" ? (r === undefined ? l : r) : (l === undefined ? r : l);
 }
+/* the three copies get their record ids first (the same ones on every device), so workouts and purchases merge record by record */
+function keyedDoc(path, v) {
+  if (!isPlain(v)) return v;
+  if (path.startsWith("lib/logm/") && isPlain(v.days)) return { ...v, days: Object.fromEntries(Object.entries(v.days).map(([d, x]) => [d, isPlain(x) && Array.isArray(x.workouts) ? { ...x, workouts: ensureKeys(x.workouts, "wid", false) } : x])) };
+  if (path === "shop" && Array.isArray(v.buys)) return { ...v, buys: ensureKeys(v.buys, "bid", false) };
+  return v;
+}
 function syncMerge(path, base, l, r, win) {
-  const out = clone(merge3(base ?? undefined, l, r, win));
+  const out = clone(merge3(keyedDoc(path, base ?? undefined), keyedDoc(path, l), keyedDoc(path, r), win));
   if (path.startsWith("lib/logm/") && isPlain(out?.days)) for (const [d, x] of Object.entries(out.days)) { const a = l?.days?.[d], c = r?.days?.[d]; if (isPlain(x) && a?.jr && c?.jr) x.jr = jrMergeDay(a, c); }
   return out;
 }
@@ -3803,6 +3837,7 @@ function mutateLog(date, fn) {
   const doc = clone(S.logm[mk] || { month: mk, days: {} });
   const day = doc.days[date] || {};
   fn(day);
+  if (Array.isArray(day.workouts)) day.workouts = ensureKeys(day.workouts, "wid", true);
   for (const k of Object.keys(day)) if (day[k] === null || day[k] === "" || (Array.isArray(day[k]) && !day[k].length && k !== "planned")) delete day[k];
   if (Object.keys(day).length) doc.days[date] = day; else delete doc.days[date];
   put("logm", mk, doc);
