@@ -22,3 +22,13 @@ Richiesta dell'utente del 26/10: vedere nella spesa quanto ho già a casa; inser
 - Scorta ≠ consumo pianificato ≠ consumo effettivo: la pillola della spesa legge solo `S.shop.pantry`; nessuna proiezione scrive la scorta.
 - Nessuna formula nutrizionale toccata: cambia solo come si legge e si inserisce una quantità.
 - Nessuna funzione tolta: le unità della dispensa (g, kg, ml, l, cl, pezzi, pacchi, cucchiai) restano tutte nel selettore.
+
+## Stato (26/10 sera)
+L208 fatto; L209 fatto (manca la revisione `design-reviewer` su 820/1440 e scuro); L210 non iniziato (editor quantità del planner: chip ½ pack / 1 pack con la regola `boundsFor` sopra).
+
+## Idee d'insieme per M19 (L212, riprogettazione di Spesa e Dispensa)
+- Un solo «amount control» (stepper `.qty` + chip a confezioni + equivalente esatto sotto) per dispensa, planner, ricetta e foglio «Buy» («You're taking» oggi è un campo in grammi con chip «1 pack · 1,000 g»: diventerebbe lo stesso controllo in confezioni).
+- La riga della spesa e la riga della dispensa con la stessa anatomia: nome, pillola «at home», quantità a destra nello stesso stepper a pillola (`.pk-st`).
+- Il box «At home» del planner e il foglio dispensa sono due editor della stessa scorta: tenerne uno (il foglio) e lasciare nel box solo lettura + «+ ½ pack».
+- Il foglio «Buy» ha molte sezioni sempre aperte (prezzo, negozio, dimensione del pacco): le meno usate in sezioni ripiegabili chiuse.
+- La riga «Planned: … for d Tue, Test bowl Wed, …» è lunghissima: riassumerla («7 meals this week») con il dettaglio in una sezione chiusa.

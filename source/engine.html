@@ -279,7 +279,7 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .vol{display:flex;flex-direction:column;gap:8px}.vol .stat-grid{margin:0}
 .sg-t b{font-weight:600}
 .key-in{-webkit-text-security:disc;font-family:ui-monospace,monospace}.key-in:focus{-webkit-text-security:none}
-.pa-q{display:flex;align-items:center;gap:6px}.pa-q .chips{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.pa-q .chips::-webkit-scrollbar{display:none}.pa-q .chip{flex:0 0 auto}.pa-q .icon-btn{flex:0 0 auto;background:var(--v-fill,var(--surface2))}
+.pa-amt #pa-n{flex:1 1 auto;min-width:0;width:auto}.qty.pa-amt .pa-u{flex:0 0 auto;width:auto;min-height:52px;font:600 15px/1.2 var(--font,inherit);text-align:left;padding-right:28px}.pa-eq{font-size:12.5px;text-align:center;min-height:18px;margin-top:2px}.pa-q{margin-top:4px}.pa-exp{max-width:220px}
 .sp-low{font-size:12.5px;color:var(--muted);margin-top:8px}
 .yd2{border-left:4px solid var(--warn)}.yd2 .td-ov .ic,.rm .td-ov .ic{width:16px;height:16px}.yd-sum{font-size:13px;color:var(--muted);margin-top:-6px}
 .yd-r2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}.yd-i{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}.yd-i .ic{width:16px;height:16px}
@@ -2101,7 +2101,6 @@ input.inp[readonly]{background:var(--md-sc-high)!important}
 .sp-bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
 .sum-stats.sm{margin-top:10px}
 .set-sub{display:flex;flex-direction:column;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
-.pa-units{gap:6px}
 .wk-rev{display:flex;flex-direction:column;gap:10px}
 .wk-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .wk-k span{display:flex;flex-direction:column;min-width:0}
@@ -5821,34 +5820,65 @@ function paFac(U, u) { return u === "pz" ? U.pw || 0 : u === "pack" ? U.pack || 
 const paLabel = (U, u, n) => u === "pz" ? (n === 1 ? "piece" : "pieces") : u === "pack" ? (n === 1 ? "pack" : "packs") : !u || u === "base" ? U.base : PA_U[u]?.[1] || U.base;
 function pantryQty(f, p) { const U = pantryUnits(f, p), u = p?.u, fac = paFac(U, u);
   if (!u || u === "base" || !fac) return { v: fmtN(p.g), u: U.base };
-  const n = p.g / fac, v = Math.abs(n - Math.round(n)) < 0.05 ? Math.round(n) : n < 10 ? Math.round(n * 100) / 100 : r1(n); return { v: v.toLocaleString("en-US"), u: paLabel(U, u, v) }; }
+  const n = p.g / fac, fr = u === "pack" ? packFrac(n) : "", v = Math.abs(n - Math.round(n)) < 0.05 ? Math.round(n) : n < 10 ? Math.round(n * 100) / 100 : r1(n);
+  return { v: fr || v.toLocaleString("en-US"), u: paLabel(U, u, fr ? (n > 1.02 ? 2 : 1) : v) }; }
 function paUnitOpts(U) { const liq = U.base === "ml"; return [["base", U.base], ...(liq ? [["l", "l"], ["cl", "cl"], ["g", "g"]] : [["kg", "kg"], ["ml", "ml"], ["l", "l"]]), ["pz", "pieces"], ["pack", "packs"], ["tbsp", "tbsp"], ["tsp", "tsp"]]; }
+/* the unit a pantry entry opens in: the one chosen; pieces for countable foods; packs for a pack food when the amount is whole or a simple fraction of a pack (a new entry starts at one pack); else grams */
+function paUnitFor(f, p) {
+  if (p?.u) return p.u; if (f.countable) return "pz";
+  const U = pantryUnits(f, p); return U.pack > 0 && !varPack(f) && (!(p?.g > 0) || packFrac(p.g / U.pack)) ? "pack" : "base";
+}
+const paU = (sh, f) => pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk });
+/* the amount in the field: what was typed stays as typed; otherwise the grams in the chosen unit, packs as ½, 1½ */
+function paShown(sh, u, fac) {
+  if (sh.n != null && typeof sh.n !== "number") return sh.n;
+  const n = sh.n ?? (sh.g !== "" && sh.g != null && fac ? num(sh.g) / fac : ""); if (n === "") return "";
+  return (u === "pack" && packFrac(n)) || String(Math.round(n * 100) / 100);
+}
+/* the same amount in the other language, under the field: exact grams when counting in packs or pieces, packs when counting in grams */
+function paEqHTML(sh) {
+  const f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return ""; const U = paU(sh, f), u = sh.u || "base", fac = paFac(U, u);
+  if (u === "pz" && !fac) return "Type the weight of one piece so the planner can use it.";
+  if (u === "pack" && !fac) return "Type how much one pack contains.";
+  const g = paGrams(sh); if (!(g > 0)) return "";
+  if (u !== "base") return `= ${fmtN(r0(g))} ${U.base}${(U.base === "g" && ["ml", "l", "cl"].includes(u)) || (U.base === "ml" && u === "g") ? " · 1 g ≈ 1 ml" : ""}`;
+  const w = U.pack > 0 && !varPack(f) ? packWords(g, U.pack) : ""; return w ? "= " + w : "";
+}
+/* one tap: packs (¼ only for packs of 500 g or more), pieces, or grams; they set the amount and the unit */
+function paQuick(sh, U, u, fac) { const f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return ""; U = U || paU(sh, f); u = u || sh.u || "base"; fac = fac ?? paFac(U, u);
+  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? Math.round(num(sh.g) / fac * 100) / 100 : 0;
+  const opts = U.pack && !varPack(f) ? [...(U.pack >= 500 ? [[0.25, "¼ pack"]] : []), [0.5, "½ pack"], [1, "1 pack"], [2, "2 packs"], [3, "3 packs"]].map(([n, l]) => ["pack", n, l]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
+  return `<div class="chips pa-q">${opts.map(([k, n, l]) => `<button class="chip" data-act="pa-quick" data-k="${k}" data-n="${n}" aria-pressed="${u === k && Math.abs(cur - n) < 1e-6}">${l}</button>`).join("")}</div>`; }
 SHEETS.pantry = sh => {
   const f = sh.food ? getFood(sh.food) || BUILTIN[sh.food] : null; const q = sh.q || "";
   const res = !f && q ? foodSearch(q, "all").filter(r => r.t === "food").slice(0, 8) : [];
   if (!f) return { title: "Add to pantry", focus: "pa-q", body: `<div class="search">${ic("search")}<input id="pa-q" type="search" placeholder="Which food?" value="${esc(q)}" data-in="pa-q" autocomplete="off"></div>
         <div class="card">${res.map(r => `<button class="lrow" data-act="pa-pick" data-id="${r.x.id}"><span style="min-width:0"><span class="t">${esc(r.x.name)}</span>${brandOf(r.x) ? `<span class="s">${bdHTML(r.x).replace(" · ", "")}</span>` : ""}</span><span class="end">${ic("chevR")}</span></button>`).join("") || `<div class="lrow"><span class="s">Type to search your foods.</span></div>`}</div>`, foot: "" };
-  const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u);
-  const shown = sh.n ?? (sh.g !== "" && sh.g != null && fac ? Math.round(num(sh.g) / fac * 100) / 100 : "");
-  const opts = paUnitOpts(U), cross = (U.base === "g" && ["ml", "l", "cl"].includes(u)) || (U.base === "ml" && u === "g");
-  return { title: f.name, focus: "pa-n",
-    body: `<div class="field"><span class="flabel">Counted in</span><div class="chips pa-units">${opts.map(([k, l]) => `<button class="chip" data-act="pa-unit" data-k="${k}" aria-pressed="${u === k}">${l}</button>`).join("")}</div></div>
+  const U = paU(sh, f), u = sh.u || "base", fac = paFac(U, u);
+  return { title: f.name, focus: null,
+    body: `<div class="field"><label class="flabel" for="pa-n">Amount at home</label>
+        <div class="qty pa-amt"><button class="step" data-act="pa-step" data-d="-1" aria-label="Less">${ic("minus")}</button>
+          <input id="pa-n" class="inp" inputmode="decimal" value="${esc(paShown(sh, u, fac))}" data-in="pa" data-k="n">
+          <select class="inp pa-u" data-chg="pa-unit" aria-label="Counted in">${paUnitOpts(U).map(([k, l]) => `<option value="${k}" ${u === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+          <button class="step" data-act="pa-step" data-d="1" aria-label="More">${ic("plus")}</button></div>
+        <div id="pa-eq" class="faint pa-eq">${paEqHTML(sh)}</div>
+        ${paQuick(sh, U, u, fac)}</div>
       ${u === "pz" ? `<div class="field"><label for="pa-pw">One piece weighs</label><div class="unit-inp" style="max-width:180px"><input id="pa-pw" class="inp" inputmode="decimal" value="${esc(String(sh.pw ?? U.pw ?? ""))}" placeholder="e.g. 60" data-in="pa" data-k="pw"><span>${U.base}</span></div></div>` : ""}
       ${u === "pack" && !(f.pack > 0) ? `<div class="field"><label for="pa-pk">One pack contains</label><div class="unit-inp" style="max-width:180px"><input id="pa-pk" class="inp" inputmode="decimal" value="${esc(String(sh.pk ?? U.pack ?? ""))}" placeholder="e.g. 500" data-in="pa" data-k="pk"><span>${U.base}</span></div></div>` : ""}
-      <div class="grid2"><div class="field"><label for="pa-n">Amount at home</label><div class="unit-inp"><input id="pa-n" class="inp" inputmode="decimal" value="${esc(String(shown))}" data-in="pa" data-k="n"><span>${u === "pz" ? "pcs" : paLabel(U, u, 2)}</span></div></div>
-        <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div></div>
-      ${u !== "base" && fac && paNum(shown) > 0 ? `<div class="faint" style="font-size:12.5px">= ${fmtN(r0(paNum(shown) * fac))} ${U.base}${cross ? " · 1 g ≈ 1 ml" : ""}</div>` : u === "pz" && !fac ? `<div class="faint" style="font-size:12.5px">Type the weight of one piece so the planner can use it.</div>` : u === "pack" && !fac ? `<div class="faint" style="font-size:12.5px">Type how much one pack contains.</div>` : ""}
+      <div class="field"><label for="pa-exp">Use by</label><input id="pa-exp" class="inp pa-exp" type="date" value="${sh.exp || ""}" data-in="pa" data-k="exp"></div>
       <div class="chips">${[[2, "2 days"], [4, "4 days"], [7, "1 week"], [30, "1 month"], [180, "6 months"]].map(([n, l]) => `<button class="chip sm" data-act="pa-exp" data-n="${n}" aria-pressed="${sh.exp === addDays(todayISO(), n)}">${l}</button>`).join("")}${sh.exp ? `<button class="chip sm" data-act="pa-exp" data-n="">No date</button>` : ""}</div>`,
     foot: `${S.shop.pantry[f.id] ? `<button class="btn danger" data-act="pa-del" style="flex:0 0 auto" aria-label="Remove from pantry">${ic("trash", "sm")}</button>` : ""}<button class="btn primary" data-act="pa-save">Save</button>` };
 };
-function paGrams(sh) { const f = getFood(sh.food) || BUILTIN[sh.food], U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base";
+function paGrams(sh) { const f = getFood(sh.food) || BUILTIN[sh.food], U = paU(sh, f), u = sh.u || "base";
   if (sh.n == null) return num(sh.g); const fac = paFac(U, u); return fac ? paNum(sh.n) * fac : 0; }
-/* an amount typed or tapped: 37, 0,5, 1/2, 1 1/2 (a fraction of a pack stays exact; 1/0 is nothing) */
+/* an amount typed or tapped: 37, 0,5, 1/2, 1 1/2, ½, 1½ (a fraction of a pack stays exact; 1/0 is nothing) */
 function paNum(v) {
   if (typeof v === "number") return isFinite(v) ? v : 0;
   const t = String(v ?? "").trim().replace(",", "."); if (!t) return 0;
   const m = t.match(/^(?:(\d+(?:\.\d+)?)\s+)?(\d+)\s*\/\s*(\d+)$/);
   if (m) { const d = +m[3]; return d ? (+m[1] || 0) + (+m[2]) / d : 0; }
+  const vf = t.match(/^(\d+)?\s*([¼½¾⅓⅔])$/);
+  if (vf) return (+vf[1] || 0) + { "¼": .25, "½": .5, "¾": .75, "⅓": 1 / 3, "⅔": 2 / 3 }[vf[2]];
   return num(t);
 }
 
@@ -7440,10 +7470,8 @@ ACT.fflt = el => { const k = el.dataset.k, f = { ...(UI.foodFilt || {}) }; if (!
 ACT["shop-range"] = el => { S.shop.range = +el.dataset.n; S.shop.mode = "days"; put("shop", "", S.shop); };
 ACT["extra-check"] = el => { const x = S.shop.extras.find(e => e.id === el.dataset.id); if (x) { x.done = !x.done; put("shop", "", S.shop); } };
 ACT["extra-del"] = el => { S.shop.extras = S.shop.extras.filter(e => e.id !== el.dataset.id); put("shop", "", S.shop); };
-ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: p.u || "base", pw: p.pw, pk: p.pk }); };
-ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food], f = getFood(sh.food) || BUILTIN[sh.food]; sh.g = p?.g ?? (f.pack || ""); sh.exp = p?.exp || ""; sh.u = p?.u || (f.countable ? "pz" : "base"); sh.pw = p?.pw; sh.pk = p?.pk; sh._new = true; renderSheet(); };
-ACT["pa-unit"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return; const g = paGrams(sh); sh.u = el.dataset.k; sh.n = undefined; if (g > 0) sh.g = g; renderSheet(); };
-ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
+ACT["pantry-edit"] = el => { const p = S.shop.pantry[el.dataset.id], f = getFood(el.dataset.id) || BUILTIN[el.dataset.id]; openSheet("pantry", { food: el.dataset.id, g: p.g, exp: p.exp || "", u: f ? paUnitFor(f, p) : p.u || "base", pw: p.pw, pk: p.pk }); };
+ACT["pa-pick"] = el => { const sh = S_(); sh.food = el.dataset.id; const p = S.shop.pantry[sh.food], f = getFood(sh.food) || BUILTIN[sh.food]; sh.g = p?.g ?? (f.pack || ""); sh.exp = p?.exp || ""; sh.u = paUnitFor(f, p); sh.pw = p?.pw; sh.pk = p?.pk; sh._new = true; renderSheet(); };ACT["pa-exp"] = el => { const sh = S_(); sh.exp = el.dataset.n ? addDays(todayISO(), +el.dataset.n) : ""; renderSheet(); };
 ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", pw = num(sh.pw) || null, pk = num(sh.pk) || null, F = getFood(sh.food) || BUILTIN[sh.food];
   if (u === "pz" && !pw && !pantryUnits(F).pw) { toast("Type the weight of one piece."); $("#pa-pw")?.focus(); return; }
   if (u === "pack" && !pk && !pantryUnits(F, S.shop.pantry[sh.food]).pack) { toast("Type how much one pack contains."); $("#pa-pk")?.focus(); return; }
@@ -7536,7 +7564,7 @@ const INP = {
   "rc-g": (v, el) => { S_().draft.ingredients[+el.dataset.i].g = v; updRecipePer(); },
   "rc-q": v => { S_().iq = v; renderSheet(); },
   qk: (v, el) => { S_()[el.dataset.k] = v; },
-  pa: (v, el) => { S_()[el.dataset.k] = v; },
+  pa: (v, el) => { const sh = S_(); sh[el.dataset.k] = v; const e = $("#pa-eq"); if (e) e.innerHTML = paEqHTML(sh); },
   "pa-q": v => { S_().q = v; renderSheet(); },
   ob: (v, el) => { S_()[el.dataset.k] = v; },
   te: (v, el) => { S_().draft[el.dataset.k] = v; },
@@ -11871,8 +11899,8 @@ function stockBoxHTML(id) {
   const f = getFood(id) || BUILTIN[id]; if (!f) return "";
   const p = S.shop.pantry[id], u = f.unit || "g", g = p?.g || 0, res = r0(planReserved()[id] || 0), q = p ? pantryQty(f, p) : { v: "0", u }, today = todayISO();
   const piece = f.countable && f.servings?.[0]?.g > 0 ? f.servings[0].g : 0, add = f.pack > 0 ? [[f.pack / 2, "½ pack"], [f.pack, "1 pack"], [f.pack * 2, "2 packs"]] : piece ? [[piece, "1"], [piece * 2, "2"], [piece * 6, "6"]] : [[100, `100 ${u}`], [250, `250 ${u}`], [500, `500 ${u}`]];
-  const ends = g > 0 ? stockPlan(today, 14).endsOn[id] : null, packs = f.pack > 0 && g >= f.pack / 10 ? Math.round(g / f.pack * 10) / 10 : null;
-  const facts = [packs != null && !(p?.u === "pack") ? `${packs} pack${packs === 1 ? "" : "s"}` : "", res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside by the plan` : "", ends ? `runs out ${ends === today ? "today" : fmtDM(ends)}` : g > 0 && !res ? "not in the plan" : ""].filter(Boolean).join(" · ");
+  const ends = g > 0 ? stockPlan(today, 14).endsOn[id] : null, PU = pantryUnits(f, p), packs = PU.pack > 0 && !varPack(f) && p?.u !== "pack" ? packWords(g, PU.pack) : "";
+  const facts = [packs, res > 0 ? `${fmtN(Math.max(0, g - res))} ${u} free · ${fmtN(res)} ${u} set aside by the plan` : "", ends ? `runs out ${ends === today ? "today" : fmtDM(ends)}` : g > 0 && !res ? "not in the plan" : ""].filter(Boolean).join(" · ");
   return `<div class="stock-box" data-stock="${id}"><div class="sb-top"><span class="flabel">${ic("jar", "sm")} At home</span><span class="pan-q"><button class="icon-btn sm" data-act="stock-step" data-id="${esc(id)}" data-d="-1" aria-label="Less at home">${ic("minus", "sm")}</button><button class="sb-v" data-act="stock-open" data-id="${esc(id)}" aria-label="Set the exact amount"><b>${q.v}<small>${q.u}</small></b></button><button class="icon-btn sm" data-act="stock-step" data-id="${esc(id)}" data-d="1" aria-label="More at home">${ic("plus", "sm")}</button></span></div>
     <div class="chips sb-add">${add.map(([v, l]) => `<button class="chip sm" data-act="stock-add" data-id="${esc(id)}" data-g="${v}">+ ${esc(l)}</button>`).join("")}${g > 0 ? `<button class="chip sm" data-act="stock-zero" data-id="${esc(id)}">Used up</button>` : ""}</div>
     ${facts ? `<span class="faint sb-s">${esc(facts)}</span>` : ""}
@@ -11883,7 +11911,7 @@ ACT["stock-zero"] = el => { const id = el.dataset.id; const undo = stockSet(id, 
 CHG["stock-exp"] = (v, el) => { const id = el.dataset.id, p = S.shop.pantry[id]; if (!p) return; S.shop.pantry[id] = clean0({ ...p, exp: /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null }); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
 /* the exact amount, units, fractions and use-by date: the pantry sheet, from any screen, and back to where you were */
 ACT["stock-open"] = el => { const id = el.dataset.id, f = getFood(id) || BUILTIN[id], p = S.shop.pantry[id]; if (!f) return; const cur = S_(), back = cur && (cur.type === "qty" || cur.type === "food") ? cur : null;
-  openSheet("pantry", { food: id, g: p?.g ?? "", exp: p?.exp || "", u: p?.u || (f.countable ? "pz" : "base"), pw: p?.pw, pk: p?.pk, back }); };
+  openSheet("pantry", { food: id, g: p?.g ?? "", exp: p?.exp || "", u: paUnitFor(f, p), pw: p?.pw, pk: p?.pk, back }); };
 /* leftovers you have and the plan doesn't use: offered first when adding food */
 function pantrySpare(days = 7) { const need = planReserved(todayISO(), Math.max(days, 14)); return Object.entries(S.shop.pantry || {}).filter(([id, p]) => (getFood(id) || BUILTIN[id]) && p.g - (need[id] || 0) >= 20 && !(p.exp && p.exp < todayISO())).map(([id, p]) => ({ id, f: getFood(id) || BUILTIN[id], g: r0(p.g - (need[id] || 0)), exp: p.exp })).sort((a, b) => (a.exp || "9999").localeCompare(b.exp || "9999")); }
 
@@ -15995,20 +16023,15 @@ ACT["wi-plan"] = () => { const R = S_().res; if (!R?.script) return; const t = t
   openSheet("session", { list: "planned", pick: true, date: busy ? addDays(t, 1) : t, idx: null, draft: wClean({ sport: R.sport, min: R.min || "", km: R.km || "", int: R.int, note: R.name, script: R.script }), back: null }); };
 /* the way in: next to "Paste" in the free workout sheet */
 { const _fw = SHEETS.freewo; SHEETS.freewo = sh => { const def = _fw(sh); if (AIF("woimport") && Sync.sample) def.body = def.body.replace(`<button class="link" data-act="fw-paste">`, `<span class="row" style="gap:14px"><button class="link" data-act="wo-import">${ic("spark", "sm")} From photo or text</button><button class="link" data-act="fw-paste">`).replace(/(data-act="fw-paste">[\s\S]*?<\/button>)/, "$1</span>"); return def; }; }
-/* ================= pantry: amounts in one tap (packs, pieces, grams) and a stepper, no keyboard needed ================= */
-function paQuick(sh) { const f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return "";
-  const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u);
-  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? Math.round(num(sh.g) / fac * 100) / 100 : 0;
-  const opts = U.pack && !varPack(f) ? [[0.25, "¼ pack"], [0.5, "½ pack"], ...[1, 2, 3, 4, 6].map(n => [n, `${n} pack${n > 1 ? "s" : ""}`])].map(([n, l]) => ["pack", n, l]) : u === "pz" || U.pw ? [1, 2, 4, 6, 12].map(n => ["pz", n, `${n} pc${n > 1 ? "s" : ""}`]) : [100, 250, 500, 1000].map(n => ["base", n, n >= 1000 ? `${n / 1000} ${U.base === "ml" ? "l" : "kg"}` : `${n} ${U.base}`]);
-  const on = (k, n) => (u === k || (k === "base" && !sh.u)) && Math.abs(cur - n) < 1e-6;
-  return `<div class="pa-q"><button class="icon-btn" data-act="pa-step" data-d="-1" aria-label="Less">${ic("minus")}</button><div class="chips">${opts.map(([k, n, l]) => `<button class="chip" data-act="pa-quick" data-k="${k}" data-n="${n}" aria-pressed="${on(k, n)}">${l}</button>`).join("")}</div><button class="icon-btn" data-act="pa-step" data-d="1" aria-label="More">${ic("plus")}</button></div>`; }
+/* ================= pantry: amounts in one tap (packs, pieces, grams) and a stepper, no keyboard needed (the sheet: SHEETS.pantry, paQuick) ================= */
 ACT["pa-quick"] = el => { const sh = S_(); sh.u = el.dataset.k; sh.n = +el.dataset.n; haptic(8); renderSheet(); };
+/* − and +: half a pack, one piece, 50 g (or 1 of a bigger unit), landing on whole steps */
 ACT["pa-step"] = el => { const sh = S_(), f = getFood(sh.food) || BUILTIN[sh.food]; if (!f) return;
-  const U = pantryUnits(f, { pw: num(sh.pw) || S.shop.pantry[f.id]?.pw, pk: num(sh.pk) || S.shop.pantry[f.id]?.pk }), u = sh.u || "base", fac = paFac(U, u), d = +el.dataset.d;
-  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pack" || u === "pz" ? 1 : .5;
+  const U = paU(sh, f), u = sh.u || "base", fac = paFac(U, u), d = +el.dataset.d;
+  const cur = sh.n != null && sh.n !== "" ? paNum(sh.n) : fac ? num(sh.g) / fac : 0, step = u === "base" ? (U.base === "g" || U.base === "ml" ? 50 : 1) : u === "pz" ? 1 : .5;
   sh.n = Math.max(0, Math.round((cur + d * step) / step) * step); haptic(6); renderSheet(); };
-{ const _ps = SHEETS.pantry; SHEETS.pantry = sh => { const o = _ps(sh); if (!sh.food) return o;
-  o.body = o.body.replace(/(<div class="grid2"><div class="field"><label for="pa-n">)/, paQuick(sh) + "$1"); o.focus = null; return o; }; }
+/* the unit selector next to the amount: the grams stay, the field shows them in the new unit */
+CHG["pa-unit"] = v => { const sh = S_(), f = sh && (getFood(sh.food) || BUILTIN[sh.food]); if (!f) return; const g = paGrams(sh); sh.u = v; sh.n = undefined; if (g > 0) sh.g = g; renderSheet(); };
 /* ================= Today: what's still to tick sits on top, and yesterday's gaps can be filled in one place ================= */
 /* supplements as one row of chips: tap = taken (time saved), late ones stand out */
 /* ================= Reminders of the day, on Today: what is waiting, by time =================
