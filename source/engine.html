@@ -5440,7 +5440,9 @@ function sheetClosed() {
   const back = el?.isConnected ? el : act && document.querySelectorAll(`[data-act="${act}"]`).length === 1 ? document.querySelector(`[data-act="${act}"]`) : null;
   back?.focus({ preventScroll: true });
 }
-function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
+/* leaving a sheet on purpose (Back, Esc, close): the field with the cursor commits its value and lets go, otherwise renderSheet() would defer the redraw and the screen would keep showing the sheet that is already gone */
+const navBlur = () => { if (typingBusy()) document.activeElement.blur(); };
+function closeSheet() { navBlur(); for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
 /* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
    a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
    popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
@@ -5459,7 +5461,7 @@ function navSync() {
 }
 function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
 function navRestore(snap) {
-  for (const k in DRAFT) delete DRAFT[k];
+  navBlur(); for (const k in DRAFT) delete DRAFT[k];
   UI.tab = snap.tab; UI.fuelTab = snap.fuelTab; UI.trainSeg = snap.trainSeg; UI.progSeg = snap.progSeg; UI.foodsSeg = snap.foodsSeg; UI.dest = null;
   UI.sheet = snap.sheet; if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
   scheduleRender();
@@ -5472,7 +5474,7 @@ function navPop(e) {
   NAV.i = at; navRestore(snap);
 }
 window.addEventListener("popstate", navPop);
-const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
+const closeToRoot = () => { navBlur(); let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; sheetClosed(); return; }
@@ -11654,7 +11656,7 @@ CHG["store-name"] = (v, el) => { storeRename(el.dataset.id, v); renderSheet(); }
 ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = storeName(id); storeDel(id); renderSheet(); const after = clone(S.shop); toast(`${nm} removed`, () => { shopUndo(snap, after); if (UI.sheet?.type === "stores") renderSheet(); }); };
 ACT["shop-here"] = el => { const sid = curStore(); if (sid) addFoodStore(el.dataset.id, sid); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
-ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
+ACT["by-ok"] = () => { const sh = S_(); if (sh?.type !== "buy") return; const g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
   S.shop.checked[sh.id] = { g: g || null, eur: eur > 0 ? Math.round(eur * 100) / 100 : null, ...((sh.sid ?? curStore()) ? { sid: sh.sid ?? curStore() } : {}), ...(sh.offer ? { offer: true } : {}) }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
 ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
 INP.by = (v, el) => { S_()[el.dataset.k] = v; };
