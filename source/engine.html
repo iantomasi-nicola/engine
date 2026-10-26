@@ -772,6 +772,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .set-det summary::after{content:"+";font-size:20px;color:var(--muted)}
 .set-det[open] summary::after{content:"–"}.ex .lrow .t,.ex .lrow .s{white-space:normal;overflow:visible;text-overflow:clip}.ex .lrow .s{overflow-wrap:break-word}.set-det.fx>summary{gap:10px}.set-det.fx>summary b{display:block;font-size:14.5px;font-weight:600;font-family:inherit;font-stretch:100%}.set-det.fx>summary small{display:block;font-size:12.5px;color:var(--muted);font-weight:450;margin-top:2px;font-family:var(--body,inherit);font-stretch:100%}@media(max-width:600px){.grid2>.fld-wide{grid-column:1/-1}}
 .set-in{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.rem-f>summary{padding:10px 0}.rem-f>summary b{font-weight:500;font-size:14px}.rem-f>summary::after{opacity:.8}.rem-f>.set-in{margin-top:4px;padding-bottom:6px}
+.rem-f[open]{background:var(--surface-2);border-radius:14px;padding:0 12px;margin-inline:-12px}.rem-f[open]>summary small{display:none}.rem-f+.rem-f{margin-top:8px}.rem-f[open]>.set-in{padding-bottom:14px}
+@media(min-width:1000px){.rem-f>summary,.rem-f .opt-row{max-width:560px}}
+@media(max-width:600px){.rem-f .ck-row{grid-template-columns:auto minmax(0,1fr)}.rem-f .ck-row>:last-child{grid-column:2;justify-self:start}}
 details.card>summary{cursor:pointer;list-style:none}
 details.card>summary::-webkit-details-marker{display:none}
 details.card>summary.lrow::after,details.rk-paste>summary.lrow::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-right:6px;transition:transform .15s}
@@ -12533,6 +12537,8 @@ ACT["supp-del"] = () => { const id = S_().draft.id; openSheet("confirm", { title
 /* ================= reminders at a set time =================
    While the app is open (or in a background tab) a check runs every 30 s and shows a notification at the set time.
    For reminders with the app closed, the same times go into your phone's calendar as an .ics file. */
+/* the reminder options fold away (closed): one line each with its state; the open/closed choice is kept in UI.setDet like the other Settings folds */
+const remFold = (k, title, sub, inner, cls = "") => `<details class="set-det fx rem-f" data-k="${k}" ${(UI.setDet || {})[k] ? "open" : ""}><summary><span><b>${title}</b><small>${esc(sub)}</small></span></summary><div class="set-in ${cls}">${inner}</div></details>`;
 function reminderPrefs() {
   const R = S.settings.reminders || {}, perm = "Notification" in window ? Notification.permission : "unsupported";
   return `<div class="field"><span class="flabel">Reminders</span>
@@ -12540,8 +12546,8 @@ function reminderPrefs() {
     <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rem-xp" style="font-size:13px">Pantry check at</label><input id="rem-xp" class="inp" type="time" value="${esc(R.pantryAt || "18:00")}" data-chg="rem-xp" style="max-width:130px"></div>
     ${prePrefs()}
     ${checkPrefs()}
-    <button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
-    <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating), the use-by dates in your pantry and the next check-ups: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div></div>`;
+    ${remFold("rem-more", "Weekly report and calendar", `Monday ${(S.settings.report || {}).at || "08:30"}${typeof pushOn === "function" ? ` · push ${pushOn() ? "on" : "off"}` : ""}`, `<button class="btn soft sm" data-act="rem-ics" style="align-self:flex-start">${ic("calendar", "sm")}Add the reminders to my calendar</button>
+    <div class="faint" style="font-size:12.5px">The calendar file has every supplement time (repeating), the use-by dates in your pantry and the next check-ups: open it on the phone and add it to the calendar. Your calendar then reminds you even with the app closed. Download it again when you change something.</div>`)}</div>`;
 }
 ACT["rem-toggle"] = async () => { const R = S.settings.reminders || {};
   if (R.on && "Notification" in window && Notification.permission === "granted") { S.settings.reminders = { ...R, on: false }; saveSettings(); scheduleRender(); return; }
@@ -12594,9 +12600,10 @@ function checksDue(d = todayISO()) { return checkList().filter(c => c.on && c.ne
 function checksNotice(d) { const L = checksDue(d).filter(c => daysBetween(c.next, d) % 7 === 0); if (!L.length) return null;
   return { title: L.length === 1 ? `${L[0].t} due` : `Check-ups due · ${L.length}`, body: L.map(c => `${c.t}: ${c.what}`).join("\n") }; }
 function checkPrefs() { const t = todayISO(), C = S.settings.reminders?.checks || {};
-  return `<div class="field ck-set"><span class="flabel">Check-ups</span>${checkList().map(c => `<div class="row sw-row ck-row"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="${esc(c.k)}" aria-label="${c.t} reminder"></button><span class="ck-t">${c.t}<small class="faint">${!c.last ? "Starts after the first one you log" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${c.k === "meas" || c.k === "photo" ? ckEverySel(c) : `<span class="faint ck-n">every ${c.every} d</span>`}</div>`).join("")}
+  const cl = checkList(), nOn = cl.filter(c => c.on).length;
+  return remFold("rem-ck", "Check-ups", `${nOn} of ${cl.length} on · reminders at ${C.at || "09:00"}`, `${cl.map(c => `<div class="row sw-row ck-row"><button type="button" class="switch" role="switch" aria-checked="${c.on}" data-act="ck-toggle" data-k="${esc(c.k)}" aria-label="${c.t} reminder"></button><span class="ck-t">${c.t}<small class="faint">${!c.last ? "Starts after the first one you log" : c.next <= t ? `Due since ${fmtDM(c.next)}` : `Next ${fmtDM(c.next)}`}</small></span>${c.k === "meas" || c.k === "photo" ? ckEverySel(c) : `<span class="faint ck-n">every ${c.every} d</span>`}</div>`).join("")}
     <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="ck-at" style="font-size:13px">Check-up reminders at</label><input id="ck-at" class="inp" type="time" value="${esc(C.at || "09:00")}" data-chg="ck-at" style="max-width:130px"></div>
-    <small class="faint" style="font-size:12.5px">The two tests follow «Retest every» in Training. The new results update zones, paces and the trends.</small></div>`; }
+    <small class="faint" style="font-size:12.5px">The two tests follow «Retest every» in Training. The new results update zones, paces and the trends.</small>`, "ck-set"); }
 const ckSet = o => { const R = S.settings.reminders || {}; S.settings.reminders = { ...R, checks: { ...(R.checks || {}), ...o } }; saveSettings(); };
 ACT["ck-toggle"] = el => { const k = el.dataset.k, C = S.settings.reminders?.checks || {}; ckSet({ [k]: C[k] === false }); scheduleRender(); };
 CHG["ck-every"] = (v, el) => { ckSet({ [el.dataset.k + "Every"]: clamp(Math.round(num(v)) || 28, 7, 180) }); scheduleRender(); };
@@ -12621,12 +12628,12 @@ function preSessionRows(date = todayISO(), now = nowHM()) {
 function preTick(d, now) { const P = PRE(); if (P.mode !== "both") return; const sent = remSent();
   for (const r of preSessionRows(d, now)) { if (!r.t || now < r.t || sent["pre|" + r.id] === d) continue; remMark("pre|" + r.id); notify(r.title, r.small, "engine-pre", { tab: "today" }); } }
 function prePrefs() { const P = PRE(), seg = (k, cur, opts) => `<div class="seg sm fill" role="group">${opts.map(([v, l]) => `<button data-act="pre-set" data-k="${esc(k)}" data-v="${esc(v)}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
-  return `<div class="field pre-set"><span class="flabel">Before a session</span>
+  return remFold("rem-pre", "Before a session", P.on ? `Remind me to eat · ${P.lead / 60} h before · ${P.which === "all" ? "all sessions" : "hard or long"}` : "Off", `
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${P.on}" data-act="pre-set" data-k="on" data-v="${esc(!P.on)}" aria-label="Before a session"></button><span>Remind me to eat<small class="faint" style="display:block;font-size:12.5px">A row on Today and a notification before the session you plan</small></span></label>
     ${P.on ? `<div class="opt-row"><span class="opt-l">Lead time</span>${seg("lead", P.lead, [[60, "1 h"], [90, "1.5 h"], [120, "2 h"], [180, "3 h"]])}</div>
     <div class="opt-row"><span class="opt-l">Sessions</span>${seg("which", P.which, [["key", "Hard or long"], ["all", "All"]])}</div>
     <div class="opt-row"><span class="opt-l">Message</span>${seg("detail", P.detail, [["amounts", "Amounts"], ["nudge", "Nudge"]])}</div>
-    <div class="opt-row"><span class="opt-l">Where</span>${seg("mode", P.mode, [["both", "Today + alert"], ["today", "Today only"]])}</div>` : ""}</div>`; }
+    <div class="opt-row"><span class="opt-l">Where</span>${seg("mode", P.mode, [["both", "Today + alert"], ["today", "Today only"]])}</div>` : ""}`, "pre-set"); }
 ACT["pre-set"] = el => { const k = el.dataset.k, v = el.dataset.v, R = S.settings.reminders || {}; S.settings.reminders = { ...R, pre: { ...(R.pre || {}), [k]: k === "lead" ? +v : k === "on" ? v === "true" : v } }; saveSettings(); scheduleRender(); };
 /* the calendar file */
 function icsEsc(t) { return String(t || "").replace(/[\\;,]/g, m => "\\" + m).replace(/\n/g, "\\n"); }
@@ -13046,7 +13053,7 @@ reminderTick = function () { _reminderTick();
 navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-tab" && e.data.tab === "report") ACT["rep-open"](); });
 const _reminderPrefs = reminderPrefs;
 reminderPrefs = function () { const RP = S.settings.report || {};
-  return _reminderPrefs().replace('<button class="btn soft sm" data-act="rem-ics"', `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rep-at" style="font-size:13px">Weekly report on Monday at</label><input id="rep-at" class="inp" type="time" value="${esc(RP.at || "08:30")}" data-chg="rep-at" style="max-width:130px"></div>
+  return _reminderPrefs().replace('<button class="btn soft sm" data-act="rem-ics"', `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="faint" for="rep-at" style="font-size:13px">Monday report at</label><input id="rep-at" class="inp" type="time" value="${esc(RP.at || "08:30")}" data-chg="rep-at" style="max-width:130px"></div>
     <label class="row sw-row"><button type="button" class="switch" role="switch" aria-checked="${RP.today !== false}" data-act="rep-today" aria-label="Weekly report on Today"></button><span>Last week in review on Today<small class="faint" style="display:block;font-size:12.5px">Monday to Wednesday, until you close it</small></span></label>
     <button class="btn soft sm" data-act="rem-ics"`); };
 CHG["rep-at"] = v => { S.settings.report = { ...(S.settings.report || {}), at: v || "08:30" }; saveSettings(); };
