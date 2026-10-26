@@ -5428,7 +5428,8 @@ const SHEETS = {};
 function openSheet(type, params = {}) {
   for (const k in DRAFT) delete DRAFT[k];
   const cur = UI.sheet; let ret = null;
-  if (cur && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
+  if (cur && params.keep !== false) { const base = cur.type === "scan" && type !== "scan" ? cur._ret || null : cur;   // a scan only finds a product: what it opens returns to where the scan was started, never to the scan screen
+    ret = base; for (let x = base; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
   UI.sheet = { type, ...params }; if (ret) UI.sheet._ret = ret; UI.sheet._new = true; renderSheet(); }
 /* a sheet is a dialog: the page behind it is inert while it is open, Tab stays inside, focus starts in it and goes back to the control that opened it */
 const SHEET_FROM = { el: null, act: null };
@@ -5442,7 +5443,9 @@ function sheetClosed() {
 }
 /* leaving a sheet on purpose (Back, Esc, close): the field with the cursor commits its value and lets go, otherwise renderSheet() would defer the redraw and the screen would keep showing the sheet that is already gone */
 const navBlur = () => { if (typingBusy()) document.activeElement.blur(); };
-function closeSheet() { navBlur(); for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
+/* the camera (the only open stream) and the handler waiting for its barcode never outlive the sheet they were opened for */
+const camRelease = () => { CAM.onCode = null; camClose(); };
+function closeSheet() { navBlur(); camRelease(); for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
 /* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
    a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
    popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
@@ -5461,9 +5464,10 @@ function navSync() {
 }
 function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
 function navRestore(snap) {
-  navBlur(); for (const k in DRAFT) delete DRAFT[k];
+  navBlur(); camRelease(); UI.recipeSheet = UI.swapFrom = null; for (const k in DRAFT) delete DRAFT[k];
   UI.tab = snap.tab; UI.fuelTab = snap.fuelTab; UI.trainSeg = snap.trainSeg; UI.progSeg = snap.progSeg; UI.foodsSeg = snap.foodsSeg; UI.dest = null;
-  UI.sheet = snap.sheet; if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
+  UI.sheet = snap.sheet; { let keep = false; for (let x = UI.sheet; x; x = x._ret) if (x.type === "scan" || x.type === "labelcmp") keep = true; if (!keep) UI.labelFor = null; }
+  if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
   scheduleRender();
 }
 function navPop(e) {
@@ -5474,7 +5478,7 @@ function navPop(e) {
   NAV.i = at; navRestore(snap);
 }
 window.addEventListener("popstate", navPop);
-const closeToRoot = () => { navBlur(); let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
+const closeToRoot = () => { navBlur(); camRelease(); let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
   if (!sh) { root.innerHTML = ""; sheetClosed(); return; }
