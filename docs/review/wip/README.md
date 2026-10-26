@@ -1,7 +1,9 @@
-# Lavoro parziale di M14b (NON verificato, NON pubblicato)
+# Lavoro parziale di M14b (NON verificato, NON pubblicato) — 27/10
 
-Patch dei tre builder (A sync, B numeri energetici, C PWA/ripristino/accessibilità), salvate il 27/10 per non perderle: i loro rami erano locali al container.
-Applicare con `git am docs/review/wip/fix-X-*.patch` (A sopra `17fddb7`, B e C sopra `04e2a7a`; i file `*-uncommitted.patch` con `git apply`) in un branch separato, poi suite completa, `code-guard`, `design-reviewer`.
-Stato per gruppo: vedi `docs/review/fix-A-report.md` (nel patch A) e i report di B e C dentro le rispettive patch (`docs/review/fix-B-report.md`, `fix-C-report.md`).
-Aperti dichiarati dal builder A: #1 (base di unione dopo un invio senza unione) e #3 (restore point «before sign-in»). Domanda aperta per l'utente: le chiavi API locali di un dispositivo mai collegato possono entrare nell'account? (raccomandato: mai, vedi S-1).
-Le patch NON fanno parte della build: eliminarle quando il lavoro è unito.
+Patch dei builder fermati dal limite d'uso: `fix-<G>-commits.patch` (commit del ramo del worktree, da applicare con `git am`) e `fix-<G>-uncommitted.patch` (modifiche non committate, `git apply`), sopra il commit indicato da `git merge-base`.
+- **A** sync (unione per chiave, flush a pagehide, isolamento per account, pillola, paginazione, S-1 chiavi locali): 9 su 11 test verdi alla fine del primo giro; aperti #1 (base di unione) e #3 (restore point).
+- **C** PWA/ripristino/URL/accessibilità: in corso, la suite completa non era finita.
+- **D** Fuel: undo con dispensa, copia giorno, ecc. + nuova funzione Copy/Paste (L188): in corso.
+- **E** Shopping/Pantry + «Replace with something from home» (L189): nessun lavoro salvato (da rifare dalla specifica nel backlog e dal report `docs/review/area03-shopping.md`).
+- **B** (numeri energetici) è già unito e pubblicato; **F** (Foods/ricette) non è mai partito.
+Per riprendere: crea un ramo, applica la patch, esegui i test dei file toccati, poi suite completa, `code-guard`, `design-reviewer`. I report dei builder (`fix-A-report.md` ecc.) sono dentro le patch. Eliminare questa cartella quando il lavoro è unito.
