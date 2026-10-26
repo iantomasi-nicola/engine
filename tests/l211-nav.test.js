@@ -107,3 +107,17 @@ test("a tab change from inside a sheet chain: the chain closes in the history to
   assert.deepEqual(await where(page), { tab: "foods", sheet: null, dom: null });
   assert.deepEqual(app.errors, []);
 });
+
+test("after a reload, Back never reopens screens of the previous page load: those entries become the new first screen", async () => {
+  /* before the reload: Foods(1) > shopq(2) > buy(3). After it: Train(1) > shopq(2). Back x2 = the first screen; Back x3 lands on an entry of the old load (also numbered 2): it must show no sheet */
+  const page = await start();
+  await go(page, () => ACT["tab"]({ dataset: { tab: "foods" } })); await go(page, () => ACT["shopq-open"]()); await go(page, () => ACT["shop-buy"]({ dataset: { id: "t-chicken" } }));
+  await app.reload();
+  await go(app.page, () => ACT["tab"]({ dataset: { tab: "train" } })); await go(app.page, () => ACT["shopq-open"]());
+  await back(app.page); await back(app.page);
+  assert.deepEqual(await where(app.page), { tab: "today", sheet: null, dom: null });
+  await back(app.page);
+  const w = await where(app.page); assert.equal(w.sheet, null, "no sheet of the old load"); assert.equal(w.tab, "today");
+  assert.equal(await app.page.evaluate(() => NAV.i), 0, "that entry is the new first screen");
+  assert.deepEqual(app.errors, []);
+});

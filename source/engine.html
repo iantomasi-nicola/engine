@@ -5449,7 +5449,7 @@ function closeSheet(all) { navBlur(); camRelease(); for (const k in DRAFT) delet
 /* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
    a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
    popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
-const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0 };
+const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0, sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };   // sid: entries carry the page load that made them, so a reload never confuses the numbers
 const navDepth = () => { let n = 0; for (let x = UI.sheet; x; x = x._ret) n++; return n; };
 function navKey() { const t = UI.tab; return [t, FUEL_TABS.includes(t) ? UI.fuelTab : "", t === "train" ? UI.trainSeg : t === "progress" ? UI.progSeg : t === "foods" ? UI.foodsSeg : "", navDepth()].join("|"); }
 function navSnap() { return { key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
@@ -5461,7 +5461,7 @@ function navSync() {
     const view = k.slice(0, k.lastIndexOf("|")); let j = NAV.i - 1;   // the same place a few sheets down in this view (a sheet chain closed in one go): step back to it, not onto a new entry
     for (; j >= 0; j--) { const e = NAV.snaps[NAV.stack[j]]; if (!e || e.key.slice(0, e.key.lastIndexOf("|")) !== view) { j = -1; break; } if (e.key === k) break; }
     if (j >= 0) { const d = NAV.i - j; NAV.i = j; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.go(-d); return; }
-    const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id }, "");
+    const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id, sid: NAV.sid }, "");
   } catch (e) {}
 }
 function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
@@ -5475,6 +5475,7 @@ function navRestore(snap) {
 function navPop(e) {
   if (NAV.busy) { navSettled(); return; }
   if (!e.state || e.state.eng == null) return;
+  if (e.state.sid !== NAV.sid) { try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (x) {} NAV.stack = [0]; NAV.i = 0; NAV.snaps = {}; if (UI.sheet) UI.sheet = null; navRestore(navSnap()); NAV.snaps[0] = navSnap(); return; }   // an entry of an earlier page load: it can't be restored, it becomes the first screen
   const id = e.state.eng, at = NAV.stack.indexOf(id), snap = NAV.snaps[id];
   if (at < 0 || !snap) { if (UI.sheet) { UI.sheet = null; navRestore(navSnap()); } return; }
   NAV.i = at; navRestore(snap);
@@ -16751,7 +16752,7 @@ ACT["check-update"] = async () => {
   try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "open-checkin", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } else if (a === "open-checkin") { UI.tab = "today"; UI.date = todayISO(); render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(history.state, "", location.pathname + location.hash); }, 900); } catch (e) {}
   if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(history.state, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
-  try { history.replaceState({ eng: 0 }, ""); } catch (e) {} NAV.snaps[0] = navSnap(); render();
+  try { history.replaceState({ eng: 0, sid: NAV.sid }, ""); } catch (e) {} NAV.snaps[0] = navSnap(); render();
   setTimeout(() => { try { storesMigrate(); } catch (e) {} }, 4000);
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }
