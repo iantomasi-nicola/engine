@@ -220,8 +220,10 @@ test("an edit still waiting in the debounce stays marked unsent when an earlier 
 
 test("signing in on a device whose data belongs to no account, while another account's copy is also there, saves a restore point before the device is cleared", async () => {
   const srv = FS.server(), seed = F.seed({ withPlan: false });
-  const A = await dev(srv, "A", { uid: null, seed, local: { "engine.snap.other": "[]" } });
-  const r = await A.page.evaluate(async () => { const before = (await BKDB.keys("pts")).length, n = Object.keys(S.foods).length; claimLocal("u9"); await new Promise(r => setTimeout(r, 300));
+  const A = await dev(srv, "A", { seed }); await A.settle();
+  /* this device's data belongs to no account (owner ""), and another account's copy is on it too */
+  const r = await A.page.evaluate(async () => { Sync.owner = ""; localStorage.removeItem(OWNER_KEY); localStorage.setItem("engine.snap.other", "[]"); await new Promise(r => setTimeout(r, 300));
+    const before = (await BKDB.keys("pts")).length, n = Object.keys(S.foods).length; claimLocal("u9"); await new Promise(r => setTimeout(r, 300));
     const ks = (await BKDB.keys("pts")).sort(), pt = ks.length > before ? await BKDB.get("pts", ks[ks.length - 1]) : null; return { n, after: Object.keys(S.foods).length, why: pt?.why || "", kept: Object.keys(pt?.data?.foods || {}).length }; });
   assert.ok(r.n > 0 && r.after === 0, "the device was cleared for the other account");
   assert.match(r.why, /sign-in/); assert.equal(r.kept, r.n, "the restore point holds the device's own data");
