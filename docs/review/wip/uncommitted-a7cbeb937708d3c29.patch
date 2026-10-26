@@ -1,0 +1,385 @@
+diff --git a/source/engine.html b/source/engine.html
+index c52f6bc..ef34f24 100644
+--- a/source/engine.html
++++ b/source/engine.html
+@@ -3155,7 +3155,7 @@ function activeMeals() { return S.settings.meals.filter(m => m.on); }
+ function emptyDay(date) { return { date, meals: {} }; }
+ function getDay(date) { return S.days[date] || emptyDay(date); }
+ function mutateDay(date, fn, opts = {}) {
+-  const before = S.days[date] ? clone(S.days[date]) : null;
++  const before = S.days[date] ? clone(S.days[date]) : null, pan0 = opts.undo ? pantryGrams() : null;
+   const d = clone(getDay(date)); d.date = date; d.meals = d.meals || {};
+   fn(d);
+   for (const k of Object.keys(d.meals)) if (!d.meals[k] || !d.meals[k].length) delete d.meals[k];
+@@ -3164,7 +3164,7 @@ function mutateDay(date, fn, opts = {}) {
+   const isEmpty = !Object.keys(d.meals).length && !d.training && !d.override && !d.note && !d.adj;
+   if (isEmpty && !before) return;
+   put("days", date, isEmpty ? null : d);
+-  if (opts.undo) toast(opts.undo, () => put("days", date, before));
++  if (opts.undo) { const moved = pantryDelta(pan0); toast(opts.undo, () => { put("days", date, before); pantryRevert(moved); opts.onUndo?.(); }); }
+ }
+ function dayItems(day) { const out = []; for (const [m, items] of Object.entries(day.meals || {})) for (const it of items) out.push([m, it]); return out; }
+ function dayTotals(day, eatenOnly = false) {
+@@ -3238,6 +3238,10 @@ function pantryAdjust(it, sign, date) {
+   }
+   if (changed) put("shop", "", S.shop);
+ }
++/* what a change did to the pantry, in grams per food, so Undo takes back exactly that and nothing that changed since */
++const pantryGrams = () => Object.fromEntries(Object.entries(S.shop.pantry || {}).map(([id, p]) => [id, +p.g || 0]));
++function pantryDelta(before) { const o = {}; for (const [id, p] of Object.entries(S.shop.pantry || {})) { const d = (+p.g || 0) - (before[id] ?? (+p.g || 0)); if (d) o[id] = d; } return o; }
++function pantryRevert(delta) { let ch = false; for (const [id, g] of Object.entries(delta)) { const p = S.shop.pantry[id]; if (!p) continue; p.g = Math.max(0, r0((+p.g || 0) - g)); ch = true; } if (ch) put("shop", "", S.shop); }
+ 
+ /* diet & search */
+ function dietOK(f) {
+@@ -4502,22 +4506,23 @@ VIEWS.plan = function () {
+       ${y && dayItems(y).length ? `<button class="btn ghost" data-act="copy-from" data-from="${addDays(date, -1)}">${ic("copy", "sm")}Same as yesterday</button>` : ""}</div></div>`;
+   }
+   for (const m of activeMeals()) meals += mealCard(date, m, day, T);
++  for (const m of S.settings.meals) if (!m.on && (day.meals[m.id] || []).length) meals += mealCard(date, m, day, T);   // a meal switched off that still holds foods: they count in the day, so they show
+   meals += coachCard(date) + nutCard(date);
+   return h + fuelSticky(date, tot, eat, T) + `<div class="plan-grid"><div class="plan-side">${side}</div><div class="plan-meals">${meals}</div></div>`;
+ };
+ function mealCard(date, m, day, T) {
+   const items = day.meals[m.id] || [];
+   const mt = mealTotals(items), me = mealTotals(items, true); const tgt = T.kcal * mealShare(m.id);
+-  const dish = day.dish?.[m.id];
++  const dish = m.on ? day.dish?.[m.id] : "Off in Settings, still counts in the day";
+   const pp = clamp(mt.kcal / (tgt || 1) * 100, 0, 100), ep = clamp(me.kcal / (tgt || 1) * 100, 0, 100);
+   return `<section class="meal" data-meal-drop="${m.id}">
+     <div class="meal-head"><div style="min-width:0"><div class="meal-name">${esc(m.name)}${day.lock?.[m.id] ? `<span class="lk" title="Locked: auto-plan leaves it as it is" aria-label="Locked">${ic("lock", "sm")}</span>` : ""}</div>${dish ? `<div class="meal-dish">${esc(dish)}</div>` : ""}</div>
+-      <div class="meal-meta"><b>${fmtN(mt.kcal)}</b> <span class="tgt">/ ${fmtN(tgt)} kcal</span><br>
++      <div class="meal-meta"><b>${fmtN(mt.kcal)}</b> <span class="tgt">${m.on ? `/ ${fmtN(tgt)} ` : ""}kcal</span><br>
+       <span class="pcf"><span style="--c:var(--carb)">${r0(mt.c)}C</span><span style="--c:var(--pro)">${r0(mt.p)}P</span><span style="--c:var(--fat)">${r0(mt.f)}F</span></span></div>
+       <button class="icon-btn" data-act="meal-menu" data-meal="${m.id}" aria-label="${esc(m.name)} options">${ic("more")}</button></div>
+-    ${items.length ? `<div class="mprog ${mt.kcal > tgt * 1.1 ? "over" : ""}" aria-hidden="true"><i class="pl" style="width:${pp}%"></i><i style="width:${ep}%"></i></div>` : ""}
++    ${items.length && m.on ? `<div class="mprog ${mt.kcal > tgt * 1.1 ? "over" : ""}" aria-hidden="true"><i class="pl" style="width:${pp}%"></i><i style="width:${ep}%"></i></div>` : ""}
+     <ul class="items" data-meal="${m.id}">${items.map(it => itemRow(it, m.id)).join("")}</ul>
+-    <button class="add-row" data-act="open-add" data-meal="${m.id}">${ic("plus", "sm")}Add to ${esc(m.name.toLowerCase())}</button></section>`;
++    ${m.on ? `<button class="add-row" data-act="open-add" data-meal="${m.id}">${ic("plus", "sm")}Add to ${esc(m.name.toLowerCase())}</button>` : ""}</section>`;
+ }
+ function itemRow(it, mealId) {
+   const mm = itemMacros(it);
+@@ -6388,14 +6393,30 @@ Reply with only JSON: {"days":[{"date":"YYYY-MM-DD","meals":{"<meal id>":{"dish"
+ }
+ 
+ /* ================= planner actions ================= */
+-function snapshotDays(dates) { const o = {}; for (const d of dates) o[d] = S.days[d] ? clone(S.days[d]) : null; return o; }
++function snapshotDays(dates) { const o = {}; for (const d of dates) o[d] = S.days[d] ? clone(S.days[d]) : null; Object.defineProperty(o, "pan", { value: pantryGrams() }); return o; }
+ function restoreDays(snap) { for (const [d, v] of Object.entries(snap)) put("days", d, v); }
++/* the Undo of a change made after a snapshot: the days come back and so do the grams the change moved in the pantry (called once the change is done) */
++function undoDays(snap) { const moved = pantryDelta(snap.pan); return () => { restoreDays(snap); pantryRevert(moved); }; }
++/* the one way to take foods off a day: what was eaten gives its stock back to the pantry (pantryAdjust remembers how much it took), a meal left empty loses its
++   dish name, and opts.undo brings foods and grams back. items = the item objects, found by id in any meal. */
++function removeItems(date, items, opts) {
++  const ids = new Set(items.map(x => x.id));
++  mutateDay(date, d => {
++    for (const [m, list] of Object.entries(d.meals)) {
++      const gone = list.filter(x => ids.has(x.id)); if (!gone.length) continue;
++      for (const it of gone) if (it.eaten) pantryAdjust(it, -1);
++      d.meals[m] = list.filter(x => !ids.has(x.id)); if (!d.meals[m].length && d.dish) delete d.dish[m];
++    }
++    if (d.dish && !Object.keys(d.dish).length) delete d.dish;
++  }, opts);
++}
++const allItemsOf = date => dayItems(getDay(date)).map(([, it]) => it);
+ function quickPlan(date) {
+   const snap = snapshotDays([date]);
+   const ctx = plannerContext(); seedRecent(ctx, date);
+   const day = planDay(date, ctx, { mode: "fill" });
+   put("days", date, day);
+-  toast(`Planned ${relDay(date).toLowerCase()} · ${fmtN(dayTotals(day).kcal)} kcal`, () => restoreDays(snap));
++  toast(`Planned ${relDay(date).toLowerCase()} · ${fmtN(dayTotals(day).kcal)} kcal`, undoDays(snap));
+ }
+ async function runPlanner() {
+   const sh = UI.sheet;
+@@ -6427,7 +6448,7 @@ async function runPlanner() {
+   }
+   const err = sh.err; closeSheet();
+   const kept = mode === "fill" ? pre.filled : 0;
+-  toast(err || (total === 1 ? `Planned ${relDay(dates[0]).toLowerCase()}` : `Planned ${total} days${sh.pairs ? " · lunch and dinner in pairs" : ""}`) + (kept ? ` · ${kept} meal${kept === 1 ? "" : "s"} left as they were` : ""), () => restoreDays(snap));
++  toast(err || (total === 1 ? `Planned ${relDay(dates[0]).toLowerCase()}` : `Planned ${total} days${sh.pairs ? " · lunch and dinner in pairs" : ""}`) + (kept ? ` · ${kept} meal${kept === 1 ? "" : "s"} left as they were` : ""), undoDays(snap));
+ }
+ 
+ /* ================= drag & drop (touch + mouse) ================= */
+@@ -6545,7 +6566,7 @@ ACT["quick-plan"] = () => quickPlan(UI.date);
+ ACT["open-copy"] = el => openSheet("copy", { scope: el.dataset.scope || "day", meal: el.dataset.meal, targets: [], mode: "add" });
+ ACT["copy-from"] = el => {
+   const src = S.days[el.dataset.from]; if (!src) return;
+-  mutateDay(UI.date, d => { for (const [m, items] of Object.entries(src.meals || {})) d.meals[m] = (d.meals[m] || []).concat(items.map(it => ({ ...clone(it), id: uid(), eaten: false }))); if (src.dish) d.dish = { ...(d.dish || {}), ...src.dish }; }, { undo: "Copied yesterday's meals" });
++  mutateDay(UI.date, d => { for (const [m, items] of Object.entries(src.meals || {})) putClones(d, m, items, src.dish?.[m]); }, { undo: "Copied yesterday's meals" });
+ };
+ ACT["all-eaten"] = () => {
+   mutateDay(UI.date, d => { for (const [, it] of dayItems(d)) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }, { undo: "Marked everything as eaten" });
+@@ -6574,29 +6595,29 @@ ACT["day-menu"] = () => {
+     { label: "Training & targets for this day", icon: "bolt", run: () => openSheet("training", { date, live: true }) },
+     ...(has ? [
+       { label: "Mark all as not eaten", icon: "undo", run: () => mutateDay(date, d => { for (const [, it] of dayItems(d)) if (it.eaten) { it.eaten = false; pantryAdjust(it, -1); } }, { undo: "Unmarked all" }) },
+-      { label: "Clear the day", icon: "trash", danger: true, sub: "Removes every planned food", run: () => mutateDay(date, d => { d.meals = {}; delete d.dish; }, { undo: "Day cleared" }) }] : [])
++      { label: "Clear the day", icon: "trash", danger: true, sub: "Removes every planned food", run: () => removeItems(date, allItemsOf(date), { undo: "Day cleared" }) }] : [])
+   ];
+   openSheet("menu", { title: fmtLong(date), items });
+ };
+ ACT["meal-menu"] = el => {
+   const mid = el.dataset.meal, items = getDay(UI.date).meals[mid] || [], locked = !!getDay(UI.date).lock?.[mid];
+   const list = [
+-    ...(UI.mclip ? [{ label: `Paste ${UI.mclip.label} here`, icon: "plus", run: () => pasteClip(UI.date, mid) }] : []),
++    ...(UI.mclip ? [{ label: `Paste ${clipLabel(mid)} here`, icon: "plus", run: () => pasteClip(UI.date, mid) }] : []),
+     ...(items.length ? [{ label: locked ? `Unlock ${mealName(mid).toLowerCase()}` : `Lock ${mealName(mid).toLowerCase()}`, icon: "lock", sub: locked ? "Auto-plan and saved weeks may change it again" : "Auto-plan, «New plan» and saved weeks leave it exactly as it is", run: () => mutateDay(UI.date, d => { d.lock = { ...(d.lock || {}) }; if (locked) delete d.lock[mid]; else d.lock[mid] = true; }, { undo: locked ? `${mealName(mid)} unlocked` : `${mealName(mid)} locked` }) }] : []),
+     { label: "Plan a treat", icon: "treat", sub: "Set aside about how many calories; decide what later. The plan makes room", run: () => openCheat({ date: UI.date, meal: mid }) },
+     ...(locked ? [] : [{ label: items.length ? "Fill the rest of this meal" : "Plan this meal", icon: "spark", sub: "Uses this meal's share of the day's targets", run: () => {
+       const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
+       const day = planDay(UI.date, ctx, { mode: "fill", meals: [mid] });
+-      put("days", UI.date, day); toast(`Planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } }]),
++      put("days", UI.date, day); toast(`Planned ${mealName(mid).toLowerCase()}`, undoDays(snap)); } }]),
+     ...(items.length ? [
+       ...(locked ? [] : [{ label: "Re-plan from scratch", icon: "swap", sub: "Keeps items already eaten", run: () => {
+         const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
+-        const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, () => restoreDays(snap)); } }]),
++        const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, undoDays(snap)); } }]),
+       { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
+       { label: `Copy ${mealName(mid).toLowerCase()}`, icon: "copy", sub: "To the clipboard: paste it on any meal", run: () => copyToClip("meal", UI.date, mid) },
+       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
+       { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }) },
+-      { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => mutateDay(UI.date, d => { delete d.meals[mid]; if (d.dish) delete d.dish[mid]; }, { undo: `${mealName(mid)} cleared` }) }] : [])
++      { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => removeItems(UI.date, items, { undo: `${mealName(mid)} cleared` }) }] : [])
+   ];
+   openSheet("menu", { title: mealName(mid), items: list });
+ };
+@@ -6622,7 +6643,7 @@ function swapMeals(date, a, b) {
+   const snap = snapshotDays([date]);
+   mutateDay(date, d => { const x = d.meals[a] || [], y = d.meals[b] || []; d.meals[a] = y; d.meals[b] = x;
+     if (d.dish) { const da = d.dish[a], db = d.dish[b]; delete d.dish[a]; delete d.dish[b]; if (db) d.dish[a] = db; if (da) d.dish[b] = da; } });
+-  toast(`Swapped ${mealName(a).toLowerCase()} and ${mealName(b).toLowerCase()}`, () => restoreDays(snap));
++  toast(`Swapped ${mealName(a).toLowerCase()} and ${mealName(b).toLowerCase()}`, undoDays(snap));
+ }
+ /* move (or copy) an item to another day and meal; false when there is nothing to do */
+ function moveItem(from, to, copy = false) {
+@@ -6631,9 +6652,9 @@ function moveItem(from, to, copy = false) {
+   if (!copy && from.date === to.date && from.meal === to.meal) return false;
+   const snap = snapshotDays([...new Set([from.date, to.date])]), it = clone(src);
+   if (copy) { it.id = uid(); it.eaten = false; delete it.took; delete it.snap; delete it.cheat; delete it.out; }
+-  if (!copy) mutateDay(from.date, d => { d.meals[from.meal] = (d.meals[from.meal] || []).filter(x => x.id !== from.id); if (d.dish) delete d.dish[from.meal]; });
++  if (!copy) mutateDay(from.date, d => { d.meals[from.meal] = (d.meals[from.meal] || []).filter(x => x.id !== from.id); if (d.dish && !d.meals[from.meal].length) delete d.dish[from.meal]; });
+   mutateDay(to.date, d => { (d.meals[to.meal] = d.meals[to.meal] || []).push(it); if (d.dish) delete d.dish[to.meal]; });
+-  toast(`${copy ? (from.date === to.date && from.meal === to.meal ? "Duplicated" : "Copied") : "Moved"} to ${from.date === to.date ? mealName(to.meal) : `${DOW[dow(to.date)]} ${fmtDM(to.date)}`}`, () => restoreDays(snap));
++  toast(`${copy ? (from.date === to.date && from.meal === to.meal ? "Duplicated" : "Copied") : "Moved"} to ${from.date === to.date ? mealName(to.meal) : `${DOW[dow(to.date)]} ${fmtDM(to.date)}`}`, undoDays(snap));
+   return true;
+ }
+ const PW_DC = 172, PW_CELL = 210;   // the day column and the narrowest readable meal column; with less room the meals of a day stack under each other
+@@ -6644,15 +6665,15 @@ function weekPlanView() {
+   const mac = m => `C ${fmtN(m.c)} · P ${fmtN(m.p)} · F ${fmtN(m.f)}`;
+   const nameOf = d => `${DOW[dow(d)]} ${+d.slice(8)}`;
+   const dayHead = d => { const day = getDay(d), tot = dayTotals(day), TT = targetsFor(d), T = TT.kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0, filled = dayItems(day).length,
+-      gaps = d >= t && M.some(m => !day.lock?.[m.id] && !(day.meals?.[m.id] || []).length && habitItems(d, m.id));
++      gaps = d >= t && M.some(m => !day.lock?.[m.id] && !(day.meals?.[m.id] || []).length && habitSrc(d, m.id));
+     const tool = (act, ico, label) => `<button class="pw-add pw-ic" data-act="${act}" data-date="${d}" aria-label="${label} (${nameOf(d)})" title="${label}">${ic(ico, "sm")}</button>`;
+     return `<div class="pw-dh">${filled || gaps ? `<span class="pw-dt">${gaps ? tool("day-fill", "spark", "Fill the empty meals from your habits") : ""}${filled ? tool("day-copy", "copy", "Copy the whole day") + tool("clear-day", "trash", "Clear the whole day") : ""}</span>` : ""}<button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal, carbs ${fmtN(tot.c)} of ${fmtN(TT.c)} g, protein ${fmtN(tot.p)} of ${fmtN(TT.p)} g, fat ${fmtN(tot.f)} of ${fmtN(TT.f)} g">
+       <span class="pw-dn"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b></span><span class="pw-kcal"><b>${fmtN(tot.kcal)}</b><small> / ${fmtN(T)} kcal</small></span><i class="pw-bar${T && tot.kcal > T * 1.08 + 3 ? " over" : ""}"><i style="width:${pct}%"></i></i>
+       <span class="pw-mac">${[["C", "carb", tot.c, TT.c, "Carbs"], ["P", "pro", tot.p, TT.p, "Protein"], ["F", "fat", tot.f, TT.f, "Fat"]].map(([l, c, v, g, n]) => `<span class="pw-mc" style="--c:var(--${c})" title="${n}: eaten or planned / target, in grams"><i>${l}</i><b>${fmtN(v)}</b><small> / ${fmtN(g)} g</small><span class="pw-mb"><span style="width:${g ? clamp(v / g * 100, 0, 100) : 0}%"></span></span></span>`).join("")}</span></button></div>`; };
+   const cell = (d, m) => { const day = getDay(d), items = day.meals[m.id] || [], c = UI.mclip, pst = c && !(c.date === d && (c.scope === "day" || c.meal === m.id)), nm = `${esc(m.name)} on ${DOW[dow(d)]}`, at = `data-date="${d}" data-meal="${m.id}"`;
+-    const paste = (txt) => pst ? `<button class="pw-add pst${txt ? "" : " pw-ic"}" data-act="meal-paste" ${at} aria-label="Paste ${esc(c.label)} in ${nm}" title="Paste ${esc(c.label)}">${ic("copy", "sm")}${txt ? "<span>Paste</span>" : ""}</button>` : "";
++    const paste = (txt) => pst ? `<button class="pw-add pst${txt ? "" : " pw-ic"}" data-act="meal-paste" ${at} aria-label="Paste ${esc(clipLabel(m.id))} in ${nm}" title="Paste ${esc(clipLabel(m.id))}">${ic("copy", "sm")}${txt ? "<span>Paste</span>" : ""}</button>` : "";
+     const more = `<button class="pw-add pw-ic pw-x" data-act="pw-cm" ${at} aria-label="Meal options: ${nm}" title="Meal options: copy, paste, save as recipe, clear">${ic("more", "sm")}</button>`;
+-    if (!items.length) { const us = d >= t && !day.lock?.[m.id] ? habitItems(d, m.id) : null;
++    if (!items.length) { const us = d >= t && !day.lock?.[m.id] ? habitSrc(d, m.id) : null;
+       return `<div class="pw-cell vac${d === t ? " now" : ""}" ${at}><span class="pw-ml">${esc(m.name)}</span><button class="pw-e" data-act="pw-add" ${at} aria-label="Add to ${nm}">${ic("plus", "sm")}<span>Add</span></button><span class="pw-ca">${more}${us ? `<button class="pw-add pw-us" data-act="pw-usual" ${at} title="Fill with what you usually have here: ${esc(us.map(itemName).join(", "))}" aria-label="Fill ${nm} with what you usually have">${ic("spark", "sm")}<span>Usual</span></button>` : ""}${paste(true)}</span></div>`; }
+     const mt = items.reduce((a, it) => addM(a, itemMacros(it), 1), ZERO());
+     return `<div class="pw-cell${d === t ? " now" : ""}" ${at}><div class="pw-ch"><div class="pw-mt" title="Meal total: carbs · protein · fat, in grams"><span class="pw-ml">${esc(m.name)}</span><b>${fmtN(mt.kcal)} kcal</b><span>${mac(mt)}</span></div>
+@@ -6688,8 +6709,7 @@ ACT["pw-to-day"] = el => { S_().toDate = el.dataset.d; renderSheet(); };
+ ACT["pw-to-meal"] = el => { S_().toMeal = el.dataset.m; renderSheet(); };
+ ACT["pw-do"] = () => { const sh = S_(); closeSheet(); moveItem({ date: sh.date, meal: sh.meal, id: sh.id }, { date: sh.toDate || sh.date, meal: sh.toMeal || sh.meal }, sh.mode === "copy"); };
+ ACT["pw-dup"] = () => { const sh = S_(); closeSheet(); moveItem({ date: sh.date, meal: sh.meal, id: sh.id }, { date: sh.date, meal: sh.meal }, true); };
+-ACT["pw-del"] = () => { const sh = S_(), it = (getDay(sh.date).meals[sh.meal] || []).find(x => x.id === sh.id), snap = snapshotDays([sh.date]); closeSheet();
+-  mutateDay(sh.date, d => { if (it?.eaten) pantryAdjust({ ...it }, -1); d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== sh.id); }); toast(`${it ? itemName(it) : "Item"} removed`, () => restoreDays(snap)); };
++ACT["pw-del"] = () => { const sh = S_(), it = (getDay(sh.date).meals[sh.meal] || []).find(x => x.id === sh.id); closeSheet(); if (it) removeItems(sh.date, [it], { undo: `${itemName(it)} removed` }); };
+ /* the mouse: drag an item onto a cell */
+ document.addEventListener("dragstart", e => { const it = e.target.closest?.(".pw-it"); if (!it || it.getAttribute("draggable") !== "true") return; e.dataTransfer.setData("text/plain", JSON.stringify({ date: it.dataset.date, meal: it.dataset.meal, id: it.dataset.item })); e.dataTransfer.effectAllowed = "copyMove"; });
+ document.addEventListener("dragover", e => { const c = e.target.closest?.(".pw-cell"); $$(".pw-cell.over").forEach(x => x !== c && x.classList.remove("over")); if (c) { e.preventDefault(); c.classList.add("over"); e.dataTransfer.dropEffect = e.altKey ? "copy" : "move"; } });
+@@ -6697,14 +6717,20 @@ document.addEventListener("drop", e => { const c = e.target.closest?.(".pw-cell"
+ /* ===== M5c: whole meals and whole days: move, copy, paste, drag (drag = move, Alt = copy, like a single item) ===== */
+ const mealItemsOf = (date, mid) => S.days[date]?.meals?.[mid] || [];
+ function cloneItem(it) { const x = clone(it); x.id = uid(); x.eaten = false; delete x.took; delete x.snap; delete x.cheat; delete x.out; return x; }
++/* copies of foods onto a meal of a draft day (inside mutateDay): never a treat or an eaten-out entry, never eaten; a meal that was empty takes the dish name along, one that had food loses its own */
++function putClones(d, m, its, dish) {
++  const cl = its.filter(x => !x.cheat && !x.out).map(cloneItem); if (!cl.length) return;
++  const had = (d.meals[m] || []).length; d.meals[m] = (d.meals[m] || []).concat(cl);
++  if (d.dish) delete d.dish[m]; if (!had && dish) (d.dish = d.dish || {})[m] = dish;
++}
+ /* pairs = [[fromMeal, toMeal], ...] on from.date -> to.date; eaten items never move (they happened), copies take everything */
+ function transferMeals(from, to, pairs, copy, what) {
+   const src = S.days[from]?.meals || {}, pick = pairs.map(([fm, tm]) => ({ fm, tm, its: (src[fm] || []).filter(x => copy || !x.eaten) })).filter(o => o.its.length);
+   if (!pick.length || (!copy && from === to && pick.every(o => o.fm === o.tm))) return false;
+   const snap = snapshotDays([...new Set([from, to])]), dishes = { ...(S.days[from]?.dish || {}) }, made = pick.map(o => ({ ...o, ids: new Set(o.its.map(x => x.id)), cl: o.its.map(cloneItem) }));
+-  if (!copy) mutateDay(from, d => { for (const o of made) { d.meals[o.fm] = (d.meals[o.fm] || []).filter(x => !o.ids.has(x.id)); if (d.dish) delete d.dish[o.fm]; } });
++  if (!copy) mutateDay(from, d => { for (const o of made) { d.meals[o.fm] = (d.meals[o.fm] || []).filter(x => !o.ids.has(x.id)); if (d.dish && !d.meals[o.fm].length) delete d.dish[o.fm]; } });
+   mutateDay(to, d => { for (const o of made) { const had = (d.meals[o.tm] || []).length; d.meals[o.tm] = (d.meals[o.tm] || []).concat(o.cl); if (d.dish) delete d.dish[o.tm]; if (!had && dishes[o.fm]) (d.dish = d.dish || {})[o.tm] = dishes[o.fm]; } });
+-  toast(`${copy ? "Copied" : "Moved"} ${what} to ${DOW[dow(to)]} ${fmtDM(to)}`, () => restoreDays(snap)); return true;
++  toast(`${copy ? "Copied" : "Moved"} ${what} to ${DOW[dow(to)]} ${fmtDM(to)}`, undoDays(snap)); return true;
+ }
+ const moveMeal = (from, to, copy = false) => transferMeals(from.date, to.date, [[from.meal, to.meal]], copy, mealName(from.meal).toLowerCase());
+ const moveDay = (from, to, copy = false) => transferMeals(from, to, Object.keys(S.days[from]?.meals || {}).map(m => [m, m]), copy, "the day");
+@@ -6715,34 +6741,43 @@ function copyToClip(scope, date, mid) {
+   UI.mclip = { scope, date, meal: mid, items: clone(its), dish: clone(day?.dish || {}), label: scope === "meal" ? `${mealName(mid).toLowerCase()} of ${fmtDM(date)}` : `the day of ${fmtDM(date)}` };
+   toast(`Copied ${UI.mclip.label}: paste it on any day or meal`); return true;
+ }
++/* what pasting on one meal puts there: with a whole day copied, that meal of it */
++const clipLabel = mid => { const c = UI.mclip; return c.scope === "day" && mid ? `${mealName(mid).toLowerCase()} of ${fmtDM(c.date)}` : c.label; };
+ function pasteClip(date, mid) {
+   const c = UI.mclip; if (!c) { toast("Copy a day or a meal first."); return false; }
+   const want = c.scope === "meal" ? { [mid || c.meal]: c.items[c.meal] } : mid ? { [mid]: c.items[mid] || [] } : c.items, snap = snapshotDays([date]);
+   const n = Object.values(want).reduce((a, v) => a + (v || []).length, 0); if (!n) { toast("That meal is empty in the copied day."); return false; }
+   mutateDay(date, d => { for (const [m, its] of Object.entries(want)) { if (!(its || []).length) continue; const had = (d.meals[m] || []).length; d.meals[m] = (d.meals[m] || []).concat(its.map(cloneItem)); if (d.dish) delete d.dish[m]; if (!had && c.dish?.[c.scope === "meal" ? c.meal : m]) (d.dish = d.dish || {})[m] = c.dish[c.scope === "meal" ? c.meal : m]; } });
+-  toast(`Pasted ${c.label} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => restoreDays(snap)); return true;
++  toast(`Pasted ${clipLabel(mid)} on ${DOW[dow(date)]} ${fmtDM(date)}`, undoDays(snap)); return true;
+ }
+ /* auto-complete: an empty meal gets what you usually have there. The same weekday and meal of the most recent earlier week that has it (up to 8 weeks back);
+    else the commonest combination for that meal in the last 21 days. Treats and eaten flags are not copied; past days, filled meals and days without history are left alone. */
+-function habitItems(date, mid) {
+-  const usable = d => mealItemsOf(d, mid).filter(x => !x.cheat);
+-  for (let k = 1; k <= 8; k++) { const its = usable(addDays(date, -7 * k)); if (its.length) return its.map(cloneItem); }
+-  const cnt = {}; for (let k = 1; k <= 21; k++) { const its = usable(addDays(date, -k)); if (!its.length) continue; const key = its.map(x => x.kind + ":" + x.ref).sort().join("|"); (cnt[key] = cnt[key] || { n: 0, its }).n++; }
+-  const best = Object.values(cnt).sort((a, b) => b.n - a.n)[0]; return best ? best.its.map(cloneItem) : null;
++const itemExists = it => it.kind === "food" ? !!(getFood(it.ref) || BUILTIN[it.ref]) : it.kind === "recipe" ? !!getRecipe(it.ref) : true;
++const HAB = { v: -1, m: {} };   // habits per day and meal, kept while the data does not change (the week table asks for every empty meal on every draw)
++function habitSrc(date, mid) {
++  if (HAB.v !== DATA_V) { HAB.v = DATA_V; HAB.m = {}; }
++  const key = date + "|" + mid; if (key in HAB.m) return HAB.m[key];
++  const usable = d => mealItemsOf(d, mid).filter(x => !x.cheat && itemExists(x));
++  let best = null;
++  for (let k = 1; k <= 8 && !best; k++) { const its = usable(addDays(date, -7 * k)); if (its.length) best = its; }
++  if (!best) { const cnt = {}; for (let k = 1; k <= 21; k++) { const its = usable(addDays(date, -k)); if (!its.length) continue; const sig = its.map(x => x.kind + ":" + x.ref).sort().join("|"); (cnt[sig] = cnt[sig] || { n: 0, its }).n++; }
++    best = Object.values(cnt).sort((a, b) => b.n - a.n)[0]?.its || null; }
++  return HAB.m[key] = best;
+ }
++function habitItems(date, mid) { return habitSrc(date, mid)?.map(cloneItem) || null; }
+ function autoCompleteDays(dates, { replace = false, meals = null } = {}) {
+   const t = todayISO(), M = activeMeals().filter(m => !meals || meals.includes(m.id)), days = dates.filter(d => d >= t), snap = snapshotDays(days), plan = [];
+   for (const d of days) for (const m of M) { if (getDay(d).lock?.[m.id] || (!replace && mealItemsOf(d, m.id).length)) continue; const its = habitItems(d, m.id); if (its) plan.push([d, m.id, its]); }
+   if (!plan.length) { toast("Nothing to fill: those meals have no history yet."); return 0; }
+   for (const [d, m, its] of plan) mutateDay(d, day => { day.meals[m] = [...(replace ? (day.meals[m] || []).filter(it => it.eaten || it.cheat) : []), ...its]; if (replace && day.dish) delete day.dish[m]; });
+-  toast(`${replace ? "Replaced" : "Filled"} ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, () => restoreDays(snap)); return plan.length;
++  toast(`${replace ? "Replaced" : "Filled"} ${plan.length} meal${plan.length === 1 ? "" : "s"} from your habits`, undoDays(snap)); return plan.length;
+ }
+ ACT["pw-plan"] = () => { const t = todayISO(), ws = weekStartOf(UI.date), we = addDays(ws, 6); if (we < t) { toast("This week is already over: pick this week or a later one."); return; }
+   const P = plannerPreview([...Array(7)].map((_, i) => addDays(ws, i)).filter(d => d >= t), "fill"); openSheet("planner", { scope: "range", from: ws > t ? ws : t, to: we, mode: P.empty ? "fill" : plPrefs().how === "habits" ? "replace" : "again", pantry: true, ...plPrefs() }); };
+ ACT["pw-clear-week"] = () => { const ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), n = days.reduce((a, d) => a + dayItems(getDay(d)).length, 0);
+   if (!n) { toast("The week is already empty."); return; }
+   openSheet("confirm", { title: "Clear the whole week?", text: `Removes the ${n} planned food${n > 1 ? "s" : ""} of ${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}, eaten ones included. You can undo it right after.`, yes: "Clear week", danger: true,
+-    run: () => { const snap = snapshotDays(days); for (const d of days) if (dayItems(getDay(d)).length) mutateDay(d, day => { day.meals = {}; delete day.dish; }); toast(`Week cleared: ${n} item${n > 1 ? "s" : ""}`, () => restoreDays(snap)); } }); };
++    run: () => { const snap = snapshotDays(days); for (const d of days) if (dayItems(getDay(d)).length) removeItems(d, allItemsOf(d)); toast(`Week cleared: ${n} item${n > 1 ? "s" : ""}`, undoDays(snap)); } }); };
+ /* ---------- saved weeks: the whole week (Monday to Sunday) under a name, to bring back on any later week ---------- */
+ const weekTpls = () => S.settings.weekTpls || [];
+ const setWeekTpls = (list, undo) => { const before = S.settings.weekTpls || []; S.settings.weekTpls = list; saveSettings(); if (undo) toast(undo, () => { S.settings.weekTpls = before; saveSettings(); scheduleRender(); }); };
+@@ -6759,14 +6794,13 @@ function saveWeekAs(ws, name) {
+ function applyWeekTpl(tid, ws, mode) {
+   const t = weekTpls().find(x => x.id === tid); if (!t) return;
+   const today = todayISO(), act = activeMeals().map(m => m.id), dates = [...Array(7)].map((_, i) => addDays(ws, i)), snap = snapshotDays(dates); let placed = 0, missing = 0, past = 0;
+-  const ok = it => it.kind === "food" ? !!(getFood(it.ref) || BUILTIN[it.ref]) : it.kind === "recipe" ? !!getRecipe(it.ref) : true;
+   dates.forEach((d, i) => { if (d < today) { past++; return; } const src = t.days[i] || { meals: {} };
+     mutateDay(d, day => {
+       if (mode === "replace") for (const m of act) if (!day.lock?.[m]) day.meals[m] = (day.meals[m] || []).filter(it => it.eaten || it.cheat);
+       for (const [m, its] of Object.entries(src.meals || {})) { if (!act.includes(m) || day.lock?.[m] || (mode === "fill" && (day.meals[m] || []).length)) continue;
+-        const good = its.filter(ok); missing += its.length - good.length; if (!good.length) continue;
++        const good = its.filter(itemExists); missing += its.length - good.length; if (!good.length) continue;
+         day.meals[m] = [...(day.meals[m] || []), ...good.map(cloneItem)]; placed += good.length; if (src.dish?.[m]) day.dish = { ...(day.dish || {}), [m]: src.dish[m] }; } }); });
+-  toast(placed ? `«${t.name}»: ${placed} item${placed === 1 ? "" : "s"} placed${missing ? ` · ${missing} no longer exist` : ""}${past ? ` · ${past} past day${past === 1 ? "" : "s"} left alone` : ""}` : "Nothing was placed: the meals already have food or the days are past.", () => restoreDays(snap));
++  toast(placed ? `«${t.name}»: ${placed} item${placed === 1 ? "" : "s"} placed${missing ? ` · ${missing} no longer exist` : ""}${past ? ` · ${past} past day${past === 1 ? "" : "s"} left alone` : ""}` : "Nothing was placed: the meals already have food or the days are past.", undoDays(snap));
+ }
+ const wtWeeks = () => { const ws = weekStartOf(UI.date), t = weekStartOf(todayISO()); return [...new Set([ws, ...[0, 1, 2, 3].map(k => addDays(t, 7 * k))])].filter(w => w >= t).sort(); };
+ SHEETS.weektpl = sh => {
+@@ -6835,8 +6869,7 @@ ACT.pick = el => { const sh = S_(); openSheet("qty", { kind: el.dataset.kind, re
+ const backToAdd = sh => openSheet("add", { date: sh.date, meal: sh.meal, seg: sh.addSeg || "recent", q: sh.addQ || "" });
+ ACT["qty-back"] = () => backToAdd(S_());
+ ACT["add-rm"] = el => { const sh = S_(), date = sh.date || UI.date, id = el.dataset.id; const it = (getDay(date).meals[sh.meal] || []).find(x => x.id === id); if (!it) return;
+-  mutateDay(date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => x.id !== id); }); refreshAdd();
+-  toast(`Removed ${itemName(it)}`, () => { mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }); refreshAdd(); }); };
++  removeItems(date, [it], { undo: `Removed ${itemName(it)}`, onUndo: refreshAdd }); refreshAdd(); };
+ ACT["quick-add"] = el => {
+   const sh = S_(); const kind = el.dataset.kind, ref = el.dataset.id;
+   const qty = +el.dataset.qty || (kind === "recipe" ? 1 : defaultQty(getFood(ref)));
+@@ -6882,8 +6915,8 @@ ACT["do-swap"] = el => {
+   closeSheet();
+ };
+ ACT["item-del"] = () => {
+-  const sh = S_();
+-  mutateDay(sh.date, d => { d.meals[sh.origMeal] = (d.meals[sh.origMeal] || []).filter(x => x.id !== sh.itemId); }, { undo: "Removed" });
++  const sh = S_(), it = (getDay(sh.date).meals[sh.origMeal] || []).find(x => x.id === sh.itemId);
++  if (it) removeItems(sh.date, [it], { undo: "Removed" });
+   closeSheet();
+ };
+ ACT["qty-save"] = () => {
+@@ -7060,14 +7093,12 @@ ACT["pl-run"] = () => runPlanner();
+ ACT["cp-day"] = el => { const sh = S_(); const d = el.dataset.d; sh.targets = sh.targets.includes(d) ? sh.targets.filter(x => x !== d) : [...sh.targets, d]; renderSheet(); };
+ ACT["cp-mode"] = el => { S_().mode = el.dataset.k; renderSheet(); };
+ ACT["cp-run"] = () => {
+-  const sh = S_(); const src = getDay(UI.date); const snap = snapshotDays(sh.targets);
++  const sh = S_(), src = getDay(UI.date), snap = snapshotDays(sh.targets), copied = sh.scope === "meal" ? [sh.meal] : Object.keys(src.meals || {});
+   for (const t of sh.targets) mutateDay(t, d => {
+-    const mealsToCopy = sh.scope === "meal" ? [sh.meal] : Object.keys(src.meals || {});
+-    if (sh.mode === "replace") { if (sh.scope === "meal") delete d.meals[sh.meal]; else d.meals = {}; }
+-    for (const m of mealsToCopy) d.meals[m] = (d.meals[m] || []).concat((src.meals[m] || []).map(it => ({ ...clone(it), id: uid(), eaten: false })));
+-    if (src.dish) { d.dish = d.dish || {}; for (const m of mealsToCopy) if (src.dish[m]) d.dish[m] = src.dish[m]; }
++    if (sh.mode === "replace") for (const m of sh.scope === "meal" ? [sh.meal] : Object.keys(d.meals)) { d.meals[m] = (d.meals[m] || []).filter(it => it.eaten || it.cheat); if (!d.meals[m].length && d.dish) delete d.dish[m]; }   // what was eaten and the treats stay
++    for (const m of copied) putClones(d, m, src.meals?.[m] || [], src.dish?.[m]);
+   });
+-  const n = sh.targets.length; closeSheet(); toast(`Copied to ${n} day${n > 1 ? "s" : ""}`, () => restoreDays(snap));
++  const n = sh.targets.length; closeSheet(); toast(`Copied to ${n} day${n > 1 ? "s" : ""}`, undoDays(snap));
+ };
+ 
+ /* describe */
+@@ -7141,6 +7172,8 @@ ACT["meal-toggle"] = el => {
+   const m = S.settings.meals.find(x => x.id === el.dataset.id);
+   if (m.on && activeMeals().length === 1) { toast("Keep at least one meal."); return; }
+   m.on = !m.on; saveSettings();
++  const n = m.on ? 0 : Object.values(S.days).reduce((a, d) => a + (d?.meals?.[m.id] || []).length, 0);
++  if (n) toast(`${m.name} is off: ${n} food${n === 1 ? "" : "s"} in it still count in the day totals, and show under the other meals`);
+ };
+ ACT.diet = el => { const k = el.dataset.k; S.settings.diet[k] = !S.settings.diet[k]; saveSettings(); };
+ ACT.cuisine = el => { const k = el.dataset.k, c = S.settings.cuisines; S.settings.cuisines = c.includes(k) ? c.filter(x => x !== k) : [...c, k]; saveSettings(); };
+@@ -7476,7 +7509,7 @@ ACT.rebalance = el => {
+     if (Math.abs(gap) > T.kcal * 0.03) { const c = Object.values(d.meals).flat().filter(it => ids.has(it.id) && ["C", "F"].includes(getFood(it.ref)?.role)); const sum = c.reduce((a, it) => a + itemMacros(it).kcal, 0);
+       if (sum > 50) { const k = clamp((sum + gap) / sum, 0.7, 1.4); for (const it of c) { const f = getFood(it.ref); it.qty = roundQty({ kind: "food", food: f, q: it.qty * k }); } } }
+   });
+-  const nt = dayTotals(getDay(date)).kcal; toast(`Portions rebalanced · ${fmtN(nt)} / ${fmtN(T.kcal)} kcal`, () => restoreDays(snap));
++  const nt = dayTotals(getDay(date)).kcal; toast(`Portions rebalanced · ${fmtN(nt)} / ${fmtN(T.kcal)} kcal`, undoDays(snap));
+ };
+ ACT["coach-add"] = el => {
+   const { id, meal, date } = el.dataset; const q = +el.dataset.q; const it = newItem("food", id, q);
+@@ -7588,7 +7621,7 @@ ACT["ch-save"] = () => {
+   const touched = new Set([sh.date]);
+   const id = sh.itemId || uid(); const plan = cheatPlan(sh.date, sh.meal, kcal, d.strategy);
+   for (const k of Object.keys(plan.per)) touched.add(k);
+-  for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null) touched.add(day);
++  for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null || (sh.itemId && Object.values(dd.meals || {}).flat().some(it => it.id === id))) touched.add(day);   // every day the treat sits on or compensates
+   const snap = snapshotDays([...touched]);
+   if (sh.itemId) { clearCheatAdj(id); for (const [day, dd] of Object.entries(S.days)) if (Object.values(dd.meals || {}).flat().some(it => it.id === id)) mutateDay(day, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); }); }
+   mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
+@@ -7599,8 +7632,8 @@ ACT["ch-save"] = () => {
+   // shrink the rest of the cheat day, and the compensation days, if they are already planned
+   const skip = new Set([id]); for (const day of touched) if (dayItems(getDay(day)).length) rebalanceDayFn(day, skip);
+   closeSheet(); UI.date = sh.date;
+-  if (sh.out) { toast(plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`, () => restoreDays(snap)); return; }
+-  toast(plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`, () => restoreDays(snap));
++  if (sh.out) { toast(plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap)); return; }
++  toast(plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap));
+ };
+ ACT["ch-del"] = () => {
+   const sh = S_(), id = sh.itemId; const touched = new Set([sh.date]); for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null) touched.add(day);
+@@ -7609,7 +7642,7 @@ ACT["ch-del"] = () => {
+   for (const day of touched) if (day !== sh.date && dayItems(getDay(day)).length) rebalanceDayFn(day);
+   // refill the meal the cheat was in
+   if (sh.date >= todayISO() && !(getDay(sh.date).meals[sh.meal] || []).length) { const ctx = plannerContext(); put("days", sh.date, planDay(sh.date, ctx, { mode: "fill", meals: [sh.meal] })); }
+-  closeSheet(); toast("Treat removed · the meal was planned again", () => restoreDays(snap));
++  closeSheet(); toast("Treat removed · the meal was planned again", undoDays(snap));
+ };
+ 
+ /* coach tips around cheat meals */
+@@ -11047,7 +11080,7 @@ function afterRender() {
+ }
+ addEventListener("resize", () => { const bar = $("#fuel-sticky"); if (bar?.classList.contains("on")) { const m = $("#main").getBoundingClientRect(); bar.style.left = m.left + "px"; bar.style.width = m.width + "px"; } });
+ ACT["clear-day"] = el => { const date = el.dataset.date || UI.date, n = dayItems(getDay(date)).length; if (!n) return;
+-  mutateDay(date, d => { d.meals = {}; delete d.dish; }, { undo: `${n} item${n > 1 ? "s" : ""} cleared` }); };
++  removeItems(date, allItemsOf(date), { undo: `${n} item${n > 1 ? "s" : ""} cleared` }); };
+ 
+ /* ================= shopping: what the plan needs, what's left over, what it costs ================= */
+ /* needs for the days in range, with where each one comes from (a recipe's ingredients show up here too) */
