@@ -90,3 +90,14 @@ test("the planner never takes a day that is already past", async () => {
   const r = await page.evaluate(`(() => { UI.date = addDays(todayISO(), -2); return plannerDates({ scope: "day" }).length + "/" + plannerDates({ scope: "week" }).every(d => d >= todayISO()); })()`);
   assert.equal(r, "0/true");
 });
+
+test("a tap on a library row of the week planner opens «Add to…» and puts the food in the chosen meal, with one Undo", async () => {
+  const page = await start();
+  await page.evaluate(async () => { UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); UI.pwLib = true; UI.pwSeg = "foods"; UI.pwQ = "Test chicken"; render(); await new Promise(x => setTimeout(x, 300)); });
+  await page.click(".pw-lr[data-ref=t-chicken]");
+  const t = await page.evaluate(() => { const s = UI.sheet; s.toDate = addDays(weekStartOf(todayISO()), 5); s.toMeal = "dinner"; ACT["pw-lib-go"](); return s.toDate; });
+  assert.deepEqual(await page.evaluate(d => getDay(d).meals.dinner.map(x => x.ref), t), ["t-chicken"]);
+  await page.evaluate(() => ACT.undo());
+  assert.equal(await page.evaluate(d => (getDay(d).meals.dinner || []).length, t), 0);
+  assert.deepEqual(app.errors, []);
+});

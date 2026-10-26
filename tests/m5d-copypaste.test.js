@@ -15,6 +15,7 @@ test("week table: every meal and every day has Copy and Paste buttons, Paste ena
   assert.equal(await page.locator(q("meal-paste", V, "lunch")).isDisabled(), true, "nothing copied: Paste is off");
   assert.equal(await page.locator(q("day-paste", V)).isDisabled(), true);
   await page.click(q("meal-copy", W, "lunch"));
+  await page.waitForSelector(q("meal-paste", V, "lunch") + ":not([disabled])");
   assert.equal(await page.locator(q("meal-paste", V, "lunch")).isDisabled(), false, "a meal is in the clipboard");
   assert.equal(await page.locator(q("day-paste", V)).isDisabled(), true, "a meal does not paste on a day");
   await page.click(q("meal-paste", V, "dinner"));
@@ -22,6 +23,7 @@ test("week table: every meal and every day has Copy and Paste buttons, Paste ena
   await page.evaluate(() => ACT.undo());
   assert.equal(await page.evaluate(v => (getDay(v).meals.dinner || []).length, V), 0);
   await page.click(q("day-copy", W));
+  await page.waitForSelector(q("day-paste", V) + ":not([disabled])");
   assert.equal(await page.locator(q("meal-paste", V, "lunch")).isDisabled(), true, "a day does not paste on one meal");
   await page.click(q("day-paste", V));
   assert.deepEqual(await page.evaluate(v => getDay(v).meals.lunch.map(x => x.qty), V), [100, 5]);

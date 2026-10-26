@@ -473,3 +473,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: tutti gli Undo del Fuel usano `undoDays(snap)` (giorni e giacenza), `mutateDay` accetta `opts.onUndo`; copie e incolla passano da `putClones`; `habitSrc` (con cache) sotto `habitItems`; `pwWhere` condiviso da «Copy/Move to…» e dal nuovo foglio `pwadd`.
 - **Eliminato**: le tre copie del filtro «cibo esistente» e del blocco giorno/pasto dei fogli (ora `itemExists`, `pwWhere`), i cancellamenti diretti di `d.meals = {}` sostituiti da `removeItems`.
 - **Aperto**: vedi R1c in `docs/PRODUCT_REQUIREMENTS.md`.
+
+## Consistency & Cleanup Report: M5d, Copy e Paste a due tasti (L188, 27/10/2026)
+- **Verificato**: `tests/m5d-copypaste.test.js` (settimana e vista giorno, tipo di appunti, Undo), `m5c` aggiornato, `meal-plan`, `planner-quick`, `planner-range`, `m14b-fuel` verdi (47), `smoke` ok, `layout-audit` (chiaro e scuro) senza problemi; screenshot 390/820/1440 chiari e scuri guardati (tasti allineati sullo stesso asse, Paste in accento solo se attivo).
+- **Cambiato**: `clipBtns` (una sola coppia di tasti per pasto e giorno), icona `paste`, `pasteClip` più semplice (niente più incolla di un giorno su un solo pasto), `copyToClip` ridisegna la schermata, «Copy» del pannello laterale rinominato «Copy to…».
+- **Eliminato**: `clipLabel`, le voci «Copy this day», «Copy <meal>» e «Paste … here» dei menu giorno e pasto, il tasto «Paste» con testo nella cella vuota.
+- **Aperto**: i tasti del giorno nella tabella settimanale compaiono al passaggio del mouse (come cestino e «Fill»); nei pasti vuoti il Copy è visibile ma spento per tenere le colonne allineate.
