@@ -1158,7 +1158,7 @@ details.card>summary::-webkit-details-marker{display:none}
 .cv-d{position:relative;min-height:92px;padding:6px;display:flex;flex-direction:column;gap:4px;text-align:left;color:var(--ink);min-width:0;border-right:1px solid var(--line);transition:background .12s}
 .cv-d:nth-child(7){border-right:0}
 .cv-d:hover{background:var(--surface-2)}
-.cv-d.out{background:color-mix(in srgb,var(--surface-2) 40%,transparent)}.cv-d.out .cv-n{opacity:.4}.cv-ad.out .cv-ad-d,.cv-ad.out .cv-ad-s{opacity:.55}
+.cv-d.out{background:color-mix(in srgb,var(--surface-2) 40%,transparent)}.cv-d.out .cv-n{opacity:.4}.cv-ad.out .cv-ad-d,.cv-ad.out .cv-ad-s{opacity:.55}.cv-ad.out.now .cv-ad-d{opacity:1}.sheet:focus-visible{outline:none}
 .cv-d.sel{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
 .cv-d.sel::after{content:"";position:absolute;inset:0;border:2px solid var(--accent);border-radius:4px;pointer-events:none}
 .cv-n{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums}
@@ -1288,7 +1288,7 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 
 .lv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lv-row .lab{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:42px}
 .lv-row .inp.sm{flex:1;min-height:40px;font-size:15px}
-@media(min-width:900px){.lv-row.pc .lab{align-self:flex-start;padding-top:10px}}
+@media(min-width:900px){.lv-row.pc .lab{align-self:flex-start;padding-top:0;min-height:62px;display:flex;align-items:center}}
 .pc-box{flex:1 1 150px;display:flex;flex-direction:column;gap:8px}.pc-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:84px;border-radius:14px;background:var(--surface-2);color:var(--ink)}.pc-tile:active{background:var(--surface-3)}
 .pc-tile b{font-family:var(--display);font-size:42px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}.pc-tile small{font-size:12px;color:var(--muted)}
 .pc-act{display:flex;gap:8px}.pc-act .btn{flex:1}
@@ -6887,7 +6887,7 @@ ACT["meal-menu"] = el => {
       ...(locked ? [] : [{ label: "Re-plan from scratch", icon: "swap", sub: "Keeps items already eaten", run: () => {
         const snap = snapshotDays([UI.date]); const ctx = plannerContext(); seedRecent(ctx, UI.date);
         const day = planDay(UI.date, ctx, { mode: "replace", meals: [mid] }); put("days", UI.date, day); toast(`Re-planned ${mealName(mid).toLowerCase()}`, undoDays(snap)); } }]),
-      { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "copy", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
+      { label: `Copy ${mealName(mid).toLowerCase()} to…`, icon: "calendar", run: () => openSheet("copy", { scope: "meal", meal: mid, targets: [], mode: "add" }) },
       { label: "Save as recipe", icon: "book", sub: "Reuse this combination with one tap", run: () => saveMealAsRecipe(mid) },
       { label: "Mark all as eaten", icon: "check", run: () => mutateDay(UI.date, d => { for (const it of d.meals[mid] || []) if (!it.eaten) { it.eaten = true; pantryAdjust(it, 1, UI.date); } }) },
       { label: `Clear ${mealName(mid).toLowerCase()}`, icon: "trash", danger: true, run: () => removeItems(UI.date, items, { undo: `${mealName(mid)} cleared` }) }] : [])
@@ -6976,7 +6976,7 @@ SHEETS.pwitem = sh => {
   if (sh.mode) return { title: `${sh.mode === "copy" ? "Copy" : "Move"} ${itemName(it)}`, body: pwWhere(sh),
     foot: `<button class="btn soft" data-act="pw-back">Back</button><button class="btn primary" data-act="pw-do">${sh.mode === "copy" ? "Copy here" : "Move here"}</button>` };
   const row = (act, label, ico, danger) => `<button class="lrow${danger ? " danger" : ""}" data-act="${act}"><span><span class="t">${label}</span></span>${ic(ico, "sm")}</button>`;
-  return { title: itemName(it), body: `<div class="card">${row("pw-sheet-edit", "Edit amount", "edit")}${it.eaten ? "" : row("pw-mode-move", "Move to…", "move")}${row("pw-mode-copy", "Copy to…", "copy")}${row("pw-dup", "Duplicate here", "plus")}${row("pw-del", "Remove", "trash", true)}</div>${it.eaten ? `<div class="faint" style="font-size:12.5px">It is already eaten, so it stays where it is: copy it instead.</div>` : ""}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` };
+  return { title: itemName(it), body: `<div class="card">${row("pw-sheet-edit", "Edit amount", "edit")}${it.eaten ? "" : row("pw-mode-move", "Move to…", "move")}${row("pw-mode-copy", "Copy to…", "calendar")}${row("pw-dup", "Duplicate here", "plus")}${row("pw-del", "Remove", "trash", true)}</div>${it.eaten ? `<div class="faint" style="font-size:12.5px">It is already eaten, so it stays where it is: copy it instead.</div>` : ""}`, foot: `<button class="btn primary" data-act="close-sheet">Done</button>` };
 };
 ACT["pw-item"] = el => openSheet("pwitem", { date: el.dataset.date, meal: el.dataset.meal, id: el.dataset.id });
 ACT["pw-sheet-edit"] = () => { const sh = S_(); closeSheet(); UI.date = sh.date; ACT["open-item"]({ dataset: { meal: sh.meal, id: sh.id } }); };
@@ -11001,8 +11001,8 @@ function playerSettings() {
     <div class="field"><span class="flabel">Sounds</span><button class="btn ${w.mute ? "soft" : "tonal"}" data-act="snd-mute">${ic(w.mute ? "bellOff" : "bell", "sm")}${w.mute ? "Muted · vibration" : "On"}</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="snd-test">${ic("play", "sm")}Test 3‑2‑1</button><button class="btn soft sm" data-act="timer-open">${ic("timer", "sm")}Open the timer</button></div>
     <div class="set-sub"><span class="flabel">Push-up counter</span><div class="grid2"><div class="fld-wide">${fitSel("player.pushCount", "Counting method", [["tap", "Tap"], ["auto", "Motion sensor (beta)"], ["off", "Off"]])}</div></div><small class="faint">A Count button appears next to the reps of a push-up exercise. Tap: one tap per rep. Motion sensor (beta): keep the phone on you; you can still tap a missed rep.</small></div>
-    <div class="set-sub"><span class="flabel">Load progression</span><div class="grid2">${fitIn("player.loadStep", "Weight added when you progress", "kg")}</div><small class="faint">What a suggestion adds to a weighted exercise when you hit every rep with reps in hand: 2 kg until you change it. Set it to the smallest plate you can add; each suggestion can still be adjusted before you apply it.</small></div>
-    <div class="set-sub"><span class="flabel">Rings</span><div class="grid2">${fitIn("player.ringStep", "Strap step when you lower or raise the rings", "units")}</div><small class="faint">The strap is marked in units split in four: the step is in units and counts in quarters (1, 0.5, 0.25). The strap length is read and written in the same unit you type in the workout (cm or hole).</small></div>
+    <div class="set-sub"><span class="flabel">Load progression</span><div class="grid2"><div class="fld-wide">${fitIn("player.loadStep", "Weight added when you progress", "kg")}</div></div><small class="faint">What a suggestion adds to a weighted exercise when you hit every rep with reps in hand: 2 kg until you change it. Set it to the smallest plate you can add; each suggestion can still be adjusted before you apply it.</small></div>
+    <div class="set-sub"><span class="flabel">Rings</span><div class="grid2"><div class="fld-wide">${fitIn("player.ringStep", "Strap step when you lower or raise the rings", "units")}</div></div><small class="faint">The strap is marked in units split in four: the step is in units and counts in quarters (1, 0.5, 0.25). The strap length is read and written in the same unit you type in the workout (cm or hole).</small></div>
     <div class="set-sub"><span class="flabel">Deload weeks</span><div class="chips">${[["planned", "As planned"], ["smart", "Only if I've been training"]].map(([k, l]) => `<button class="chip" data-act="ph-dlmode" data-k="${k}" aria-pressed="${(PER().deloadMode || "planned") === k}">${l}</button>`).join("")}</div><small class="faint">A scheduled deload (in the Season, or in a new program) is skipped when you did less than ${DL_MIN * 100}% of the planned sessions in the 3 weeks before: with little training there is nothing to recover from. Each program and each week can still be set by hand: Train › Workouts › Programs, Train › Season, or the page before a workout. The Season tab appears when «Season and periodization» is on in Settings › Features.</small></div>
     <div class="set-sub"><span class="flabel">Cycling</span><div class="grid2">${fitIn("bike.ftp", "FTP", "W")}${fitIn("bike.speed", "Usual speed", "km/h")}</div><small class="faint">Power steps ("- 10m 88-94% FTP", "- 5m Z4") show and say watts; distance steps ("- 20km Z2") are timed from your usual speed.</small></div>
     <div class="faint" style="font-size:12.5px">Beeps are scheduled on the audio clock, so they land exactly on the second. AMRAP: the minute you're in, the last 30 s and a spoken 10‑second countdown. Running: each step's target is spoken as it starts. Keep the phone unlocked during a session (the screen stays on by itself).</div>`;
