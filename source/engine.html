@@ -4568,7 +4568,7 @@ function render() {
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
   $("#fab").hidden = UI.tab !== "plan";
   if (UI.sheet && UI.sheet.live) renderSheet();
-  restoreFocus(f); ensureLoop(); afterRender();
+  restoreFocus(f); ensureLoop(); afterRender(); navSync();
 }
 
 /* ================= plan view ================= */
@@ -5380,12 +5380,11 @@ function deficitHTML(date) {
 }
 /* ================= sheet framework ================= */
 const SHEETS = {};
-/* A sheet marked keep (the shopping list opened from Today) is where you come back to: every sheet opened from it, or from one of those, remembers its parent (_ret),
-   and closing it, or finishing what it did, shows the parent again at the same scroll. Opening a sheet that is already in the chain goes back to it instead of stacking. */
+/* A sheet opened from another sheet remembers its parent (_ret; keep:false opts out), and closing it, or finishing what it did, shows the parent again at the same scroll. Opening a sheet that is already in the chain goes back to it instead of stacking. */
 function openSheet(type, params = {}) {
   for (const k in DRAFT) delete DRAFT[k];
   const cur = UI.sheet; let ret = null;
-  if (cur && (cur.keep || cur._ret) && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
+  if (cur && params.keep !== false) { ret = cur; for (let x = cur; x; x = x._ret) if (x.type === type) { ret = x._ret || null; break; } cur._sc = $(".sheet-b")?.scrollTop || 0; }
   UI.sheet = { type, ...params }; if (ret) UI.sheet._ret = ret; UI.sheet._new = true; renderSheet(); }
 /* a sheet is a dialog: the page behind it is inert while it is open, Tab stays inside, focus starts in it and goes back to the control that opened it */
 const SHEET_FROM = { el: null, act: null };
@@ -5397,7 +5396,38 @@ function sheetClosed() {
   const back = el?.isConnected ? el : act && document.querySelectorAll(`[data-act="${act}"]`).length === 1 ? document.querySelector(`[data-act="${act}"]`) : null;
   back?.focus({ preventScroll: true });
 }
-function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
+function closeSheet() { for (const k in DRAFT) delete DRAFT[k]; const r = UI.sheet?._ret; UI.dest = null; if (r) { UI.sheet = r; r._new = false; renderSheet(); return; } UI.sheet = null; $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); navSync(); }
+/* Back button: one history entry per step (a view or segment change, a sheet opening). navSync() runs after every render and compares where the UI is with where the history is:
+   a new place pushes an entry, the place before the current one steps back (so closing a sheet in the app does not leave a stale "forward" entry), the same place only refreshes the snapshot.
+   popstate puts the snapshot of the entry back (views and the sheet with its _ret chain). On the first screen Back leaves like in any app: no guard entry is pushed. */
+const NAV = { snaps: {}, stack: [0], i: 0, seq: 0, busy: 0, timer: 0 };
+const navDepth = () => { let n = 0; for (let x = UI.sheet; x; x = x._ret) n++; return n; };
+function navKey() { const t = UI.tab; return [t, FUEL_TABS.includes(t) ? UI.fuelTab : "", t === "train" ? UI.trainSeg : t === "progress" ? UI.progSeg : t === "foods" ? UI.foodsSeg : "", navDepth()].join("|"); }
+function navSnap() { return { key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, trainSeg: UI.trainSeg, progSeg: UI.progSeg, foodsSeg: UI.foodsSeg, sheet: UI.sheet }; }
+function navSync() {
+  try {
+    if (NAV.busy) return;
+    const k = navKey(), cur = NAV.snaps[NAV.stack[NAV.i]], prev = NAV.snaps[NAV.stack[NAV.i - 1]];
+    if (cur && cur.key === k) { NAV.snaps[NAV.stack[NAV.i]] = navSnap(); return; }
+    if (prev && prev.key === k && NAV.i > 0) { NAV.i--; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.back(); return; }
+    const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id }, "");
+  } catch (e) {}
+}
+function navSettled() { clearTimeout(NAV.timer); if (!NAV.busy) return; NAV.busy = 0; navSync(); }
+function navRestore(snap) {
+  for (const k in DRAFT) delete DRAFT[k];
+  UI.tab = snap.tab; UI.fuelTab = snap.fuelTab; UI.trainSeg = snap.trainSeg; UI.progSeg = snap.progSeg; UI.foodsSeg = snap.foodsSeg; UI.dest = null;
+  UI.sheet = snap.sheet; if (UI.sheet) { UI.sheet._new = false; renderSheet(); } else { $("#sheet-root").innerHTML = ""; document.body.style.overflow = ""; sheetClosed(); }
+  scheduleRender();
+}
+function navPop(e) {
+  if (NAV.busy) { navSettled(); return; }
+  if (!e.state || e.state.eng == null) return;
+  const id = e.state.eng, at = NAV.stack.indexOf(id), snap = NAV.snaps[id];
+  if (at < 0 || !snap) { if (UI.sheet) { UI.sheet = null; navRestore(navSnap()); } return; }
+  NAV.i = at; navRestore(snap);
+}
+window.addEventListener("popstate", navPop);
 const closeToRoot = () => { let r = UI.sheet; while (r?._ret) r = r._ret; if (r && r !== UI.sheet) { UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); } else closeSheet(); };
 function renderSheet() {
   const sh = UI.sheet; const root = $("#sheet-root");
@@ -5414,6 +5444,7 @@ function renderSheet() {
   if (sh._new) { sh._new = false; if (def.focus && matchMedia("(pointer:fine)").matches) $("#" + def.focus)?.focus(); }
   else restoreFocus(f);
   if (!root.contains(document.activeElement)) $(".sheet", root)?.focus({ preventScroll: true });
+  navSync();
 }
 document.addEventListener("keydown", e => {
   if (e.key !== "Tab" || !UI.sheet) return;
@@ -6731,7 +6762,7 @@ const S_ = () => UI.sheet;
 const saveSettings = () => put("settings", "", S.settings);
 
 ACT["fuel-tab"] = el => { UI.tab = UI.fuelTab = el.dataset.k; scheduleRender(); window.scrollTo(0, 0); };
-ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
+ACT.tab = el => { UI.tab = el.dataset.tab; if (FUEL_TABS.includes(UI.tab)) UI.fuelTab = UI.tab; if (UI.sheet) UI.sheet._ret = null; closeSheet(); scheduleRender(); window.scrollTo(0, 0); };
 ACT.date = el => { UI.date = el.dataset.date; scheduleRender(); };
 ACT.week = el => { UI.date = addDays(UI.date, +el.dataset.d); scheduleRender(); };
 ACT["close-sheet"] = () => { const ed = UI.labelFor; if (ed) { UI.labelFor = null; if (UI.sheet !== ed) { camClose(); UI.sheet = ed; renderSheet(); return; } }
@@ -16500,12 +16531,12 @@ ACT["check-update"] = async () => {
 (function boot() {
   loadLocal();
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
-  try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
+  try { const q = new URLSearchParams(location.search), k = q.get("supp"); if (k) { setTimeout(() => { try { suppMark(q.get("d") || todayISO(), k); } catch (e) {} history.replaceState(history.state, "", location.pathname + location.hash); }, 2500); } } catch (e) {}
   /* home-screen shortcuts: ?a=<action> runs once the app is up */
-  try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "open-checkin", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } else if (a === "open-checkin") { UI.tab = "today"; UI.date = todayISO(); render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(null, "", location.pathname + location.hash); }, 900); } catch (e) {}
-  if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(null, "", location.pathname); } catch (e) {} }, 900);
+  try { const q = new URLSearchParams(location.search), a = q.get("a"); if (a && ["open-add", "open-checkin", "weigh-open", "timer-open", "free-open", "shopq-open", "cook-open"].includes(a)) setTimeout(() => { try { if (a === "open-add") { UI.tab = "plan"; UI.fuelTab = "plan"; render(); } else if (a === "open-checkin") { UI.tab = "today"; UI.date = todayISO(); render(); } ACT[a]?.({ dataset: {} }); } catch (e) {} history.replaceState(history.state, "", location.pathname + location.hash); }, 900); } catch (e) {}
+  if (location.hash === "#report") setTimeout(() => { try { ACT["rep-open"](); history.replaceState(history.state, "", location.pathname); } catch (e) {} }, 900);
   try { const h = location.hash.replace("#", ""); if (TABS.some(t => t[0] === h) || FUEL_TABS.includes(h)) { UI.tab = h; if (FUEL_TABS.includes(h)) UI.fuelTab = h; } } catch (e) {}
-  render();
+  try { history.replaceState({ eng: 0 }, ""); } catch (e) {} NAV.snaps[0] = navSnap(); render();
   setTimeout(() => { try { storesMigrate(); } catch (e) {} }, 4000);
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
   if (!window.claude || typeof window.claude.use !== "function") { Sync.ready = true; setTimeout(maybeOnboard, 400); return; }
