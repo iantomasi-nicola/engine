@@ -30,7 +30,6 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   /* static assets (icons, libraries, label reader, schema) live at the repository root; copy them for other outputs */
   if (OUT !== ROOT) for (const d of ["icons", "vendor", "ocr", "supabase"]) cpdir(path.join(ROOT, d), path.join(OUT, d));
   if (!fs.existsSync(OUT + "/config.js")) fs.copyFileSync(W + "/config.js", OUT + "/config.js");
-  fs.copyFileSync(W + "/scale-test.html", OUT + "/scale-test.html");   // standalone Bluetooth check for the Mi Scale 2 (docs/PRODUCT_REQUIREMENTS.md L195)
   fs.writeFileSync(OUT + "/.nojekyll", "");
   console.log("built", OUT, "index", s.length, "build", build);
 })();
