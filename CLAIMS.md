@@ -17,6 +17,6 @@
 | L211-sec | released | L211 XSS data-*, day.adj, restore malformato | foods,fuel,shopping | claude/l211-sec | 2026-10-26 18:31Z | 2026-10-26 19:46Z | Fatto e pubblicato (main c9a72c3). Non fatti: prezzo 0 in Buy, binPurge, pantryAdjust <0,5 g, shop-done righe senza grammi |
 | L211-nav | released | L211 navigazione: Indietro, fotocamera | other,pwa | claude/l211-nav | 2026-10-26 18:31Z | 2026-10-26 19:11Z | Fatto e unito (fb3b27a); da pubblicare dopo suite |
 | L211-fin | released | L211 chiusura punti code-guard | sync,tests | claude/l211-fin | 2026-10-26 19:50Z | 2026-10-26 19:56Z | Fatto: id canonico e finto server realistico (4eaa5ae) |
-| SHIP | released | pubblicazione L213 menu notifiche | other | claude/bf-icu-guard | 2026-10-26 23:13Z | 2026-10-26 23:14Z | main = b1ecae0, rollback 73fbbf0 (L213) |
 | M5d-fuel | active | L214 prezzo pasto + L205 sgarro | fuel | claude/m5d-fuel | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
 | M5d-shop | active | L203 scelta dalla dispensa + L204 ricetta | shopping | claude/m5d-shop | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
+| SHIP | active | pubblicazione fix sync + docs | other | claude/awesome-goldberg-ontswx | 2026-10-26 23:39Z | 2026-10-27 00:39Z | main = b1ecae0, rollback 73fbbf0 (L213) |
