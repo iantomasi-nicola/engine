@@ -134,6 +134,21 @@
   }
   /* a refusal that a retry can't fix (too large, not allowed, invalid): the change is set aside and the rest goes on */
   const permanent = r => { const s = r?.status || 0; return s >= 400 && s < 500 && ![401, 408, 429].includes(s); };
+  /* a document two devices can both change: read what the account holds now, merge, and write only if nobody wrote since (the update is conditional on the version read; a row that
+     is not there yet is inserted). If another device got in between, read again and merge again. */
+  async function sendMerged(q) {
+    for (let i = 0; i < 6; i++) {
+      const g = await sb.from(T).select("data,updated_at").eq("user_id", E.uid).eq("path", q.path).maybeSingle();
+      if (g.error) return { r: g, data: q.data };
+      let data = q.data; if (g.data && !same(g.data.data, q.base)) data = E.merge(q.path, q.base, q.data, g.data.data);
+      if (q.path === "settings" && E.noKeys) data = E.noKeys(data);   // an entry queued by an older version may still hold the keys (S-1)
+      const old = g.data?.updated_at || null, now = Date.now(), at = new Date(old && Date.parse(old) >= now ? Date.parse(old) + 1 : now).toISOString();
+      if (!g.data) { const r = await sb.from(T).insert({ user_id: E.uid, path: q.path, data, updated_at: at }); if (r.error && (r.status === 409 || r.error.code === "23505")) continue; return { r, data }; }
+      let u = sb.from(T).update({ data, updated_at: at }).eq("user_id", E.uid).eq("path", q.path); u = old ? u.eq("updated_at", old) : u.is("updated_at", null);
+      const r = await u.select("path"); if (r.error || r.data?.length) return { r, data };
+    }
+    throw new Error("The account kept changing while this was sent");   // the whole entry is tried again in a few seconds
+  }
   let flushing = false, retryT = 0;
   async function flushQ() {
     if (flushing || !E.uid || !sb) return; flushing = true;
@@ -142,11 +157,10 @@
         const q = queue.find(x => !x.bad); if (!q) break;
         let data = q.data, r = null;
         if (q.op === "del") r = await sb.from(T).delete().eq("user_id", E.uid).eq("path", q.path);
+        else if (q.mb && E.merge) ({ r, data } = await sendMerged(q));
         else {
-          if (q.mb && E.merge) { const g = await sb.from(T).select("data").eq("user_id", E.uid).eq("path", q.path).maybeSingle();
-            if (g.error) r = g; else if (g.data && !same(g.data.data, q.base)) data = E.merge(q.path, q.base, q.data, g.data.data); }
           if (q.path === "settings" && E.noKeys) data = E.noKeys(data);   // an entry queued by an older version may still hold the keys (S-1)
-          if (!r) r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
+          r = await sb.from(T).upsert({ user_id: E.uid, path: q.path, data, updated_at: new Date().toISOString() });
         }
         if (r.error) { if (!permanent(r)) throw r.error; q.bad = true; st.lastError = errText(r.error) || "error " + r.status; saveQ(); emit(); continue; }
         st.online = true; note(q.path, q.op === "del" ? undefined : data);
