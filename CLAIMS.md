@@ -6,3 +6,4 @@
 | M16-bf | released | BF da intervals.icu: interruttore + calibrazione sulla bilancia | progress,settings,sync | claude/bf-icu-guard | 2026-10-26 12:59Z | 2026-10-26 13:21Z | Fatto e verificato sul ramo claude/bf-icu-guard (L199 + rimozione scale-test); non pubblicato. Vedi HANDOFF §1 del 26/10 sera per come pubblicare. |
 | M12 | released | Calcolatori, sport, contaflessioni | strength,train | claude/m12-pushups | 2026-10-26 13:03Z | 2026-10-26 13:29Z | WIP non verificato su claude/m12-pushups aee3d54, resta eseguire tests/m12-pushups.test.js, screenshot, design-reviewer, decisione MET futsal/nuoto |
 | M14b-A | active | M14b gruppo A sync + S-1 | sync | claude/awesome-goldberg-ontswx | 2026-10-26 13:30Z | 2026-10-26 19:30Z |  |
+| M14b-D | active | M14b gruppo D Fuel + Copy/Paste L188 | fuel | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 19:31Z |  |
