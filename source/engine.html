@@ -3156,7 +3156,7 @@ function normalizeRecords() {
   return dropped;   // ingredients that were not objects (nothing to keep): the restore tells how many
 }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
-const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm";
+const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm" || kind === "days";
 const keyOf = (kind, id) => kind + "|" + (id || "");
 const splitKey = key => { const i = key.indexOf("|"); return [key.slice(0, i), key.slice(i + 1)]; };
 const pathOf = (kind, id) => DOC_KINDS.includes(kind) ? kind : "lib/" + kind + "/" + id;
@@ -10631,7 +10631,7 @@ async function pushIfMissing(kind, ids) { for (const id of ids) { try { const s 
 function applyCollection(kind, qs) {
   const fc = !!qs.metadata?.fromCache, first = !Sync.known[kind], join = !fc && !Sync.fresh[kind] && Sync.union, next = {}, send = [];
   const clean = kind === "days" ? cleanDay : kind === "logm" ? (v => isObj(v) ? cleanLogMonth(v) : null) : null;   // a malformed copy in the account is cut back like one in a file
-  for (const d of qs.docs) { const v = clean ? clean(clone(d.data()), d.id) : clone(d.data()); if (v) next[d.id] = v; if (kind === "logm" && !Sync.pending.has(keyOf(kind, d.id))) Sync.seen[keyOf(kind, d.id)] = clone(d.data()); }
+  for (const d of qs.docs) { const v = clean ? clean(clone(d.data()), d.id) : clone(d.data()); if (v) next[d.id] = v; if ((kind === "logm" || kind === "days") && !Sync.pending.has(keyOf(kind, d.id))) Sync.seen[keyOf(kind, d.id)] = clone(d.data()); }
   for (const [key, job] of Sync.pending) { const [k, id] = splitKey(key); if (k !== kind) continue; if (job.data === null) delete next[id]; else next[id] = job.data; }
   /* edits this device never sent (the tab closed first) */
   if (first) for (const key of Sync.dirty) { const [k, id] = splitKey(key); if (k !== kind || Sync.pending.has(key)) continue;
@@ -10641,7 +10641,7 @@ function applyCollection(kind, qs) {
   const since = addDays(todayISO(), -180), old = [];
   if (join) for (const [id, loc] of Object.entries(S[kind] || {})) { if (Sync.pending.has(keyOf(kind, id))) continue;
     if (next[id] === undefined) { if (kind === "days" && id < since) old.push(id); else send.push([id, loc]); }
-    else if (kind === "logm" && !deq(loc, next[id])) { const m = syncMerge(pathOf(kind, id), null, loc, next[id], "r"); if (!deq(m, next[id])) send.push([id, m]); } }
+    else if ((kind === "logm" || kind === "days") && !deq(loc, next[id])) { const m = syncMerge(pathOf(kind, id), null, loc, next[id], "r"); if (!deq(m, next[id])) send.push([id, m]); } }
   if (join && qs.docs.length && send.length) joinNote();
   if (kind === "logm") for (const [mk, rem] of Object.entries(next)) { if (Sync.pending.has(keyOf(kind, mk)) || send.some(x => x[0] === mk)) continue; const m = jrMergeDoc(S.logm[mk], rem); if (m) send.push([mk, m]); }
   if (kind === "queue") notifyQueue(S.queue, next);
