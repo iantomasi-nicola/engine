@@ -36,7 +36,7 @@ test("the head of the page: language, title and font links are in <head>, the fo
   const html = fs.readFileSync(path.join(dir, "index.html"), "utf8"), head = html.slice(0, html.indexOf("</head>")), body = html.slice(html.indexOf("</head>"));
   assert.match(html, /^<!doctype html><html lang="en">/i);
   assert.match(head, /<title>Engine<\/title>/); assert.match(head, /rel="preconnect" href="https:\/\/fonts\.googleapis\.com"/);
-  assert.match(head, /<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^"]*" media="print" onload="this\.media='all'"/);
+  assert.match(head, /<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^"]*" media="print" crossorigin>/); assert.doesNotMatch(head, /onload=/);   // no inline attribute: look-boot switches it to all (next test)
   assert.match(head, /<noscript><link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com/);
   assert.doesNotMatch(body.replace(/<script[\s\S]*?<\/script>/g, ""), /<title>|rel="preconnect"|<link rel="stylesheet" href="https:\/\/fonts/);
 });
