@@ -7334,8 +7334,9 @@ ACT["fd-save"] = () => {
   if (sh.isNew && !sh.dupOk) { const X = foodDupes(d), first = X.barcode || X.name[0]; if (first) { sh.dupOk = true; toast(`“${first.name}” is already in your foods: tap Save again to add this one anyway`); return; } }
   const bad = ["kcal", "p", "c", "f"].find(k => d.per[k] != null && String(d.per[k]).trim() !== "" && !/^\s*-?\d*[.,]?\d+\s*$|^\s*-?\d+[.,]?\s*$/.test(String(d.per[k])));
   if (bad) { toast("Check the numbers: only digits, please."); return; }
+  const noKcal = d.per.kcal == null || String(d.per.kcal).trim() === "";   // an empty field is worked out from the macros; a typed 0 is a real 0 (sweeteners)
   for (const k of Object.keys(d.per)) d.per[k] = NUT_OPT.includes(k) ? optN(d.per[k], 4) : Math.max(0, num(d.per[k]));
-  if (!d.per.kcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
+  if (noKcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
   if (d.mx) { for (const k of Object.keys(d.mx)) { if (d.mx[k] === "" || d.mx[k] == null) delete d.mx[k]; else d.mx[k] = num(d.mx[k]); } if (!Object.keys(d.mx).length) delete d.mx; }
   d.servings = (d.servings || []).map(s => ({ l: (s.l || "").trim() || "1 portion", g: num(s.g) })).filter(s => s.g > 0);
   d.pack = Math.max(0, num(d.pack)); d.barcode = String(d.barcode || "").replace(/\D/g, "");
@@ -7568,7 +7569,8 @@ const INP = {
   qty: v => { S_().qty = num(v); updQtyStrip(); },
   fd: (v, el) => { const d = S_().draft; d[el.dataset.k] = v; if (["name", "brand", "barcode"].includes(el.dataset.k)) { const q = $("#fd-dup"); if (q) q.innerHTML = fdDupHTML(S_()); } if (el.dataset.k === "_pv" || el.dataset.k === "pack") { const q = $("#fd-eq"); if (q) q.innerHTML = fdEqHTML(d, d.unit || "g"); } },
   "fd-mx": (v, el) => { const d = S_().draft; d.mx = { ...(d.mx || {}), [el.dataset.k]: v }; },
-  "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; const calc = kcalFromMacros(d.per);
+  "fd-per": (v, el) => { const d = S_().draft; d.per[el.dataset.k] = v; if (el.dataset.k === "kcal") d.autoKcal = String(v).trim() === "";   // typed calories (even 0) are kept; emptied, they follow the macros again
+    const calc = kcalFromMacros(d.per);
     if (d.autoKcal && el.dataset.k !== "kcal") { d.per.kcal = calc; const k = $("#fd-kcal"); if (k) k.value = calc; }
     const c = $("#fd-calc"); if (c) c.innerHTML = fdCalcHTML(d); const q = $("#fd-dup"); if (q) q.innerHTML = fdDupHTML(S_()); },
   "fd-serv": (v, el) => { S_().draft.servings[+el.dataset.i][el.dataset.k] = v; },

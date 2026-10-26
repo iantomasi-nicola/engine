@@ -134,3 +134,13 @@ test("6. A small need with nothing at home is one pack, never a «0×» row", as
   assert.equal(s, 0);
   assert.deepEqual(app.errors, []);
 });
+
+test("7. Calories typed as 0 stay 0 (a sweetener has carbs and no calories); only an empty field is worked out from the macros", async () => {
+  const page = await start();
+  /* Erythritol: kcal "0", carbs 99 -> kcal 0 (it was rewritten to 4*99 = 396). A food with kcal empty and P10 C20 F5 -> 4*10 + 4*20 + 9*5 = 165. «-5» is clamped to 0 and also kept as 0. */
+  const r = await page.evaluate(`(() => { const type = (k, v) => INP["fd-per"](v, { dataset: { k } });   // what the fields do while you type, in the order given
+    const save = (name, typed) => { openSheet("food", { draft: blankFood(name), isNew: true, then: null }); for (const [k, v] of typed) type(k, v); ACT["fd-save"](); return Object.values(S.foods).find(x => x.name === name)?.per; };
+    return { zeroFirst: save("Erythritol", [["kcal", "0"], ["c", "99"]]), zeroLast: save("Sweet two", [["c", "99"], ["kcal", "0"]]), blank: save("Blank kcal", [["p", "10"], ["c", "20"], ["f", "5"]]), neg: save("Negative kcal", [["kcal", "-5"], ["p", "2"], ["c", "3"], ["f", "1"]]) }; })()`);
+  assert.equal(r.zeroFirst.kcal, 0); assert.equal(r.zeroFirst.c, 99); assert.equal(r.zeroLast.kcal, 0); assert.equal(r.blank.kcal, 165); assert.equal(r.neg.kcal, 0);
+  assert.deepEqual(app.errors, []);
+});
