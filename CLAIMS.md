@@ -20,3 +20,4 @@
 | M5d-fuel | active | L214 prezzo pasto + L205 sgarro | fuel | claude/m5d-fuel | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
 | M5d-shop | active | L203 scelta dalla dispensa + L204 ricetta | shopping | claude/m5d-shop | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
 | SHIP | released | pubblicazione id canonico + test server | other | claude/bf-icu-guard | 2026-10-26 23:46Z | 2026-10-26 23:47Z | nulla da pubblicare: i punti L211 1-2 erano già su main (7381a26, 4eaa5ae) |
+| R4-progress | active | R4 correzioni audit area 9 | progress,settings | claude/r4-progress | 2026-10-26 23:56Z | 2026-10-27 04:56Z |  |
