@@ -5456,9 +5456,11 @@ function navSnap() { return { key: navKey(), tab: UI.tab, fuelTab: UI.fuelTab, t
 function navSync() {
   try {
     if (NAV.busy) return;
-    const k = navKey(), cur = NAV.snaps[NAV.stack[NAV.i]], prev = NAV.snaps[NAV.stack[NAV.i - 1]];
+    const k = navKey(), cur = NAV.snaps[NAV.stack[NAV.i]];
     if (cur && cur.key === k) { NAV.snaps[NAV.stack[NAV.i]] = navSnap(); return; }
-    if (prev && prev.key === k && NAV.i > 0) { NAV.i--; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.back(); return; }
+    const view = k.slice(0, k.lastIndexOf("|")); let j = NAV.i - 1;   // the same place a few sheets down in this view (a sheet chain closed in one go): step back to it, not onto a new entry
+    for (; j >= 0; j--) { const e = NAV.snaps[NAV.stack[j]]; if (!e || e.key.slice(0, e.key.lastIndexOf("|")) !== view) { j = -1; break; } if (e.key === k) break; }
+    if (j >= 0) { const d = NAV.i - j; NAV.i = j; NAV.snaps[NAV.stack[NAV.i]] = navSnap(); NAV.busy = 1; clearTimeout(NAV.timer); NAV.timer = setTimeout(navSettled, 400); history.go(-d); return; }
     const id = ++NAV.seq; NAV.stack.length = NAV.i + 1; NAV.stack.push(id); NAV.i++; NAV.snaps[id] = navSnap(); history.pushState({ eng: id }, "");
   } catch (e) {}
 }

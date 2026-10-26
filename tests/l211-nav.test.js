@@ -82,3 +82,15 @@ test("scan started from Foods: Save to Foods or a closed editor leaves no scan s
   await go(page, () => ACT["close-sheet"]());
   assert.deepEqual(await cam(page), { overlay: false, live: false, onCode: false, sheet: null });
 });
+
+test("after Swap is done, Back does not reopen the confirmation that was already carried out", async () => {
+  /* shopq(1) > buy(2) > swapfood(3, confirm) > Swap = back to shopq(1). History must be [Today, shopq] again: one Back = the view, not the swap screen */
+  const page = await start();
+  await go(page, () => ACT["shopq-open"]()); await go(page, () => ACT["shop-buy"]({ dataset: { id: "t-rice" } })); await go(page, () => ACT["by-swap"]());
+  await go(page, () => ACT["sf-pick"]({ dataset: { id: "t-oil" } }));
+  await go(page, () => ACT["sf-do"]()); await page.waitForTimeout(300);
+  assert.equal((await where(page)).sheet, "shopq");
+  assert.equal(await page.evaluate(() => NAV.i), 1, "the history is back to two entries");
+  await back(page); assert.equal((await where(page)).sheet, null, "Back leaves the list, it does not reopen the swap");
+  assert.deepEqual(app.errors, []);
+});
