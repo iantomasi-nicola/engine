@@ -53,5 +53,5 @@ test("a food without per or a recipe without ingredients does not break Foods, A
   const page = await start(seed);
   const r = await page.evaluate(async () => { UI.tab = "foods"; UI.fuelTab = "foods"; UI.foodsSeg = "all"; DATA_V++; render(); await new Promise(x => setTimeout(x, 150)); const rows = document.querySelectorAll('[data-act="edit-food"],[data-act="edit-recipe"]').length; ACT["edit-recipe"]({ dataset: { id: "bad" } }); await new Promise(x => setTimeout(x, 100));
     return { rows, kcal: getFood("bad2").per.kcal, per: typeof getFood("bad").per.kcal, sheet: UI.sheet?.type, txt: document.querySelector("#foods-q") ? 1 : 0, nan: /NaN/.test(document.body.innerText) }; });
-  assert.equal(r.kcal, 5.5); assert.equal(r.per, "number"); assert.equal(r.sheet, "recipe"); assert.equal(r.nan, false); assert.deepEqual(app.errors, []);
+  assert.equal(r.kcal, 5.5); assert.equal(r.per, "undefined", "F-09: a missing value stays unknown, no 0 is invented"); assert.equal(r.sheet, "recipe"); assert.equal(r.nan, false); assert.deepEqual(app.errors, []);
 });

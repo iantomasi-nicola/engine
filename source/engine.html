@@ -3054,6 +3054,12 @@ let SAVE_Q = false;
 function saveSoon() { DATA_V++; if (SAVE_Q) return; SAVE_Q = true; queueMicrotask(() => { SAVE_Q = false; saveDirty(); saveLocal(); }); }
 function saveDirty() { if (!Sync.owner) return; try { localStorage.setItem(DIRTY_KEY, JSON.stringify({ uid: Sync.owner, keys: [...Sync.dirty] })); } catch (e) {} }
 let DIRTY_T = 0; const saveDirtyLater = () => { clearTimeout(DIRTY_T); DIRTY_T = setTimeout(saveDirty, 1000); };
+/* a document (shop, body, train) over its default: a part of the wrong type (a list where an object belongs, a string) falls back to the default, in a device copy as in a restore */
+function docShape(k, v) {
+  const def = DOC_DEFAULT[k](), o = { ...def, ...(isObj(v) ? v : {}) };
+  for (const key of Object.keys(def)) if (Array.isArray(def[key]) ? !Array.isArray(o[key]) : isObj(def[key]) ? !isObj(o[key]) : typeof o[key] !== typeof def[key]) o[key] = def[key];
+  return o;
+}
 function loadLocal() {
   try {
     const j = JSON.parse(localStorage.getItem(LS_KEY) || "null");
@@ -3061,7 +3067,7 @@ function loadLocal() {
   } catch (e) {}
   S.logm = cleanLogm(S.logm); for (const k of ["foods", "recipes", "days"]) S[k] = cleanColl(S[k]);
   if (S.settings) S.settings = normalizeSettings(S.settings);
-  for (const k of Object.keys(DOC_DEFAULT)) S[k] = { ...DOC_DEFAULT[k](), ...(S[k] || {}) };
+  for (const k of Object.keys(DOC_DEFAULT)) S[k] = docShape(k, S[k]);
   try { Sync.owner = localStorage.getItem(OWNER_KEY) || ""; const d = JSON.parse(localStorage.getItem(DIRTY_KEY) || "null"); if (Sync.owner && d?.uid === Sync.owner) Sync.dirty = new Set(d.keys || []); } catch (e) {}
   if (S.settings) withKeys(S.settings, keyStore()[Sync.owner]);   // keys still inside an older device copy stay in memory and move to the key store at the next save
   normalizeRecords();
@@ -3095,14 +3101,19 @@ function saveKeys() { const all = keyStore(), k = keysOf(S.settings), o = Sync.o
 /* foods and recipes from an older version or a damaged file: numbers are numbers, a food has per values and a recipe has a list of ingredients, so no screen breaks on them
    (a hidden record is a bin entry or a built-in override and is left alone) */
 function normalizeRecords() {
-  const n = v => { const x = typeof v === "number" ? v : parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : 0; };
+  /* a numeric string («5,5») becomes a number; an unknown value (null, missing) stays unknown, never 0 (F-09); a string that is not a number becomes unknown */
+  const num = v => { if (typeof v === "number") return isFinite(v) ? v : null; if (v == null || String(v).trim() === "") return null; const x = parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : null; };
+  let dropped = 0;
   for (const f of Object.values(S.foods || {})) { if (!f || typeof f !== "object" || f.hidden) continue;
     f.name = String(f.name ?? ""); f.per = f.per && typeof f.per === "object" ? f.per : {};
-    for (const k of ["kcal", "p", "c", "f"]) f.per[k] = n(f.per[k]);
-    for (const k of Object.keys(f.per)) if (!["kcal", "p", "c", "f"].includes(k) && f.per[k] != null && typeof f.per[k] !== "number") f.per[k] = n(f.per[k]);
-    if (!Array.isArray(f.servings)) f.servings = []; f.pack = Math.max(0, n(f.pack)); }
+    for (const k of Object.keys(f.per)) if (f.per[k] != null && typeof f.per[k] !== "number") f.per[k] = num(f.per[k]);
+    if (!Array.isArray(f.servings)) f.servings = [];
+    if (f.pack != null) f.pack = Math.max(0, num(f.pack) ?? 0); }
   for (const r of Object.values(S.recipes || {})) { if (!r || typeof r !== "object" || r.hidden) continue;
-    r.name = String(r.name ?? ""); r.ingredients = Array.isArray(r.ingredients) ? r.ingredients.filter(i => i && typeof i === "object" && i.food).map(i => ({ ...i, g: n(i.g) })) : []; r.servings = n(r.servings) > 0 ? n(r.servings) : 1; }
+    r.name = String(r.name ?? "");
+    if (Array.isArray(r.ingredients)) { const ok = r.ingredients.filter(i => i && typeof i === "object"); dropped += r.ingredients.length - ok.length; r.ingredients = ok; for (const i of ok) if (typeof i.g === "string") i.g = num(i.g) ?? 0; } else r.ingredients = [];
+    r.servings = num(r.servings) > 0 ? num(r.servings) : 1; }
+  return dropped;   // ingredients that were not objects (nothing to keep): the restore tells how many
 }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
 const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm";
@@ -9054,7 +9065,7 @@ const topBar = (left, title, sub, right) => `<header class="lv-top">${left}<div 
 
 let PCNT = null;   // the count in progress: { cur: step, x: exercise, auto: sensor on, prev: reps before counting, ct: repCounter, fn: motion listener }
 VIEWS.live = function () {
-  const L = LV(); if (PCNT && (!L || L.cur !== PCNT.cur || L.phase !== "run")) pcStop();
+  const L = LV(); if (PCNT && (!L || L.cur !== PCNT.cur || L.phase !== "run")) pcLeave();
   if (!L) { UI.tab = "today"; return VIEWS.today(); }
   if (L.phase === "preview") return L.auto ? runPreview(L) : livePreview(L);
   if (L.phase === "done") return L.auto ? runSummary(L) : liveSummary(L);
@@ -9271,9 +9282,12 @@ const isPushUp = name => /\b(push-?ups?|piegamenti|flessioni)\b/i.test(name || "
 function pcStop() {
   if (!PCNT) return;
   if (PCNT.fn) window.removeEventListener("devicemotion", PCNT.fn);
-  const x = LV()?.res[PCNT.cur]?.ex?.[PCNT.x]; if (x && !(x.reps[0] > 0)) x.reps[0] = PCNT.prev;   // nothing counted: the planned reps stay
+  const x = LV()?.res[PCNT.cur]?.ex?.[PCNT.x]; if (x && !(x.reps[0] > 0)) { x.reps[0] = PCNT.prev; saveWK(); }   // nothing counted: the planned reps stay
   PCNT = null;
 }
+/* the render found the counted step gone: it only lets go of the sensor; the planned reps come back right after the render (a render never writes) */
+function pcLeave() { const p = PCNT; if (!p) return; if (p.fn) window.removeEventListener("devicemotion", p.fn); PCNT = null;
+  setTimeout(() => { const x = LV()?.res[p.cur]?.ex?.[p.x]; if (x && !(x.reps[0] > 0)) { x.reps[0] = p.prev; saveWK(); } }, 0); }
 function pcAdd(d) {
   const L = LV(); if (!L || !PCNT || L.cur !== PCNT.cur) { pcStop(); return; }
   const x = L.res[L.cur].ex[PCNT.x]; x.reps[0] = Math.max(0, (+x.reps[0] || 0) + d); haptic(10); saveWK(); scheduleRender();
@@ -9293,13 +9307,14 @@ function repsRow(xi, x, e) {
 ACT["lv-pc"] = async el => {
   const L = LV(); if (!L) return;
   if (PCNT) { pcStop(); saveWK(); scheduleRender(); return; }
-  const xi = +el.dataset.x, x = L.res[L.cur].ex[xi]; PCNT = { cur: L.cur, x: xi, auto: false, prev: x.reps[0], ct: null, fn: null }; x.reps[0] = 0;
+  const xi = +el.dataset.x, x = L.res[L.cur].ex[xi], me = PCNT = { cur: L.cur, x: xi, auto: false, prev: x.reps[0], ct: null, fn: null }; x.reps[0] = 0;
   if (PLAYER().pushCount === "auto") {
     try {
       if (typeof DeviceMotionEvent === "undefined") throw new Error("no sensor");
       if (typeof DeviceMotionEvent.requestPermission === "function" && (await DeviceMotionEvent.requestPermission()) !== "granted") throw new Error("refused");
-      PCNT.ct = repCounter(); PCNT.fn = e => pcSample(e.accelerationIncludingGravity, e.timeStamp / 1000); window.addEventListener("devicemotion", PCNT.fn); PCNT.auto = true;
-    } catch (e) { toast("No motion sensor here: tap to count"); }
+      if (PCNT !== me) return;   // Stop (or another count) came while the permission was pending: the answer is for nobody
+      me.ct = repCounter(); me.fn = e => pcSample(e.accelerationIncludingGravity, e.timeStamp / 1000); window.addEventListener("devicemotion", me.fn); me.auto = true;
+    } catch (e) { if (PCNT !== me) return; toast("No motion sensor here: tap to count"); }
   }
   saveWK(); scheduleRender();
 };
@@ -11665,12 +11680,20 @@ function shopUndo(before, after) {
   const J = JSON.stringify, cur = S.shop;
   for (const k of new Set([...Object.keys(before), ...Object.keys(after)])) {
     const b = before[k], a = after[k]; if (J(a) === J(b)) continue;
-    if (Array.isArray(a) || Array.isArray(b)) { const out = [...(cur[k] || [])], bs = (b || []).map(J), as = (a || []).map(J);
-      for (const x of as) { const i = bs.indexOf(x); if (i >= 0) bs.splice(i, 1); else { const j = out.findIndex(y => J(y) === x); if (j >= 0) out.splice(j, 1); } }
-      const left = (a || []).map(J); for (const y of b || []) { const i = left.indexOf(J(y)); if (i >= 0) left.splice(i, 1); else out.push(clone(y)); }
+    if (Array.isArray(a) || Array.isArray(b)) { const out = [...(cur[k] || [])], bs = (b || []).map(J);
+      const idOf = y => isObj(y) && y.id != null ? y.id : undefined;
+      for (const x of a || []) { const sx = J(x), i = bs.indexOf(sx); if (i >= 0) bs.splice(i, 1); else { let j = out.findIndex(y => J(y) === sx); if (j < 0 && idOf(x) !== undefined) j = out.findIndex(y => idOf(y) === idOf(x)); if (j >= 0) out.splice(j, 1); } }   // an element changed since is found by its id, so the old one below does not double it
+      const left = (a || []).map(J); for (const y of b || []) { const i = left.indexOf(J(y)); if (i >= 0) left.splice(i, 1); else if (idOf(y) === undefined || !out.some(z => idOf(z) === idOf(y))) out.push(clone(y)); }
       cur[k] = out; }
     else if (b && a && typeof b === "object" && typeof a === "object" || (!a && b && typeof b === "object") || (!b && a && typeof a === "object")) { const o = cur[k] = cur[k] || {};
-      for (const id of new Set([...Object.keys(b || {}), ...Object.keys(a || {})])) { if (J(a?.[id]) === J(b?.[id]) || J(o[id]) !== J(a?.[id])) continue; if (b && id in b) o[id] = clone(b[id]); else delete o[id]; } }
+      for (const id of new Set([...Object.keys(b || {}), ...Object.keys(a || {})])) { if (J(a?.[id]) === J(b?.[id])) continue;
+        if (J(o[id]) !== J(a?.[id])) {
+          /* the real stock changes only by purchases, consumption and manual fixes: if the action bought something and a meal used some of it since, the purchase is still undone
+             (so list, history and pantry agree) by taking away exactly the grams the action added; the consumption stays. Never below 0. Other entries changed since are left alone. */
+          if (k === "pantry" && (typeof a?.[id]?.g === "number" || typeof b?.[id]?.g === "number")) { const g = Math.max(0, r0((o[id]?.g || 0) + (b?.[id]?.g || 0) - (a?.[id]?.g || 0)));
+            if (!g && !b?.[id]) delete o[id]; else o[id] = { ...(o[id] || b[id]), g }; }
+          continue; }
+        if (b && id in b) o[id] = clone(b[id]); else delete o[id]; } }
     else if (J(cur[k]) === J(a)) { if (b === undefined) delete cur[k]; else cur[k] = b; }
   }
   put("shop", "", S.shop);
@@ -11889,16 +11912,17 @@ function swapPreview(from) {
 function swapFood(from, to, o = {}) {
   const A = getFood(from) || BUILTIN[from], B = getFood(to) || BUILTIN[to]; if (!A || !B || from === to) return { meals: 0, recipes: 0 };
   const key = o.by || (o.kcal ? "kcal" : null), k = key && A.per[key] > 0 && B.per[key] > 0 ? A.per[key] / B.per[key] : 1, today = o.since && o.since > todayISO() ? o.since : todayISO(), q = x => Math.round(x * 10) / 10;   // by: the macro the new food must match (kcal, p, c or f); since/until: only a window of the plan
-  const before = {}; for (const [d, day] of Object.entries(S.days)) before[d] = clone(day); const recBefore = {}, checked = clone(S.shop.checked?.[from] ?? null);
+  const touched = [], recBefore = {}, checked = clone(S.shop.checked?.[from] ?? null);   // touched: the items this swap changed (day, id, old qty, new qty), nothing else
   let meals = 0, nrec = 0;
   for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => it.kind === "food" && it.ref === from && !it.eaten)) continue;
-    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) if (it.kind === "food" && it.ref === from && !it.eaten) { it.ref = to; it.qty = q((+it.qty || 0) * k); meals++; } }); }
+    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) if (it.kind === "food" && it.ref === from && !it.eaten) { const was = it.qty; it.ref = to; it.qty = q((+it.qty || 0) * k); touched.push({ d, id: it.id, qty: was, now: it.qty }); meals++; } }); }
   if (o.recipes) for (const r of allRecipes().filter(r => (r.ingredients || []).some(i => i.food === from))) { recBefore[r.id] = S.recipes[r.id] ? clone(S.recipes[r.id]) : null; freezeRecipeUses(r.id);
     const n = clone(getRecipe(r.id)); n.ingredients = n.ingredients.map(i => i.food === from ? { food: to, g: q(i.g * k) } : i); if (n.source === "builtin") n.source = "custom"; put("recipes", r.id, n); nrec++; }
   if (S.shop.checked?.[from]) { delete S.shop.checked[from]; put("shop", "", S.shop); }
   toast(o.home ? `${B.name} from home instead of ${A.name}` : `${A.name} replaced by ${B.name}${meals ? ` in ${meals} meal${meals === 1 ? "" : "s"}` : ""}`, () => {
-    for (const [d, v] of Object.entries(before)) if (JSON.stringify(S.days[d] || null) !== JSON.stringify(v)) put("days", d, v);
-    for (const d of Object.keys(S.days)) if (!(d in before)) put("days", d, null);
+    /* only the items the swap changed go back, and only if they are still as the swap left them (not eaten, same food, same grams): a day added since, or a meal ticked since, is never rewritten */
+    for (const d of new Set(touched.map(x => x.d))) { if (!S.days[d]) continue;
+      mutateDay(d, dd => { for (const [, it] of dayItems(dd)) { const t = touched.find(x => x.d === d && x.id === it.id); if (t && !it.eaten && it.ref === to && it.qty === t.now) { it.ref = from; it.qty = t.qty; } } }); }
     for (const [id, v] of Object.entries(recBefore)) { if (v) put("recipes", id, v); else del("recipes", id); }
     if (checked) { S.shop.checked = { ...(S.shop.checked || {}), [from]: checked }; put("shop", "", S.shop); } scheduleRender(); });
   return { meals, recipes: nrec };
@@ -13496,7 +13520,7 @@ function fillIn(cur, add, d = 0) {
   if (isObj(cur) && isObj(add) && d < 4) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = cur[k] != null ? fillIn(cur[k], v, d + 1) : v; return o; }
   return cur;
 }
-ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0;
+ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0, bad = 0;
   try {
     if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
       const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
@@ -13504,10 +13528,11 @@ ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh
     const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
     if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
     if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
-    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : { ...DOC_DEFAULT[k](), ...j[k] }); n++; }
+    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : docShape(k, j[k])); n++; }
+    bad = normalizeRecords(); DATA_V++;
     if (P.photos && j.photos) for (const [id, url] of Object.entries(j.photos)) { const b = dataBlob(url); if (!b) { skipped++; continue; } try { await IDB.put(id, b); n++; } catch (e) { skipped++; } }
   } catch (e) { toast("The restore stopped halfway: " + String(e?.message || e).slice(0, 80) + ". The copy kept just before is under Settings → Backups → Restore points."); scheduleRender(); return; }
-  toast(`Restored · ${n} items${skipped ? ` · ${skipped} photo${skipped > 1 ? "s" : ""} skipped` : ""}`); scheduleRender(); };
+  toast(`Restored · ${n} items${bad ? ` · ${bad} damaged ingredient${bad > 1 ? "s" : ""} skipped` : ""}${skipped ? ` · ${skipped} photo${skipped > 1 ? "s" : ""} skipped` : ""}`); scheduleRender(); };
 CHG["bk-file"] = (v, el) => { const f = el.files?.[0]; if (!f) return; el.value = ""; const rd = new FileReader(); rd.onload = () => { let j; try { j = JSON.parse(rd.result); } catch (e) { toast("That file isn't a backup."); return; } restoreOpen(j, "file"); }; rd.readAsText(f); };
 SHEETS.bkpoints = sh => ({ title: "Restore points", body: sh.list ? (sh.list.length ? `<div class="card">${[...sh.list].reverse().map(k => `<button class="lrow" data-act="bk-point" data-k="${k}"><span><span class="t">${esc(new Date(k).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</span><span class="s">${esc(sh.why[k] || "")}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : `<div class="note">No restore points yet: the first one is made a few seconds after opening the app.</div>`) : `<div class="result"><span class="spinner"></span></div>`,
   foot: `<button class="btn primary" data-act="close-sheet">Done</button>` });
