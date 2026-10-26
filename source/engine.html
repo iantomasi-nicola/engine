@@ -3004,13 +3004,15 @@ const algoAt = (date, E = FIT().energy) => ALGO.filter(a => a.on(E) && (!E[a.fro
 function normalizeSettings(s) {
   const d = defaultSettings();
   const o = { ...d, ...(s || {}) };
-  o.diet = { ...d.diet, ...(s?.diet || {}) };
-  o.schedule = { ...d.schedule, ...(s?.schedule || {}) };
-  if (!Array.isArray(o.types) || !o.types.length) o.types = d.types;
-  if (!Array.isArray(o.meals) || !o.meals.length) o.meals = d.meals;
-  if (!Array.isArray(o.intensity) || o.intensity.length < 2) o.intensity = d.intensity;
-  if (!Array.isArray(o.avoid)) o.avoid = [];
-  if (!Array.isArray(o.cuisines)) o.cuisines = [];
+  o.diet = { ...d.diet, ...(isObj(s?.diet) ? s.diet : {}) };
+  o.schedule = { ...d.schedule, ...(isObj(s?.schedule) ? s.schedule : {}) };
+  for (const k of Object.keys(o.schedule)) if (!isObj(o.schedule[k])) o.schedule[k] = d.schedule[k] || { t: "rest", i: 1 };
+  const listOf = (a, ok, def, min = 1) => { const l = Array.isArray(a) ? a.filter(ok) : []; return l.length >= min ? l : def; };
+  o.types = listOf(o.types, t => isObj(t) && typeof t.id === "string", d.types);
+  o.meals = listOf(o.meals, m => isObj(m) && typeof m.id === "string", d.meals);
+  o.intensity = listOf(o.intensity, x => isObj(x), d.intensity, 2);
+  o.avoid = listOf(o.avoid, x => typeof x === "string", []); o.cuisines = listOf(o.cuisines, x => typeof x === "string", [], 0);
+  migrateAi(o);
   o.fit = deepMerge(defaultFit(), s?.fit || {});
   for (const k of ["tef", "neat"]) { const v = o.fit.energy[k]; if (!(typeof v === "number" && v >= 0)) o.fit.energy[k] = defaultFit().energy[k]; }   // a field saved empty means the default (an empty TEF or NEAT was a silent zero)
   if (s?.fit?.energy?.neatRefSteps === 7000) o.fit.energy.neatRefSteps = 6540;   // the first guess (7000) gives way to the measured US adult mean
@@ -3031,7 +3033,7 @@ const UI = { trainSeg: "cal", progSeg: "overview", dashSeg: "all", tab: "today",
 /* owner = the account the data on this device belongs to (none: never signed in); dirty = edits that account has not confirmed yet;
    seen = the account's copy each mergeable document was last read as (the base of a three-way merge); union = first sign-in of this device's own data */
 const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), timers: new Map(), known: {}, fresh: {}, seen: {}, dirty: new Set(), owner: "", union: false, sample: null, downloads: null, ready: false };
-const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty";
+const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty", UNION_KEY = "engine.union";
 
 let SAVE_WARNED = false;
 function saveLocal() {
@@ -3040,14 +3042,58 @@ function saveLocal() {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ settings: noKeys(S.settings), foods: S.foods, recipes: S.recipes, days: S.days, queue: S.queue, shop: S.shop, body: S.body, logm: S.logm, train: S.train })); }
   catch (e) { if (!SAVE_WARNED) { SAVE_WARNED = true; toast(Sync.db && window.ENGINE?.status?.().online ? "This device's storage is full: your changes are kept in your account only." : "This device's storage is full: new changes can't be saved. Export a backup and free some space."); } }
 }
+/* Inner parts of the wrong type (a damaged device copy, an old version, a malformed backup file or account copy) are cut back to what the screens can read.
+   Right data comes out unchanged. A list keeps its objects (or strings), a number written as text becomes a number, a part that must be an object and is not is dropped. */
+const objs = a => a.filter(isObj);
+function cleanList(o, k, keep) { if (o[k] == null) return; if (Array.isArray(o[k])) o[k] = o[k].filter(keep); else delete o[k]; }
+function cleanNum(o, k) { if (o[k] == null || typeof o[k] === "number") return; const n = parseFloat(String(o[k]).replace(",", ".")); if (isFinite(n)) o[k] = n; else delete o[k]; }
+function cleanObj(o, k) { if (o[k] != null && !isObj(o[k])) delete o[k]; }
+/* Lists of records that had no unique id of their own (the workouts of a day: wid; the purchases of the shopping document: bid, as their id is the food's) get one, so two devices
+   can merge them record by record. A record made now gets a random id (fresh); one that arrives without (older data, a file) gets an id derived from its content and its place among
+   identical records, so every device gives the same id to the same record. A repeated id (a copy made in the same day) is renamed the same way. Returns a new list. */
+const recKey = x => isObj(x) ? (typeof x.bid === "string" ? x.bid : typeof x.wid === "string" ? x.wid : typeof x.id === "string" || typeof x.id === "number" ? String(x.id) : undefined) : undefined;
+function fnv(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function ensureKeys(list, f, fresh) {
+  if (!Array.isArray(list)) return list;
+  const taken = new Set(), count = {};
+  return list.map(x => {
+    if (!isObj(x)) return x;
+    let k = typeof x[f] === "string" ? x[f] : "";
+    if (!k || taken.has(k)) {
+      if (fresh) do k = uid(); while (taken.has(k));
+      else { const { [f]: was, ...rest } = x, base = k || fnv(JSON.stringify(rest)); do k = base + (k ? "~" : "-") + (count[base] = (count[base] || 0) + 1); while (taken.has(k)); }
+    }
+    taken.add(k); return x[f] === k ? { ...x } : { ...x, [f]: k };
+  });
+}
+/* a day of the meal plan: meals is { meal: [items] }, an item has a numeric quantity */
+function cleanDay(d, id) {
+  if (!isObj(d)) return null;
+  const o = { ...d }, meals = {};
+  for (const [m, items] of Object.entries(isObj(d.meals) ? d.meals : {})) meals[m] = Array.isArray(items) ? objs(items).map(it => { if (it.qty == null || typeof it.qty === "number") return it; const c = { ...it }; cleanNum(c, "qty"); if (c.qty == null) c.qty = 0; return c; }) : [];
+  o.meals = meals; if (id && !o.date && isDay(id)) o.date = id;
+  for (const k of ["lock", "adj", "override", "training"]) cleanObj(o, k);
+  return o;
+}
+function cleanDays(m) { const out = {}; for (const [id, v] of Object.entries(isObj(m) ? m : {})) { const d = cleanDay(v, id); if (d) out[id] = d; } return out; }
+/* a day of the daily log */
+function cleanLogDay(x) {
+  const o = { ...x };
+  for (const k of ["workouts", "wsess", "naps"]) cleanList(o, k, isObj);
+  cleanList(o, "planned", isObj); cleanList(o, "caff", Array.isArray); cleanList(o, "skip", v => typeof v === "string");
+  if (o.workouts) o.workouts = ensureKeys(o.workouts, "wid", false);
+  for (const k of ["supp", "jr"]) cleanObj(o, k);
+  for (const k of ["water", "weight", "bf", "sleep"]) cleanNum(o, k);
+  return o;
+}
 /* the daily log keeps only real months and days (a stray key from a bad link, file or sync cannot reach the charts) */
+function cleanLogMonth(doc) {
+  const days = {}; for (const [d, v] of Object.entries(isObj(doc.days) ? doc.days : {})) if (isDay(d) && isObj(v)) days[d] = cleanLogDay(v);
+  return { ...doc, days };
+}
 function cleanLogm(m) {
   const out = {};
-  for (const [mk, doc] of Object.entries(isObj(m) ? m : {})) {
-    if (!/^\d{4}-\d{2}$/.test(mk) || !isObj(doc)) continue;
-    const days = {}; for (const [d, v] of Object.entries(isObj(doc.days) ? doc.days : {})) if (isDay(d) && isObj(v)) days[d] = v;
-    out[mk] = { ...doc, days };
-  }
+  for (const [mk, doc] of Object.entries(isObj(m) ? m : {})) if (/^\d{4}-\d{2}$/.test(mk) && isObj(doc)) out[mk] = cleanLogMonth(doc);
   return out;
 }
 /* the fields every shop, body and training document must have */
@@ -3062,14 +3108,25 @@ let DIRTY_T = 0; const saveDirtyLater = () => { clearTimeout(DIRTY_T); DIRTY_T =
 function docShape(k, v) {
   const def = DOC_DEFAULT[k](), o = { ...def, ...(isObj(v) ? v : {}) };
   for (const key of Object.keys(def)) if (Array.isArray(def[key]) ? !Array.isArray(o[key]) : isObj(def[key]) ? !isObj(o[key]) : typeof o[key] !== typeof def[key]) o[key] = def[key];
-  return o;
+  return DOC_INNER[k](o);
 }
+/* the inside of those documents: the lists and maps the screens walk */
+const DOC_INNER = {
+  shop: o => { for (const k of ["extras", "buys", "receipts"]) cleanList(o, k, isObj); cleanList(o, "stores", v => typeof v === "string");
+    for (const k of ["checked", "prices", "pref"]) cleanObj(o, k);
+    if (o.buys) o.buys = ensureKeys(o.buys, "bid", false);
+    o.pantry = Object.fromEntries(Object.entries(o.pantry).filter(([, v]) => isObj(v))); return o; },
+  body: o => { o.w = Object.fromEntries(Object.entries(o.w).filter(([d]) => isDay(d)).map(([d, v]) => { const c = { v }; cleanNum(c, "v"); return [d, c.v]; }).filter(([, v]) => v != null));
+    o.m = Object.fromEntries(Object.entries(o.m).filter(([, v]) => isObj(v))); cleanList(o, "photos", isObj); return o; },
+  train: o => { for (const k of ["calis", "topSets", "tests", "races", "circuitLog", "amrapLog", "progs", "goals", "pbs"]) cleanList(o, k, isObj); cleanList(o, "racesDel", v => typeof v === "string");
+    for (const k of ["wk", "period"]) cleanObj(o, k); return o; }
+};
 function loadLocal() {
   try {
     const j = JSON.parse(localStorage.getItem(LS_KEY) || "null");
     if (j) for (const k of Object.keys(S)) if (isObj(j[k])) S[k] = j[k];   // a part of the wrong type (a damaged copy) keeps its empty default
   } catch (e) {}
-  S.logm = cleanLogm(S.logm); for (const k of ["foods", "recipes", "days"]) S[k] = cleanColl(S[k]);
+  S.logm = cleanLogm(S.logm); for (const k of ["foods", "recipes"]) S[k] = cleanColl(S[k]); S.days = cleanDays(S.days);
   if (S.settings) S.settings = normalizeSettings(S.settings);
   for (const k of Object.keys(DOC_DEFAULT)) S[k] = docShape(k, S[k]);
   try { Sync.owner = localStorage.getItem(OWNER_KEY) || ""; const d = JSON.parse(localStorage.getItem(DIRTY_KEY) || "null"); if (Sync.owner && d?.uid === Sync.owner) Sync.dirty = new Set(d.keys || []); } catch (e) {}
@@ -3080,24 +3137,38 @@ function loadLocal() {
 /* ================= API keys: on this device only (S-1) =================
    The intervals.icu, MapTiler and AI keys are in memory inside S.settings (everything reads them there) and on disk only in "engine.keys"
    ({ owner uid, or "" before any sign-in: keys }). They never reach the synced settings document, the device copy, the snapshot or a restore point;
-   another device starts with the fields empty. A backup file has them only when asked (backupData({ keys: true })). */
+   another device starts with the fields empty. A backup file has them only when asked (backupData({ keys: true })).
+   Two more things that belong to this device only travel the same way: the result of the last Verify of a service (check: another device's result says nothing about this one)
+   and the services hidden here (ai.hidden: «Remove» on a device that does not have the key only hides the service there). */
 const KEYS_KEY = "engine.keys";
+/* the single key of older versions (settings.ai = { key, provider }) is service s1; done once, wherever it turns up (device copy, key store, account copy, file) */
+function migrateAi(st) {
+  const a = st?.ai; if (!isObj(a) || !a.key) return st;
+  if (!Array.isArray(a.services)) { st.ai = { services: [{ id: "s1", provider: a.provider || "gemini", key: a.key, model: a.model, on: true, models: a.models, check: a.check }] }; return st; }
+  const { key, ...rest } = a, svc = a.services.map(x => isObj(x) && x.id === "s1" && !x.key ? { ...x, key } : x);
+  if (!svc.some(x => isObj(x) && x.key === key)) svc.push({ id: "s0", provider: a.provider || "gemini", key, model: a.model, on: true });   // a key no service holds is never dropped
+  st.ai = { ...rest, services: svc };
+  return st;
+}
 function keysOf(st) {
   const k = {}; if (!st) return k;
   if (st.intervals?.key) k.icu = st.intervals.key; if (st.mapKey) k.map = st.mapKey; if (st.ai?.key) k.ai = st.ai.key;
-  for (const x of st.ai?.services || []) if (x?.key && x.id) (k.svc = k.svc || {})[x.id] = x.key;
+  for (const x of st.ai?.services || []) if (x?.id) { if (x.key) (k.svc = k.svc || {})[x.id] = x.key; if (isObj(x.check)) (k.chk = k.chk || {})[x.id] = x.check; }
+  if (Array.isArray(st.ai?.hidden) && st.ai.hidden.length) k.hide = st.ai.hidden.slice();
   return k;
 }
 function noKeys(st) {
   if (!st) return st; const o = clone(st);
   delete o.mapKey; if (o.intervals) delete o.intervals.key;
-  if (o.ai) { delete o.ai.key; for (const x of o.ai.services || []) if (x) delete x.key; }
+  if (o.ai) { delete o.ai.key; delete o.ai.hidden; for (const x of o.ai.services || []) if (x) { delete x.key; delete x.check; } }
   return o;
 }
 function withKeys(st, k) {
   if (!st || !k) return st;
   if (k.icu) st.intervals = { ...(st.intervals || {}), key: k.icu }; if (k.map) st.mapKey = k.map; if (k.ai) st.ai = { ...(st.ai || {}), key: k.ai };
-  if (k.svc) for (const x of st.ai?.services || []) if (x && k.svc[x.id]) x.key = k.svc[x.id];
+  if (k.hide) st.ai = { ...(st.ai || {}), hidden: k.hide };
+  migrateAi(st);
+  for (const x of st.ai?.services || []) if (x) { if (k.svc?.[x.id]) x.key = k.svc[x.id]; if (k.chk?.[x.id]) x.check = k.chk[x.id]; }
   return st;
 }
 function keyStore() { try { const j = JSON.parse(localStorage.getItem(KEYS_KEY) || "{}"); return isPlain(j) ? j : {}; } catch (e) { return {}; } }
@@ -3120,7 +3191,7 @@ function normalizeRecords() {
   return dropped;   // ingredients that were not objects (nothing to keep): the restore tells how many
 }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
-const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm";
+const MERGED = kind => DOC_KINDS.includes(kind) || kind === "logm" || kind === "days";
 const keyOf = (kind, id) => kind + "|" + (id || "");
 const splitKey = key => { const i = key.indexOf("|"); return [key.slice(0, i), key.slice(i + 1)]; };
 const pathOf = (kind, id) => DOC_KINDS.includes(kind) ? kind : "lib/" + kind + "/" + id;
@@ -3158,6 +3229,7 @@ function syncSent(path, data, merged) {
 }
 
 function put(kind, id, data) {
+  if (kind === "shop" && data && Array.isArray(data.buys)) data.buys = ensureKeys(data.buys, "bid", true);
   setLocal(kind, id, data);
   const key = keyOf(kind, id);
   if (Sync.owner) Sync.dirty.add(key);
@@ -3202,20 +3274,33 @@ function deq(a, b) {
   for (const k of ka) if (!Object.prototype.hasOwnProperty.call(b, k) || !deq(a[k], b[k])) return false;
   return true;
 }
-const idList = a => Array.isArray(a) && a.every(x => isPlain(x) && (typeof x.id === "string" || typeof x.id === "number")) && new Set(a.map(x => String(x.id))).size === a.length;
-function merge3(b, l, r, win) {
+const idList = a => Array.isArray(a) && a.every(x => recKey(x) !== undefined) && new Set(a.map(recKey)).size === a.length;
+/* deleted races (and any such list of names) are a set: what one side added is kept, what one side removed stays removed */
+const SET_KEYS = ["racesDel"];
+function merge3(b, l, r, win, key) {
   if (deq(l, b)) return r;
   if (deq(r, b) || deq(l, r)) return l;
-  if (isPlain(l) && isPlain(r)) { const out = {}, bb = isPlain(b) ? b : {}; for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) { const v = merge3(bb[k], l[k], r[k], win); if (v !== undefined) out[k] = v; } return out; }
+  if (isPlain(l) && isPlain(r)) { const out = {}, bb = isPlain(b) ? b : {}; for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) { const v = merge3(bb[k], l[k], r[k], win, k); if (v !== undefined) out[k] = v; } return out; }
+  if (SET_KEYS.includes(key) && Array.isArray(l) && Array.isArray(r) && [...l, ...r].every(x => typeof x === "string")) {
+    const B = new Set(Array.isArray(b) ? b : []), L = new Set(l), R = new Set(r);
+    return [...new Set([...l, ...r])].filter(x => (L.has(x) && R.has(x)) || !B.has(x));
+  }
   if (idList(l) && idList(r) && (b == null || idList(b))) {
-    const m = a => new Map((a || []).map(x => [String(x.id), x])), B = m(b), L = m(l), R = m(r), out = [];
+    const m = a => new Map((a || []).map(x => [recKey(x), x])), B = m(b), L = m(l), R = m(r), out = [];
     for (const id of new Set([...L.keys(), ...R.keys()])) { const v = merge3(B.get(id), L.get(id), R.get(id), win); if (v !== undefined) out.push(v); }
     return out;
   }
   return win === "r" ? (r === undefined ? l : r) : (l === undefined ? r : l);
 }
+/* the three copies get their record ids first (the same ones on every device), so workouts and purchases merge record by record */
+function keyedDoc(path, v) {
+  if (!isPlain(v)) return v;
+  if (path.startsWith("lib/logm/") && isPlain(v.days)) return { ...v, days: Object.fromEntries(Object.entries(v.days).map(([d, x]) => [d, isPlain(x) && Array.isArray(x.workouts) ? { ...x, workouts: ensureKeys(x.workouts, "wid", false) } : x])) };
+  if (path === "shop" && Array.isArray(v.buys)) return { ...v, buys: ensureKeys(v.buys, "bid", false) };
+  return v;
+}
 function syncMerge(path, base, l, r, win) {
-  const out = clone(merge3(base ?? undefined, l, r, win));
+  const out = clone(merge3(keyedDoc(path, base ?? undefined), keyedDoc(path, l), keyedDoc(path, r), win));
   if (path.startsWith("lib/logm/") && isPlain(out?.days)) for (const [d, x] of Object.entries(out.days)) { const a = l?.days?.[d], c = r?.days?.[d]; if (isPlain(x) && a?.jr && c?.jr) x.jr = jrMergeDay(a, c); }
   return out;
 }
@@ -3767,6 +3852,7 @@ function mutateLog(date, fn) {
   const doc = clone(S.logm[mk] || { month: mk, days: {} });
   const day = doc.days[date] || {};
   fn(day);
+  if (Array.isArray(day.workouts)) day.workouts = ensureKeys(day.workouts, "wid", true);
   for (const k of Object.keys(day)) if (day[k] === null || day[k] === "" || (Array.isArray(day[k]) && !day[k].length && k !== "planned")) delete day[k];
   if (Object.keys(day).length) doc.days[date] = day; else delete doc.days[date];
   put("logm", mk, doc);
@@ -4591,6 +4677,11 @@ function restoreFocus(f) {
 const SIDE_KEY = "engine.side";
 function sideMode() { if (innerWidth < 600) return null; let p = null; try { p = localStorage.getItem(SIDE_KEY); } catch (e) {} return p === "rail" || p === "full" ? p : innerWidth >= 1024 ? "full" : "rail"; }
 function applySide() { const m = sideMode(); document.body.classList.toggle("side-rail", m === "rail"); document.body.classList.toggle("side-full", m === "full"); }
+/* a screen that cannot be drawn (data it did not expect) must not leave a blank page: the way out stays here, with the restore points and a backup of what is on this device */
+function renderFailed(e) {
+  return `<section class="card pad" style="display:flex;flex-direction:column;gap:12px;max-width:560px;margin:16px auto"><div><b>This screen couldn't be drawn.</b><div class="faint" style="font-size:13.5px;margin-top:4px">Your data is still on this device${e?.message ? ` (${esc(String(e.message).slice(0, 120))})` : ""}. Save a backup, or go back to an earlier copy.</div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn tonal" data-act="bk-save">${ic("download", "sm")}Save a backup now</button><button class="btn primary" data-act="bk-points">Restore points</button></div></section>`;
+}
 function render() {
   if (!S.settings || !S.settings.fit) S.settings = normalizeSettings(S.settings);
   applyShopMode(); applySide();
@@ -4605,7 +4696,8 @@ function render() {
   const navTop = S.settings?.navPos === "top" && UI.tab !== "live" && !(UI.tab === "timer" && TMR.phase !== "setup");
   document.body.classList.toggle("nav-top", S.settings?.navPos === "top");
   if (document.querySelector(".ghosting,.drop-on,.s-lift")) $("#main")._h = null; // a drag left marks in the page: write it fresh
-  setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + v());
+  let page; try { page = v(); } catch (e) { page = renderFailed(e); }
+  setHTML($("#main"), (navTop ? `<nav class="tnav" aria-label="Sections">${navHTML(false)}</nav>` : "") + page);
   if (UI.swipe) { const g = $(".plan-grid"); if (g) g.classList.add("swipe-" + UI.swipe); UI.swipe = null; }
   $("#fab").hidden = UI.tab !== "plan";
   if (UI.sheet && UI.sheet.live) renderSheet();
@@ -10560,7 +10652,7 @@ ACT["off-refresh"] = async () => {
   if (!d.brand) d.brand = n.brand; renderSheet(); toast("Values updated from Open Food Facts · Save to keep them");
 };
 /* ================= sync subscriptions ================= */
-const shapeDoc = (kind, d) => kind === "settings" ? normalizeSettings(d) : kind === "shop" ? { checked: {}, extras: [], pantry: {}, range: 7, stores: [], pref: {}, ...d } : kind === "train" ? { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...d } : { w: {}, m: {}, ...d };
+const shapeDoc = (kind, d) => kind === "settings" ? normalizeSettings(d) : kind === "shop" ? { pref: {}, ...docShape("shop", d) } : docShape(kind, d);
 /* what counts as this device's own data on a first sign-in (defaults alone don't) */
 const HAS_LOCAL = {
   settings: v => !!v?.onboarded,
@@ -10586,17 +10678,21 @@ function applyDoc(kind, snap) {
   }
   Sync.seen[key] = raw ? clone(raw) : null;
   if (next) S[kind] = shapeDoc(kind, next);
-  if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc } }); if (!fc && Object.keys(had).length) send = true; }
+  if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc }, chk: { ...had.chk, ...own.chk } }); if (!fc && Object.keys(had).length) send = true; }
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
+  unionDone();
   saveLocal(); scheduleRender();
   if (send) put(kind, "", S[kind]);
   if (kind === "settings") maybeOnboard();
 }
+/* every kind answered by the account: the merge owed since the first sign-in is done (its result is dirty or queued, so it survives a closed tab) */
+function unionDone() { if (!Sync.union || ![...DOC_KINDS, "foods", "recipes", "queue", "logm", "days"].every(k => Sync.fresh[k])) return; try { localStorage.removeItem(UNION_KEY); } catch (e) {} }
 /* days older than the 180 the app reads: the account may have them already, so only the missing ones go up */
 async function pushIfMissing(kind, ids) { for (const id of ids) { try { const s = await refFor(kind, id).get(); if (!s.exists && S[kind][id] !== undefined) put(kind, id, S[kind][id]); } catch (e) {} } }
 function applyCollection(kind, qs) {
   const fc = !!qs.metadata?.fromCache, first = !Sync.known[kind], join = !fc && !Sync.fresh[kind] && Sync.union, next = {}, send = [];
-  for (const d of qs.docs) { next[d.id] = clone(d.data()); if (kind === "logm" && !Sync.pending.has(keyOf(kind, d.id))) Sync.seen[keyOf(kind, d.id)] = clone(d.data()); }
+  const clean = kind === "days" ? cleanDay : kind === "logm" ? (v => isObj(v) ? cleanLogMonth(v) : null) : null;   // a malformed copy in the account is cut back like one in a file
+  for (const d of qs.docs) { const v = clean ? clean(clone(d.data()), d.id) : clone(d.data()); if (v) next[d.id] = v; if ((kind === "logm" || kind === "days") && !Sync.pending.has(keyOf(kind, d.id))) Sync.seen[keyOf(kind, d.id)] = clone(d.data()); }
   for (const [key, job] of Sync.pending) { const [k, id] = splitKey(key); if (k !== kind) continue; if (job.data === null) delete next[id]; else next[id] = job.data; }
   /* edits this device never sent (the tab closed first) */
   if (first) for (const key of Sync.dirty) { const [k, id] = splitKey(key); if (k !== kind || Sync.pending.has(key)) continue;
@@ -10606,12 +10702,13 @@ function applyCollection(kind, qs) {
   const since = addDays(todayISO(), -180), old = [];
   if (join) for (const [id, loc] of Object.entries(S[kind] || {})) { if (Sync.pending.has(keyOf(kind, id))) continue;
     if (next[id] === undefined) { if (kind === "days" && id < since) old.push(id); else send.push([id, loc]); }
-    else if (kind === "logm" && !deq(loc, next[id])) { const m = syncMerge(pathOf(kind, id), null, loc, next[id], "r"); if (!deq(m, next[id])) send.push([id, m]); } }
+    else if ((kind === "logm" || kind === "days") && !deq(loc, next[id])) { const m = syncMerge(pathOf(kind, id), null, loc, next[id], "r"); if (!deq(m, next[id])) send.push([id, m]); } }
   if (join && qs.docs.length && send.length) joinNote();
   if (kind === "logm") for (const [mk, rem] of Object.entries(next)) { if (Sync.pending.has(keyOf(kind, mk)) || send.some(x => x[0] === mk)) continue; const m = jrMergeDoc(S.logm[mk], rem); if (m) send.push([mk, m]); }
   if (kind === "queue") notifyQueue(S.queue, next);
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
   if (kind === "days") for (const [id, v] of Object.entries(S.days)) if (id < since && !next[id]) next[id] = v;
+  unionDone();
   S[kind] = next;
   for (const [id, v] of send) put(kind, id, v);
   saveLocal(); scheduleRender();
@@ -10624,12 +10721,16 @@ function notifyQueue(prev, next) {
 }
 /* the data on this device belongs to one account at most. Another account signing in starts from its own data: nothing of the first one
    (keys included) is uploaded, and the first one's unsent edits wait in its own queue for its next sign-in */
-function claimLocal(id) {
+async function claimLocal(id) {
   let snaps = []; try { snaps = Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) {}
   const owner = Sync.owner, mine = owner ? owner === id : !snaps.some(k => k !== "engine.snap." + id);
-  Sync.union = mine && !owner && !snaps.includes("engine.snap." + id);
+  /* the merge of this device's data into the account is owed until every kind has had a fresh answer from the server (engine.union = that account): a first load that never finished must not turn into «the account's copy wins» on the next opening */
+  let owed = ""; try { owed = localStorage.getItem(UNION_KEY) || ""; } catch (e) {}
+  Sync.union = mine && ((!owner && !snaps.includes("engine.snap." + id)) || owed === id);
+  try { Sync.union ? localStorage.setItem(UNION_KEY, id) : localStorage.removeItem(UNION_KEY); } catch (e) {}
   if (!mine) {
-    if (!owner) restorePoint("before sign-in (this device's data)");   // data of no account, about to be cleared for this one: kept as a restore point (the copy is taken now, before the reset)
+    /* data of no account, about to be cleared for this one: kept as a restore point first (the copy is taken now, before the reset). If it can't be stored the device is not attached: nothing is cleared or uploaded */
+    if ((!owner || owed === owner) && !(await restorePoint("before sign-in (this device's data)"))) { Sync.union = false; toast("This device's data couldn't be saved as a restore point first, so it was not connected to your account. Export a backup (Settings → Backups) and try again, or use another browser."); return false; }
     if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
     Sync.dirty = new Set();
     Object.assign(S, { settings: withKeys(normalizeSettings(null), keyStore()[id]), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
@@ -10638,6 +10739,7 @@ function claimLocal(id) {
   if (!mine) { saveLocal(); scheduleRender(); }
   else if (!owner) { const all = keyStore(); if (all[""]) { delete all[""]; try { localStorage.setItem(KEYS_KEY, JSON.stringify(all)); } catch (e) {} } saveKeys(); }   // the keys of a device used without an account become this account's keys on this device
   saveDirty();
+  return true;
 }
 function subscribe() {
   const db = Sync.db, b = Sync.base;
@@ -13464,7 +13566,7 @@ const BKDB = (() => { let p = null; const open = () => p || (p = new Promise((ok
   return { get: (st, k) => tx(st, "readonly", s => s.get(k)), put: (st, k, v) => tx(st, "readwrite", s => s.put(v, k)), del: (st, k) => tx(st, "readwrite", s => s.delete(k)), keys: st => tx(st, "readonly", s => s.getAllKeys()) }; })();
 function backupData(o = {}) {
   const st = clone(S.settings || {});
-  if (!o.keys) { delete st.mapKey; if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) delete x.key; delete st.ai.key; } }
+  if (!o.keys) { delete st.mapKey; if (st.intervals) delete st.intervals.key; if (st.ai) { st.ai = clone(st.ai); for (const x of st.ai.services || []) { delete x.key; delete x.check; } delete st.ai.key; delete st.ai.hidden; } }
   return { app: "Engine", version: BK_VERSION, exported: new Date().toISOString(), settings: st, foods: S.foods, recipes: S.recipes, days: S.days, logm: S.logm, train: S.train, body: S.body, shop: S.shop };
 }
 async function photosData() { const out = {}; for (const x of S.body.photos || []) { const b = await photoBlob(x); if (b) out[x.id] = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); } return out; }
@@ -13472,7 +13574,15 @@ async function backupJSON(o = BKP()) { const j = backupData(o); if (o.photos) j.
 const bkName = () => `engine-backup-${todayISO()}.json`;
 /* restore points */
 /* true once it is stored; API keys never go in (they stay in this device's own key store, S-1) */
-async function restorePoint(why = "daily") { try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData() }); const ks = (await BKDB.keys("pts")).sort(); for (const old of ks.slice(0, Math.max(0, ks.length - 14))) await BKDB.del("pts", old); return true; } catch (e) { return false; } }
+async function restorePoint(why = "daily") {
+  try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData() }); return await trimPoints(); } catch (e) { return false; }
+}
+/* the last 14 points are kept; those made before a sign-in are the way back from a wrong first sign-in and are never rotated away */
+async function trimPoints() {
+  try { const rot = []; for (const k of (await BKDB.keys("pts")).sort()) if (!/^before sign-in/.test((await BKDB.get("pts", k))?.why || "")) rot.push(k);
+    for (const old of rot.slice(0, Math.max(0, rot.length - 14))) await BKDB.del("pts", old); } catch (e) {}
+  return true;
+}
 async function dailyPoint() { try { const ks = (await BKDB.keys("pts")).sort(), last = ks[ks.length - 1]; if (!last || last.slice(0, 10) !== new Date().toISOString().slice(0, 10)) await restorePoint("daily"); } catch (e) {} }
 /* the file on a schedule */
 const bkLast = () => S.settings.backup?.last || null;
@@ -13514,8 +13624,10 @@ const BK_NAMES = { settings: "settings", foods: "foods", recipes: "recipes", day
 function bkClean(j) {
   const c = { ...j }, bad = [];
   for (const k of Object.keys(BK_NAMES)) if (j[k] != null && !isObj(j[k])) { delete c[k]; bad.push(BK_NAMES[k]); }
-  for (const k of ["foods", "recipes", "days"]) if (c[k]) c[k] = cleanColl(c[k]);
+  for (const k of ["foods", "recipes"]) if (c[k]) c[k] = cleanColl(c[k]);
+  if (c.days) c.days = cleanDays(c.days);
   if (c.logm) c.logm = cleanLogm(c.logm);
+  for (const k of Object.keys(DOC_INNER)) if (c[k]) { const d = docShape(k, c[k]); for (const key of Object.keys(d)) if (!(key in c[k])) delete d[key]; c[k] = d; }   // inner parts cut back; a part the file lacks stays absent, so a restore does not overwrite it with an empty default
   return { j: c, bad };
 }
 function restoreOpen(j, from) { if (!isObj(j) || (j.app !== "Fuel" && j.app !== "Engine" && !j.settings)) { toast("That file isn't an Engine backup."); return; }
@@ -13544,15 +13656,21 @@ function fillIn(cur, add, d = 0) {
   if (isObj(cur) && isObj(add) && d < 4) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = cur[k] != null ? fillIn(cur[k], v, d + 1) : v; return o; }
   return cur;
 }
+/* «Replace»: what the file has overwrites what is here, down to a record (a log day, a weigh-in, a pantry line, a race); what it lacks stays. Lists of records with an id are joined by id */
+function overlay(cur, add, d = 0) {
+  if (isObj(cur) && isObj(add) && d < 2) { const o = { ...cur }; for (const [k, v] of Object.entries(add)) o[k] = k in cur ? overlay(cur[k], v, d + 1) : v; return o; }
+  if (Array.isArray(cur) && Array.isArray(add) && cur.length && cur.every(x => recKey(x) !== undefined) && add.every(x => recKey(x) !== undefined)) { const m = new Map(add.map(x => [recKey(x), x])); return [...cur.map(x => m.has(recKey(x)) ? m.get(recKey(x)) : x), ...add.filter(x => !cur.some(y => recKey(y) === recKey(x)))]; }
+  return add;
+}
 ACT["rs-go"] = async () => { const sh = S_(), j = sh.j, P = sh.parts, merge = sh.mode === "merge"; closeSheet(); await restorePoint("before restore"); let n = 0, skipped = 0, bad = 0;
   try {
     if (P.settings && j.settings && !merge) { const cur = S.settings || {}, s = normalizeSettings({ ...cur, ...j.settings });   // field by field: what the file lacks stays as it is
-      const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
+      const mine = keysOf(cur), got = keysOf(s); withKeys(s, { ...mine, ...got, svc: { ...(mine.svc || {}), ...(got.svc || {}) }, chk: { ...(mine.chk || {}), ...(got.chk || {}) } });   // a key the file lacks stays this device's (S-1: lost keys would be lost for good)
       put("settings", "", s); n++; }
     const coll = k => { for (const [id, v] of Object.entries(j[k] || {})) { if (merge && S[k][id]) continue; put(k, id, v); n++; } };
     if (P.foods) { coll("foods"); coll("recipes"); } if (P.days) coll("days");
-    if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else coll("logm"); }
-    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : docShape(k, j[k])); n++; }
+    if (P.logm) { if (merge) { for (const [mk, doc] of Object.entries(j.logm || {})) { const cur = S.logm[mk]; const days = { ...(doc.days || {}), ...(cur?.days || {}) }; put("logm", mk, { ...(cur || doc), days }); n++; } } else for (const [mk, doc] of Object.entries(j.logm || {})) { put("logm", mk, overlay(S.logm[mk], doc)); n++; } }
+    for (const k of ["train", "body", "shop"]) if (P[k] && j[k]) { put(k, "", merge ? fillIn(clone(S[k]), j[k]) : docShape(k, overlay(S[k], j[k]))); n++; }
     bad = normalizeRecords(); DATA_V++;
     if (P.photos && j.photos) for (const [id, url] of Object.entries(j.photos)) { const b = dataBlob(url); if (!b) { skipped++; continue; } try { await IDB.put(id, b); n++; } catch (e) { skipped++; } }
   } catch (e) { toast("The restore stopped halfway: " + String(e?.message || e).slice(0, 80) + ". The copy kept just before is under Settings → Backups → Restore points."); scheduleRender(); return; }
@@ -16762,7 +16880,7 @@ ACT["check-update"] = async () => {
     if (sample) { try { const lim = await sample.limits(); Sync.sampleImages = !!(lim && lim.images); } catch (e) {} }
     if (db && user) {
       let id = null; try { id = await user.id(); } catch (e) {}
-      if (id) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; claimLocal(id); syncState(); subscribe(); }
+      if (id && await claimLocal(id)) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; syncState(); subscribe(); }
     }
     Sync.ready = true; scheduleRender();
     if (!Sync.db) setTimeout(maybeOnboard, 300);

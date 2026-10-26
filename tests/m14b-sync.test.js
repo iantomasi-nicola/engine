@@ -189,7 +189,7 @@ test("S-1 keys stay on the device: not in the account, the device copy, the snap
   const srv = FS.server(), seed = F.seed({ withPlan: false }); seed.settings = KEYED();
   const A = await dev(srv, "A", { seed }); await A.settle(); await wait(1500);
   const r = await A.page.evaluate(async () => { await restorePoint("test"); const ks = (await BKDB.keys("pts")).sort(), pt = await BKDB.get("pts", ks[ks.length - 1]);
-    return { local: localStorage.getItem("fuelplanner.v1"), snap: localStorage.getItem("engine.snap.u1"), q: localStorage.getItem("engine.q.u1") || "", point: JSON.stringify(pt), store: localStorage.getItem("engine.keys"), mem: [S.settings.intervals.key, S.settings.mapKey, S.settings.ai.services[0].key, S.settings.ai.key] }; });
+    return { local: localStorage.getItem("fuelplanner.v1"), snap: localStorage.getItem("engine.snap.u1"), q: localStorage.getItem("engine.q.u1") || "", point: JSON.stringify(pt), store: localStorage.getItem("engine.keys"), mem: [S.settings.intervals.key, S.settings.mapKey, S.settings.ai.services[0].key, S.settings.ai.services[1]?.key] }; });   // the older single key (ai.key) is service s0 once the list has its own s1
   for (const k of ["local", "snap", "q", "point"]) assert.doesNotMatch(r[k], /SYNTH-/, k);
   assert.doesNotMatch(JSON.stringify([...srv.rows("u1")]), /SYNTH-/);
   assert.match(r.store, /SYNTH-ICU/); assert.deepEqual(r.mem, ["SYNTH-ICU", "SYNTH-MAP", "SYNTH-AI", "SYNTH-OLD"]);

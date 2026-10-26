@@ -1,6 +1,6 @@
 /* An in-memory Supabase for sync tests: one server shared by several browser contexts ("devices"), each running the real shim.js.
    Synthetic data only, no network: vendor/supabase.js is replaced by a stub that forwards every query to this Node process.
-   The stub implements just what shim.js uses: auth.getSession/signOut, from(T).select/eq/gt/order/limit/range/maybeSingle, upsert, delete, channel. */
+   The stub implements just what shim.js uses: auth.getSession/signOut, from(T).select/eq/is/gt/order/limit/range/maybeSingle, upsert, insert, update (a conditional one: .eq("updated_at", seen).select() answers the rows it changed), delete, channel. */
 const H = require("./harness");
 const STUB = `
 window.supabase = { createClient: () => {
@@ -8,13 +8,14 @@ window.supabase = { createClient: () => {
   const q = (spec) => { const o = {
       select(cols) { spec.op = spec.op || "select"; spec.cols = cols; return o; },
       eq(k, v) { (spec.eq = spec.eq || {})[k] = v; return o; },
+      is(k, v) { (spec.is = spec.is || {})[k] = v; return o; },
       gt(k, v) { spec.gt = [k, v]; return o; },
       order(k) { spec.order = k; return o; },
       limit(n) { spec.limit = n; return o; },
       range(a, b) { spec.range = [a, b]; return o; },
       maybeSingle() { spec.single = true; return o; },
       then(res, rej) { return call(spec).then(res, rej); } }; return o; };
-  const from = () => ({ select: c => q({ op: "select" }).select(c), upsert: row => q({ op: "upsert", row }), delete: () => q({ op: "delete" }) });
+  const from = () => ({ select: c => q({ op: "select" }).select(c), upsert: row => q({ op: "upsert", row }), insert: row => q({ op: "insert", row }), update: row => q({ op: "update", row }), delete: () => q({ op: "delete" }) });
   const user = () => ({ id: window.__fakeUid, email: window.__fakeUid + "@example.test" });
   const auth = { getSession: async () => ({ data: { session: window.__fakeUid ? { user: user() } : null }, error: null }), signOut: async () => ({ error: null }),
     signInWithPassword: async () => ({ data: { session: { user: user() } }, error: null }), signUp: async () => ({ data: {}, error: null }) };
@@ -23,17 +24,18 @@ window.supabase = { createClient: () => {
   return { from, auth, storage, channel: () => chan, removeChannel() {} };
 } };`;
 
-/* the server: rows per user, kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
+/* the server: rows per user (data, and the updated_at the client wrote or the server stamped), kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
 function server({ maxRows = 1000 } = {}) {
   const S = { users: new Map(), log: [], maxRows, devs: [], reject: null, onPage: null };
   S.rows = uid => S.users.get(uid) || S.users.set(uid, new Map()).get(uid);
   S.get = (uid, path) => { const r = S.rows(uid).get(path); return r ? JSON.parse(JSON.stringify(r.data)) : undefined; };
-  S.set = (uid, path, data) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: JSON.parse(JSON.stringify(data)), at: Date.now() }); };
+  S.set = (uid, path, data, ua) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: JSON.parse(JSON.stringify(data)), at: Date.now(), ua: ua || new Date().toISOString() }); };
+  const tell = (dev, row) => { for (const d of S.devs) if (d !== dev && d.uid === dev.uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "UPDATE", new: r }), { path: row.path, data: row.data }).catch(() => {}); };
   S.handle = async (dev, spec) => {
     if (dev.down) return { data: null, error: { message: "TypeError: Failed to fetch" }, status: 0 };
     const uid = dev.uid, T = S.rows(uid);
     if (spec.op === "select") {
-      if (spec.single) { const r = T.get(spec.eq?.path); return { data: r ? { data: JSON.parse(JSON.stringify(r.data)) } : null, error: null, status: 200 }; }
+      if (spec.single) { const r = T.get(spec.eq?.path); return { data: r ? { data: JSON.parse(JSON.stringify(r.data)), updated_at: r.ua } : null, error: null, status: 200 }; }
       let list = [...T].map(([path, r]) => ({ path, data: JSON.parse(JSON.stringify(r.data)) }));
       if (spec.order) list.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
       if (spec.gt) list = list.filter(r => r[spec.gt[0]] > spec.gt[1]);
@@ -45,9 +47,21 @@ function server({ maxRows = 1000 } = {}) {
     }
     if (spec.op === "upsert") {
       const row = spec.row; if (S.reject && S.reject(row.path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
-      S.set(uid, row.path, row.data); S.log.push([dev.name, "upsert", row.path]);
-      for (const d of S.devs) if (d !== dev && d.uid === uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "UPDATE", new: r }), { path: row.path, data: row.data }).catch(() => {});
+      S.set(uid, row.path, row.data, row.updated_at); S.log.push([dev.name, "upsert", row.path]); tell(dev, row);
       return { data: null, error: null, status: 201 };
+    }
+    if (spec.op === "insert") {
+      const row = spec.row; if (T.has(row.path)) return { data: null, error: { message: "duplicate key value violates unique constraint", code: "23505" }, status: 409 };
+      if (S.reject && S.reject(row.path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
+      S.set(uid, row.path, row.data, row.updated_at); S.log.push([dev.name, "insert", row.path]); tell(dev, row);
+      return { data: null, error: null, status: 201 };
+    }
+    if (spec.op === "update") {
+      const row = spec.row, path = spec.eq?.path, cur = T.get(path);
+      if (!cur || ("updated_at" in (spec.eq || {}) && cur.ua !== spec.eq.updated_at) || (spec.is && "updated_at" in spec.is && cur.ua != null)) return { data: [], error: null, status: 200 };
+      if (S.reject && S.reject(path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
+      S.set(uid, path, row.data, row.updated_at); S.log.push([dev.name, "update", path]); tell(dev, { path, data: row.data });
+      return { data: [{ path }], error: null, status: 200 };
     }
     if (spec.op === "delete") {
       const p = spec.eq?.path; T.delete(p); S.log.push([dev.name, "delete", p]);
