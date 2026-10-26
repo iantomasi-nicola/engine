@@ -34,7 +34,7 @@ test("A6 Replace brings back what the file has and keeps what it lacks (log days
 test("A6 Replace into an empty device restores the file as it is", async () => {
   const src = F.seed({ withPlan: false }); src.body = { w: { [F.plus(-10)]: 80 }, m: {} }; src.logm = { [YM]: { month: YM, days: { [DX]: { water: 1000 } } } };
   const app = await H.startApp({ dir, seed: F.seed({ withPlan: false }) }); apps.push(app);
-  const r = await app.page.evaluate(async j => { restoreOpen({ app: "Engine", version: 3, ...j }, "file"); UI.sheet.mode = "replace"; await ACT["rs-go"](); await new Promise(r => setTimeout(r, 300)); return { w: S.body.w, shop: S.shop, dx: Object.values(S.logm)[0]?.days }; }, { body: src.body, logm: src.logm, shop: { checked: {}, extras: [{ id: "e1", text: "Salt" }], pantry: { "t-rice": { g: 250 } }, range: 7, stores: ["Lidl"] } });
+  const r = await app.page.evaluate(async j => { restoreOpen({ app: "Engine", version: 3, ...j }, "file"); UI.sheet.mode = "replace"; await ACT["rs-go"](); await new Promise(r => setTimeout(r, 300)); return { w: S.body.w, shop: S.shop, dx: Object.values(S.logm)[0]?.days }; }, { body: src.body, logm: src.logm, shop: { checked: {}, extras: [{ id: "e1", text: "Salt" }], pantry: { "t-rice": { g: 250 } }, range: 7, stores: [{ id: "st-lidl", name: "Lidl" }] } });
   assert.deepEqual(r.w, src.body.w); assert.deepEqual(Object.keys(r.dx), [DX]);
-  assert.deepEqual(r.shop.extras, [{ id: "e1", text: "Salt" }]); assert.deepEqual(r.shop.stores, ["Lidl"]); assert.equal(r.shop.pantry["t-rice"].g, 250);
+  assert.deepEqual(r.shop.extras, [{ id: "e1", text: "Salt" }]); assert.deepEqual(r.shop.stores, [{ id: "st-lidl", name: "Lidl" }]); assert.equal(r.shop.pantry["t-rice"].g, 250);
 });
