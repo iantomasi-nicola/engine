@@ -19,4 +19,4 @@
 | L211-fin | released | L211 chiusura punti code-guard | sync,tests | claude/l211-fin | 2026-10-26 19:50Z | 2026-10-26 19:56Z | Fatto: id canonico e finto server realistico (4eaa5ae) |
 | M5d-fuel | active | L214 prezzo pasto + L205 sgarro | fuel | claude/m5d-fuel | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
 | M5d-shop | active | L203 scelta dalla dispensa + L204 ricetta | shopping | claude/m5d-shop | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
-| SHIP | released | pubblicazione fix sync + docs | other | claude/awesome-goldberg-ontswx | 2026-10-26 23:39Z | 2026-10-26 23:39Z | fatto |
+| SHIP | active | pubblicazione id canonico + test server | other | claude/bf-icu-guard | 2026-10-26 23:46Z | 2026-10-27 00:46Z | fatto |
