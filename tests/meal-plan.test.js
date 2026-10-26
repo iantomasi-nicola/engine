@@ -84,7 +84,7 @@ test("an empty meal offers «Usual» (what you usually have there): one click fi
   assert.deepEqual(app.errors, []);
 });
 
-test("each day shows its kcal bar (warning colour above the target, with the same tolerance as the rest of the app) and a bar for every macro against its target", async () => {
+test("each day shows its kcal bar (red above the target, with the same tolerance as the rest of the app) and a bar for every macro against its target", async () => {
   const page = await start(H.VIEWPORTS.desktop); await plan(page);
   const r = await page.evaluate(async () => { const t = todayISO(), ws = weekStartOf(t), a = ws, b = addDays(ws, 1); UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = t;
     const T = targetsFor(a).kcal; S.days[a] = { date: a, meals: { lunch: [{ id: "big", kind: "food", ref: "t-rice", qty: Math.ceil(T / 3.5 * 1.2), eaten: false }] } }; S.days[b] = { date: b, meals: { lunch: [{ id: "small", kind: "food", ref: "t-rice", qty: 20, eaten: false }] } }; DATA_V++; render(); await new Promise(x => setTimeout(x, 100));
