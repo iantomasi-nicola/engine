@@ -57,8 +57,8 @@ test("shopping: need = planned recipes + foods, rounded up to whole packs (no pa
   // today: the recipe (2 servings of a 2-serving recipe = 200 g rice, 300 g chicken, 10 g oil) + 100 g rice as a plain food
   assert.deepEqual(r["t-rice"], { need: 300, have: 0, buy: 300, packs: 1, left: 700 });
   assert.deepEqual(r["t-chicken"], { need: 300, have: 0, buy: 300, packs: 1, left: 100 });
-  // 10 g of a 500 g pack is 2% of it: Math.ceil(buy / pack - 0.02) gives 0 packs, so a tiny need is "bought" as 0 packs (quirk, kept as is)
-  assert.deepEqual(r["t-oil"], { need: 10, have: 0, buy: 10, packs: 0, left: 0 });
+  // 10 g of a 500 g pack is 2% of it: it used to give a «0×» row (L211 B6); a small need with nothing at home is one whole pack
+  assert.deepEqual(r["t-oil"], { need: 10, have: 0, buy: 10, packs: 1, left: 490 });
 });
 
 test("shopping: eaten items are not needed any more; a seven-day range adds up all days", async () => {
