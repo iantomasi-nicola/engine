@@ -479,3 +479,9 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `stockSet` restituisce il proprio undo (`stockUndoer`), `shopUndo(before, after)` per Finish/scontrino/rimozione negozio, `spendIn` e il toast di Finish escludono i prezzi `est`, `closeSheet` azzera `rcLearn`, `esc()` sui `data-id` delle viste Spesa/Dispensa/Foods, tap target 36 px.
 - **Eliminato**: `STOCK_UNDO` e `undoStock`.
 - **Aperto**: la migrazione Lidl (una tantum) ripristina ancora l'intero `S.shop`; `data-id` fuori da Foods/Spesa/Dispensa non hanno `esc()` (altri gruppi: validazione degli id in import/sync); `shop-buy` 28 px di altezza.
+
+## Consistency & Cleanup Report: M14b F, secondo giro (ramo claude/m14b-ef)
+- **Verificato**: `tests/m14b-ef3.test.js` (6 test, tutti rossi prima), 107 test di food-*, recipe-*, m14b-*, f09, off, ai-import, persistence, registry, nav-return, security verdi; layout-audit 0 problemi.
+- **Cambiato**: `fd-save` (clamp e rifiuto del testo non numerico), `rc-save` (validazione dopo il filtro, porzioni), tasto Esc (usa `close-sheet`), `VIEWS.foods` (`UI.foodsMax`, `foods-more`), `loadLocal` chiama `normalizeRecords`.
+- **Eliminato**: nulla.
+- **Aperto**: `normalizeRecords` non copre i record che arrivano dalla sync (da chiamare in `applyCollection`, ramo sync); Esc in un editor con dati digitati scarta senza conferma.

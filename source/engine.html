@@ -3024,7 +3024,20 @@ function loadLocal() {
   S.shop = { checked: {}, extras: [], pantry: {}, range: 7, stores: [], ...(S.shop || {}) };
   S.body = { w: {}, m: {}, ...(S.body || {}) };
   S.train = { tests: [], pbs: [], calis: [], circuitLog: [], topSets: [], ...(S.train || {}) };
+  normalizeRecords();
   DATA_V++;
+}
+/* foods and recipes from an older version or a damaged file: numbers are numbers, a food has per values and a recipe has a list of ingredients, so no screen breaks on them
+   (a hidden record is a bin entry or a built-in override and is left alone) */
+function normalizeRecords() {
+  const n = v => { const x = typeof v === "number" ? v : parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : 0; };
+  for (const f of Object.values(S.foods || {})) { if (!f || typeof f !== "object" || f.hidden) continue;
+    f.name = String(f.name ?? ""); f.per = f.per && typeof f.per === "object" ? f.per : {};
+    for (const k of ["kcal", "p", "c", "f"]) f.per[k] = n(f.per[k]);
+    for (const k of Object.keys(f.per)) if (!["kcal", "p", "c", "f"].includes(k) && f.per[k] != null && typeof f.per[k] !== "number") f.per[k] = n(f.per[k]);
+    if (!Array.isArray(f.servings)) f.servings = []; f.pack = Math.max(0, n(f.pack)); }
+  for (const r of Object.values(S.recipes || {})) { if (!r || typeof r !== "object" || r.hidden) continue;
+    r.name = String(r.name ?? ""); r.ingredients = Array.isArray(r.ingredients) ? r.ingredients.filter(i => i && typeof i === "object" && i.food).map(i => ({ ...i, g: n(i.g) })) : []; r.servings = n(r.servings) > 0 ? n(r.servings) : 1; }
 }
 const DOC_KINDS = ["settings", "shop", "body", "train"];
 function setLocal(kind, id, data) {
@@ -4639,9 +4652,9 @@ VIEWS.foods = function () {
       <div class="card">${hf.map(f => `<div class="lrow"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${f.delAt ? `gone in ${Math.max(0, 3 - daysBetween(f.delAt, todayISO()))} day${3 - daysBetween(f.delAt, todayISO()) === 1 ? "" : "s"}` : foodSub(f)}</span></span><span class="end"><button class="btn tonal sm" data-act="fd-unhide" data-id="${esc(f.id)}">${ic("undo", "sm")}Restore</button></span></div>`).join("") || `<div class="lrow"><span class="s">Nothing deleted matches “${esc(q)}”.</span></div>`}</div>`; }
   if (queue.length) h += `<div class="note">${queue.length} barcode${queue.length > 1 ? "s" : ""} waiting for Open Food Facts: ${queue.map(x => esc(x.barcode)).join(", ")}. They import automatically when the sync runs; you can also photograph the label now.</div>`;
   if (!res.length) h += `<div class="empty"><h3>No matches</h3><p>${q ? `Nothing called “${esc(q)}” yet. Scan its barcode, photograph the label, or add it yourself.` : "You haven't saved anything here yet."}</p><div class="row"><button class="btn primary" data-act="new-food" data-name="${esc(q)}">Create “${esc(q || "new food")}”</button><button class="btn ghost" data-act="open-scan">${ic("scan", "sm")}Scan</button></div></div>`;
-  else h += `<div class="card">${res.slice(0, 200).map(r => r.t === "food"
+  else h += `<div class="card">${res.slice(0, UI.foodsMax || 200).map(r => r.t === "food"
     ? `<div class="lrow"><button data-act="edit-food" data-id="${r.x.id}" style="text-align:left;min-width:0"><span class="t">${r.x.fav ? "★ " : ""}${esc(r.x.name)} ${sourceTag(r.x)}</span><span class="s">${foodSub(r.x)}</span></button><span class="end"><button class="plus-btn" data-act="pick-food" data-id="${r.x.id}" aria-label="Add ${esc(r.x.name)} to plan">${ic("plus")}</button></span></div>`
-    : (() => { const ps = recipePerServing(r.x); return `<div class="lrow"><button data-act="edit-recipe" data-id="${r.x.id}" style="text-align:left;min-width:0"><span class="t">${ic("recipe", "sm")} ${r.x.fav ? "★ " : ""}${esc(r.x.name)} ${r.x.source === "builtin" ? '<span class="tag">Starter</span>' : ""}</span><span class="s">${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F per serving · ${r.x.servings} serving${r.x.servings > 1 ? "s" : ""}</span></button><span class="end"><button class="plus-btn" data-act="pick-recipe" data-id="${r.x.id}" aria-label="Add ${esc(r.x.name)} to plan">${ic("plus")}</button></span></div>`; })()).join("")}</div>`;
+    : (() => { const ps = recipePerServing(r.x); return `<div class="lrow"><button data-act="edit-recipe" data-id="${r.x.id}" style="text-align:left;min-width:0"><span class="t">${ic("recipe", "sm")} ${r.x.fav ? "★ " : ""}${esc(r.x.name)} ${r.x.source === "builtin" ? '<span class="tag">Starter</span>' : ""}</span><span class="s">${fmtN(ps.kcal)} kcal · ${r0(ps.p)}P ${r0(ps.c)}C ${r0(ps.f)}F per serving · ${r.x.servings} serving${r.x.servings > 1 ? "s" : ""}</span></button><span class="end"><button class="plus-btn" data-act="pick-recipe" data-id="${r.x.id}" aria-label="Add ${esc(r.x.name)} to plan">${ic("plus")}</button></span></div>`; })()).join("")}</div>${res.length > (UI.foodsMax || 200) ? `<button class="btn soft block" data-act="foods-more">Show more · ${res.length - (UI.foodsMax || 200)} left</button>` : ""}`;
   return h;
 };
 
@@ -7028,11 +7041,13 @@ ACT["fd-save"] = () => {
   const sh = S_(); const d = clone(sh.draft); delete d.ocrText;
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the food a name."); $("#fd-name")?.focus(); return; }
   if (sh.isNew && !sh.dupOk) { const X = foodDupes(d), first = X.barcode || X.name[0]; if (first) { sh.dupOk = true; toast(`“${first.name}” is already in your foods: tap Save again to add this one anyway`); return; } }
-  for (const k of Object.keys(d.per)) d.per[k] = NUT_OPT.includes(k) ? optN(d.per[k], 4) : num(d.per[k]);
+  const bad = ["kcal", "p", "c", "f"].find(k => d.per[k] != null && String(d.per[k]).trim() !== "" && !/^\s*-?\d*[.,]?\d+\s*$|^\s*-?\d+[.,]?\s*$/.test(String(d.per[k])));
+  if (bad) { toast("Check the numbers: only digits, please."); return; }
+  for (const k of Object.keys(d.per)) d.per[k] = NUT_OPT.includes(k) ? optN(d.per[k], 4) : Math.max(0, num(d.per[k]));
   if (!d.per.kcal) d.per.kcal = r0(4 * d.per.p + 4 * d.per.c + 9 * d.per.f);
   if (d.mx) { for (const k of Object.keys(d.mx)) { if (d.mx[k] === "" || d.mx[k] == null) delete d.mx[k]; else d.mx[k] = num(d.mx[k]); } if (!Object.keys(d.mx).length) delete d.mx; }
   d.servings = (d.servings || []).map(s => ({ l: (s.l || "").trim() || "1 portion", g: num(s.g) })).filter(s => s.g > 0);
-  d.pack = num(d.pack); d.barcode = String(d.barcode || "").replace(/\D/g, "");
+  d.pack = Math.max(0, num(d.pack)); d.barcode = String(d.barcode || "").replace(/\D/g, "");
   if (!d.meals?.length) d.meals = ["m"];
   if (d.orig) d.edited = ["kcal", "p", "c", "f"].some(k => Math.abs(num(d.orig[k]) - d.per[k]) > 0.05);
   if (BUILTIN[d.id] && !sh.isNew) d.source = "builtin-edit";
@@ -7077,8 +7092,10 @@ ACT["rc-fav"] = () => { const d = S_().draft; d.fav = !d.fav; renderSheet(); };
 ACT["rc-save"] = el => {
   const sh = S_(); const d = clone(sh.draft);
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the recipe a name."); return; }
-  if (!d.ingredients.length) { toast("Add at least one ingredient."); return; }
-  d.servings = Math.max(0.25, num(d.servings) || 1); d.ingredients = d.ingredients.map(i => ({ food: i.food, g: num(i.g) })).filter(i => i.g > 0);
+  d.ingredients = d.ingredients.map(i => ({ food: i.food, g: num(i.g) })).filter(i => i.g > 0);
+  if (!d.ingredients.length) { toast("Add at least one ingredient with an amount."); return; }
+  if (!(num(d.servings) > 0)) { toast("Servings must be more than 0."); return; }
+  d.servings = Math.max(0.25, num(d.servings));
   if (d.source === "builtin") { d.source = "custom"; }
   if (!d.id) d.id = "rec-" + uid();
   d.time = num(d.time) > 0 ? Math.round(num(d.time)) : null; if (d.time == null) delete d.time;
@@ -7165,7 +7182,8 @@ ACT["scan-queue"] = () => {
 };
 
 /* foods tab */
-ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; scheduleRender(); };
+ACT["foods-seg"] = el => { UI.foodsSeg = el.dataset.seg; UI.foodsMax = 200; scheduleRender(); };
+ACT["foods-more"] = () => { UI.foodsMax = (UI.foodsMax || 200) + 200; scheduleRender(); };
 ACT.fflt = el => { const k = el.dataset.k, f = { ...(UI.foodFilt || {}) }; if (!k) UI.foodFilt = {}; else { if (f[k]) delete f[k]; else { f[k] = true; if (k === "in") delete f.out; if (k === "out") delete f.in; } UI.foodFilt = f; } if (UI.sheet) renderSheet(); else scheduleRender(); };
 
 
@@ -7252,7 +7270,7 @@ ACT["ob-done"] = () => {
 
 /* ================= input / change / submit wiring ================= */
 const INP = {
-  "foods-q": v => { UI.foodsQ = v; scheduleRender(); },
+  "foods-q": v => { UI.foodsQ = v; UI.foodsMax = 200; scheduleRender(); },
   // typing only refreshes the results: the field keeps focus, the keyboard and what you're composing
   "lb-text": v => { const sh = S_(); if (sh) sh.text = v; },
   "add-q": v => { const sh = S_(); sh.q = v; clearTimeout(INP._addT); INP._addT = setTimeout(() => { const l = $("#add-list"), g = $("#add-seg"); if (l) l.innerHTML = addRowsFor(sh); if (g) g.hidden = !!v.trim(); const tip = $(".add-tip"); if (tip) tip.hidden = !!v.trim(); const b = $(".sheet-b"); if (b) b.scrollTop = 0; offInline(sh); }, 90); },
@@ -7318,7 +7336,7 @@ document.addEventListener("change", e => {
 document.addEventListener("submit", e => { const f = e.target.closest("[data-form]"); if (!f) return; e.preventDefault(); FORMS[f.dataset.form]?.(f); });
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.dataset && e.target.dataset.chg !== undefined) { e.target.blur(); return; }
-  if (e.key === "Escape" && UI.sheet) { if (UI.sheet.type === "qty" && UI.sheet.back === "add") backToAdd(UI.sheet); else closeSheet(); return; }
+  if (e.key === "Escape" && UI.sheet) { if (UI.sheet.type === "qty" && UI.sheet.back === "add") backToAdd(UI.sheet); else ACT["close-sheet"](); return; }
   if (e.key === "Enter" && e.target.id === "add-q") { e.preventDefault(); const sh = S_(); const l = $("#add-list"); if (l && sh) l.innerHTML = addRowsFor(sh);
     if (sh?._multi) { ACT["add-all"](); return; }
     if (sh?._typedQty) { const b = $("#add-list [data-act=quick-add]"); if (b) { ACT["quick-add"](b); addReset(sh); } return; }
