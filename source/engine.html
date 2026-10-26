@@ -10710,7 +10710,7 @@ function notifyQueue(prev, next) {
 }
 /* the data on this device belongs to one account at most. Another account signing in starts from its own data: nothing of the first one
    (keys included) is uploaded, and the first one's unsent edits wait in its own queue for its next sign-in */
-function claimLocal(id) {
+async function claimLocal(id) {
   let snaps = []; try { snaps = Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) {}
   const owner = Sync.owner, mine = owner ? owner === id : !snaps.some(k => k !== "engine.snap." + id);
   /* the merge of this device's data into the account is owed until every kind has had a fresh answer from the server (engine.union = that account): a first load that never finished must not turn into «the account's copy wins» on the next opening */
@@ -10718,7 +10718,8 @@ function claimLocal(id) {
   Sync.union = mine && ((!owner && !snaps.includes("engine.snap." + id)) || owed === id);
   try { Sync.union ? localStorage.setItem(UNION_KEY, id) : localStorage.removeItem(UNION_KEY); } catch (e) {}
   if (!mine) {
-    if (!owner || owed === owner) restorePoint("before sign-in (this device's data)");   // data of no account, about to be cleared for this one: kept as a restore point (the copy is taken now, before the reset)
+    /* data of no account, about to be cleared for this one: kept as a restore point first (the copy is taken now, before the reset). If it can't be stored the device is not attached: nothing is cleared or uploaded */
+    if ((!owner || owed === owner) && !(await restorePoint("before sign-in (this device's data)"))) { Sync.union = false; toast("This device's data couldn't be saved as a restore point first, so it was not connected to your account. Export a backup (Settings → Backups) and try again, or use another browser."); return false; }
     if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
     Sync.dirty = new Set();
     Object.assign(S, { settings: withKeys(normalizeSettings(null), keyStore()[id]), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
@@ -10727,6 +10728,7 @@ function claimLocal(id) {
   if (!mine) { saveLocal(); scheduleRender(); }
   else if (!owner) { const all = keyStore(); if (all[""]) { delete all[""]; try { localStorage.setItem(KEYS_KEY, JSON.stringify(all)); } catch (e) {} } saveKeys(); }   // the keys of a device used without an account become this account's keys on this device
   saveDirty();
+  return true;
 }
 function subscribe() {
   const db = Sync.db, b = Sync.base;
@@ -13561,7 +13563,15 @@ async function backupJSON(o = BKP()) { const j = backupData(o); if (o.photos) j.
 const bkName = () => `engine-backup-${todayISO()}.json`;
 /* restore points */
 /* true once it is stored; API keys never go in (they stay in this device's own key store, S-1) */
-async function restorePoint(why = "daily") { try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData() }); const ks = (await BKDB.keys("pts")).sort(); for (const old of ks.slice(0, Math.max(0, ks.length - 14))) await BKDB.del("pts", old); return true; } catch (e) { return false; } }
+async function restorePoint(why = "daily") {
+  try { const k = new Date().toISOString(); await BKDB.put("pts", k, { why, data: backupData() }); return await trimPoints(); } catch (e) { return false; }
+}
+/* the last 14 points are kept; those made before a sign-in are the way back from a wrong first sign-in and are never rotated away */
+async function trimPoints() {
+  try { const rot = []; for (const k of (await BKDB.keys("pts")).sort()) if (!/^before sign-in/.test((await BKDB.get("pts", k))?.why || "")) rot.push(k);
+    for (const old of rot.slice(0, Math.max(0, rot.length - 14))) await BKDB.del("pts", old); } catch (e) {}
+  return true;
+}
 async function dailyPoint() { try { const ks = (await BKDB.keys("pts")).sort(), last = ks[ks.length - 1]; if (!last || last.slice(0, 10) !== new Date().toISOString().slice(0, 10)) await restorePoint("daily"); } catch (e) {} }
 /* the file on a schedule */
 const bkLast = () => S.settings.backup?.last || null;
@@ -16859,7 +16869,7 @@ ACT["check-update"] = async () => {
     if (sample) { try { const lim = await sample.limits(); Sync.sampleImages = !!(lim && lim.images); } catch (e) {} }
     if (db && user) {
       let id = null; try { id = await user.id(); } catch (e) {}
-      if (id) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; claimLocal(id); syncState(); subscribe(); }
+      if (id && await claimLocal(id)) { Sync.db = db; Sync.uid = id; Sync.base = "data/users/" + id; syncState(); subscribe(); }
     }
     Sync.ready = true; scheduleRender();
     if (!Sync.db) setTimeout(maybeOnboard, 300);

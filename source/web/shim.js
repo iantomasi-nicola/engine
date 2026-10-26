@@ -71,8 +71,8 @@
      A change the server refused (bad) is tried again once in every session. */
   function loadQ(uid) {
     const own = LS.get("engine.q." + uid, null); if (Array.isArray(own)) return own.map(q => ({ ...q, bad: false }));
-    const legacy = LS.get("engine.q", null), snaps = snapKeys();
-    if (Array.isArray(legacy) && (snaps.includes("engine.snap." + uid) || !snaps.length)) { if (LS.set("engine.q." + uid, legacy)) LS.del("engine.q"); else legacyQ = true; return legacy; }
+    const legacy = LS.get("engine.q", null), snaps = snapKeys(), owner = (() => { try { return localStorage.getItem("engine.owner") || ""; } catch (e) { return ""; } })();
+    if (Array.isArray(legacy) && (owner ? owner === uid : snaps.includes("engine.snap." + uid) || !snaps.length)) { if (LS.set("engine.q." + uid, legacy)) LS.del("engine.q"); else legacyQ = true; return legacy; }
     return [];
   }
   let qT = 0, legacyQ = false;   // legacyQ: the older single queue is deleted only once this account's queue was saved
