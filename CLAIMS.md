@@ -16,4 +16,4 @@
 | L211-sync | released | L211 sync: difetti gravi dell'audit | sync | claude/l211-sync | 2026-10-26 18:31Z | 2026-10-26 19:11Z | Fatto e unito in claude/awesome-goldberg-ontswx (fb3b27a); da pubblicare dopo suite |
 | L211-sec | active | L211 XSS data-*, day.adj, restore malformato | foods,fuel,shopping | claude/l211-sec | 2026-10-26 18:31Z | 2026-10-27 00:31Z |  |
 | L211-nav | released | L211 navigazione: Indietro, fotocamera | other,pwa | claude/l211-nav | 2026-10-26 18:31Z | 2026-10-26 19:11Z | Fatto e unito (fb3b27a); da pubblicare dopo suite |
-| SHIP | active | pubblicazione L211 | other | claude/awesome-goldberg-ontswx | 2026-10-26 19:45Z | 2026-10-26 20:45Z | main = 2ec0391, rollback 93068ae (M17 + docs audit) |
+| SHIP | released | pubblicazione L211 | other | claude/awesome-goldberg-ontswx | 2026-10-26 19:45Z | 2026-10-26 19:46Z | main = c9a72c3, rollback 91217b9 |
