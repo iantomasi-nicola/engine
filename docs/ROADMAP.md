@@ -16,7 +16,7 @@ Stato (24/10): **M0, M1, M2, M7a e le semplificazioni UX sono fatte e pubblicate
 | M4 Quick win UI e check-in | C8, J1, I1, G2, I2, F1 | M | Basso | **Fatta (24/10), in revisione** |
 | **M4b Daily Journal** (richiesta 24/10) | K1–K10 | L | Basso | **Fatta (24/10)**, in revisione |
 | M5 Recipe Engine e Meal Plan settimanale | C1, C2, C4, C5, C6, L13, L14 | XL | Medio | **Fatta (24/10)** in due passi: M5a (ricette) e M5b (piano settimanale, scambio, cook, filtri); in revisione |
-| M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | **Fatta (24/10)**, in revisione; S-1 (chiavi nel cloud) in attesa di decisione |
+| M6 Sicurezza e integrazioni | ENG-06, ENG-07, A5, G5 | M | Medio | **Fatta (24/10)**, in revisione; S-1 (chiavi nel cloud) chiuso in M14b-A (chiavi solo sul dispositivo, ramo `claude/m14b-a-sync`) |
 | M7a Nutrizione: base sicura (nessun numero cambia) | D16, D9, D6 (provenienza del NEAT), **D5a** sensori FC per sport | M | Basso | **Fatta e pubblicata (24/10)** |
 | M7a2 AEE automatico — P0/P1 (importare altri campi in sola lettura, modalità in ombra) | D18 (vedi `AEE_ENGINE_PROPOSAL.md`) | L | Medio | **P0 e P1 fatti (24/10)**: import in sola lettura e AEE in ombra; nessun numero in uso cambia. P2–P3 in attesa del confronto sui dati reali |
 | **M7b-1 Calibrazione v2, avvisi sui macro, data di attivazione** (formule APPROVATE dall'utente il 26/10: «le nuove formule te le approvo tutte») | D8/F-06, D11/F-07, D17/F-11 (parte), L154 | M | Medio | **Fatta e pubblicata (26/10)**: `main` = `6de4659` (rollback `ecf46de`) insieme alle correzioni grafiche 1–7, alla piega AEE e al padding di `rk-more`; `calibV2`, `energyWarnings`, `ALGO_START`, interruttori `calMode`/`warn` |

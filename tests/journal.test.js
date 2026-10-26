@@ -9,10 +9,11 @@ const fill = (page, rows) => page.evaluate(rows => { for (const [ago, p, m, e, s
 
 test("a tap saves the value at once in the day's log; tapping it again clears it; nothing else in the log changes (K1)", async () => {
   const page = await start();
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate(async () => {
     const d = todayISO(); mutateLog(d, x => { x.sleep = 7.5; x.notes = "keep"; });
     jrSet(d, "m", 4); const a = clone(logGet(d).jr);
     jrSet(d, "m", null); const b = clone(logGet(d).jr), L = logGet(d);
+    await null;   // the device copy is written once at the end of the task (M14b #5), before the tab can close
     return { a, b, sleep: L.sleep, notes: L.notes, stored: JSON.parse(localStorage.getItem(LS_KEY)).logm[d.slice(0, 7)].days[d].jr };
   });
   assert.equal(r.a.m, 4);
