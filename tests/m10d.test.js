@@ -92,7 +92,7 @@ test("the weather row always draws the day (rain chance, expected rain, your ses
 
 test("with the app open, two supplements due at the same minute make exactly one notification, and it is not repeated", async () => {
   const page = await open();
-  const r = await page.evaluate(() => { const t = todayISO(), now = nowHM(), at = addMin(now, -5); const calls = []; window.notify = (a, b, c, d) => calls.push([a, b, c, d]); notify = (a, b, c, d) => calls.push([a, b, c, d]);
+  const r = await page.evaluate(() => { const t = todayISO(), now = nowHM(), at = addMin(now, -5); const calls = [], only = (a, b, c, d) => { if (/^supp-/.test(c)) calls.push([a, b, c, d]); }; window.notify = only; notify = only;   // the weekly review (Mondays) and the check-ups are other reminders
     Object.defineProperty(Notification, "permission", { configurable: true, get: () => "granted" });
     S.settings.supps = [{ id: "a", name: "Creatina", times: [at], days: [], on: true, since: addDays(t, -9) }, { id: "b", name: "Beta-alanina", times: [at], days: [], on: true, since: addDays(t, -9) }];
     S.settings.reminders = { on: true }; localStorage.removeItem("engine.rem"); reminderTick(); const first = calls.length; reminderTick(); return { first, total: calls.length, call: calls[0] }; });
