@@ -568,3 +568,9 @@ Verified: 14 review defects (phone day header, Paste accent, week cell icon orde
 - **Verificato**: `tests/reminders-fold.test.js` (2), `m11c`, `settings-typing`, `ux-habits`, `m7c` verdi; screenshot a 390 px prima/dopo (gruppo Reminders 2239 → 1325 px).
 - **Cambiato**: `remFold` (sezione ripiegabile chiusa con riga di stato, stesso markup `.set-det.fx` e stessa memoria `UI.setDet`), `prePrefs`, `checkPrefs` e `reminderPrefs`; i wrapper che aggiungono rapporto settimanale e push continuano a inserirsi prima del tasto del calendario, ora dentro la terza sezione.
 - **Aperto**: i blocchi Supplements, Water and caffeine, Daily journal e Daily check-in restano schede separate dentro lo stesso gruppo (valutare di ripiegarli in M19/M13); revisione grafica a 820/1440 e in scuro.
+
+## Consistency & Cleanup Report: M5d, «Use something from home» rifatto (L203; ramo claude/m5d-shop)
+- **Verificato**: `tests/m5d-shop.test.js` (9 test per L203, scritti prima e rossi per il motivo giusto, valori calcolati a mano nei commenti), m14b-ef/ef2/ef3, review-fixes, shop-quick, stock, pantry-ui, nav-return, l202-back, l211-nav verdi (81 test); layout-audit 0 problemi in chiaro e scuro con le nuove schermate `sheet-buy-home`, `sheet-home-pick`, `sheet-home-pick-to`, `sheet-home-pick-q`. Suite completa non lanciata.
+- **Cambiato**: `homeNeed`/`homeSwaps` (tutta la dispensa, `suggested`, kcal se manca il macro), foglio `homepick` con `hm-open/pick/back/filter/add` e `INP["hm-q"]`, `closeUpTo` (chiude i fogli del flusso e lascia quello da cui è partito), `paDone` torna al picker, `prodadd` ricorda la destinazione (`dest`, `pdDest`: annullando un foglio la destinazione non va più persa).
+- **Eliminato**: `homeSwapHTML` e il CSS `.hm-h/.hm-b` (sezione ripiegabile dei soli suggeriti), il test della sezione ripiegabile di m14b-ef.
+- **Aperto**: L204 (prodotto dentro una ricetta pianificata) segue nello stesso ramo.
