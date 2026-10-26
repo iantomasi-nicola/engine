@@ -6708,15 +6708,24 @@ function undoDays(snap) { const moved = pantryDelta(snap.pan); return () => { re
 /* the one way to take foods off a day: what was eaten gives its stock back to the pantry (pantryAdjust remembers how much it took), a meal left empty loses its
    dish name, and opts.undo brings foods and grams back. items = the item objects, found by id in any meal. */
 function removeItems(date, items, opts) {
-  const ids = new Set(items.map(x => x.id));
+  const ids = new Set(items.map(x => x.id)), cheats = new Set(items.filter(x => x.cheat).map(x => x.id));
+  /* a treat takes its compensation with it, on every day it raised or lowered (L211 B2); those days come back with Undo */
+  const comp = [...cheatDays(items)].filter(d => d !== date).map(d => [d, clone(S.days[d])]);
+  for (const [d] of comp) mutateDay(d, x => { for (const id of cheats) delete x.adj[id]; });
   mutateDay(date, d => {
     for (const [m, list] of Object.entries(d.meals)) {
       const gone = list.filter(x => ids.has(x.id)); if (!gone.length) continue;
-      for (const it of gone) if (it.eaten) pantryAdjust(it, -1);
+      for (const it of gone) { if (it.eaten) pantryAdjust(it, -1); if (it.cheat && d.adj) delete d.adj[it.id]; }
       d.meals[m] = list.filter(x => !ids.has(x.id)); if (!d.meals[m].length && d.dish) delete d.dish[m];
     }
     if (d.dish && !Object.keys(d.dish).length) delete d.dish;
-  }, opts);
+  }, comp.length && opts?.undo ? { ...opts, onUndo: () => { for (const [d, v] of comp) put("days", d, v); opts.onUndo?.(); } } : opts);
+}
+/* the days a treat among these items raised or lowered through its compensation (day.adj, keyed by the treat's id) */
+function cheatDays(items) {
+  const ids = new Set(items.filter(x => x.cheat).map(x => x.id)), out = new Set();
+  if (ids.size) for (const [d, day] of Object.entries(S.days)) if (Object.keys(day.adj || {}).some(k => ids.has(k))) out.add(d);
+  return out;
 }
 const allItemsOf = date => dayItems(getDay(date)).map(([, it]) => it);
 function quickPlan(date) {
@@ -7098,7 +7107,7 @@ ACT["pw-plan"] = () => { const t = todayISO(), ws = weekStartOf(UI.date), we = a
 ACT["pw-clear-week"] = () => { const ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), n = days.reduce((a, d) => a + dayItems(getDay(d)).length, 0);
   if (!n) { toast("The week is already empty."); return; }
   openSheet("confirm", { title: "Clear the whole week?", text: `Removes the ${n} planned food${n > 1 ? "s" : ""} of ${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}, eaten ones included. You can undo it right after.`, yes: "Clear week", danger: true,
-    run: () => { const snap = snapshotDays(days); for (const d of days) if (dayItems(getDay(d)).length) removeItems(d, allItemsOf(d)); toast(`Week cleared: ${n} item${n > 1 ? "s" : ""}`, undoDays(snap)); } }); };
+    run: () => { const snap = snapshotDays([...new Set([...days, ...days.flatMap(d => [...cheatDays(allItemsOf(d))])])]); for (const d of days) if (dayItems(getDay(d)).length) removeItems(d, allItemsOf(d)); toast(`Week cleared: ${n} item${n > 1 ? "s" : ""}`, undoDays(snap)); } }); };
 /* ---------- saved weeks: the whole week (Monday to Sunday) under a name, to bring back on any later week ---------- */
 const weekTpls = () => S.settings.weekTpls || [];
 const setWeekTpls = (list, undo) => { const before = S.settings.weekTpls || []; S.settings.weekTpls = list; saveSettings(); if (undo) toast(undo, () => { S.settings.weekTpls = before; saveSettings(); scheduleRender(); }); };

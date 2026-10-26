@@ -10,7 +10,7 @@ const TREAT = (center, strat) => `
   const T = ${center}; const days = []; for (let i = -1; i <= 8; i++) { const d = addDays(T, i); days.push(d); S.days[d] = { date: d, meals: { lunch: [newItem("food", "t-rice", 100)] } }; } DATA_V++;
   const base = Object.fromEntries(days.map(d => [d, targetsFor(d).kcal]));
   openCheat({ date: T, meal: "dinner" }); UI.sheet.draft.kcal = 1800; UI.sheet.draft.strategy = "${strat}"; ACT["ch-save"]();
-  const adjs = () => Object.fromEntries(Object.entries(S.days).filter(([, v]) => v.adj).map(([d, v]) => [d, v.adj]));
+  const adjs = () => Object.fromEntries(Object.entries(S.days).filter(([, v]) => v.adj).sort(([a], [b]) => a < b ? -1 : 1).map(([d, v]) => [d, v.adj]));
   const tgt = () => Object.fromEntries(days.map(d => [d, targetsFor(d).kcal]));
   const withTreat = { adj: JSON.stringify(adjs()), tgt: JSON.stringify(tgt()) };
   const treat = getDay(T).meals.dinner.find(x => x.cheat);`;
