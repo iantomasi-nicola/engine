@@ -3031,7 +3031,7 @@ const UI = { trainSeg: "cal", progSeg: "overview", dashSeg: "all", tab: "today",
 /* owner = the account the data on this device belongs to (none: never signed in); dirty = edits that account has not confirmed yet;
    seen = the account's copy each mergeable document was last read as (the base of a three-way merge); union = first sign-in of this device's own data */
 const Sync = { db: null, uid: null, base: null, state: "local", pending: new Map(), timers: new Map(), known: {}, fresh: {}, seen: {}, dirty: new Set(), owner: "", union: false, sample: null, downloads: null, ready: false };
-const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty";
+const OWNER_KEY = "engine.owner", DIRTY_KEY = "engine.dirty", UNION_KEY = "engine.union";
 
 let SAVE_WARNED = false;
 function saveLocal() {
@@ -10577,10 +10577,13 @@ function applyDoc(kind, snap) {
   if (next) S[kind] = shapeDoc(kind, next);
   if (set) { withKeys(S.settings, { ...had, ...own, svc: { ...had.svc, ...own.svc } }); if (!fc && Object.keys(had).length) send = true; }
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
+  unionDone();
   saveLocal(); scheduleRender();
   if (send) put(kind, "", S[kind]);
   if (kind === "settings") maybeOnboard();
 }
+/* every kind answered by the account: the merge owed since the first sign-in is done (its result is dirty or queued, so it survives a closed tab) */
+function unionDone() { if (!Sync.union || ![...DOC_KINDS, "foods", "recipes", "queue", "logm", "days"].every(k => Sync.fresh[k])) return; try { localStorage.removeItem(UNION_KEY); } catch (e) {} }
 /* days older than the 180 the app reads: the account may have them already, so only the missing ones go up */
 async function pushIfMissing(kind, ids) { for (const id of ids) { try { const s = await refFor(kind, id).get(); if (!s.exists && S[kind][id] !== undefined) put(kind, id, S[kind][id]); } catch (e) {} } }
 function applyCollection(kind, qs) {
@@ -10601,6 +10604,7 @@ function applyCollection(kind, qs) {
   if (kind === "queue") notifyQueue(S.queue, next);
   Sync.known[kind] = true; if (!fc) Sync.fresh[kind] = true;
   if (kind === "days") for (const [id, v] of Object.entries(S.days)) if (id < since && !next[id]) next[id] = v;
+  unionDone();
   S[kind] = next;
   for (const [id, v] of send) put(kind, id, v);
   saveLocal(); scheduleRender();
@@ -10616,9 +10620,12 @@ function notifyQueue(prev, next) {
 function claimLocal(id) {
   let snaps = []; try { snaps = Object.keys(localStorage).filter(k => k.startsWith("engine.snap.")); } catch (e) {}
   const owner = Sync.owner, mine = owner ? owner === id : !snaps.some(k => k !== "engine.snap." + id);
-  Sync.union = mine && !owner && !snaps.includes("engine.snap." + id);
+  /* the merge of this device's data into the account is owed until every kind has had a fresh answer from the server (engine.union = that account): a first load that never finished must not turn into «the account's copy wins» on the next opening */
+  let owed = ""; try { owed = localStorage.getItem(UNION_KEY) || ""; } catch (e) {}
+  Sync.union = mine && ((!owner && !snaps.includes("engine.snap." + id)) || owed === id);
+  try { Sync.union ? localStorage.setItem(UNION_KEY, id) : localStorage.removeItem(UNION_KEY); } catch (e) {}
   if (!mine) {
-    if (!owner) restorePoint("before sign-in (this device's data)");   // data of no account, about to be cleared for this one: kept as a restore point (the copy is taken now, before the reset)
+    if (!owner || owed === owner) restorePoint("before sign-in (this device's data)");   // data of no account, about to be cleared for this one: kept as a restore point (the copy is taken now, before the reset)
     if (owner && Sync.dirty.size) window.ENGINE?.stash?.(owner, [...Sync.dirty].map(key => { const [k, i] = splitKey(key), v = DOC_KINDS.includes(k) ? S[k] : S[k]?.[i]; return { path: pathOf(k, i), op: v == null ? "del" : "set", data: v ?? null, mb: MERGED(k) }; }));
     Sync.dirty = new Set();
     Object.assign(S, { settings: withKeys(normalizeSettings(null), keyStore()[id]), foods: {}, recipes: {}, days: {}, queue: {}, logm: {}, shop: shapeDoc("shop", {}), body: shapeDoc("body", {}), train: shapeDoc("train", {}) });
