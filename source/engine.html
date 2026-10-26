@@ -3210,6 +3210,11 @@ function suggestMeal() {
 function mealName(id) { return S.settings.meals.find(m => m.id === id)?.name || id; }
 function newItem(kind, ref, qty, extra = {}) { return { id: uid(), kind, ref, qty, eaten: false, ...extra }; }
 function defaultQty(f) { return f.servings?.[0]?.g || (f.role === "F" ? 10 : 100); }
+/* the amount a food is offered with when you add it to the plan: the one you last put it in with (kept in settings.doses), else its first serving */
+function planQty(f) { const d = +S.settings.doses?.[f.id]; return d > 0 ? d : defaultQty(f); }
+function rememberDose(kind, ref, qty) { qty = +qty; if (kind !== "food" || !(qty > 0) || +S.settings.doses?.[ref] === qty) return; S.settings.doses = { ...(S.settings.doses || {}), [ref]: qty }; saveSettings(); }
+/* a recipe taken apart: one food item per ingredient, scaled to the servings asked for */
+function recipeToItems(r, servings) { const k = (+servings || 1) / (r.servings || 1); return (r.ingredients || []).filter(i => getFood(i.food) && i.g > 0).map(i => newItem("food", i.food, r1(i.g * k))); }
 
 /* pantry */
 /* what an item uses, per food: [[foodId, grams]]; a recipe item is scaled by its servings */
@@ -5276,7 +5281,7 @@ let addRowsFor = sh => {
   const q = (sh.q || "").trim(), seg = sh.seg || "recent"; sh._multi = null; sh._typedQty = false;
   const row = (kind, x, qty, sub) => `<div class="lrow add-r"><button data-act="pick" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" style="text-align:left;min-width:0"><span class="t">${kind === "recipe" ? ic("recipe", "sm") + " " : ""}${x.fav ? "★ " : ""}${esc(x.name)} ${kind === "food" ? sourceTag(x) : ""}</span><span class="s">${sub}</span></button>
     <span class="end"><button class="plus-btn" data-act="quick-add" data-kind="${kind}" data-id="${x.id}" data-qty="${qty || ""}" aria-label="Add ${esc(x.name)} now">${ic("plus")}</button></span></div>`;
-  const foodRow = (f, qty) => { qty = qty || defaultQty(f); const m = addM(ZERO(), f.per, qty / 100); return row("food", f, qty, `${bdHTML(f)}${(S.shop?.pantry?.[f.id]?.g || 0) > 0 ? "at home · " : ""}${servingMatch(f, qty) || fmtQ(qty) + " " + (f.unit || "g")} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
+  const foodRow = (f, qty) => { qty = qty || planQty(f); const m = addM(ZERO(), f.per, qty / 100); return row("food", f, qty, `${bdHTML(f)}${(S.shop?.pantry?.[f.id]?.g || 0) > 0 ? "at home · " : ""}${servingMatch(f, qty) || fmtQ(qty) + " " + (f.unit || "g")} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
   const recRow = (r, qty) => { qty = qty || 1; const m = addM(ZERO(), recipePerServing(r), qty); return row("recipe", r, qty, `${fmtQ(qty)} serving${qty === 1 ? "" : "s"} · ${fmtN(m.kcal)} kcal · ${r0(m.c)}C ${r0(m.p)}P ${r0(m.f)}F`); };
   if (q) {
     const multi = parseMulti(q);
@@ -6045,7 +6050,7 @@ function foundHTML(sh) {
 }
 const foundSave = sh => { const f = foundFood(sh); if (!S.foods[f.id]) put("foods", f.id, f); return f; };
 function goQty(food, from) {
-  openSheet("qty", { kind: "food", ref: food.id, qty: defaultQty(food), date: from.date || UI.date, meal: from.meal || suggestMeal(), back: from.back });
+  openSheet("qty", { kind: "food", ref: food.id, qty: planQty(food), date: from.date || UI.date, meal: from.meal || suggestMeal(), back: from.back });
 }
 
 /* ================= AI features ================= */
@@ -6663,7 +6668,7 @@ function weekPlanView() {
   return `<header class="top plan-top">${fuelNav()}<div class="top-row pw-top"><div class="pw-tt"><div class="top-title">${now ? "This week" : ws === addDays(weekStartOf(t), 7) ? "Next week" : ws === addDays(weekStartOf(t), -7) ? "Last week" : `Week of ${fmtDM(ws)}`}</div><div class="top-sub">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</div></div>
     <div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn tonal sm" data-act="pw-plan">${ic("plate", "sm")}Auto-plan week</button><button class="btn soft sm" data-act="wt-open">${ic("calendar", "sm")}Saved weeks</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>
     <div class="row top-acts"><button class="icon-btn" ${nav(-1)} aria-label="Previous week">${ic("chevL")}</button>${now ? "" : `<button class="btn soft sm" ${nav(0)}>Today</button>`}<button class="icon-btn" ${nav(1)} aria-label="Next week">${ic("chevR")}</button><button class="icon-btn" data-act="plan-view" data-k="day" aria-label="Day view" title="Day view">${ic("list")}</button>${shopBtn()}</div></div></header>
-    <div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>The ⋯ button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
+    <div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>A recipe dragged from the library adds its ingredients, each with its own amount. The ⋯ button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
 ACT["pw-nav"] = el => { const d = +el.dataset.d; UI.date = d === 0 ? todayISO() : addDays(UI.date, 7 * d); scheduleRender(); };
@@ -6792,7 +6797,7 @@ ACT["mclip-clear"] = () => { UI.mclip = null; scheduleRender(); };
 /* the side library of the week view: foods and recipes to drag into a meal (open/closed kept in UI.pwLib; closed by default) */
 const PW_SEGS = [["recent", "Recent"], ["foods", "Foods"], ["recipes", "Recipes"], ["fav", "Favourites"]];
 function pwLibList() {
-  const q = (UI.pwQ || "").trim(), seg = UI.pwSeg || "recent", food = f => ({ t: "food", x: f, qty: defaultQty(f) }), rec = r => ({ t: "recipe", x: r, qty: 1 });
+  const q = (UI.pwQ || "").trim(), seg = UI.pwSeg || "recent", food = f => ({ t: "food", x: f, qty: planQty(f) }), rec = r => ({ t: "recipe", x: r, qty: 1 });
   let list;
   if (seg === "recent" && !q) list = recentFoods(40).map(r => r.kind === "food" ? (getFood(r.ref) && { t: "food", x: getFood(r.ref), qty: r.qty || defaultQty(getFood(r.ref)) }) : (getRecipe(r.ref) && { t: "recipe", x: getRecipe(r.ref), qty: r.qty || 1 })).filter(Boolean);
   else list = foodSearch(q, seg === "foods" || seg === "recent" ? "all" : seg === "fav" ? "fav" : "recipes").filter(o => seg === "foods" ? o.t === "food" : true).map(o => o.t === "food" ? food(o.x) : rec(o.x));
@@ -6801,7 +6806,7 @@ function pwLibList() {
 function pwLibRows() {
   const L = pwLibList(); if (!L.length) return `<div class="faint" style="font-size:12.5px;padding:6px 2px">Nothing here${UI.pwQ ? " for “" + esc(UI.pwQ) + "”" : " yet"}.</div>`;
   return L.map(o => { const m = o.t === "food" ? addM(ZERO(), o.x.per, o.qty / 100) : addM(ZERO(), recipePerServing(o.x), o.qty), unit = o.t === "food" ? (o.x.unit || "g") : "serving";
-    return `<div class="pw-lr" draggable="true" data-t="${o.t}" data-ref="${esc(o.x.id)}" data-qty="${o.qty}" title="Drag into a meal"><b>${o.t === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(o.x.name)}</b><small>${(S.shop?.pantry?.[o.x.id]?.g || 0) > 0 ? "at home · " : ""}<span class="nw">${fmtQ(o.qty)} ${unit}</span> · <span class="nw">${fmtN(m.kcal)} kcal</span></small></div>`; }).join("");
+    return `<div class="pw-lr" draggable="true" data-t="${o.t}" data-ref="${esc(o.x.id)}" data-qty="${o.qty}" title="Drag into a meal"><b>${o.t === "recipe" ? ic("recipe", "sm") + " " : ""}${esc(o.x.name)}</b><small>${(S.shop?.pantry?.[o.x.id]?.g || 0) > 0 ? "at home · " : ""}<span class="nw">${fmtQ(o.qty)} ${unit}</span> · <span class="nw">${fmtN(m.kcal)} kcal</span>${o.t === "recipe" ? ` · <span class="nw">${recipeToItems(o.x, o.qty).length} ingredients</span>` : ""}</small></div>`; }).join("");
 }
 const pwLibPanel = () => `<aside class="pw-lib" aria-label="Foods and recipes"><div class="pw-lt"><b>Foods &amp; recipes</b><input id="pw-lq" class="inp" type="search" placeholder="Search" value="${esc(UI.pwQ || "")}" data-in="pw-lq" autocomplete="off"><div class="chips">${PW_SEGS.map(([k, l]) => `<button class="chip sm" data-act="pw-seg" data-k="${k}" aria-pressed="${(UI.pwSeg || "recent") === k}">${l}</button>`).join("")}<button class="chip sm" data-act="pw-home" aria-pressed="${!!UI.pwHome}">At home</button></div><button class="icon-btn" data-act="pw-lib" aria-label="Close">${ic("close", "sm")}</button></div>
   <div id="pw-ll" class="pw-ll">${pwLibRows()}</div></aside>`;
@@ -6809,9 +6814,13 @@ ACT["pw-lib"] = () => { UI.pwLib = !UI.pwLib; scheduleRender(); };
 ACT["pw-home"] = el => { UI.pwHome = !UI.pwHome; const l = $("#pw-ll"); $$(".pw-lib [data-act=pw-home]").forEach(b => b.setAttribute("aria-pressed", String(!!UI.pwHome))); if (l) l.innerHTML = pwLibRows(); };
 ACT["pw-seg"] = el => { UI.pwSeg = el.dataset.k; const l = $("#pw-ll"); $$(".pw-lib [data-act=pw-seg]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === UI.pwSeg))); if (l) l.innerHTML = pwLibRows(); };
 function dropLib(f, date, meal) {
-  if (!f?.ref || !(date && meal)) return false; const it = newItem(f.t, f.ref, +f.qty || (f.t === "recipe" ? 1 : defaultQty(getFood(f.ref))));
-  mutateDay(date, d => { (d.meals[meal] = d.meals[meal] || []).push(it); if (d.dish) delete d.dish[meal]; });
-  toast(`Added ${itemName(it)} to ${mealName(meal)} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => mutateDay(date, d => { d.meals[meal] = (d.meals[meal] || []).filter(x => x.id !== it.id); })); return true;
+  if (!f?.ref || !(date && meal)) return false;
+  const its = f.t === "recipe" ? recipeToItems(getRecipe(f.ref) || {}, +f.qty || 1) : [newItem(f.t, f.ref, +f.qty || planQty(getFood(f.ref)))];
+  if (!its.length) { toast("That recipe has no ingredients to add."); return false; }
+  mutateDay(date, d => { (d.meals[meal] = d.meals[meal] || []).push(...its); if (d.dish) delete d.dish[meal]; });
+  if (f.t !== "recipe") rememberDose("food", f.ref, its[0].qty);
+  const ids = new Set(its.map(i => i.id));
+  toast(`Added ${f.t === "recipe" ? (getRecipe(f.ref)?.name || "the recipe") + " (" + its.length + " ingredients)" : itemName(its[0])} to ${mealName(meal)} on ${DOW[dow(date)]} ${fmtDM(date)}`, () => mutateDay(date, d => { d.meals[meal] = (d.meals[meal] || []).filter(x => !ids.has(x.id)); })); return true;
 }
 ACT["day-copy"] = el => copyToClip("day", el.dataset.date || UI.date);
 ACT["day-fill"] = el => autoCompleteDays([el.dataset.date || UI.date]);
@@ -6831,7 +6840,7 @@ document.addEventListener("drop", e => { const h = e.target.closest?.(".pw-day")
 /* add sheet */
 ACT["sheet-meal"] = el => { S_().meal = el.dataset.meal; renderSheet(); };
 ACT["add-seg"] = el => { S_().seg = el.dataset.seg; renderSheet(); };
-ACT.pick = el => { const sh = S_(); openSheet("qty", { kind: el.dataset.kind, ref: el.dataset.id, qty: +el.dataset.qty || (el.dataset.kind === "recipe" ? 1 : defaultQty(getFood(el.dataset.id))), date: sh.date || UI.date, meal: sh.meal, back: "add", addQ: sh.q || "", addSeg: sh.seg || "recent" }); };
+ACT.pick = el => { const sh = S_(); openSheet("qty", { kind: el.dataset.kind, ref: el.dataset.id, qty: +el.dataset.qty || (el.dataset.kind === "recipe" ? 1 : planQty(getFood(el.dataset.id))), date: sh.date || UI.date, meal: sh.meal, back: "add", addQ: sh.q || "", addSeg: sh.seg || "recent" }); };
 const backToAdd = sh => openSheet("add", { date: sh.date, meal: sh.meal, seg: sh.addSeg || "recent", q: sh.addQ || "" });
 ACT["qty-back"] = () => backToAdd(S_());
 ACT["add-rm"] = el => { const sh = S_(), date = sh.date || UI.date, id = el.dataset.id; const it = (getDay(date).meals[sh.meal] || []).find(x => x.id === id); if (!it) return;
@@ -6839,8 +6848,8 @@ ACT["add-rm"] = el => { const sh = S_(), date = sh.date || UI.date, id = el.data
   toast(`Removed ${itemName(it)}`, () => { mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); }); refreshAdd(); }); };
 ACT["quick-add"] = el => {
   const sh = S_(); const kind = el.dataset.kind, ref = el.dataset.id;
-  const qty = +el.dataset.qty || (kind === "recipe" ? 1 : defaultQty(getFood(ref)));
-  const it = newItem(kind, ref, qty); const date = sh.date || UI.date;
+  const qty = +el.dataset.qty || (kind === "recipe" ? 1 : planQty(getFood(ref)));
+  const it = newItem(kind, ref, qty); const date = sh.date || UI.date; rememberDose(kind, ref, qty);
   mutateDay(date, d => { (d.meals[sh.meal] = d.meals[sh.meal] || []).push(it); });
   el.innerHTML = ic("check"); el.classList.add("done"); clearTimeout(el._t); el._t = setTimeout(() => { el.innerHTML = ic("plus"); el.classList.remove("done"); }, 1400);
   refreshAdd();
@@ -6855,7 +6864,7 @@ ACT["add-all"] = () => {
   addReset(sh); refreshAdd();
   toast(`Added ${its.length} foods to ${mealName(sh.meal)}`, () => { const ids = new Set(its.map(i => i.id)); mutateDay(date, d => { d.meals[sh.meal] = (d.meals[sh.meal] || []).filter(x => !ids.has(x.id)); }); refreshAdd(); });
 };
-ACT["pick-food"] = el => openSheet("qty", { kind: "food", ref: el.dataset.id, qty: defaultQty(getFood(el.dataset.id)), date: UI.date, meal: suggestMeal() });
+ACT["pick-food"] = el => openSheet("qty", { kind: "food", ref: el.dataset.id, qty: planQty(getFood(el.dataset.id)), date: UI.date, meal: suggestMeal() });
 ACT["pick-recipe"] = el => openSheet("qty", { kind: "recipe", ref: el.dataset.id, qty: 1, date: UI.date, meal: suggestMeal() });
 ACT["open-quick"] = () => { const sh = S_(); openSheet("quick", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal() }); };
 ACT["open-describe"] = () => { const sh = S_(); openSheet("describe", { date: sh?.date || UI.date, meal: sh?.meal || suggestMeal(), text: "" }); };
@@ -6889,6 +6898,7 @@ ACT["item-del"] = () => {
 ACT["qty-save"] = () => {
   const sh = S_(); const qty = num($("#qty-in")?.value) || sh.qty;
   if (!(qty > 0)) { toast("Enter an amount above zero."); return; }
+  rememberDose(sh.kind, sh.ref, qty);
   if (sh.itemId) {
     mutateDay(sh.date, d => {
       const src = d.meals[sh.origMeal] || []; const i = src.findIndex(x => x.id === sh.itemId); if (i < 0) return;
@@ -6972,7 +6982,7 @@ ACT["fd-save"] = () => {
   if (pv > 0 && !priceSet(d.id, pv, pu)) toast(pu === "pack" ? "Price not saved: type the pack size first." : "Price not saved: this food has no piece weight.");
   if (d.barcode && S.queue[d.barcode]) put("queue", d.barcode, { ...S.queue[d.barcode], status: "done", food: d.id });
   if (sh.then === "qty" && UI.dest) destPick(d);
-  else if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: defaultQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
+  else if (sh.then === "qty") { openSheet("qty", { kind: "food", ref: d.id, qty: planQty(d), date: sh.date || UI.date, meal: sh.meal || suggestMeal(), ...(sh.back === "add" ? { back: "add", addQ: sh.addQ || "", addSeg: sh.addSeg || "recent" } : {}) }); toast(`Saved ${d.name}`); }
   else if (sh.backQty) { openSheet("qty", sh.backQty); toast("Saved"); }
   else if (sh.backBuy) { openSheet("buy", sh.backBuy); toast("Saved"); }
   else { closeSheet(); toast(`Saved ${d.name}`); }
@@ -10094,7 +10104,7 @@ function offInline(sh) {
 }
 function importOFF(f) { const own = findByBarcode(f.barcode) || (S.foods[f.id] && !S.foods[f.id].hidden ? S.foods[f.id] : null); if (own) return own; put("foods", f.id, f); return f; }
 ACT["off-pick-inl"] = el => { const sh = S_(), f = sh.offItems?.[+el.dataset.i]; if (!f) return; const food = importOFF(f);
-  openSheet("qty", { kind: "food", ref: food.id, qty: defaultQty(food), date: sh.date || UI.date, meal: sh.meal, back: "add", addQ: sh.q || "", addSeg: sh.seg || "recent" }); };
+  openSheet("qty", { kind: "food", ref: food.id, qty: planQty(food), date: sh.date || UI.date, meal: sh.meal, back: "add", addQ: sh.q || "", addSeg: sh.seg || "recent" }); };
 ACT["off-search"] = async () => {
   const from = S_(), q = (from.q || "").trim(); if (q.length < 2) { toast("Type the product name first."); return; }
   const sh = { q, date: from.date || UI.date, meal: from.meal || suggestMeal(), stage: "busy", addQ: from.addQ ?? q, addSeg: from.addSeg || from.seg || "recent" };
@@ -10119,7 +10129,7 @@ SHEETS.offsearch = sh => {
   return { title: "Open Food Facts", focus: "off-q", head: `<button class="icon-btn" data-act="qty-back" aria-label="Back to search" style="order:-1">${ic("chevL")}</button>`, body };
 };
 ACT["off-pick"] = el => { const sh = S_(), f = sh.items[+el.dataset.i]; if (!f) return; const food = importOFF(f);
-  openSheet("qty", { kind: "food", ref: food.id, qty: defaultQty(food), date: sh.date, meal: sh.meal, back: "add", addQ: sh.addQ, addSeg: sh.addSeg }); toast(food === f ? `Saved ${f.name} to your foods` : `Already in your foods: ${food.name}`); };
+  openSheet("qty", { kind: "food", ref: food.id, qty: planQty(food), date: sh.date, meal: sh.meal, back: "add", addQ: sh.addQ, addSeg: sh.addSeg }); toast(food === f ? `Saved ${f.name} to your foods` : `Already in your foods: ${food.name}`); };
 ACT["off-ai"] = async () => {
   const sh = S_(); if (!Sync.sample) return; sh.stage = "ai"; renderSheet();
   const prompt = `Give the nutrition values per 100 g (or 100 ml for drinks) of this food or packaged product, as sold in Italy: """${sh.q.slice(0, 200)}"""
