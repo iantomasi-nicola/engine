@@ -144,3 +144,39 @@ test("7. Calories typed as 0 stay 0 (a sweetener has carbs and no calories); onl
   assert.equal(r.zeroFirst.kcal, 0); assert.equal(r.zeroFirst.c, 99); assert.equal(r.zeroLast.kcal, 0); assert.equal(r.blank.kcal, 165); assert.equal(r.neg.kcal, 0);
   assert.deepEqual(app.errors, []);
 });
+
+test("8-9. Spending: the «spent» toast and the Spending card count only prices the user entered, never an estimate", async () => {
+  const page = await start();
+  /* extras: Milk 2 (estimated, remembered price) and Bread 3 (typed). Finish: toast says €3,00 (it said €5,00); the card for the week says 3 and counts 1 purchase without a price.
+     An old purchase that is only an estimate is no spending history: spendStats() is null while nothing real was paid. */
+  const r = await page.evaluate(`(() => { S.shop.extras = [{ id: "e1", text: "Milk", done: true, eur: 2, est: true }, { id: "e2", text: "Bread", done: true, eur: 3 }]; put("shop", "", S.shop);
+    ACT["shop-done"](); const t = document.querySelector("#toast")?.textContent, R = spendIn(addDays(todayISO(), -7), todayISO());
+    S.shop.buys = [{ d: addDays(todayISO(), -40), n: "Milk", eur: 2, x: 1, est: true }]; DATA_V++;
+    return { toast: t, total: R.total, unpriced: R.unpriced, stats: spendStats() }; })()`);
+  assert.match(r.toast, /€3,00 spent/); assert.equal(r.total, 3); assert.equal(r.unpriced, 1); assert.equal(r.stats, null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("10. Pasting (or copying yesterday) when only treats are there says so instead of «Pasted» with nothing changed", async () => {
+  const page = await start();
+  const r = await page.evaluate(`(() => { const T = todayISO(), Y = addDays(T, -1), N = addDays(T, 1), out = {};
+    S.days[Y] = { date: Y, meals: { dinner: [{ id: "tr", kind: "quick", cheat: true, name: "Pizza", m: { kcal: 900, p: 0, c: 0, f: 0 }, eaten: true }] } }; DATA_V++;
+    UI.date = T; ACT["copy-from"]({ dataset: { from: Y } }); out.copyFrom = [document.querySelector("#toast")?.textContent, !!S.days[T]];
+    S.days[T] = { date: T, meals: { dinner: [{ id: "tr2", kind: "quick", cheat: true, name: "Cake", m: { kcal: 400, p: 0, c: 0, f: 0 }, eaten: false }] } }; DATA_V++;
+    copyToClip("meal", T, "dinner"); const before = JSON.stringify(getDay(N)); out.paste = [pasteClip(N, "snack"), document.querySelector("#toast")?.textContent, JSON.stringify(getDay(N)) === before];
+    return out; })()`);
+  assert.equal(r.copyFrom[1], false); assert.match(r.copyFrom[0], /treat/i); assert.doesNotMatch(r.copyFrom[0], /^Copied/);
+  assert.equal(r.paste[0], false); assert.match(r.paste[1], /treat/i); assert.doesNotMatch(r.paste[1], /^Pasted/); assert.equal(r.paste[2], true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("11. «Use soon from» can be 0 days; a recipe saved with an ingredient that has no amount says it left it out", async () => {
+  const page = await start();
+  const r = await page.evaluate(`(() => { CHG["xp-days"]("0"); const a = S.settings.shopPrefs.soonDays; CHG["xp-days"]("5"); const b = S.settings.shopPrefs.soonDays; CHG["xp-days"]("");
+    const c = S.settings.shopPrefs.soonDays;
+    openSheet("recipe", { draft: { id: "", name: "Mini", servings: 1, meals: ["m"], ingredients: [{ food: "t-rice", g: 100 }, { food: "t-oil", g: "" }], note: "", fav: false, source: "custom" }, isNew: true }); ACT["rc-save"]({ dataset: {} });
+    return { a, b, c, toast: document.querySelector("#toast")?.textContent, ing: Object.values(S.recipes).find(x => x.name === "Mini")?.ingredients.length }; })()`);
+  /* 0 stays 0; 5 stays 5; an emptied field keeps the default 2 */
+  assert.deepEqual([r.a, r.b, r.c], [0, 5, 2]); assert.equal(r.ing, 1); assert.match(r.toast, /1 ingredient without an amount/);
+  assert.deepEqual(app.errors, []);
+});

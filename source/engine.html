@@ -6886,6 +6886,7 @@ ACT["quick-plan"] = () => quickPlan(UI.date);
 ACT["open-copy"] = el => openSheet("copy", { scope: el.dataset.scope || "day", meal: el.dataset.meal, targets: [], mode: "add" });
 ACT["copy-from"] = el => {
   const src = S.days[el.dataset.from]; if (!src) return;
+  if (!Object.values(src.meals || {}).flat().some(x => !x.cheat && !x.out)) { toast("Nothing to copy: treats and meals eaten out are not copied."); return; }
   mutateDay(UI.date, d => { for (const [m, items] of Object.entries(src.meals || {})) putClones(d, m, items, src.dish?.[m]); }, { undo: "Copied yesterday's meals" });
 };
 ACT["all-eaten"] = () => {
@@ -7074,6 +7075,7 @@ function pasteClip(date, mid) {
   const c = UI.mclip; if (!c) { toast("Copy a day or a meal first."); return false; }
   const want = c.scope === "meal" ? { [mid || c.meal]: c.items[c.meal] } : c.items, snap = snapshotDays([date]);
   const n = Object.values(want).reduce((a, v) => a + (v || []).length, 0); if (!n) { toast("There is nothing in the copied " + c.scope + "."); return false; }
+  if (!Object.values(want).flat().some(x => x && !x.cheat && !x.out)) { toast(`Nothing to paste: treats and meals eaten out are not copied.`); return false; }
   mutateDay(date, d => { for (const [m, its] of Object.entries(want)) putClones(d, m, its || [], c.dish?.[c.scope === "meal" ? c.meal : m]); });
   toast(`Pasted ${c.label} on ${DOW[dow(date)]} ${fmtDM(date)}`, undoDays(snap)); return true;
 }
@@ -7384,7 +7386,7 @@ ACT["rc-fav"] = () => { const d = S_().draft; d.fav = !d.fav; renderSheet(); };
 ACT["rc-save"] = el => {
   const sh = S_(); const d = clone(sh.draft);
   d.name = (d.name || "").trim(); if (!d.name) { toast("Give the recipe a name."); return; }
-  d.ingredients = d.ingredients.map(i => ({ food: i.food, g: num(i.g) })).filter(i => i.g > 0);
+  const listed = d.ingredients.length; d.ingredients = d.ingredients.map(i => ({ food: i.food, g: num(i.g) })).filter(i => i.g > 0); const noG = listed - d.ingredients.length;
   if (!d.ingredients.length) { toast("Add at least one ingredient with an amount."); return; }
   if (!(num(d.servings) > 0)) { toast("Servings must be more than 0."); return; }
   d.servings = Math.max(0.25, num(d.servings));
@@ -7396,7 +7398,7 @@ ACT["rc-save"] = el => {
   put("recipes", d.id, d);
   if (el.dataset.then === "add") openSheet("qty", { kind: "recipe", ref: d.id, qty: 1, date: UI.date, meal: suggestMeal() });
   else closeSheet();
-  toast(`Saved ${d.name}`);
+  toast(`Saved ${d.name}${noG ? ` · ${noG} ingredient${noG > 1 ? "s" : ""} without an amount left out` : ""}`);
 };
 ACT["rc-delete"] = () => { const sh = S_(), id = sh.draft.id, name = sh.draft.name || "this recipe";
   openSheet("confirm", { title: `Delete ${name}?`, text: BUILTIN_REC[id] ? "It disappears from your recipes and from auto-plan. Meals already planned with it stay as they are." : "It disappears from your recipes and from auto-plan. Meals you already ate keep their values; meals still planned with it lose them, so swap those first.", yes: "Delete", danger: true, run: () => deleteRecipe(id) }); };
@@ -11737,7 +11739,7 @@ ACT["shop-done"] = () => {
     if (sid) addFoodStore(id, sid);
     S.shop.buys.push({ d: today, id, n: f.name, g, eur, est: c.eur == null, ...(sid ? { sid } : {}), ...(c.offer ? { offer: true } : {}) }); if (c.eur != null) tot += eur; n++; }
   const again = [], xh = S.shop.xhist = S.shop.xhist || {};
-  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null, x: 1, ...(x.est ? { est: true } : {}), ...(curStore() ? { sid: curStore() } : {}) }); if (x.eur != null) tot += +x.eur; n++;
+  for (const x of (S.shop.extras || []).filter(x => x.done)) { S.shop.buys.push({ d: today, n: x.text, eur: x.eur ?? null, x: 1, ...(x.est ? { est: true } : {}), ...(curStore() ? { sid: curStore() } : {}) }); if (x.eur != null && !x.est) tot += +x.eur; n++;
     const k = extraKey(x.text), h = xh[k]; xh[k] = { n: h?.n || x.text, eur: x.eur != null && !x.est ? x.eur : h?.eur ?? null, cnt: (h?.cnt || 0) + 1, last: today };
     if (x.rec) again.push({ id: uid(), text: x.text, done: false, rec: x.rec, due: addDays(today, x.rec), ...(xh[k].eur != null ? { eur: xh[k].eur, est: true } : {}) }); }
   S.shop.buys = S.shop.buys.filter(b => b.d >= addDays(today, -730));
@@ -11793,7 +11795,7 @@ function spendIn(from, to) {
 const SPEND_RANGES = [["week", "Week"], ["month", "Month"], ["year", "Year"], ["90", "90 days"]];
 function spendRangeOf(k, today = todayISO()) { return k === "month" ? [today.slice(0, 8) + "01", today] : k === "year" ? [today.slice(0, 5) + "01-01", today] : k === "90" ? [addDays(today, -89), today] : [weekStartOf(today), today]; }
 function spendStats() {
-  const B = (S.shop.buys || []).filter(b => b.eur != null), today = todayISO(); if (!B.length) return null;
+  const B = (S.shop.buys || []).filter(b => b.eur != null && !b.est), today = todayISO(); if (!B.length) return null;
   const first = B.reduce((a, b) => b.d < a ? b.d : a, today), days = Math.max(7, daysBetween(first, today) + 1);
   const span90 = Math.min(91, days), perDay = spendIn(addDays(today, -90), today).total / span90;
   return { week: spendIn(...spendRangeOf("week")).total, avgWeek: perDay * 7, avgMonth: perDay * 30.44, avgYear: perDay * 365, since: first };
@@ -11972,7 +11974,7 @@ ACT["xp-keep"] = el => { const p = S.shop.pantry[el.dataset.id]; if (!p) return;
 ACT["xp-use"] = el => { const id = el.dataset.id, f = getFood(id); if (!f) return; const p = S.shop.pantry[id];
   UI.tab = "plan"; UI.fuelTab = "plan"; UI.date = todayISO(); scheduleRender();
   openSheet("qty", { kind: "food", ref: id, qty: Math.min(p?.g || defaultQty(f), Math.max(defaultQty(f), 0)), date: todayISO(), meal: suggestMeal() }); };
-CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), soonDays: clamp(Math.round(num(v)) || 2, 0, 14) }; saveSettings(); scheduleRender(); };
+CHG["xp-days"] = v => { S.settings.shopPrefs = { ...(S.settings.shopPrefs || {}), soonDays: String(v).trim() === "" ? 2 : clamp(Math.round(num(v)), 0, 14) }; saveSettings(); scheduleRender(); };
 
 /* ================= replace a product (a different brand, another shop) =================
    In the plan from today on (and in your recipes if you say so); what you already ate, and past days, keep the old one. One tap undoes it all. */
@@ -16612,8 +16614,7 @@ addEventListener("resize", () => { if (UI.tab === "settings") scheduleRender(); 
   return h.replace("</svg>", hp + "</svg>"); }; }
 /* ================= ticking an item in the list puts it in the pantry right away: the list for the range drops it ================= */
 { const _ck = ACT["shop-check"]; ACT["shop-check"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id), c = S.shop.checked?.[id];
-  if (!r || (c && c !== true && !c.g && false)) return _ck(el);
-  if (c) return _ck(el);
+  if (!r || c) return _ck(el);
   const g = r0(buyG(r)); if (!(g > 0)) return _ck(el); const before = clone(S.shop.pantry[id] || null), nb = (S.shop.buys || []).length;
   const p = S.shop.pantry[id] || { g: 0 }; S.shop.pantry[id] = { ...p, g: r0((p.g || 0) + g), exp: p.g > 0 ? p.exp || null : null };
   const k = eurPerG(id); S.shop.buys = [...(S.shop.buys || []), { d: todayISO(), id, n: r.f.name, g, eur: k != null ? Math.round(k * g * 100) / 100 : null, est: true, tick: true }];
