@@ -4406,8 +4406,9 @@ const FUEL_TABS = ["plan", "foods", "shop", "pantry"];
 const fuelNav = () => `<nav class="subnav" aria-label="Fuel">${[["plan", "Meals"], ["foods", "Foods"], ["shop", "Shop"], ["pantry", "Pantry"]].map(([k, l]) => { const E = k === "pantry" ? expiryList() : null, xp = E ? E.expired.length + E.soon.length : 0, why = E ? [E.expired.length ? `${E.expired.length} expired` : "", E.soon.length ? `${E.soon.length} to use soon` : ""].filter(Boolean).join(" · ") : ""; return `<button data-act="fuel-tab" data-k="${k}" ${UI.tab === k ? 'aria-current="page"' : ""}${xp ? ` title="${why}"` : ""}><span class="tab-l">${l}${xp ? `<span class="tab-dot${E.expired.length ? "" : " soon"}" role="img" aria-label="${why}">${xp}</span>` : ""}</span></button>`; }).join("")}</nav>`;
 function navHTML(side) {
   const cur = FUEL_TABS.includes(UI.tab) ? "plan" : UI.tab;
-  return (side ? [...TABS, ["week", "Week", "calendar"], ["timer", "Tools", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = cur === id, i = ic(on ? icon + "-f" : icon);
-    return `<button class="${side ? "side-btn" : ""}" data-act="tab" data-tab="${tab}" ${on ? 'aria-current="page"' : ""}>${side ? i : `<span class="nav-ic">${i}</span>`}<span>${label}</span></button>`; }).join("");
+  const mw = side && innerWidth >= PW_MIN, mwOn = mw && cur === "plan" && UI.planView === "week";   /* PC: the weekly meal plan one click away */
+  return (side ? [TABS[0], TABS[1], ...(mw ? [["mealweek", "Meal week", "calendar"]] : []), ...TABS.slice(2), ["week", "Week", "calendar"], ["timer", "Tools", "timer"], ["settings", "Settings", "settings"]] : TABS).map(([id, label, icon]) => { const tab = id === "plan" ? (UI.fuelTab || "plan") : id, on = id === "mealweek" ? mwOn : cur === id && !(id === "plan" && mwOn), i = ic(on ? icon + "-f" : icon);
+    return `<button class="${side ? "side-btn" : ""}" data-act="${id === "mealweek" ? "go-week-plan" : "tab"}" ${id === "mealweek" ? "" : `data-tab="${tab}"`} ${on ? 'aria-current="page"' : ""}>${side ? i : `<span class="nav-ic">${i}</span>`}<span>${label}</span></button>`; }).join("");
 }
 
 /* ================= render loop ================= */
@@ -6712,6 +6713,9 @@ function weekPlanView() {
     <div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>A recipe dragged from the library adds its ingredients, each with its own amount. The ⋯ button of a meal copies it, pastes, saves a recipe or clears it.</div>`;
 }
 ACT["plan-view"] = el => { UI.planView = el.dataset.k; scheduleRender(); };
+/* PC shortcut (sidebar «Meal week» or the W key): Fuel › Meals in the week view, on the current week */
+ACT["go-week-plan"] = () => { closeSheet(); UI.tab = UI.fuelTab = "plan"; UI.planView = "week"; UI.date = todayISO(); scheduleRender(); window.scrollTo(0, 0); };
+document.addEventListener("keydown", e => { if ((e.key !== "w" && e.key !== "W") || e.metaKey || e.ctrlKey || e.altKey || UI.sheet || UI.tab === "live" || e.target.closest?.("input,textarea,select,[contenteditable]") || innerWidth < PW_MIN) return; ACT["go-week-plan"](); });
 ACT["pw-nav"] = el => { const d = +el.dataset.d; UI.date = d === 0 ? todayISO() : addDays(UI.date, 7 * d); scheduleRender(); };
 ACT["pw-day"] = el => { UI.date = el.dataset.date; ACT["day-menu"](); };
 ACT["pw-add"] = el => { UI.date = el.dataset.date; ACT["open-add"]({ dataset: { meal: el.dataset.meal } }); };

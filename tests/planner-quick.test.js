@@ -43,3 +43,19 @@ test("a real mouse drag of a recipe from the library onto a meal cell adds its i
   assert.equal(edit, 100, "editing an existing item does not change the remembered dose");
   assert.deepEqual(app.errors, []);
 });
+
+test("PC: a sidebar button and the W key open the weekly meal plan in one step; neither exists on a phone", async () => {
+  const page = await start();
+  const r = await page.evaluate(async () => { UI.tab = "today"; UI.planView = "day"; render(); await new Promise(x => setTimeout(x, 150));
+    const has = !!document.querySelector('#side [data-act="go-week-plan"]'), before = document.querySelector('#side [aria-current=page]')?.innerText.trim();
+    document.querySelector('#side [data-act="go-week-plan"]').click(); await new Promise(x => setTimeout(x, 250));
+    const a = { tab: UI.tab, view: UI.planView, on: document.querySelector('#side [data-act="go-week-plan"]').getAttribute("aria-current"), fuelOn: !!document.querySelector('#side [data-tab="plan"][aria-current]'), grid: !!document.querySelector(".pw-mn") };
+    UI.tab = "today"; UI.planView = "day"; render(); await new Promise(x => setTimeout(x, 150));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "w", bubbles: true })); await new Promise(x => setTimeout(x, 250));
+    return { has, before, a, key: [UI.tab, UI.planView] }; });
+  assert.equal(r.has, true); assert.equal(r.before, "Today");
+  assert.deepEqual(r.a, { tab: "plan", view: "week", on: "page", fuelOn: false, grid: true }); assert.deepEqual(r.key, ["plan", "week"]);
+  await app.close(); app = await H.startApp({ dir, seed: F.seed({ withPlan: false }), viewport: H.VIEWPORTS.phone });
+  assert.equal(await app.page.evaluate(() => !!document.querySelector('[data-act="go-week-plan"]')), false);
+  assert.deepEqual(app.errors, []);
+});
