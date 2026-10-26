@@ -8031,6 +8031,10 @@ SHEETS.cheat = sh => {
   const impact = d.strategy === "day" ? `The other meals of ${relDay(sh.date).toLowerCase()} shrink by about ${fmtN(plan.excess)} kcal together (protein kept).`
     : d.strategy === "none" ? `Planned surplus of about ${fmtN(plan.excess)} kcal. Fine now and then; your weekly balance absorbs it.`
     : Object.keys(plan.per).length ? `${Object.entries(plan.per).map(([day, v]) => `${DOW[dow(day)]} ${fmtN(v)}`).join(" · ")} kcal (from carbs and fat; protein stays).${plan.leftover > 30 ? ` About ${fmtN(plan.leftover)} kcal stay as surplus to keep each day within 15%.` : ""}` : "Nothing to compensate.";
+  if (sh.ask) { const pl = cheatPlanned(sh.date, sh.meal), mn = mealName(sh.meal).toLowerCase();
+    return { title: "Plan a treat",
+      body: `<div class="field"><span class="flabel">${esc(relDay(sh.date))}'s ${esc(mn)} already has ${pl.length} food${pl.length === 1 ? "" : "s"}</span><div class="card">${pl.map(it => `<div class="lrow"><span><span class="t">${esc(itemName(it))}</span><span class="s">${fmtN(itemMacros(it).kcal)} kcal</span></span></div>`).join("")}</div><div class="note">The treat is added to the ${esc(mn)}. Keep these foods next to it, or remove them?</div><button class="btn text sm" data-act="ch-ask-back">Back</button></div>`,
+      foot: `<button class="btn soft" data-act="ch-keep" data-v="1" style="flex:1">Keep the foods</button><button class="btn primary" data-act="ch-keep" data-v="0" style="flex:1">Remove the foods</button>` }; }
   return {
     title: sh.out ? "Eaten out" : sh.itemId ? "Edit treat" : "Plan a treat", ...(sh.focus && !sh._f ? { focus: sh.focus } : {}),
     body: `<div class="field"><label for="ch-date">Day</label><input id="ch-date" class="inp" type="date" value="${sh.date}" data-in="ch-date"></div>
@@ -8095,8 +8099,14 @@ ACT["ch-ai"] = async () => {
   } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
   sh.busy = false; if (UI.sheet === sh) renderSheet();
 };
+/* the foods of a meal that are still only planned: what a new treat or a meal out would sit next to */
+const cheatPlanned = (date, meal) => (getDay(date).meals[meal] || []).filter(it => !it.eaten && !it.cheat);
+ACT["ch-keep"] = el => { const sh = S_(); sh.keep = el.dataset.v === "1"; sh.ask = false; ACT["ch-save"](); };
+ACT["ch-ask-back"] = () => { Object.assign(S_(), { ask: false, keep: undefined }); renderSheet(); };
 ACT["ch-save"] = () => {
   const sh = S_(), d = sh.draft; const kcal = num(d.kcal); if (!(kcal > 0)) { toast("Enter the estimated calories."); return; }
+  const planned = sh.itemId || sh.out ? [] : cheatPlanned(sh.date, sh.meal); if (planned.length && sh.keep == null) { sh.ask = true; renderSheet(); return; }
+  const kept = planned.length && sh.keep, said = planned.length ? ` · ${planned.length} planned food${planned.length === 1 ? "" : "s"} ${kept ? "kept" : "removed"}` : "";
   const m = { kcal, p: num(d.p), c: num(d.c), f: num(d.f) };
   const touched = new Set([sh.date]);
   const id = sh.itemId || uid(); const plan = cheatPlan(sh.date, sh.meal, kcal, d.strategy);
@@ -8104,13 +8114,13 @@ ACT["ch-save"] = () => {
   for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null || (sh.itemId && Object.values(dd.meals || {}).flat().some(it => it.id === id))) touched.add(day);   // every day the treat sits on or compensates
   const snap = snapshotDays([...touched]);
   if (sh.itemId) { clearCheatAdj(id); for (const [day, dd] of Object.entries(S.days)) if (Object.values(dd.meals || {}).flat().some(it => it.id === id)) mutateDay(day, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); }); }
-  mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
+  mutateDay(sh.date, x => { if (!sh.itemId && !kept) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish && !kept) delete x.dish[sh.meal]; });
   applyCheatAdj(id, plan, sh.date);
   // shrink the rest of the cheat day, and the compensation days, if they are already planned
   const skip = new Set([id]); for (const day of touched) if (dayItems(getDay(day)).length) rebalanceDayFn(day, skip);
   closeSheet(); UI.date = sh.date;
-  if (sh.out) { toast(plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap)); return; }
-  toast(plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap));
+  if (sh.out) { toast((plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`) + said, undoDays(snap)); return; }
+  toast((plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`) + said, undoDays(snap));
 };
 ACT["ch-del"] = () => {
   const sh = S_(), id = sh.itemId; const touched = new Set([sh.date]); for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null) touched.add(day);
