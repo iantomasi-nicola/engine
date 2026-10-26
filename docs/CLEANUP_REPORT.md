@@ -485,3 +485,10 @@ Eliminati `installGuide`, `installCard`, `ACT["install-now"]`, i listener `befor
 - **Cambiato**: `clipBtns` (una sola coppia di tasti per pasto e giorno), icona `paste`, `pasteClip` più semplice (niente più incolla di un giorno su un solo pasto), `copyToClip` ridisegna la schermata, «Copy» del pannello laterale rinominato «Copy to…».
 - **Eliminato**: `clipLabel`, le voci «Copy this day», «Copy <meal>» e «Paste … here» dei menu giorno e pasto, il tasto «Paste» con testo nella cella vuota.
 - **Aperto**: i tasti del giorno nella tabella settimanale compaiono al passaggio del mouse (come cestino e «Fill»); nei pasti vuoti il Copy è visibile ma spento per tenere le colonne allineate.
+
+## Consistency & Cleanup Report: M12 contaflessioni, nuoto in metri, sport di squadra (27/10/2026)
+- **Verificato**: `tests/m12-pushups.test.js` 12/12, `m12`, `pre-start`, `preview-suggestions` (37 test verdi), `npm run smoke` sui tre viewport, `layout-audit` (0 problemi su 55 schermate x 4 viewport), screenshot del player con il contatore attivo su 390/820/1440 chiari e scuri.
+- **Causa del run appeso**: Chromium recente espone `DeviceMotionEvent.requestPermission` e risponde «denied» senza un gesto: la pagina spike restava con «Mark the set» disabilitato, il click aspettava 30 s e il browser lasciato aperto impediva al processo di uscire. Test ora con permesso simulato, `try/finally` sul browser, timeout 5 s sulla pagina.
+- **Cambiato**: `let PCNT` spostato prima di `VIEWS.live` (nessun rischio TDZ); `.pc-box` raggruppa tile, −1 e Stop alla stessa larghezza.
+- **Eliminato**: nulla. Nessun coefficiente energetico aggiunto (MET di futsal/nuoto non presenti nel codice).
+- **Aperto**: prova del sensore sul telefono e taratura delle soglie; MET di default per futsal e nuoto (serve fonte primaria e approvazione del proprietario); «10 reps» compare sopra e nello stepper Reps (preesistente).

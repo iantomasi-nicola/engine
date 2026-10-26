@@ -1286,6 +1286,9 @@ body.live-mode .main{max-width:600px!important;margin:0 auto;padding-bottom:28px
 
 .lv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lv-row .lab{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:42px}
 .lv-row .inp.sm{flex:1;min-height:40px;font-size:15px}
+.pc-box{flex:1 1 150px;display:flex;flex-direction:column;gap:8px}.pc-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:84px;border-radius:14px;background:var(--surface-2);color:var(--ink)}.pc-tile:active{background:var(--surface-3)}
+.pc-tile b{font-family:var(--display);font-size:42px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}.pc-tile small{font-size:12px;color:var(--muted)}
+.pc-act{display:flex;gap:8px}.pc-act .btn{flex:1}
 .stp{display:inline-flex;align-items:center;background:var(--surface-2);border-radius:12px;padding:3px}
 .stp button{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--ink)}.stp button:active{background:var(--surface-3)}
 .stp b{min-width:58px;text-align:center;font-family:var(--display);font-size:20px;font-weight:780;font-variant-numeric:tabular-nums}.stp b small{font-size:11px;color:var(--muted);margin-left:2px;font-weight:650}
@@ -3980,7 +3983,12 @@ const dsAttr = (d, x, k) => x.st === "done" ? `data-date="${d}" data-i="${d < to
 /* kcal that training adds to the day's target (training + its digestion, calibrated like the rest of the model) */
 const trainAdded = r => r && r.eat ? r.eat * (1 + FIT().energy.tef) * r.factor : 0;
 const SESS_SRC = { logged: "Done", mixed: "Done + still planned", dated: "Planned", program: "From your program", pattern: "From your weekly pattern", rest: "Planned rest", none: "Nothing planned" };
-function sessionLabel(w) { if (!w || w.sport === "Rest") return "Rest"; return `${w.sport}${w.min ? " " + r0(w.min) + "′" : ""}${w.km ? " " + r1(w.km) + " km" : ""}${w.int ? " · " + w.int : ""}`; }
+/* sport families by name (the sport list is the user's own): swimming and team sports have their own details, G4 */
+const isSwimSport = sp => /swim|nuot/i.test(sp || "");
+const isTeamSport = sp => /football|soccer|futsal|calcio/i.test(sp || "");
+/* a session's distance as it is said: metres for swimming, km elsewhere (stored as km for every sport) */
+const distText = w => { const d = +w?.km; return d > 0 ? (isSwimSport(w.sport) ? `${r0(d * 1000)} m` : `${r1(d)} km`) : ""; };
+function sessionLabel(w) { if (!w || w.sport === "Rest") return "Rest"; return `${w.sport}${w.min ? " " + r0(w.min) + "′" : ""}${distText(w) ? " " + distText(w) : ""}${w.int ? " · " + w.int : ""}`; }
 
 /* ================= energy series: BMR + NEAT + training + TEF, calibrated on your weight trend ================= */
 /* the phase's calories against TDEE: the number typed, or for Maintenance a slight deficit given as a % of that day's TDEE */
@@ -5119,7 +5127,7 @@ function trainWeek() {
   const days = [0, 1, 2, 3, 4, 5, 6].map(i => {
     const d = addDays(ws, i), its = daySessions(d), r = energyAt(d), T = targetsFor(d); kT += T.kcal; kE += trainAdded(r);
     const ss = its.map((x, k) => { const w = x.w, p = x.p, t = (p || w).tpl ? tplById((p || w).tpl) : null, st = x.st;
-      const meta = [w.sport !== (p?.note || w.note) ? shortSport(w.sport) : "", w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", st === "done" ? (sessionKcal(w, d).kcal ? fmtN(sessionKcal(w, d).kcal) + " kcal" : "") : (w.load ? "load " + w.load : w.int || "")].filter(Boolean).join(" · ");
+      const meta = [w.sport !== (p?.note || w.note) ? shortSport(w.sport) : "", w.min ? r0(w.min) + "′" : "", distText(w), st === "done" ? (sessionKcal(w, d).kcal ? fmtN(sessionKcal(w, d).kcal) + " kcal" : "") : (w.load ? "load " + w.load : w.int || "")].filter(Boolean).join(" · ");
       return `<button class="pl-s ${st}" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:var(--${st === "done" ? "good" : INT_COLOR[w.int || sessionIntensity(w)] || "fat"})"><i>${st === "done" ? ic("check", "sm") : st === "missed" ? "×" : ""}</i><span><b>${esc(t?.name || p?.note || w.note || w.sport)}</b><small>${esc(meta)}</small></span></button>`; }).join("");
     return `<div class="pl-day ${d === today ? "now" : ""} ${d < today ? "past" : ""}" data-sdrop="${d}"><button class="pl-dh" data-act="${UI.clip ? "cal-paste" : "open-checkin"}" data-date="${d}"><b>${d === today ? "Today" : DOW[dow(d)]}</b><small>${fmtDM(d)}</small></button>
       <div class="pl-ss">${ss || `<span class="pl-rest">Rest</span>`}${d >= today ? `<button class="pl-add ${UI.clip ? "paste" : ""}" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan a workout on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div>
@@ -5870,7 +5878,8 @@ SHEETS.session = sh => {
       ${w.sport === "Rest" ? `<div class="note">A planned rest day: no training calories are added to the target.</div>` : `
       ${isPlan ? `<div class="field"><label for="ss-at">Starts at <span class="faint">· optional</span></label><input id="ss-at" class="inp" type="time" value="${esc(w.at || "")}" data-in="ss" data-k="at">${pm || icuLinked() ? `<span class="faint" style="font-size:12.5px">${pm ? "Changing it moves the workout in intervals.icu right away." : "Kept here; intervals.icu is not the plan source."}</span>` : ""}</div>` : ""}
       <div class="grid2"><div class="field"><label for="ss-min">Minutes</label><input id="ss-min" class="inp" inputmode="decimal" value="${w.min ?? ""}" placeholder="45 or 1:05" data-in="ss" data-k="min"></div>
-      <div class="field"><label for="ss-km">Km${isRun ? "" : " (optional)"}</label><input id="ss-km" class="inp" inputmode="decimal" value="${w.km ?? ""}" data-in="ss" data-k="km"></div></div>
+      ${isSwimSport(w.sport) ? `<div class="field"><label for="ss-m">Metres (optional)</label><input id="ss-m" class="inp" inputmode="decimal" value="${num(w.km) > 0 ? r0(num(w.km) * 1000) : ""}" data-in="ss" data-k="m"></div>`
+        : `<div class="field"><label for="ss-km">Km${isRun ? "" : " (optional)"}</label><input id="ss-km" class="inp" inputmode="decimal" value="${w.km ?? ""}" data-in="ss" data-k="km"></div>`}</div>
       <div class="field"><span class="flabel">Intensity</span>${segBar("ss-int", w.int || "Moderate", INTS.map(i => [i, i]))}<span class="faint" style="font-size:12.5px">Recovery run = Light · long run and normal calisthenics = Moderate · intervals and weighted calisthenics = Hard.</span></div>
       ${isLog ? `<div class="grid2"><div class="field"><label for="ss-hr">Avg HR</label><input id="ss-hr" class="inp" inputmode="numeric" value="${w.hr ?? ""}" data-in="ss" data-k="hr"></div><div class="field"><label for="ss-watch">Watch kcal</label><input id="ss-watch" class="inp" inputmode="numeric" value="${w.watch ?? ""}" data-in="ss" data-k="watch"></div></div>` :
         `<div class="field"><label for="ss-note">${isPlan ? "Name" : "Note"}</label><input id="ss-note" class="inp" value="${esc(w.note || "")}" placeholder="${isPlan ? "e.g. W3 · 5×1000 m VO2max" : "e.g. 3×10′ at T pace"}" data-in="ss-text" data-k="note"></div>
@@ -7627,7 +7636,7 @@ ACT["cc-add"] = () => { FIT().circuits.push({ name: `Circuit ${String.fromCharCo
 ACT["cc-del"] = el => { FIT().circuits.splice(+el.dataset.i, 1); saveSettings(); };
 FORMS.ex = () => { const v = $("#ex-in").value.trim(); if (!v) return; if (!FIT().exercises.includes(v)) FIT().exercises.push(v); saveSettings(); };
 
-INP.ss = (v, el) => { const sh = S_(); sh.draft[el.dataset.k] = v; if (el.dataset.k === "min") sh.draft.minTyped = true; const tmp = { ...sh.draft, min: parseMinutes(sh.draft.min), km: num(sh.draft.km), hr: num(sh.draft.hr), watch: num(sh.draft.watch) }; const e = sessionKcal(tmp, sh.date || todayISO()); const x = $("#ss-est b"); if (x) x.textContent = `${fmtN(e.kcal)} kcal`; };
+INP.ss = (v, el) => { const sh = S_(); if (el.dataset.k === "m") sh.draft.km = v.trim() === "" ? "" : String(num(v) / 1000); else sh.draft[el.dataset.k] = v; if (el.dataset.k === "min") sh.draft.minTyped = true; const tmp = { ...sh.draft, min: parseMinutes(sh.draft.min), km: num(sh.draft.km), hr: num(sh.draft.hr), watch: num(sh.draft.watch) }; const e = sessionKcal(tmp, sh.date || todayISO()); const x = $("#ss-est b"); if (x) x.textContent = `${fmtN(e.kcal)} kcal`; };
 INP["ss-text"] = (v, el) => { S_().draft[el.dataset.k] = v; };
 INP["ss-script"] = v => { const sh = S_(); sh.draft.script = v; const g = workoutGist(sh.draft), x = $("#ss-gist"); if (x) x.textContent = g.text ? `${g.text}${g.min ? ` · ≈ ${g.min} min` : ""}` : "Steps start with “-”, a line like “5x” repeats the steps under it.";
   const p = $("#ss-prev"); if (p) p.innerHTML = scriptPreview(v); const m = $("#ss-min"); if (m && g.min && !sh.draft.minTyped) { m.value = g.min; sh.draft.min = g.min; } };
@@ -8292,7 +8301,7 @@ function calMealRows(d) {
 function calDayPanel(d) {
   const today = todayISO(), its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d), L = logGet(d) || {};
   const rows = its.map((x, k) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null;
-    const meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", w.load ? "load " + r0(w.load) : w.int || ""].filter(Boolean).join(" · ");
+    const meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", distText(w), w.load ? "load " + r0(w.load) : w.int || ""].filter(Boolean).join(" · ");
     return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(t?.name || x.p?.note || w.note || w.sport)}</b><small>${esc(meta)}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") + "Done" : x.st === "missed" ? "Missed" : "Planned"}</span></button>`; }).join("");
   const body = [L.weight ? `${r1(L.weight)} kg` : "", L.sleep ? `${r1(L.sleep)} h sleep` : "", L.hrv ? `HRV ${L.hrv}` : ""].filter(Boolean).join(" · ");
   return `<section class="card cv-day" aria-live="polite"><div class="cv-day-h"><div><b>${d === today ? "Today" : DOWL[dow(d)]}</b><small>${fmtDM(d)}${body ? " · " + esc(body) : ""}</small></div>
@@ -8309,7 +8318,7 @@ function calNextCard(sel) {
   const today = todayISO(), L = [];
   for (let i = 0; i <= 14 && L.length < 3; i++) { const d = addDays(today, i); if (d === sel) continue; for (const x of daySessions(d)) if (x.st === "planned" && L.length < 3) L.push([d, x]); }
   if (!L.length) return "";
-  return `<section class="card cv-next" aria-label="Next sessions"><span class="flabel">Next sessions</span>${L.map(([d, x]) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null, meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · ");
+  return `<section class="card cv-next" aria-label="Next sessions"><span class="flabel">Next sessions</span>${L.map(([d, x]) => { const w = x.w, t = (x.p || w).tpl ? tplById((x.p || w).tpl) : null, meta = [shortSport(w.sport), w.min ? r0(w.min) + "′" : "", distText(w)].filter(Boolean).join(" · ");
     return `<button class="lrow" data-act="cal-sel" data-date="${d}"><span style="min-width:0"><span class="t">${esc(t?.name || x.p?.note || w.note || w.sport)}</span><span class="s">${d === today ? "Today" : DOWL[dow(d)]} ${fmtDM(d)} · ${esc(meta)}</span></span></button>`; }).join("")}</section>`;
 }
 /* Route, intervals.icu and Import: the text buttons at the right of the header row of Month, Agenda and Week */
@@ -8331,7 +8340,7 @@ function trainCalendar() {
       const T = calWeekTotals(ws, fit), fe = F.rows[addDays(ws, 6)]; let days = "";
       for (let i = 0; i < 7; i++) { const d = addDays(ws, i); const its = daySessions(d), rs = (S.train.races || []).filter(r => r.date === d);
         if (!its.length && !rs.length && d !== today) continue;
-        days += `<div class="cv-ad ${d === today ? "now" : ""}" data-sdrop="${d}"><button class="cv-ad-d" data-act="cal-sel" data-date="${d}"><b>${+d.slice(8)}</b><small>${DOW[dow(d)]}</small></button><div class="cv-ad-s">${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${r.km ? r1(r.km) + " km" : esc(r.sport || "")}</small></span></button>`).join("")}${its.map((x, k) => { const w = x.w; return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(x.p?.note || w.note || w.sport)}</b><small>${esc([shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : ""].filter(Boolean).join(" · "))}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") : x.st === "missed" ? "Missed" : ""}</span></button>`; }).join("") || `<span class="cv-empty">Rest</span>`}${d >= today ? `<button class="cv-add" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div></div>`; }
+        days += `<div class="cv-ad ${d === today ? "now" : ""}" data-sdrop="${d}"><button class="cv-ad-d" data-act="cal-sel" data-date="${d}"><b>${+d.slice(8)}</b><small>${DOW[dow(d)]}</small></button><div class="cv-ad-s">${rs.map(r => `<button class="cv-row race" data-act="rc-edit" data-id="${r.id}"><i class="cv-dot race">${ic("flag", "sm")}</i><span><b>${esc(r.name)}</b><small>${r.km ? r1(r.km) + " km" : esc(r.sport || "")}</small></span></button>`).join("")}${its.map((x, k) => { const w = x.w; return `<button class="cv-row" data-act="wo-open" ${dsAttr(d, x, k)}${dragAttr(x)} style="--c:${calColor(x)}"><i class="cv-dot ${x.st}"></i><span><b>${esc(x.p?.note || w.note || w.sport)}</b><small>${esc([shortSport(w.sport), w.min ? r0(w.min) + "′" : "", distText(w)].filter(Boolean).join(" · "))}</small></span><span class="cv-st ${x.st}">${x.st === "done" ? ic("check", "sm") : x.st === "missed" ? "Missed" : ""}</span></button>`; }).join("") || `<span class="cv-empty">Rest</span>`}${d >= today ? `<button class="cv-add" data-act="${UI.clip ? "cal-paste" : "plan-wo"}" data-date="${d}" aria-label="Plan on ${fmtDM(d)}">${ic("plus", "sm")}</button>` : ""}</div></div>`; }
       h += `<div class="cv-wk"><div class="cv-wk-h"><b>${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))} ${phPill(weekPhase(ws).ph, true)}</b>${T.n || fe ? `<small>${[T.n ? `${hmOf(T.min)} · ${T.n} sessions${T.km ? ` · ${r1(T.km)} km` : ""} · load ${r0(T.tl)}` : "", fe ? `fitness ${r0(fe.ctl)}` : ""].filter(Boolean).join(" · ")}</small>` : ""}</div>${days || `<div class="cv-empty pad">Nothing this week</div>`}</div>`;
     }
     return h + `</div>`;
@@ -8381,11 +8390,11 @@ function icuSport(t) {
   const find = re => names.find(n => re.test(n));
   if (/run/.test(s)) return fit.runSport;
   if (/ride|bike|cycl|spin/.test(s)) return find(/cycl|bike|ride/i) || "Cycling";
-  if (/swim/.test(s)) return find(/swim/i) || "Swimming";
+  if (isSwimSport(s)) return names.find(isSwimSport) || "Swimming";
   if (/walk|hike/.test(s)) return find(/walk|hik/i) || "Walking";
   if (/weight|strength|gym|calis|crossfit|hiit/.test(s)) return find(/calis|strength|gym/i) || "Strength";
   if (/row/.test(s)) return find(/row/i) || "Rowing";
-  if (/football|soccer/.test(s)) return find(/football|soccer/i) || "Football";
+  if (isTeamSport(s)) return names.find(isTeamSport) || "Football";
   return find(/^other$/i) || names[0] || "Other";
 }
 function icuIntensity(name, desc, min, load) {
@@ -8761,7 +8770,7 @@ const holdParts = e => (e.holdScheme || [e.dur]).slice();
    Every cue (3-2-1 ticks, go, end, spoken call-outs) is derived from the clock, then scheduled on the
    AudioContext clock a few hundred ms ahead, so it lands exactly when the display changes second. */
 let AC = null, WL = null, VOICE_OK = false;
-const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !!w.mute, voice: p.voice !== "off", lang: p.voice === "en" ? "en" : "it", prep: p.prep == null || p.prep === "" || isNaN(+p.prep) ? 5 : Math.max(0, Math.min(30, +p.prep)), calls: p.calls !== "off" }; };
+const PLAYER = () => { const p = FIT()?.player || {}, w = WK(); return { mute: !!w.mute, voice: p.voice !== "off", lang: p.voice === "en" ? "en" : "it", prep: p.prep == null || p.prep === "" || isNaN(+p.prep) ? 5 : Math.max(0, Math.min(30, +p.prep)), calls: p.calls !== "off", pushCount: p.pushCount === "auto" || p.pushCount === "off" ? p.pushCount : "tap" }; };
 const VT = (it, en) => PLAYER().lang === "en" ? en : it;
 /* one output chain: a limiter in front of the speakers, so overlapping beeps never clip; a larger buffer ("playback") so a busy screen can't make the audio crackle */
 let AOUT = null, SPEAKING = 0;
@@ -8993,8 +9002,10 @@ function clockRing(val, pct, label, cls = "") {
 const dock = (primary, opts = {}) => { const L = LV(); return `<div class="lv-dock">${opts.noNav ? "" : `<button class="icon-btn tonal" data-act="lv-go" data-i="${L.cur - 1}" ${L.cur ? "" : "disabled"} aria-label="Previous step">${ic("chevL")}</button>`}${primary}${opts.noNav ? "" : `<button class="icon-btn tonal" data-act="lv-skip" aria-label="Skip to next step">${ic("chevR")}</button>`}</div>`; };
 const topBar = (left, title, sub, right) => `<header class="lv-top">${left}<div class="lv-ttl"><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}</div>${right}</header>`;
 
+let PCNT = null;   // the count in progress: { cur: step, x: exercise, auto: sensor on, prev: reps before counting, ct: repCounter, fn: motion listener }
 VIEWS.live = function () {
-  const L = LV(); if (!L) { UI.tab = "today"; return VIEWS.today(); }
+  const L = LV(); if (PCNT && (!L || L.cur !== PCNT.cur || L.phase !== "run")) pcStop();
+  if (!L) { UI.tab = "today"; return VIEWS.today(); }
   if (L.phase === "preview") return L.auto ? runPreview(L) : livePreview(L);
   if (L.phase === "done") return L.auto ? runSummary(L) : liveSummary(L);
   if (L.free && L.cur >= L.tasks.length) return freeHub(L);
@@ -9189,6 +9200,60 @@ const liveHintHTML = (L, t) => { const H = liveHint(L, t); if (!H) return "";
 ACT["lv-hint"] = el => { const L = LV(), H = liveHint(L, L?.tasks[L.cur]); const it = H?.items[+el.dataset.i]; if (!it) return; const snap = clone(L.tasks); it.apply(); L.res[H.p].hint = "applied"; saveWK(); scheduleRender();
   toast(`${it.label} for the sets ahead`, () => { const L2 = LV(); if (!L2) return; L2.tasks = snap; if (L2.res[H.p]) L2.res[H.p].hint = null; saveWK(); scheduleRender(); }); };
 ACT["lv-hint-no"] = () => { const L = LV(), H = liveHint(L, L?.tasks[L.cur]); if (!H) return; L.res[H.p].hint = "no"; saveWK(); scheduleRender(); };
+/* ---------- push-up counter (L27): a tap per rep, or the phone's motion sensor (beta); Settings › Workout player switches it off ----------
+   repCounter() reads the size of the acceleration, so the way the phone sits does not matter: a smoothed copy minus a slow baseline leaves the up-and-down movement of the body.
+   One rep = a swing above +T followed by a swing below -T, at least 0.6 s after the previous rep; T is 35% of the recent swing and never under 0.6 m/s², so a phone lying still, a tremor or breathing count nothing.
+   The smoothing times (0.12 s, 1.5 s), the 0.6 m/s² floor and the 0.6 s gap are working values, NOT measured on a body yet: tune them with the log from pushup-test.html (docs/PRODUCT_REQUIREMENTS.md I4). */
+function repCounter() {
+  let tp = null, y = 0, base = 0, env = 0, hi = false, lastRep = -Infinity;
+  return { feed(t, a) {
+    if (tp == null) { tp = t; y = base = a; return 0; }
+    const dt = Math.max(1e-3, t - tp); tp = t;
+    y += (1 - Math.exp(-dt / 0.12)) * (a - y); base += (1 - Math.exp(-dt / 1.5)) * (a - base);
+    const s = y - base; env = Math.max(Math.abs(s), env * Math.exp(-dt / 4));
+    const T = Math.max(0.6, 0.35 * env);
+    if (s > T) hi = true;
+    else if (s < -T && hi) { hi = false; if (t - lastRep >= 0.6) { lastRep = t; return 1; } }
+    return 0;
+  } };
+}
+const isPushUp = name => /\b(push-?ups?|piegamenti|flessioni)\b/i.test(name || "");
+function pcStop() {
+  if (!PCNT) return;
+  if (PCNT.fn) window.removeEventListener("devicemotion", PCNT.fn);
+  const x = LV()?.res[PCNT.cur]?.ex?.[PCNT.x]; if (x && !(x.reps[0] > 0)) x.reps[0] = PCNT.prev;   // nothing counted: the planned reps stay
+  PCNT = null;
+}
+function pcAdd(d) {
+  const L = LV(); if (!L || !PCNT || L.cur !== PCNT.cur) { pcStop(); return; }
+  const x = L.res[L.cur].ex[PCNT.x]; x.reps[0] = Math.max(0, (+x.reps[0] || 0) + d); haptic(10); saveWK(); scheduleRender();
+}
+function pcSample(a, t) {
+  if (!PCNT?.ct) return;
+  if (UI.tab !== "live") { pcStop(); return; }
+  if (a && a.x != null && PCNT.ct.feed(t, Math.hypot(a.x, a.y, a.z))) pcAdd(1);
+}
+/* the Reps row of a plain exercise: the stepper (with a Count button on a push-up), or while counting a big tile that replaces the stepper, so the number is shown once */
+function repsRow(xi, x, e) {
+  const L = LV(), data = `data-x="${xi}"`;
+  if (PCNT && PCNT.cur === L.cur && PCNT.x === xi) return `<div class="lv-row pc"><span class="lab">Reps</span><span class="pc-box"><button class="pc-tile" data-act="lv-pc-tap" aria-label="Count one push-up"><b>${x.reps[0]}</b><small>${PCNT.auto ? "Counting by motion · tap to add one" : "Tap for each rep"}</small></button>
+    <span class="pc-act"><button class="btn tonal sm" data-act="lv-rep" ${data} data-i="0" data-d="-1">−1</button><button class="btn soft sm" data-act="lv-pc" ${data}>Stop</button></span></span></div>`;
+  return `<div class="lv-row"><span class="lab">Reps</span>${stepper("lv-rep", x.reps[0], `${data} data-i="0"`)}${PLAYER().pushCount !== "off" && isPushUp(e.name) ? `<button class="btn tonal sm" data-act="lv-pc" ${data}>${ic("pulse", "sm")}Count</button>` : ""}</div>`;
+}
+ACT["lv-pc"] = async el => {
+  const L = LV(); if (!L) return;
+  if (PCNT) { pcStop(); saveWK(); scheduleRender(); return; }
+  const xi = +el.dataset.x, x = L.res[L.cur].ex[xi]; PCNT = { cur: L.cur, x: xi, auto: false, prev: x.reps[0], ct: null, fn: null }; x.reps[0] = 0;
+  if (PLAYER().pushCount === "auto") {
+    try {
+      if (typeof DeviceMotionEvent === "undefined") throw new Error("no sensor");
+      if (typeof DeviceMotionEvent.requestPermission === "function" && (await DeviceMotionEvent.requestPermission()) !== "granted") throw new Error("refused");
+      PCNT.ct = repCounter(); PCNT.fn = e => pcSample(e.accelerationIncludingGravity, e.timeStamp / 1000); window.addEventListener("devicemotion", PCNT.fn); PCNT.auto = true;
+    } catch (e) { toast("No motion sensor here: tap to count"); }
+  }
+  saveWK(); scheduleRender();
+};
+ACT["lv-pc-tap"] = () => pcAdd(1);
 function liveTask(L, t, r) {
   if (L.clk && !L.clk.paused && clkEl(L.clk) < 0 && t.t !== "rest") return { body: prepCard(-clkEl(L.clk), t.t === "run" || t.t === "open" ? runLabel(t) : taskLine(t)), dock: dock(`<button class="btn tonal grow" data-act="lv-pause">${ic("pause", "sm")}Pause</button>`) };
   if (t.t === "run" || t.t === "open") return liveRunTask(L, t, r);
@@ -9252,7 +9317,7 @@ function liveTask(L, t, r) {
       b += `<div class="minis">${x.reps.map((v, i) => `<span class="mini edit ${i < x.mini ? "ok" : i === x.mini ? "now" : ""}"><button data-act="lv-rep" data-x="${xi}" data-i="${i}" data-d="-1" aria-label="One less">−</button><b>${v}</b><button data-act="lv-rep" data-x="${xi}" data-i="${i}" data-d="1" aria-label="One more">+</button></span>`).join("")}</div>`;
       if (L.sub && L.sub.kind === "intra") { b += `<div class="lv-subt intra"><small>Cluster rest</small><b data-tick="sub">${Math.ceil((L.sub.end - nowMs()) / 1000)}s</b><button class="btn sm on-dark" data-act="lv-sub-skip">Skip</button></div>`; }
       else if (x.mini < x.reps.length) primary = primary || `<button class="btn primary grow" data-act="lv-mini" data-x="${xi}">${ic("check", "sm")}Done ${x.reps[x.mini]} · ${x.mini + 1}/${x.reps.length}</button>`;
-    } else b += `<div class="lv-row"><span class="lab">Reps</span>${stepper("lv-rep", x.reps[0], `data-x="${xi}" data-i="0"`)}</div>`;
+    } else b += repsRow(xi, x, e);
     // load of this set: ± steps (2.5 kg in the gym, 1.25 on the body) or type it; the next sets of the exercise start from it
     { const st = typeof isGym === "function" && isGym(L.sport) ? 2.5 : 1.25, v = x.load == null ? "" : x.load;
       b += `<div class="lv-row"><span class="lab">Load</span><span class="stp"><button data-act="lv-load" data-d="${-st}" data-x="${xi}" aria-label="Less">${ic("minus", "sm")}</button><span class="stp-in"><input class="inp" inputmode="decimal" value="${v === 0 || v === "" ? "" : esc(String(v))}" placeholder="BW" data-chg="lv-load-set" data-x="${xi}" aria-label="Load in kg"><small>kg</small></span><button data-act="lv-load" data-d="${st}" data-x="${xi}" aria-label="More">${ic("plus", "sm")}</button></span></div>`; }
@@ -9611,7 +9676,7 @@ SHEETS.wo = sh => {
   const R = sh.r, w = R.w; const sess = w?.sid ? (logGet(R.date)?.wsess || []).find(x => x.id === w.sid) : null;
   const canStart = !R.logged && (R.script || isStrength(R.sport));
   let body = "";
-  if (w) body += `<div class="wo-meta"><span class="pill" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})">${esc(w.int || sessionIntensity(w))}</span><span>${esc(w.sport)}${w.min ? ` · ${r0(w.min)} min` : ""}${w.km ? ` · ${r1(w.km)} km` : ""}${w.load ? ` · load ${w.load}` : ""}${R.logged && sessionKcal(w, R.date).kcal ? ` · ${fmtN(sessionKcal(w, R.date).kcal)} kcal` : ""}</span>${R.logged ? `<span class="pill" style="--c:var(--good)">Done</span>` : ""}${isIcu(R.p || w) ? `<span class="faint">intervals.icu</span>` : ""}</div>`;
+  if (w) body += `<div class="wo-meta"><span class="pill" style="--c:var(--${INT_COLOR[w.int || sessionIntensity(w)] || "fat"})">${esc(w.int || sessionIntensity(w))}</span><span>${esc(w.sport)}${w.min ? ` · ${r0(w.min)} min` : ""}${distText(w) ? ` · ${distText(w)}` : ""}${w.load ? ` · load ${w.load}` : ""}${R.logged && sessionKcal(w, R.date).kcal ? ` · ${fmtN(sessionKcal(w, R.date).kcal)} kcal` : ""}</span>${R.logged ? `<span class="pill" style="--c:var(--good)">Done</span>` : ""}${isIcu(R.p || w) ? `<span class="faint">intervals.icu</span>` : ""}</div>`;
   if (R.script && !isStrength(R.sport)) { const g = runGist(R.script); if (g.text) body += `<div class="wo-gist">${esc(g.text)}</div>`; }
   if (R.prog) { const P = progById(R.prog); if (P) body += `<div class="note">${esc(P.name)} · week ${R.week} of ${P.weeks} · ${esc(progRuleText(P, R.week))}</div>`; }
   if (w && !R.logged && R.ri >= 0 && R.date >= todayISO()) body += `<div class="grid2 wo-at"><div class="field"><label for="wo-date">Day</label><input id="wo-date" class="inp" type="date" value="${R.date}" data-chg="wo-date" data-date="${R.date}" data-i="${R.ri}"></div><div class="field"><label for="wo-at">Starts at</label><input id="wo-at" class="inp" type="time" value="${esc((R.p || w).at || "")}" data-chg="wo-at" data-date="${R.date}" data-i="${R.ri}"></div></div>${icuPlanMode() && isIcu(R.p || w) ? `<small class="faint wo-at-n">Changing the day or the time moves the workout in intervals.icu right away.</small>` : ""}`;
@@ -10113,8 +10178,8 @@ VIEWS.today = function () {
   if (items.length) {
     tr += items.map((x, i) => { const w = x.w, p = x.p, isDone = x.st === "done", t = (p || w).tpl ? tplById((p || w).tpl) : null, title = t?.name || p?.note || w.note || w.sport;
       const k = sessionKcal(w, today).kcal, sess = isDone && w.sid ? (Lg.wsess || []).find(s => s.id === w.sid) : null, g = workoutGist(isDone ? (p || w) : w);
-      const meta = isDone ? [w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", k ? fmtN(k) + " kcal" : "", sess ? "RPE " + sess.rpe : ""].filter(Boolean).join(" · ")
-        : [(p || w).at || "", title.toLowerCase().includes(String(w.sport).toLowerCase().slice(0, 4)) ? "" : shortSport(w.sport), w.min ? r0(w.min) + "′" : "", w.km ? r1(w.km) + " km" : "", intOf(w)].filter(Boolean).join(" · ");
+      const meta = isDone ? [w.min ? r0(w.min) + "′" : "", distText(w), k ? fmtN(k) + " kcal" : "", sess ? "RPE " + sess.rpe : ""].filter(Boolean).join(" · ")
+        : [(p || w).at || "", title.toLowerCase().includes(String(w.sport).toLowerCase().slice(0, 4)) ? "" : shortSport(w.sport), w.min ? r0(w.min) + "′" : "", distText(w), intOf(w)].filter(Boolean).join(" · ");
       const extra = isDone ? (p && p.min && w.min ? compliance(p, w) : "") : [isStrength(w.sport) ? "" : sessionDetail(w), domsNote(w, today)].filter(Boolean).join(" · ");
       return woRow({ done: isDone, color: INT_COLOR[intOf(w)] || "fat", title, meta, g: !isDone && g.text ? g.text : "", pv: isDone ? "" : woMini(w), x: extra, open: `data-act="wo-open" data-date="${today}" data-i="${i}"`,
         edit: x.ri >= 0 ? `data-act="edit-session" data-list="planned" data-date="${today}" data-i="${x.ri}"` : "", go: `data-act="wo-start" data-date="${today}" data-i="${i}"`, goLabel: LV() && LV().planDate === today ? "Resume" : "Start" }); }).join("");
@@ -10654,7 +10719,7 @@ ACT["lv-snd"] = () => { const w = WK(), f = FIT(); f.player = f.player || {}; if
 
 /* ================= free workout: pick the kind, paste a script or not, add timers and sets as you go ================= */
 const FREE_KINDS = [["str", "Strength", "bolt"], ["end", "Endurance", "pulse"], ["oth", "Other", "spark"]];
-function freeSports(kind) { const all = FIT().sports.map(s => s.name).filter(n => n !== "Rest"); return kind === "str" ? all.filter(isStrength) : kind === "end" ? all.filter(n => !isStrength(n) && !/football|soccer|other/i.test(n)) : all; }
+function freeSports(kind) { const all = FIT().sports.map(s => s.name).filter(n => n !== "Rest"); return kind === "str" ? all.filter(isStrength) : kind === "end" ? all.filter(n => !isStrength(n) && !isTeamSport(n) && !/other/i.test(n)) : all; }
 SHEETS.freewo = sh => {
   const sports = freeSports(sh.kind); if (!sports.includes(sh.sport)) sh.sport = sh.kind === "str" ? strengthSport() : sh.kind === "end" ? (sports.includes(FIT().runSport) ? FIT().runSport : sports[0]) : sports[0];
   const sc = (sh.script || "").trim(), auto = !isStrength(sh.sport);
@@ -10861,6 +10926,7 @@ function playerSettings() {
   return `<div class="grid4">${fitSel("player.voice", "Voice call-outs", [["it", "Italiano"], ["en", "English"], ["off", "Off · beeps only"]])}${fitSel("player.calls", "Minute call-outs", [["on", "On"], ["off", "Off"]])}<div class="field"><span class="flabel">Countdown before starting</span>${prepChips().replace('<span>Countdown</span>', '')}</div>
     <div class="field"><span class="flabel">Sounds</span><button class="btn ${w.mute ? "soft" : "tonal"}" data-act="snd-mute">${ic(w.mute ? "bellOff" : "bell", "sm")}${w.mute ? "Muted · vibration" : "On"}</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn soft sm" data-act="snd-test">${ic("play", "sm")}Test 3‑2‑1</button><button class="btn soft sm" data-act="timer-open">${ic("timer", "sm")}Open the timer</button></div>
+    <div class="set-sub"><span class="flabel">Push-up counter</span><div class="grid2">${fitSel("player.pushCount", "Counting reps in a Push-up set", [["tap", "Tap"], ["auto", "Motion sensor (beta)"], ["off", "Off"]])}</div><small class="faint">A Count button appears next to the reps of a push-up exercise. Tap: one tap per rep. Motion sensor: the phone counts the up-and-down of your body; keep it on you (armband, pocket, in a hand), a phone lying on the floor feels nothing. It is a first version that has not been measured on a body yet, you can always tap a rep it missed. Where a phone has no motion sensor, or refuses it, you tap.</small></div>
     <div class="set-sub"><span class="flabel">Load progression</span><div class="grid2">${fitIn("player.loadStep", "Weight added when you progress", "kg")}</div><small class="faint">What a suggestion adds to a weighted exercise when you hit every rep with reps in hand: 2 kg until you change it. Set it to the smallest plate you can add; each suggestion can still be adjusted before you apply it.</small></div>
     <div class="set-sub"><span class="flabel">Rings</span><div class="grid2">${fitIn("player.ringStep", "Strap step when you lower or raise the rings", "units")}</div><small class="faint">The strap is marked in units split in four: the step is in units and counts in quarters (1, 0.5, 0.25). The strap length is read and written in the same unit you type in the workout (cm or hole).</small></div>
     <div class="set-sub"><span class="flabel">Deload weeks</span><div class="chips">${[["planned", "As planned"], ["smart", "Only if I've been training"]].map(([k, l]) => `<button class="chip" data-act="ph-dlmode" data-k="${k}" aria-pressed="${(PER().deloadMode || "planned") === k}">${l}</button>`).join("")}</div><small class="faint">A scheduled deload (in the Season, or in a new program) is skipped when you did less than ${DL_MIN * 100}% of the planned sessions in the 3 weeks before: with little training there is nothing to recover from. Each program and each week can still be set by hand: Train › Workouts › Programs, Train › Season, or the page before a workout. The Season tab appears when «Season and periodization» is on in Settings › Features.</small></div>
@@ -15438,7 +15504,7 @@ function workoutPdf(date, w) {
   const P = (t, o = {}) => { const size = o.size || 10, words = pdfLatin(t).split(" "), lines = []; let cur = ""; for (const x of words) { if (pdfWidth(cur + " " + x, size) > (o.w || W)) { lines.push(cur); cur = x; } else cur = cur ? cur + " " + x : x; } if (cur) lines.push(cur); for (const l of lines) { need(size + 5); d.text(o.x ?? M, y, l, { size, color: o.color || ink }); y -= size + 4; } };
   need(120); d.text(M, y, "ENGINE", { size: 9, bold: true, color: acc }); d.text(M + W, y, fmtLong(date), { size: 9, color: mut, align: "right" }); y -= 28;
   d.text(M, y, w.note || w.sport, { size: 22, bold: true, color: ink }); y -= 20;
-  d.text(M, y, [w.sport, w.min ? `${r0(w.min)} min` : "", w.km ? `${r1(w.km)} km` : "", w.hr ? `${r0(w.hr)} bpm average` : "", w.rpe ? `RPE ${w.rpe}` : "", (w.int || sessionIntensity(w))].filter(Boolean).join("  ·  "), { size: 10, color: mut }); y -= 14;
+  d.text(M, y, [w.sport, w.min ? `${r0(w.min)} min` : "", distText(w), w.hr ? `${r0(w.hr)} bpm average` : "", w.rpe ? `RPE ${w.rpe}` : "", (w.int || sessionIntensity(w))].filter(Boolean).join("  ·  "), { size: 10, color: mut }); y -= 14;
   if (sc) { H2("Score"); need(60); d.text(M, y - 26, String(sc.score), { size: 40, bold: true, color: acc }); d.text(M + 78, y - 8, `${sc.label}  ·  out of 100`, { size: 11, bold: true, color: ink }); y -= 46;
     for (const p of sc.parts) { need(24); d.text(M, y, p.name, { size: 10, bold: true, color: p.pts == null ? mut : ink }); d.rect(M + 100, y - 1, 150, 6, { fill: [230, 230, 230] }); if (p.pts != null) d.rect(M + 100, y - 1, 1.5 * p.pts, 6, { fill: acc }); d.text(M + 262, y, p.pts == null ? "-" : String(r0(p.pts)), { size: 10, bold: true, color: p.pts == null ? mut : ink }); d.text(M + 292, y, pdfFit(p.note, W - 292, 8.5), { size: 8.5, color: mut }); y -= 17; }
     y -= 4; for (const [t, c] of [[sc.pos, "+"], [sc.neg, "!"], [sc.tips, ">"]]) for (const x of t) P(`${c}  ${x}`, { size: 9.5 }); }
