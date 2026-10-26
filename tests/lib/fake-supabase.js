@@ -30,12 +30,26 @@ function jsonb(v) {
   if (v && typeof v === "object") return Object.fromEntries(Object.keys(v).sort((a, b) => a.length - b.length || (Buffer.from(a).compare(Buffer.from(b)))).map(k => [k, jsonb(v[k])]));
   return v;
 }
-/* the server: rows per user (data, and the updated_at the client wrote or the server stamped), kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
+/* timestamptz as PostgREST writes it: microseconds, "+00:00", trailing zeros of the fraction trimmed (none at all when zero). The server keeps microseconds; a time sent by
+   a client ("…123Z", milliseconds) is stored as it is; a time that does not parse is kept as text (it never matches). */
+function micros(s) {
+  const m = /^(\d{4}-\d\d-\d\d)[T ](\d\d:\d\d:\d\d)(?:\.(\d{1,6})\d*)?\s*(Z|[+ -]\d\d(?::?\d\d)?)?$/.exec(String(s)); if (!m) return null;
+  let z = m[4] || "Z"; if (z[0] === " ") z = "+" + z.slice(1); if (/^[+-]\d\d$/.test(z)) z += ":00"; if (/^[+-]\d{4}$/.test(z)) z = z.slice(0, 3) + ":" + z.slice(3);
+  const ms = Date.parse(m[1] + "T" + m[2] + z); return isNaN(ms) ? null : BigInt(ms) * 1000n + BigInt((m[3] || "").padEnd(6, "0"));
+}
+function pgTime(s) {
+  const u = micros(s); if (u == null) return String(s);
+  const ms = Number(u / 1000n), f = String(u % 1000000n).padStart(6, "0").replace(/0+$/, "");
+  return new Date(ms).toISOString().slice(0, 19) + (f ? "." + f : "") + "+00:00";
+}
+const sameTime = (a, b) => { const x = micros(a), y = micros(b); return x != null && x === y; };
+
+/* the server: rows per user (data, and the updated_at the client wrote or the server stamped, in Postgres format), kept in "heap" order (an update moves the row to the end, as PostgREST without ORDER BY can) */
 function server({ maxRows = 1000 } = {}) {
   const S = { users: new Map(), log: [], maxRows, devs: [], reject: null, onPage: null };
   S.rows = uid => S.users.get(uid) || S.users.set(uid, new Map()).get(uid);
   S.get = (uid, path) => { const r = S.rows(uid).get(path); return r ? JSON.parse(JSON.stringify(r.data)) : undefined; };
-  S.set = (uid, path, data, ua) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: jsonb(JSON.parse(JSON.stringify(data))), at: Date.now(), ua: ua || new Date().toISOString() }); };
+  S.set = (uid, path, data, ua) => { const T = S.rows(uid); T.delete(path); T.set(path, { data: jsonb(JSON.parse(JSON.stringify(data))), at: Date.now(), ua: pgTime(ua || new Date().toISOString()) }); };
   const tell = (dev, row) => { for (const d of S.devs) if (d !== dev && d.uid === dev.uid && !d.down && !d.asleep) d.page.evaluate(r => window.__rt && window.__rt({ eventType: "UPDATE", new: r }), { path: row.path, data: jsonb(JSON.parse(JSON.stringify(row.data))) }).catch(() => {}); };
   S.handle = async (dev, spec) => {
     if (dev.down) return { data: null, error: { message: "TypeError: Failed to fetch" }, status: 0 };
@@ -64,7 +78,7 @@ function server({ maxRows = 1000 } = {}) {
     }
     if (spec.op === "update") {
       const row = spec.row, path = spec.eq?.path, cur = T.get(path);
-      if (!cur || ("updated_at" in (spec.eq || {}) && cur.ua !== spec.eq.updated_at) || (spec.is && "updated_at" in spec.is && cur.ua != null)) return { data: [], error: null, status: 200 };
+      if (!cur || ("updated_at" in (spec.eq || {}) && !sameTime(cur.ua, spec.eq.updated_at)) || (spec.is && "updated_at" in spec.is && cur.ua != null)) return { data: [], error: null, status: 200 };
       if (S.reject && S.reject(path)) return { data: null, error: { message: "Payload too large", code: "PGRST413" }, status: 413 };
       S.set(uid, path, row.data, row.updated_at); S.log.push([dev.name, "update", path]); tell(dev, { path, data: row.data });
       return { data: [{ path }], error: null, status: 200 };
@@ -113,4 +127,4 @@ async function device(srv, name, { dir, uid = "u1", seed = null, local = null, v
   await dev.open();
   return dev;
 }
-module.exports = { server, device, STUB };
+module.exports = { server, device, STUB, pgTime };
