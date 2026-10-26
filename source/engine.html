@@ -3105,7 +3105,7 @@ const nutrCovOn = (date = todayISO()) => { const E = FIT().energy; return E.nutr
 const optN = (v, dp = 1) => { const n = v == null || String(v).trim() === "" ? NaN : parseFloat(String(v).replace(",", ".")); return isFinite(n) ? Math.max(0, Math.round(n * 10 ** dp) / 10 ** dp) : nutrCovOn() ? null : 0; };
 function recipeTotals(r) {
   const t = ZERO(); let g = 0;
-  for (const ing of r.ingredients || []) { const f = getFood(ing.food) || (S.foods[ing.food]?.hidden ? BUILTIN[ing.food] : null); if (!f) continue; addM(t, f.per, ing.g / 100); g += ing.g; }
+  for (const ing of r.ingredients || []) { const f = foodForItem(ing.food); if (!f) continue; addM(t, f.per, ing.g / 100); g += ing.g; }
   t.g = g; return t;
 }
 /* a recipe as a meal used it: once you have eaten it, the meal keeps the recipe as it was (it.snap), so editing or deleting the recipe later never changes your history */
@@ -3131,7 +3131,8 @@ function itemMacros(it) {
 }
 /* meals already planned keep a deleted starter recipe or built-in food (it only leaves the library) */
 const recipeForItem = id => getRecipe(id) || (S.recipes[id]?.hidden ? BUILTIN_REC[id] : null) || null;
-const foodForItem = id => getFood(id) || (S.foods[id]?.hidden ? BUILTIN[id] : null) || null;
+/* a deleted food still prices the days and recipes that used it: your own keeps its record in the bin, a built-in comes back from the library */
+const foodForItem = id => getFood(id) || (S.foods[id]?.hidden ? (S.foods[id].per ? S.foods[id] : BUILTIN[id]) : null) || null;
 function itemName(it) {
   if (it.kind === "quick") return it.name || "Quick add";
   if (it.kind === "recipe") return itemRecipe(it)?.name || "Missing recipe";
@@ -11175,6 +11176,7 @@ function shoppingRows(start, n) {
     const f = getFood(id) || BUILTIN[id]; if (!f) continue;
     const buy = r0(g - P.cov[id]); if (buy <= 0) continue;
     const covered = r0(P.cov[id]), free = Math.max(0, r0(P.free[id] || 0));
+    if (f.pack > 0 && covered > 0 && buy <= f.pack * 0.02) continue;   // a whole pack of the stock covers it within the pack tolerance: no «0×» row
     const packs = f.pack && buy > 0 ? Math.ceil(buy / f.pack - 0.02) : 0, left = packs ? r0(packs * f.pack - buy) : 0, usedLater = Math.min(left, r0(P.later[id] || 0));
     rows.push({ id, f, need: r0(g), covered, have: covered + free, free, buy, packs, left, usedLater, cat: f.cat || "other", src: [...(P.buyWhy[id] || [])] });
   }
@@ -11273,7 +11275,8 @@ SHEETS.buy = sh => {
         <div class="chips">${(f.pack > 0 ? [f.pack / 2, f.pack * 2] : [250, 500, 1000]).map(v => `<button class="chip sm" data-act="by-pack-set" data-v="${v}">${fmtN(v)} ${u}</button>`).join("")}</div>
         <small class="faint">The list counts whole packs of this size. Changing it here changes the food everywhere.</small></div>
       ${g && r && g > r.buy ? `<div class="note">${fmtN(g - r.buy)} ${u} more than the plan needs: it goes to the pantry and the planner will use it.</div>` : ""}
-      <div class="faint" style="font-size:12.5px">${p ? `Last price: ${fmtEur(p.eur)} for ${fmtN(p.g)} ${u} (${fmtEur(p.eur / p.g * 1000)}/${u === "ml" ? "l" : "kg"})${p.at ? `, ${fmtDM(p.at)}` : ""}.` : "No price yet: what you enter is remembered for next time and for the estimates."}</div>`,
+      <div class="faint" style="font-size:12.5px">${p ? `Last price: ${fmtEur(p.eur)} for ${fmtN(p.g)} ${u} (${fmtEur(p.eur / p.g * 1000)}/${u === "ml" ? "l" : "kg"})${p.at ? `, ${fmtDM(p.at)}` : ""}.` : "No price yet: what you enter is remembered for next time and for the estimates."}</div>
+      ${homeSwapHTML(sh.id)}`,
     foot: `${S.shop.checked?.[sh.id] ? `<button class="btn soft" data-act="by-out" style="flex:0 0 auto">Take out</button>` : ""}<button class="btn tonal" data-act="by-swap" style="flex:0 0 auto" aria-label="Replace this product">${ic("swap", "sm")}Replace</button><button class="btn primary" data-act="by-ok">${ic("cart", "sm")}In the cart</button>` };
 };
 ACT["shop-buy"] = el => { const id = el.dataset.id, c = S.shop.checked?.[id], r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === id);
@@ -11295,7 +11298,7 @@ ACT["store-del"] = el => { const snap = clone(S.shop), id = el.dataset.id, nm = 
 ACT["shop-here"] = el => { const sid = curStore(); if (sid) addFoodStore(el.dataset.id, sid); };
 ACT["by-set"] = el => { const sh = S_(); sh.g = +el.dataset.v; renderSheet(); };
 ACT["by-ok"] = () => { const sh = S_(), g = num(sh.g), eur = sh.eur === "" || sh.eur == null ? null : num(sh.eur); S.shop.checked = S.shop.checked || {};
-  S.shop.checked[sh.id] = { g: g || null, eur: eur != null && eur >= 0 ? Math.round(eur * 100) / 100 : null, ...((sh.sid ?? curStore()) ? { sid: sh.sid ?? curStore() } : {}), ...(sh.offer ? { offer: true } : {}) }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
+  S.shop.checked[sh.id] = { g: g || null, eur: eur > 0 ? Math.round(eur * 100) / 100 : null, ...((sh.sid ?? curStore()) ? { sid: sh.sid ?? curStore() } : {}), ...(sh.offer ? { offer: true } : {}) }; put("shop", "", S.shop); closeSheet(); if (UI.sheetBack === "shopq") openSheet("shopq", { live: true }); };
 ACT["by-out"] = () => { const sh = S_(); delete S.shop.checked[sh.id]; put("shop", "", S.shop); closeSheet(); };
 INP.by = (v, el) => { S_()[el.dataset.k] = v; };
 ACT["by-store"] = el => { S_().sid = el.dataset.k || null; renderSheet(); };
@@ -11309,8 +11312,8 @@ ACT["shop-done"] = () => {
   for (const [id, c] of Object.entries(S.shop.checked || {})) { if (!c) continue; const r = rows.find(x => x.id === id), f = getFood(id) || BUILTIN[id]; if (!f) continue;
     const g = r0(c.g || (r ? buyG(r) : f.pack || 0)); if (!(g > 0)) continue;
     const eur = c.eur != null ? c.eur : eurPerG(id) != null ? Math.round(eurPerG(id) * g * 100) / 100 : null;
-    const p = S.shop.pantry[id] || { g: 0 }, shelf = { produce: 5, meat: 3, fish: 2, dairy: 7, bakery: 4, frozen: 90, pantry: 180, snacks: 60, drinks: 30 }[f.cat] || 14;
-    S.shop.pantry[id] = { g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : null }; // no use-by unless you set one
+    const p = S.shop.pantry[id] || { g: 0 };
+    S.shop.pantry[id] = { ...p, g: r0((p.g || 0) + g), exp: p.exp && p.g > 0 ? p.exp : null }; // no use-by unless you set one
     const sid = c.sid ?? curStore();
     if (c.eur != null && !c.offer) { const old = S.shop.prices[id]; S.shop.prices[id] = { ...(old?.st ? { st: old.st } : {}), eur: c.eur, g, at: today, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: c.eur, g, at: today }].slice(-8) };
       if (sid) { const pr = S.shop.prices[id], o = pr.st?.[sid]; pr.st = { ...(pr.st || {}), [sid]: { eur: c.eur, g, at: today, hist: [...(o?.hist || []), { eur: c.eur, g, at: today }].slice(-8) } }; } }
@@ -11472,7 +11475,7 @@ function priceSet(id, v, unit) {
   const pw = pantryUnits(f, S.shop.pantry?.[id]).pw, g = unit === "kg" ? 1000 : unit === "pack" ? f.pack : unit === "unit" ? pw : 0;
   if (!(g > 0)) return false;
   S.shop.prices = S.shop.prices || {}; const at = todayISO();
-  S.shop.prices[id] = { eur: v, g, at, hist: [{ eur: v, g, at }], manual: true }; put("shop", "", S.shop); return true;
+  const old = S.shop.prices[id]; S.shop.prices[id] = { ...(old?.st ? { st: old.st } : {}), eur: v, g, at, hist: [...(old?.hist || (old ? [{ eur: old.eur, g: old.g, at: old.at }] : [])), { eur: v, g, at }].slice(-8), manual: true }; put("shop", "", S.shop); return true;
 }
 function stockBoxHTML(id) {
   const f = getFood(id) || BUILTIN[id]; if (!f) return "";
@@ -11539,21 +11542,41 @@ function swapPreview(from) {
 }
 function swapFood(from, to, o = {}) {
   const A = getFood(from) || BUILTIN[from], B = getFood(to) || BUILTIN[to]; if (!A || !B || from === to) return { meals: 0, recipes: 0 };
-  const k = o.kcal && A.per.kcal > 0 && B.per.kcal > 0 ? A.per.kcal / B.per.kcal : 1, today = todayISO(), q = x => Math.round(x * 10) / 10;
+  const key = o.by || (o.kcal ? "kcal" : null), k = key && A.per[key] > 0 && B.per[key] > 0 ? A.per[key] / B.per[key] : 1, today = o.since && o.since > todayISO() ? o.since : todayISO(), q = x => Math.round(x * 10) / 10;   // by: the macro the new food must match (kcal, p, c or f); since/until: only a window of the plan
   const before = {}; for (const [d, day] of Object.entries(S.days)) before[d] = clone(day); const recBefore = {}, checked = clone(S.shop.checked?.[from] ?? null);
   let meals = 0, nrec = 0;
-  for (const [d, day] of Object.entries(S.days)) { if (d < today || !dayItems(day).some(([, it]) => it.kind === "food" && it.ref === from && !it.eaten)) continue;
+  for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => it.kind === "food" && it.ref === from && !it.eaten)) continue;
     mutateDay(d, dd => { for (const [, it] of dayItems(dd)) if (it.kind === "food" && it.ref === from && !it.eaten) { it.ref = to; it.qty = q((+it.qty || 0) * k); meals++; } }); }
   if (o.recipes) for (const r of allRecipes().filter(r => (r.ingredients || []).some(i => i.food === from))) { recBefore[r.id] = S.recipes[r.id] ? clone(S.recipes[r.id]) : null; freezeRecipeUses(r.id);
     const n = clone(getRecipe(r.id)); n.ingredients = n.ingredients.map(i => i.food === from ? { food: to, g: q(i.g * k) } : i); if (n.source === "builtin") n.source = "custom"; put("recipes", r.id, n); nrec++; }
   if (S.shop.checked?.[from]) { delete S.shop.checked[from]; put("shop", "", S.shop); }
-  toast(`${A.name} replaced by ${B.name}${meals ? ` in ${meals} meal${meals === 1 ? "" : "s"}` : ""}`, () => {
+  toast(o.home ? `${B.name} from home instead of ${A.name}` : `${A.name} replaced by ${B.name}${meals ? ` in ${meals} meal${meals === 1 ? "" : "s"}` : ""}`, () => {
     for (const [d, v] of Object.entries(before)) if (JSON.stringify(S.days[d] || null) !== JSON.stringify(v)) put("days", d, v);
     for (const d of Object.keys(S.days)) if (!(d in before)) put("days", d, null);
     for (const [id, v] of Object.entries(recBefore)) { if (v) put("recipes", id, v); else del("recipes", id); }
     if (checked) { S.shop.checked = { ...(S.shop.checked || {}), [from]: checked }; put("shop", "", S.shop); } scheduleRender(); });
   return { meals, recipes: nrec };
 }
+/* «Use something from home» (L189): for a row to buy, foods at home with stock to spare that do the same job (same role P/C/F),
+   closest in macros first. The planned meals of the list window that use the product move to it in the grams that match the role's
+   macro (500 g of X → 430 g of Y); the real stock is never touched, the row simply stops being needed. Only offered when the product is planned
+   as itself (not inside a recipe) and the stock to spare covers all of it. */
+const HOME_KEY = { P: "p", C: "c", F: "f" };
+function homeSwaps(id) {
+  const A = getFood(id), key = A && HOME_KEY[A.role]; if (!A?.per || !key || !(A.per[key] > 0)) return [];
+  const start = UI.shopStart, n = S.shop.range || 7, today = todayISO(), since = start > today ? start : today, until = addDays(start, n - 1);
+  const row = shoppingRows(start, n).find(r => r.id === id && r.buy > 0); if (!row) return [];
+  let q = 0; for (const [d, day] of Object.entries(S.days)) if (d >= since && d <= until) for (const [, it] of dayItems(day)) if (it.kind === "food" && it.ref === id && !it.eaten) q += +it.qty || 0;
+  if (!(q > 0) || q < row.need - 1) return [];
+  const free = stockPlan(start, n).free, near = g => Math.hypot(g.per.p - A.per.p, g.per.c - A.per.c, g.per.f - A.per.f);
+  return allFoods().filter(g => g.id !== id && g.role === A.role && g.per && g.per[key] > 0 && dietOK(g) && (free[g.id] || 0) > 0)
+    .map(g => { const x = q * A.per[key] / g.per[key]; return { food: g, key, since, until, qFrom: r0(q), qTo: x >= 50 ? Math.round(x / 5) * 5 : r0(x), d: near(g) }; })
+    .filter(x => x.qTo > 0 && x.qTo <= q * 3 && x.qTo <= (free[x.food.id] || 0) + 0.5).sort((a, b) => a.d - b.d || a.food.name.localeCompare(b.food.name)).slice(0, 4);
+}
+const homeSwapHTML = id => { const L = homeSwaps(id); if (!L.length) return "";
+  const A = getFood(id), u = A.unit || "g";
+  return foldOne("home", "Use something from home", `${L.length} at home`, "", () => `<div class="card">${L.map(x => `<button class="lrow" data-act="home-swap" data-id="${esc(id)}" data-to="${esc(x.food.id)}"><span style="min-width:0"><span class="t">${esc(x.food.name)}</span><span class="s">${fmtN(x.qFrom)} ${u} of ${esc(A.name)} → ${fmtN(x.qTo)} ${x.food.unit || "g"} of ${esc(x.food.name)}</span></span><span class="end">${ic("swap", "sm")}</span></button>`).join("")}</div>`); };
+ACT["home-swap"] = el => { const x = homeSwaps(el.dataset.id).find(y => y.food.id === el.dataset.to); if (!x) return; if (UI.sheet) closeToRoot(); swapFood(el.dataset.id, x.food.id, { by: x.key, since: x.since, until: x.until, home: true }); };
 SHEETS.swapfood = sh => {
   const A = getFood(sh.from) || BUILTIN[sh.from]; if (!A) return { title: "Replace", body: `<div class="empty slim"><p>That product is gone.</p></div>`, foot: "" };
   if (!sh.to) { const q = sh.q || "", res = q ? foodSearch(q, "all").filter(r => r.t === "food" && r.x.id !== sh.from).slice(0, 8) : [];
@@ -14054,7 +14077,7 @@ function foldView(id, h) {
     let sum = ""; try { sum = FOLD_SUM[m[1]]?.() || ""; } catch (e) {}
     return foldOne(id, m[1], sum, m[2], part.slice(m[0].length)); }).join("");
 }
-ACT["fold-tog"] = el => { const st = (UI.fold = UI.fold || {})[el.dataset.id] = (UI.fold || {})[el.dataset.id] || {}; st[el.dataset.k] = !st[el.dataset.k]; scheduleRender(); };
+ACT["fold-tog"] = el => { const st = (UI.fold = UI.fold || {})[el.dataset.id] = (UI.fold || {})[el.dataset.id] || {}; st[el.dataset.k] = !st[el.dataset.k]; if (UI.sheet) renderSheet(); else scheduleRender(); };
 const recFold = h => foldView("rec", h + `<div class="section-h"><h2>All results</h2></div>${UI.fold?.rec?.["All results"] ? recAllHTML() : ""}`);
 { const _rec = trainRecords; trainRecords = function () { return recFold(amrapRecords() + _rec()); }; }
 /* the recaps over time: Train › Stats › Strength, newest first; tap one for the whole session */
@@ -15638,7 +15661,7 @@ function shopRowHTML(r) {
 }
 ACT["shop-pk"] = el => { const id = el.dataset.id, r = shopToBuy().find(x => x.id === id); if (!r?.f.pack) return; S.shop.checked = S.shop.checked || {};
   const c = S.shop.checked[id], cur = c && c.g ? c.g : buyG(r), next = Math.max(0, cur + +el.dataset.d * r.f.pack);
-  if (!next) delete S.shop.checked[id]; else S.shop.checked[id] = { g: next, eur: c && c.eur != null ? c.eur : null };
+  if (!next) delete S.shop.checked[id]; else S.shop.checked[id] = { ...(c && typeof c === "object" ? c : {}), g: next, eur: c && c.eur != null && cur > 0 ? Math.round(c.eur * next / cur * 100) / 100 : null };
   haptic(8); put("shop", "", S.shop); if (UI.sheet) renderSheet(); };
 /* the window of the list: this week from today (past days left out), next week, the next N days from a date, or any range */
 function applyShopMode() {
@@ -15730,10 +15753,12 @@ ACT["fd-unhide"] = el => { const id = el.dataset.id; binRestore(id); toast(`${ge
 ACT["fd-unhide-all"] = () => { const ids = hiddenFoods().map(f => f.id); openSheet("confirm", { title: `Restore ${ids.length} foods?`, text: "Everything in the bin comes back.", yes: "Restore all", run: () => { ids.forEach(binRestore); UI.foodsSeg = "all"; toast(`${ids.length} foods restored`); } }); };
 /* once a session: what's been in the bin for 3 days leaves for good (built-ins stay hidden, your foods are deleted) */
 let BIN_DONE = false;
+/* a food that days or recipes still use keeps its record (out of every list) so their history does not change */
+const foodUsed = id => Object.values(S.days || {}).some(d => dayItems(d).some(([, it]) => it.kind === "food" && it.ref === id)) || Object.values(S.recipes || {}).some(r => (r.ingredients || []).some(i => i.food === id));
 function binPurge() { const lim = addDays(todayISO(), -BIN_DAYS); let n = 0;
   for (const x of Object.values(S.foods || {})) { if (!x?.hidden || x.gone) continue;
     if (!x.delAt) { put("foods", x.id, { ...x, delAt: todayISO() }); continue; }
-    if (x.delAt <= lim) { if (BUILTIN[x.id]) put("foods", x.id, { id: x.id, hidden: true, gone: true }); else del("foods", x.id); n++; } }
+    if (x.delAt <= lim) { if (BUILTIN[x.id]) put("foods", x.id, { id: x.id, hidden: true, gone: true }); else if (foodUsed(x.id)) put("foods", x.id, { ...x, gone: true }); else del("foods", x.id); n++; } }
   return n; }
 { const _af = afterRender; afterRender = function () { _af(); if (!BIN_DONE && S.foods && dataReady("foods")) { BIN_DONE = true; try { binPurge(); } catch (e) { console.warn(e); } } }; }
 /* ================= a recipe, changed just for this meal: amounts per serving, ingredients out — saved as a private copy ================= */
