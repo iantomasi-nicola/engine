@@ -8,6 +8,6 @@
 | M14b-D | released | M14b gruppo D Fuel + Copy/Paste L188 | fuel | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 14:59Z | Pubblicato su main bbc135a |
 | M12 | released | M12 verifica contaflessioni | strength,train | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 13:47Z | M12 verificata su claude/m12-verified 00c114a; da unire. Aperti: soglie sensore da tarare su telefono, MET futsal/nuoto da approvare |
 | M14b-C | released | M14b gruppo C PWA + R2 | pwa,tests | claude/awesome-goldberg-ontswx | 2026-10-26 13:31Z | 2026-10-26 14:59Z | Pubblicato su main bbc135a |
-| M14b-EF | active | M14b gruppi E Shopping+L189 e F Foods | foods,shopping | claude/m14b-ef | 2026-10-26 13:35Z | 2026-10-26 19:35Z |  |
+| M14b-EF | released | M14b gruppi E Shopping+L189 e F Foods | foods,shopping | claude/m14b-ef | 2026-10-26 13:35Z | 2026-10-26 14:59Z | Pubblicato su main bbc135a |
 | L202 | released | Indietro e chiusura tornano alla schermata giusta | other | claude/l202-back | 2026-10-26 13:42Z | 2026-10-26 14:43Z | Fatto e unito in claude/awesome-goldberg-ontswx; in pubblicazione |
 | SHIP | released | pubblicazione M14b A-F, M12, L188, L189, L202 | other | claude/awesome-goldberg-ontswx | 2026-10-26 14:43Z | 2026-10-26 14:58Z | main = bbc135a, rollback 86f14f4 |
