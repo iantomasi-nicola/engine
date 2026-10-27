@@ -19,5 +19,5 @@
 | L211-fin | released | L211 chiusura punti code-guard | sync,tests | claude/l211-fin | 2026-10-26 19:50Z | 2026-10-26 19:56Z | Fatto: id canonico e finto server realistico (4eaa5ae) |
 | M5d-fuel | released | L214 prezzo pasto + L205 sgarro | fuel | claude/m5d-fuel | 2026-10-26 23:35Z | 2026-10-27 00:01Z | Fatto e unito (5f163c9) |
 | M5d-shop | active | L203 scelta dalla dispensa + L204 ricetta | shopping | claude/m5d-shop | 2026-10-26 23:35Z | 2026-10-27 04:35Z |  |
-| SHIP | released | pubblicazione id canonico + test server | other | claude/bf-icu-guard | 2026-10-26 23:46Z | 2026-10-26 23:47Z | nulla da pubblicare: i punti L211 1-2 erano già su main (7381a26, 4eaa5ae) |
 | R4-progress | active | R4 correzioni audit area 9 | progress,settings | claude/r4-progress | 2026-10-26 23:56Z | 2026-10-27 04:56Z |  |
+| SHIP | active | pubblicazione L216 + fix test del martedì | other | claude/bf-icu-guard | 2026-10-27 00:05Z | 2026-10-27 01:05Z | nulla da pubblicare: i punti L211 1-2 erano già su main (7381a26, 4eaa5ae) |
