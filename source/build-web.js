@@ -36,6 +36,10 @@ const cpdir = (a, b) => { for (const f of fs.readdirSync(a)) { const p = path.jo
   if (OUT !== ROOT) for (const d of ["icons", "vendor", "ocr", "supabase"]) cpdir(path.join(ROOT, d), path.join(OUT, d));
   if (!fs.existsSync(OUT + "/config.js")) fs.copyFileSync(W + "/config.js", OUT + "/config.js");
   fs.copyFileSync(W + "/pushup-test.html", OUT + "/pushup-test.html");   // standalone motion-sensor check for the push-up counter (docs/PRODUCT_REQUIREMENTS.md I4, L27)
+  /* standalone live-weight check for the S400 scale (docs/SCALE_LIVE.md, L217): its one inline script runs by hash, and the page has no network access at all (connect-src 'none') */
+  const scale = fs.readFileSync(W + "/scale-live.html", "utf8"), scaleJs = [...scale.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  if (scaleJs.length !== 1 || !scale.includes("script-src 'unsafe-inline'")) throw new Error("scale-live.html: expected one inline script and script-src 'unsafe-inline'");
+  fs.writeFileSync(OUT + "/scale-live.html", scale.replace("script-src 'unsafe-inline'", "script-src " + sha(scaleJs[0][1])));
   fs.writeFileSync(OUT + "/.nojekyll", "");
   console.log("built", OUT, "index", s.length, "build", build);
 })();
