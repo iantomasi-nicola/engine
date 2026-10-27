@@ -50,3 +50,33 @@ test("kcalChart and proteinChart draw a fixed, small number of gridlines whateve
   // a normal day keeps the round labels it had: 0, 1k, 2k, 3k (top 2500 * 1.05 = 2625 -> step 500 -> max 3000 -> redrawn on 4 intervals as 0, 1k, 2k, 3k)
   assert.deepEqual(r.normal, ["0", "1k", "2k", "3k"]);
 });
+
+/* GRAVE 2 -- a weight goal ABOVE the current weight (bulk): the Goal card says direction and kg, with no kcal claim (no approved gain formula), never a negative number.
+   Trend 80 kg (a flat 80 kg for 14 days), goal 85 kg in 60 days:
+     kg to go = |80 - 85| = 5; the pace needed = 5 kg / (60 / 7 weeks) = 0.583 -> «0.6 kg/week»; the verdict names the date.
+   Goal 75 kg (loss) keeps the card it had: «5 kg» «to go», «kcal needed». Goal 80.1 kg: inside 0.2 kg -> «Reached», «Goal already reached.» */
+const goalCard = async (page, goal) => page.evaluate(g => {
+  const t = todayISO(); for (let i = 0; i < 14; i++) mutateLog(addDays(t, -i), d => { d.weight = 80; });
+  FIT().goal = { type: "weight", value: g.value, date: g.days ? addDays(t, g.days) : "", leanShare: 0.1 }; FIT().phases = [{ start: addDays(t, -30), phase: g.phase || "Maintenance", kcal: 0 }]; DATA_V++;
+  const d = document.createElement("div"); d.innerHTML = overviewView(); const c = d.querySelector(".card.goal");
+  const tx = e => e.innerHTML.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return { text: tx(c), kpis: [...c.querySelectorAll(".stat")].map(tx), date: addDays(t, g.days || 0), G: (({ dir, toLose, energy }) => ({ dir, toLose, energy }))(goalState()) };
+}, goal);
+
+test("goal above the current weight: «5 kg to gain», no kcal claim, no negative number, the pace needed for the date", async () => {
+  const page = await start();
+  const r = await goalCard(page, { value: 85, days: 60, phase: "Bulk" });
+  assert.equal(r.G.dir, "gain"); assert.equal(r.G.energy, null);
+  assert.match(r.kpis[0], /^5 kg to gain$/); assert.equal(r.kpis.length, 2);
+  assert.ok(!/kcal needed|−|-\d|0k|no deficit|already reached/i.test(r.text), r.text);
+  assert.match(r.text, /To gain 5 kg by [^.]+ you need about 0\.6 kg\/week\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("goal below the current weight keeps its card; a goal inside 0.2 kg is reached", async () => {
+  const page = await start();
+  const lose = await goalCard(page, { value: 75, days: 60, phase: "Cut" });
+  assert.equal(lose.G.dir, "lose"); assert.match(lose.kpis[0], /^5 kg to go/); assert.ok(lose.kpis.some(k => /kcal needed/.test(k)), lose.text); assert.equal(lose.kpis.length, 3);
+  const done = await goalCard(page, { value: 80.1, days: 60 });
+  assert.equal(done.G.dir, "reached"); assert.match(done.text, /Reached/); assert.match(done.text, /Goal already reached\./);
+});

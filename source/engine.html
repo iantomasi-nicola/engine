@@ -762,7 +762,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .ready i{width:8px;height:8px;border-radius:50%}
 
 .stat-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
-.goal .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.goal .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.goal .stat-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 .goal .stat b{font-size:19px}
 .tag{white-space:nowrap}
 .hero-top .train{flex:1 1 auto;min-width:0}
@@ -4373,7 +4373,9 @@ function goalState() {
   const goalBf = g.type === "bf" ? +g.value : (goalW && lean != null ? (goalW - (lean - ls * (w - goalW))) / goalW * 100 : null);
   const toLose = goalW != null ? w - goalW : null;
   const fat = toLose != null ? toLose * (1 - ls) : null;
-  const energy = fat != null ? Math.max(0, fat) * kpk : null;
+  /* the direction of the goal: gaining is shown as kg and pace only (no approved energy formula for it), reached = within 0.2 kg */
+  const dir = goalW == null ? null : Math.abs(goalW - w) < 0.2 ? "reached" : goalW > w ? "gain" : "lose";
+  const energy = dir === "lose" ? fat * kpk : null;
   const deficit = -(r.target - r.tdee);
   const perWeek = deficit > 0 ? deficit * 7 / kpk / (1 - ls) : 0;
   const weeks = toLose > 0 && perWeek > 0 ? toLose / perWeek : null;
@@ -4382,11 +4384,12 @@ function goalState() {
   if (g.date) {
     const days = daysBetween(today, g.date);
     if (days <= 0) verdict = "The target date has passed. Set a new one in Settings.";
-    else if (!(fat > 0)) verdict = "Goal already reached.";
-    else { needed = energy / days; const diff = needed - deficit; verdict = `To reach it by ${fmtDM(g.date)} you need about ${fmtN(needed)} kcal/day of deficit (${r0(needed / r.tdee * 100)}% of TDEE) vs ${fmtN(deficit)} now · ` + (Math.abs(diff) <= 50 ? "on track." : diff > 0 ? `${fmtN(diff)} kcal/day more needed.` : `${fmtN(-diff)} kcal/day less would be enough.`); }
+    else if (dir === "reached") verdict = "Goal already reached.";
+    else if (dir === "gain") verdict = `To gain ${r1(-toLose)} kg by ${fmtDM(g.date)} you need about ${r1(-toLose / (days / 7))} kg/week.`;
+    else if (dir === "lose") { needed = energy / days; const diff = needed - deficit; verdict = `To reach it by ${fmtDM(g.date)} you need about ${fmtN(needed)} kcal/day of deficit (${r0(needed / r.tdee * 100)}% of TDEE) vs ${fmtN(deficit)} now · ` + (Math.abs(diff) <= 50 ? "on track." : diff > 0 ? `${fmtN(diff)} kcal/day more needed.` : `${fmtN(-diff)} kcal/day less would be enough.`); }
   }
   const text = g.type === "weight" ? `${r1(g.value)} kg` : `${r1(g.value)}% body fat${goalW ? ` (≈ ${r1(goalW)} kg)` : ""}`;
-  return { w, bfNow, lean, goalW, goalBf, toLose, fat, energy, deficit, perWeek, weeks, eta, needed, verdict, text, kpk, reached: goalW != null && Math.abs(goalW - w) < 0.2 };
+  return { w, bfNow, lean, goalW, goalBf, toLose, fat, dir, energy, deficit, perWeek, weeks, eta, needed, verdict, text, kpk, reached: goalW != null && Math.abs(goalW - w) < 0.2 };
 }
 function weeklyTable() {
   return memo("weekly", () => {
@@ -5425,7 +5428,7 @@ function overviewView() {
   let h = weekBalanceHTML();
   h += `<div class="card pad goal"><div class="row" style="justify-content:space-between"><span class="flabel">Goal</span><button class="link" data-act="tab" data-tab="settings">Edit</button></div>
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
-    <div class="stat-grid" style="margin-top:4px">${kpi(G.toLose != null ? r1(G.toLose) + " kg" : "—", "to go", G.fat != null ? `${r1(G.fat)} kg of fat` : "")}${kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(G.kpk)} kcal per kg`)}${etaKpi(G)}</div>
+    <div class="stat-grid${G.dir === "gain" ? " two" : ""}" style="margin-top:4px">${kpi(G.toLose != null ? r1(Math.abs(G.toLose)) + " kg" : "—", G.dir === "gain" ? "to gain" : "to go", G.dir === "lose" ? `${r1(G.fat)} kg of fat` : "")}${G.dir === "gain" ? "" : kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(G.kpk)} kcal per kg`)}${etaKpi(G)}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
   h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "from the formulas")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
   const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
@@ -14835,6 +14838,7 @@ function obsRate(days = 28) {
   }
   return G; }; }
 const etaKpi = G => G.obs?.eta ? kpi(fmtDM(G.obs.eta), "ETA · real pace", `${r1(G.obs.toward)} kg/week · ${fmtDM(G.obs.lo)}–${G.obs.hi ? fmtDM(G.obs.hi) : "?"}${G.eta ? ` · plan ${fmtDM(G.eta)}` : ""}`)
+  : G.dir === "gain" ? kpi("—", "ETA", G.obs ? `scale ${sgn(G.obs.kgWk)} kg/week` : "needs about 2 weeks of weigh-ins")
   : kpi(G.eta ? fmtDM(G.eta) : "—", "ETA", G.weeks ? `about ${Math.ceil(G.weeks)} weeks · ${r1(G.perWeek)} kg/week${G.obs ? ` · scale ${sgn(G.obs.kgWk)} kg/week` : ""}` : G.deficit > 0 ? "" : "no deficit planned");
 
 /* ---------- watch left running ---------- */
