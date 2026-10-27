@@ -15825,21 +15825,35 @@ const PDF_W = { " ": 278, "!": 278, '"': 355, "#": 556, "$": 556, "%": 889, "&":
 const PDF_MAP = { "−": "-", "–": "\x96", "—": "\x97", "·": "\xB7", "×": "\xD7", "≈": "~", "≥": ">=", "≤": "<=", "→": "->", "←": "<-", "…": "\x85", "’": "\x92", "‘": "\x91", "“": "\x93", "”": "\x94", "•": "\x95", "°": "\xB0", "²": "\xB2" };
 function pdfLatin(s) { let o = ""; for (const ch of String(s ?? "")) { const c = ch.codePointAt(0); o += PDF_MAP[ch] ?? (c >= 32 && c < 127 ? ch : c >= 160 && c <= 255 ? ch : c === 9 || c === 10 ? " " : "?"); } return o; }
 const pdfWidth = (s, size, bold) => { let w = 0; for (const ch of pdfLatin(s)) w += (PDF_W[ch] ?? 556) * (bold ? 1.06 : 1); return w * size / 1000; };
+/* a string as PDF text: Latin-1 and the three characters that end or open a string escaped */
+const pdfStr = s => pdfLatin(s).replace(/[\\()]/g, m => "\\" + m);
+/* lines no wider than w: words are kept whole when they fit, a word wider than the line is cut where it must be */
+function pdfWrap(t, w, size, bold) {
+  const lines = []; let cur = "";
+  for (const word of pdfLatin(t).split(" ")) {
+    if (pdfWidth(cur ? cur + " " + word : word, size, bold) <= w) { cur = cur ? cur + " " + word : word; continue; }
+    if (cur) { lines.push(cur); cur = ""; }
+    let rest = word; while (pdfWidth(rest, size, bold) > w && rest.length > 1) { let k = rest.length - 1; while (k > 1 && pdfWidth(rest.slice(0, k), size, bold) > w) k--; lines.push(rest.slice(0, k)); rest = rest.slice(k); }
+    cur = rest;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
 const pdfFit = (t, w, size) => { t = String(t ?? ""); if (pdfWidth(t, size) <= w) return t; while (t.length > 1 && pdfWidth(t + "…", size) > w) t = t.slice(0, -1); return t.trimEnd() + "…"; };
 function pdfDoc(title) {
   const pw = 595.28, ph = 841.89, pages = []; let cur = null; const f = n => (Math.round(n * 100) / 100).toString(), col = c => (c || [0, 0, 0]).map(v => f(v / 255)).join(" ");
   const d = { w: pw, h: ph, page() { cur = []; pages.push(cur); return d; },
-    text(x, y, s, o = {}) { if (!cur) d.page(); const size = o.size || 10, str = pdfLatin(s), wd = pdfWidth(s, size, o.bold), xx = o.align === "right" ? x - wd : o.align === "center" ? x - wd / 2 : x;
-      cur.push(`BT /${o.bold ? "F2" : "F1"} ${f(size)} Tf ${col(o.color)} rg ${f(xx)} ${f(y)} Td (${str.replace(/[\\()]/g, m => "\\" + m)}) Tj ET`); return wd; },
+    text(x, y, s, o = {}) { if (!cur) d.page(); const size = o.size || 10, wd = pdfWidth(s, size, o.bold), xx = o.align === "right" ? x - wd : o.align === "center" ? x - wd / 2 : x;
+      cur.push(`BT /${o.bold ? "F2" : "F1"} ${f(size)} Tf ${col(o.color)} rg ${f(xx)} ${f(y)} Td (${pdfStr(s)}) Tj ET`); return wd; },
     line(x1, y1, x2, y2, o = {}) { if (!cur) d.page(); cur.push(`${col(o.color || [200, 200, 200])} RG ${f(o.w || 0.6)} w ${f(x1)} ${f(y1)} m ${f(x2)} ${f(y2)} l S`); },
     rect(x, y, w, h, o = {}) { if (!cur) d.page(); cur.push(`${col(o.fill || [0, 0, 0])} rg ${f(x)} ${f(y)} ${f(w)} ${f(h)} re f`); },
     finish() {
       const objs = [], add = s => objs.push(s) && objs.length, n = pages.length;
       add("<< /Type /Catalog /Pages 2 0 R >>"); add(`<< /Type /Pages /Kids [${pages.map((_, i) => `${5 + i * 2} 0 R`).join(" ")}] /Count ${n} >>`);
       add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"); add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
-      pages.forEach((c, i) => { const body = `${c.join("\n")}\nBT /F1 8 Tf 0.55 0.55 0.55 rg ${f(pw - 42 - pdfWidth(`Page ${i + 1} of ${n}`, 8))} 24 Td (${pdfLatin(`Page ${i + 1} of ${n}`)}) Tj ET`;
+      pages.forEach((c, i) => { const body = `${c.join("\n")}\nBT /F1 8 Tf 0.55 0.55 0.55 rg ${f(pw - 42 - pdfWidth(`Page ${i + 1} of ${n}`, 8))} 24 Td (${pdfStr(`Page ${i + 1} of ${n}`)}) Tj ET`;
         add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(pw)} ${f(ph)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + i * 2} 0 R >>`); add(`<< /Length ${body.length} >>\nstream\n${body}\nendstream`); });
-      add(`<< /Title (${pdfLatin(title || "Engine")}) /Producer (Engine) >>`);
+      add(`<< /Title (${pdfStr(title || "Engine")}) /Producer (Engine) >>`);
       let out = "%PDF-1.4\n", offs = []; objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
       const xr = out.length; out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info ${objs.length} 0 R >>\nstartxref\n${xr}\n%%EOF\n`;
       const u = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) u[i] = out.charCodeAt(i) & 255; return new Blob([u], { type: "application/pdf" }); } };
@@ -15851,9 +15865,9 @@ function workoutPdf(date, w) {
   let y = 0, first = true; const W = d.w - 2 * M, bike = isBike(w.sport);
   const need = h => { if (first || y - h < 50) { d.page(); y = d.h - 46; if (!first) { d.text(M, y, `${w.note || w.sport} · ${fmtDM(date)}`, { size: 9, color: mut }); y -= 24; } first = false; } };
   const H2 = t => { need(40); y -= 10; d.text(M, y, t, { size: 13, bold: true, color: ink }); y -= 6; d.line(M, y, M + W, y, { color: line }); y -= 16; };
-  const P = (t, o = {}) => { const size = o.size || 10, words = pdfLatin(t).split(" "), lines = []; let cur = ""; for (const x of words) { if (pdfWidth(cur + " " + x, size) > (o.w || W)) { lines.push(cur); cur = x; } else cur = cur ? cur + " " + x : x; } if (cur) lines.push(cur); for (const l of lines) { need(size + 5); d.text(o.x ?? M, y, l, { size, color: o.color || ink }); y -= size + 4; } };
+  const P = (t, o = {}) => { const size = o.size || 10, lines = pdfWrap(t, o.w || W, size); for (const l of lines) { need(size + 5); d.text(o.x ?? M, y, l, { size, color: o.color || ink }); y -= size + 4; } };
   need(120); d.text(M, y, "ENGINE", { size: 9, bold: true, color: acc }); d.text(M + W, y, fmtLong(date), { size: 9, color: mut, align: "right" }); y -= 28;
-  d.text(M, y, w.note || w.sport, { size: 22, bold: true, color: ink }); y -= 20;
+  { const tl = pdfWrap(w.note || w.sport, W, 22, true); if (tl.length > 3) tl.splice(3, tl.length, pdfFit(tl.slice(2).join(" "), W / 1.06, 22)); for (const l of tl) { d.text(M, y, l, { size: 22, bold: true, color: ink }); y -= 26; } y += 6; }
   d.text(M, y, [w.sport, w.min ? `${r0(w.min)} min` : "", distText(w), w.hr ? `${r0(w.hr)} bpm average` : "", w.rpe ? `RPE ${w.rpe}` : "", (w.int || sessionIntensity(w))].filter(Boolean).join("  ·  "), { size: 10, color: mut }); y -= 14;
   if (sc) { H2("Score"); need(60); d.text(M, y - 26, String(sc.score), { size: 40, bold: true, color: acc }); d.text(M + 78, y - 8, `${sc.label}  ·  out of 100`, { size: 11, bold: true, color: ink }); y -= 46;
     for (const p of sc.parts) { need(24); d.text(M, y, p.name, { size: 10, bold: true, color: p.pts == null ? mut : ink }); d.rect(M + 100, y - 1, 150, 6, { fill: [230, 230, 230] }); if (p.pts != null) d.rect(M + 100, y - 1, 1.5 * p.pts, 6, { fill: acc }); d.text(M + 262, y, p.pts == null ? "-" : String(r0(p.pts)), { size: 10, bold: true, color: p.pts == null ? mut : ink }); d.text(M + 292, y, pdfFit(p.note, W - 292, 8.5), { size: 8.5, color: mut }); y -= 17; }

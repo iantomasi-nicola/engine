@@ -156,6 +156,25 @@ test("Journal: the AI summary is shown only for the period it was made for", asy
   assert.deepEqual(r, { here: "A", earlier: "", back: "A", week: "", afterMove: "A", where: "B" });
 });
 
+/* MEDIO 12 -- PDF recap: strings are escaped everywhere (the Info title too) and a long title wraps inside the page.
+   Title «Easy :) run (((  a\b» -> the Info string must read back, with its escapes undone, as the same text (parentheses and the backslash balanced);
+   a 63-character title at 22 pt is wider than the 511 pt of the text column: no 22 pt line of the page may be wider than that, and every word is still there. */
+test("PDF recap: the title is escaped in the document info and long titles wrap", async () => {
+  const page = await start();
+  const r = await page.evaluate(async () => {
+    const t = todayISO(), title = "Easy :) run ((( a\\b";
+    const read = async w => { mutateLog(t, d => { d.workouts = [w]; }); const buf = new Uint8Array(await workoutPdf(t, logGet(t).workouts[0]).arrayBuffer()); let s = ""; for (const x of buf) s += String.fromCharCode(x); return s; };
+    const unesc = (s, from) => { let depth = 1, out = ""; for (let i = from; i < s.length; i++) { const c = s[i]; if (c === "\\") { out += s[++i]; continue; } if (c === "(") depth++; if (c === ")" && --depth === 0) return out; out += c; } return null; };
+    const a = await read({ sport: "Run", min: 30, km: 5, note: title }), i = a.indexOf("/Title (");
+    const longT = "Sunday long run with the club along the river and back through the park"; const b = await read({ sport: "Run", min: 30, km: 5, note: longT });
+    const big = [...b.matchAll(/\/F2 22 Tf [\d. ]+ rg ([\d.]+) ([\d.]+) Td \((.*)\) Tj ET/g)].map(m => ({ x: +m[1], text: unesc(m[3] + ")", 0), }));
+    return { title: unesc(a, i + 8), want: pdfLatin(title + " " + t), lines: big.length, widest: Math.max(...big.map(l => l.x + pdfWidth(l.text, 22, true))), joined: big.map(l => l.text).join(" ") };
+  });
+  assert.equal(r.title, r.want);
+  assert.ok(r.lines >= 2, "the long title wraps: " + r.lines + " lines"); assert.ok(r.widest <= 595.28 - 42 + 0.5, "widest " + r.widest);
+  assert.equal(r.joined, "Sunday long run with the club along the river and back through the park");
+});
+
 /* MEDIO 3 -- Excel dates are whole serial numbers built from the calendar date, in any time zone.
    Serial = days since 1899-12-30: 2026-01-01 = Date.UTC(2026,0,1)/86400000 + 25569 = 20454 + 25569 = 46023; 2026-01-05 = 46027; 2026-04-05 = 46117; 2026-10-04 = 46299.
    (America/Sao_Paulo gave 46022.9997 and Australia/Sydney a day off on the days the clocks change.) The cell carries the format dd/mm/yyyy. */
