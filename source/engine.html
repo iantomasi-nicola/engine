@@ -8479,7 +8479,7 @@ function formZone(pct) { return FORM_ZONES.find(z => pct > z[0]) || FORM_ZONES[F
 function fitnessSeries() {
   return memo("fitness", () => {
     const today = todayISO(), keys = Object.keys(S.logm || {}).sort(); let first = null;
-    for (const k of keys) { const days = S.logm[k]?.days || {}; const ds = Object.keys(days).filter(d => (days[d].workouts || []).some(w => w.sport && w.sport !== "Rest")).sort(); if (ds.length) { first = ds[0]; break; } }
+    for (const k of keys) { const days = S.logm[k]?.days || {}; const ds = Object.keys(days).filter(d => d <= today && (days[d].workouts || []).some(w => w.sport && w.sport !== "Rest")).sort(); if (ds.length) { first = ds[0]; break; } }
     if (!first) return { rows: {}, first: null, today };
     const kC = 1 - Math.exp(-1 / 42), kA = 1 - Math.exp(-1 / 7), end = addDays(today, 21), rows = {};
     let ctl = 0, atl = 0;

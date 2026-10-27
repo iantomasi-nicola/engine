@@ -122,3 +122,17 @@ test("Intake: g protein per kg is divided by the trend weight, like the card bel
   });
   assert.equal(r.trend, 81.5); assert.equal(r.stat, "1.8"); assert.match(r.card, /Protein[\d.]+ → 1\.8/);
 });
+
+/* MEDIO 10 -- the PMC chart with only FUTURE workouts logged (a wrong date, an import): fitness starts at the first workout up to today, so with none it says so instead of throwing.
+   One workout tomorrow -> «Log a few sessions…»; add one 3 days ago -> the chart draws and today's row exists. */
+test("pmcChart with only a future workout shows the empty note; with a past one it draws", async () => {
+  const page = await start();
+  const a = await page.evaluate(() => {
+    const t = todayISO(); mutateLog(addDays(t, 1), d => { d.workouts = [{ sport: "Run", min: 40, km: 8 }]; }); DATA_V++;
+    try { return { html: pmcChart(), now: fitnessNow() }; } catch (e) { return { err: e.message }; }
+  });
+  assert.equal(a.err, undefined); assert.match(a.html, /Log a few sessions/); assert.equal(a.now, null);
+  const b = await page.evaluate(() => { const t = todayISO(); mutateLog(addDays(t, -3), d => { d.workouts = [{ sport: "Run", min: 40, km: 8 }]; }); DATA_V++;
+    try { return { svg: pmcChart().includes("<svg"), ctl: fitnessNow().ctl > 0 }; } catch (e) { return { err: e.message }; } });
+  assert.deepEqual(b, { svg: true, ctl: true });
+});
