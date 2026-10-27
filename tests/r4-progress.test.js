@@ -110,3 +110,15 @@ test("Intake: days with only calories show unknown macros, no zeros and no donut
   assert.equal(b.donut, true); assert.match(b.text, /45%.*Carbs|Carbs.*45%/); assert.match(b.text, /150 g/);
   assert.deepEqual(app.errors, []);
 });
+
+/* MEDIO 6 -- g protein per kg uses the trend weight, the same as the card under it, not S.settings.weight (stale: only the weigh-in sheet and onboarding update it).
+   settings.weight 99, weigh-ins a flat 81.5 kg for 14 days -> trend 81.5; protein 150 g a day: 150 / 81.5 = 1.84 -> «1.8» (with 99 it was 1.5). */
+test("Intake: g protein per kg is divided by the trend weight, like the card below", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    S.settings.weight = 99; const t = todayISO(); for (let i = 0; i < 14; i++) mutateLog(addDays(t, -i), d => { d.weight = 81.5; d.kcal = 2400; d.p = 150; d.c = 250; d.f = 70; });
+    UI.statsRange = 7; UI.statsBasis = "eaten"; const d = document.createElement("div"); d.innerHTML = VIEWS.stats(true) + macroGkg();
+    return { trend: trendNow(), stat: d.querySelector(".stat b").textContent === "—" ? "—" : [...d.querySelectorAll(".stat")].find(s => /protein per kg/.test(s.textContent)).querySelector("b").textContent, card: d.querySelector(".gkg").textContent.replace(/\s+/g, " ") };
+  });
+  assert.equal(r.trend, 81.5); assert.equal(r.stat, "1.8"); assert.match(r.card, /Protein[\d.]+ → 1\.8/);
+});
