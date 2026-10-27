@@ -206,6 +206,21 @@ test("an open period is not compared with the previous complete one; weigh-in th
   assert.equal(s.open, false); assert.equal(s.weigh, 1); assert.deepEqual(s.only, ["Only 1 weigh-in: aim for 5 a week so the trend stays reliable."]);
 });
 
+/* MEDIO 9 -- the Body weight line is the trend weight of the app (mean of the weigh-ins of the last 7 DAYS), not the mean of the last 7 ENTRIES.
+   Weigh-ins every 3 days: 82 (12 days ago), 81 (9), 80 (6), 79 (3), 78 (today).
+   Trend today = mean of the weigh-ins in the last 7 days (6 days ago to today) = (80 + 79 + 78) / 3 = 79; trend at the first one = 82; change = 79 - 82 = -3.0 kg.
+   The 7-entry average gave 80 (all five) and -2 kg. */
+test("Body weight chart: the line and the change are the 7-day trend of the app", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    const t = todayISO(); [[12, 82], [9, 81], [6, 80], [3, 79], [0, 78]].forEach(([a, w]) => mutateLog(addDays(t, -a), d => { d.weight = w; }));
+    const d = document.createElement("div"); d.innerHTML = weightChart(weightsSeries());
+    const path = [...d.querySelectorAll("path")].find(p => /accent/.test(p.getAttribute("stroke") || "")).getAttribute("d").split(/[ML]/).filter(Boolean).length;
+    return { trend: trendSimple(t), text: d.textContent.replace(/\s+/g, " "), points: path };
+  });
+  assert.equal(r.trend, 79); assert.match(r.text, /Trend -3 kg since/); assert.match(r.text, /line = 7-day average/); assert.equal(r.points, 5);
+});
+
 /* MEDIO 12 -- PDF recap: strings are escaped everywhere (the Info title too) and a long title wraps inside the page.
    Title «Easy :) run (((  a\b» -> the Info string must read back, with its escapes undone, as the same text (parentheses and the backslash balanced);
    a 63-character title at 22 pt is wider than the 511 pt of the text column: no 22 pt line of the page may be wider than that, and every word is still there. */

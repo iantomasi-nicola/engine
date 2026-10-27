@@ -5136,7 +5136,7 @@ function weightChart(ws) {
   const x = s => L + (W - L - R) * (parseISO(s).getTime() - t0) / span;
   const y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo || 1));
   let g = axisGrid(axisTicks(lo, hi, 4, true), y, L, W - R, v => v);
-  const ma = vs.map((_, i) => { const s = vs.slice(Math.max(0, i - 6), i + 1); return s.reduce((a, b) => a + b, 0) / s.length; });
+  const ma = ws.map(w => trendSimple(w[0]));   // the one trend weight of the app: the mean of the weigh-ins of the last 7 days
   g += `<path d="${ws.map((w, i) => (i ? "L" : "M") + x(w[0]) + " " + y(ma[i])).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
   ws.forEach((w, i) => g += `<circle cx="${x(w[0])}" cy="${y(vs[i])}" r="${i === n - 1 && !est.length ? 4.5 : 2.6}" fill="${i === n - 1 && !est.length ? "var(--accent)" : "var(--faint)"}"><title>${fmtDM(w[0])}: ${vs[i]} kg</title></circle>`);
   if (est.length) { const pts = [...ws.map(w => ({ d: w[0], kg: +w[1] })), ...est].sort((a, b) => a.d.localeCompare(b.d)); g += `<path d="${pts.map((q, i) => (i ? "L" : "M") + x(q.d) + " " + y(q.kg)).join(" ")}" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 4" opacity=".8"/>`;
@@ -5144,7 +5144,7 @@ function weightChart(ws) {
   g += `<text x="${L}" y="${H - 6}">${fmtDM(ws[0][0])}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDM(est.length ? est[est.length - 1].d : ws[n - 1][0])}</text>`;
   const ch = r1(ma[n - 1] - ma[0]);
   return `<div class="row" style="justify-content:space-between"><span><b class="num" style="font-size:22px">${vs[n - 1]}</b> <span class="muted">kg latest</span></span><span class="muted" style="font-size:13px">Trend ${ch > 0 ? "+" : ""}${ch} kg since ${fmtDM(ws[0][0])}</span></div>
-    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Body weight trend">${g}</svg><div class="faint" style="font-size:12px">Dots = weigh-ins · line = 7-entry average${est.length ? ` · hollow dots and dashes = estimated from your intake on days without a weigh-in (about ${est[est.length - 1].kg} kg today), bent to the next weigh-in` : ""}</div>`;
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Body weight trend">${g}</svg><div class="faint" style="font-size:12px">Dots = weigh-ins · line = 7-day average${est.length ? ` · hollow dots and dashes = estimated from your intake on days without a weigh-in (about ${est[est.length - 1].kg} kg today), bent to the next weigh-in` : ""}</div>`;
 }
 
 /* ================= settings view ================= */
