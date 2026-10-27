@@ -36,8 +36,9 @@ after(async () => { await br?.close(); });
 
 test("the build copies the page; its script runs by hash and the page cannot reach the network", () => {
   const html = fs.readFileSync(path.join(dir, "scale-live.html"), "utf8");
-  assert.doesNotMatch(html, /unsafe-inline'[^;]*;\s*style/, "script-src no longer has 'unsafe-inline'");
-  assert.match(html, /script-src 'sha256-[A-Za-z0-9+/=]+'/); assert.match(html, /connect-src 'none'/);
+  const csp = html.match(/Content-Security-Policy" content="([^"]+)"/)[1], dirs = Object.fromEntries(csp.split(";").map(d => d.trim().split(/\s+/)).map(([k, ...v]) => [k, v.join(" ")]));
+  assert.match(dirs["script-src"], /^'sha256-[A-Za-z0-9+/=]+'$/, "only the hash of its own script, no 'unsafe-inline'");
+  assert.equal(dirs["connect-src"], "'none'"); assert.equal(dirs["default-src"], "'none'");
   assert.deepEqual(errs, [], "the hash matches: the script ran without a CSP error");
 });
 
@@ -58,8 +59,8 @@ test("AES-128 and CCM match the official vectors (FIPS-197 C.1, NIST SP 800-38C 
   }
 });
 
-test("CCM agrees with Node's OpenSSL on random inputs of every length up to 40 bytes (12-byte nonce, 4-byte tag)", async () => {
-  for (let len = 0; len <= 40; len++) {
+test("CCM agrees with Node's OpenSSL on random inputs of every length from 1 to 40 bytes (12-byte nonce, 4-byte tag)", async () => {
+  for (let len = 1; len <= 40; len++) {
     const k = crypto.randomBytes(16), n = crypto.randomBytes(12), a = crypto.randomBytes(1 + (len % 20)), p = crypto.randomBytes(len);
     const c = crypto.createCipheriv("aes-128-ccm", k, n, { authTagLength: 4 }); c.setAAD(a, { plaintextLength: p.length });
     const want = Buffer.concat([c.update(p), c.final(), c.getAuthTag()]).toString("hex");

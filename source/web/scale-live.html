@@ -168,19 +168,21 @@ $("save").onclick = () => {
   if (m && !S400.macOk(m)) return showKey(`<span class="bad">The MAC must look like AA:BB:CC:DD:EE:FF.</span>`);
   if (k) store.set(LK, k.toLowerCase());
   if (m) store.set(LM, m.toUpperCase()); else store.del(LM);
-  $("key").value = ""; showKey();
+  $("key").value = ""; seen.clear(); showKey();
 };
 $("forget").onclick = () => { store.del(LK); $("key").value = ""; showKey("Bind key removed from this device."); };
 
 const rows = ["time,source,rssi,mac,counter,frctrl,raw_hex,result,plain_hex,weight_kg,imp50_ohm,imp250_ohm,hr_bpm,profile"], seen = new Set();
 let frames = 0, scan = null, watched = null;
 const csv = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-function handle(bytes, src, rssi) {
+function handle(bytes, src, rssi, again) {
   const r = S400.parseFrame(bytes, S400.macBytes(store.get(LM)), keyBytes());
-  frames++; $("nf").textContent = frames; $("raw").textContent = r.raw; $("plain").textContent = r.plain || "–";
+  frames++; $("nf").textContent = frames;
+  if (rssi != null) $("rssi").textContent = rssi + " dBm";
+  if (seen.has(r.raw) && !again) return r;   // the scale repeats each broadcast many times: a late copy of the weight packet must not undo «complete»
+  seen.add(r.raw); $("raw").textContent = r.raw; $("plain").textContent = r.plain || "–";
   $("why").innerHTML = r.ok ? `<span class="ok">${r.empty ? r.why : "Decrypted"}</span>` : `<span class="bad">${r.why}</span>`;
   if (r.counter != null) $("cnt").textContent = r.counter;
-  if (rssi != null) $("rssi").textContent = rssi + " dBm";
   $("fmac").textContent = r.mac || store.get(LM) || "–";
   const sc = (r.objects || []).map(o => o.scale).find(Boolean) || {};
   if (sc.off) $("phase").textContent = "Stepped off.";
@@ -189,7 +191,6 @@ function handle(bytes, src, rssi) {
   if (sc.imp250 != null) { $("i250").textContent = sc.imp250.toFixed(1) + " Ω"; $("phase").textContent = "Measurement complete."; }
   if (sc.bpm != null) $("hr").textContent = sc.bpm + " bpm";
   if (sc.profile != null) $("prof").textContent = sc.profile;
-  if (seen.has(r.raw)) return r; seen.add(r.raw);
   rows.push([new Date().toISOString(), src, rssi, r.mac || store.get(LM), r.counter, r.frctrl != null ? "0x" + r.frctrl.toString(16) : "", r.raw, r.ok ? (r.empty ? "idle" : "ok") : r.why, r.plain, sc.kg, sc.imp50, sc.imp250, sc.bpm, sc.profile].map(csv).join(","));
   $("log").value = rows.join("\n"); $("log").scrollTop = $("log").scrollHeight;
   return r;
@@ -220,7 +221,7 @@ $("scan").onclick = async () => {
   } catch (e) { scan = null; status(String(e.message || e), true); }
 };
 $("stop").onclick = stop;
-$("dec").onclick = () => { const b = S400.unhex($("paste").value); if (!b || !b.length) { $("why").innerHTML = `<span class="bad">Not a hex frame.</span>`; return; } handle(b, "pasted", null); };
+$("dec").onclick = () => { const b = S400.unhex($("paste").value); if (!b || !b.length) { $("why").innerHTML = `<span class="bad">Not a hex frame.</span>`; return; } handle(b, "pasted", null, true); };
 $("copy").onclick = async () => { try { await navigator.clipboard.writeText(rows.join("\n")); $("copy").textContent = "Copied"; } catch (e) { $("log").select(); $("copy").textContent = "Selected: copy it"; } setTimeout(() => { $("copy").textContent = "Copy log"; }, 1800); };
 $("clear").onclick = () => { rows.length = 1; seen.clear(); frames = 0; $("nf").textContent = 0; $("log").value = rows[0]; };
 $("log").value = rows[0];
