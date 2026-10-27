@@ -68,7 +68,7 @@ test("L91: a meal out puts nothing on the shopping list, reserves nothing in the
   const r = await app.page.evaluate(() => { const t = addDays(todayISO(), 1), m = Object.keys(getDay(t).meals).find(k => (getDay(t).meals[k] || []).some(it => it.kind === "food"));
     const refs = (getDay(t).meals[m] || []).filter(it => it.kind === "food").map(it => it.ref), need = () => { const P = stockPlan(todayISO(), 7); return refs.reduce((a, id) => a + (P.need[id] || 0), 0); };
     const before = need();
-    openCheat({ date: t, meal: m }); Object.assign(UI.sheet.draft, { name: "Sushi out", kcal: 900, p: 40, c: 100, f: 30, strategy: "none" }); UI.sheet.out = false; ACT["ch-save"]();
+    openCheat({ date: t, meal: m }); Object.assign(UI.sheet.draft, { name: "Sushi out", kcal: 900, p: 40, c: 100, f: 30, strategy: "none" }); UI.sheet.out = false; ACT["ch-save"](); ACT["ch-keep"]({ dataset: { v: "0" } });
     const after = need(); UI.tab = "shop"; UI.fuelTab = "shop"; render();
     const line = document.querySelector(".shop-out")?.textContent.replace(/\s+/g, " ") || "";
     return { m: !!m, before, after, line }; });

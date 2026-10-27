@@ -577,6 +577,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .meal-meta{margin-left:auto;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.3}
 .meal-meta b{font-family:var(--display);font-stretch:112%;font-size:15px;color:var(--ink)}
 .meal-meta .tgt{color:var(--faint)}
+.meal-eur{margin-left:auto;font-size:12px;font-weight:450;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
+.hero-eur{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:3px 14px;margin-top:12px;font-size:12px;line-height:1.35;font-variant-numeric:tabular-nums;color:var(--muted)}.hero-eur>span{display:inline-flex;align-items:center;gap:6px}.hero-eur .he-w{display:inline;margin-left:auto}.hero-eur b{font-weight:600;color:var(--ink)}
 .pcf{display:inline-flex;gap:8px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
 .pcf span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:2px;margin-right:4px;vertical-align:1px;background:var(--c)}
 .items{list-style:none;margin:0;padding:0 0 4px;min-height:8px}
@@ -968,6 +970,8 @@ details.card[open]>summary.lrow::after,details.rk-paste[open]>summary.lrow::afte
 .pw-cell{container:pwc/inline-size;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;padding:5px;border-radius:14px;background:var(--surface-2)}.pw-cell.over,.pw-day.over{outline:2px dashed var(--accent);outline-offset:-3px}
 .pw-cell.vac{flex-direction:row;align-items:center;gap:4px;padding:4px 4px 4px 9px;background:color-mix(in srgb,var(--ink) 4%,transparent)}.pw-dr.now .pw-cell.vac{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .pw-e{flex:1;display:flex;align-items:center;gap:6px;height:34px;padding:0 6px 0 0;border-radius:9px;background:none;color:var(--muted);font-size:12.5px;font-weight:600}.pw-e:hover,.pw-e:focus-visible{background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--accent)}
+.meal-eur,.pw-eur,.pw-deur>span,.pw-wk,.td-eur{display:inline-flex;align-items:center;gap:4px}.pan-eur{display:inline-flex;align-items:center;gap:2px}.pan-eur .ic{width:12px;height:12px}
+.pw-eur{flex:0 0 100%;white-space:nowrap}.pw-deur{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11.5px;line-height:1.3;color:var(--muted);font-variant-numeric:tabular-nums}.pw-deur .ic{flex:none}
 .pw-ch{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}.lk{display:inline-flex;vertical-align:-2px;margin-left:6px;color:var(--muted)}.lk .ic,.lk .ic.sm{width:13px;height:13px}.pw-ca .lk{align-self:center;margin:0 4px 0 0}
 .pw-mt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding:5px 4px 0;font-size:11.5px;line-height:1.35;font-variant-numeric:tabular-nums;color:var(--muted)}.pw-mt b{font-size:12.5px;font-weight:650;color:var(--ink)}
 .pw-it{display:flex;align-items:center;gap:2px;background:var(--pw-card,var(--surface));border-radius:9px;padding:5px 2px 5px 9px;min-width:0;cursor:grab}.pw-it.eaten .pw-nm{color:var(--muted)}
@@ -4811,7 +4815,7 @@ VIEWS.plan = function () {
       <div class="kring">${kRing(tot.kcal, eat.kcal, T.kcal)}<div class="center" aria-live="polite"><span class="big">${fmtN(tot.kcal)}</span><span class="lab">of ${fmtN(T.kcal)} kcal</span><span class="of ${tot.kcal && !onT && !eat.manual && !eat.kcal ? "warn" : ""}">${planTxt}</span></div></div>
       <div class="mbars">${macroBar("Carbs", "c", "carb", tot.c, eat.c, T.c)}${macroBar("Protein", "p", "pro", tot.p, eat.p, T.p)}${macroBar("Fat", "f", "fat", tot.f, eat.f, T.f)}
         <div class="legend"><span><i></i>Eaten</span><span><i class="pl"></i>Planned</span></div></div>
-    </div>${deficitHTML(date)}${SMART() ? smartStrip(date) : ""}</section>`;
+    </div>${dayCostPill(date)}${deficitHTML(date)}${SMART() ? smartStrip(date) : ""}</section>`;
   // the weigh-in lives in Today's check-in only
 
   side += `<div class="toolbar"><button class="btn ink sm" data-act="open-planner">${ic("spark", "sm")}Auto-plan</button>${AIF("describe") ? `<button class="btn ghost sm" data-act="open-snap">${ic("camera", "sm")}<span class="hide-xs">Photo or describe</span><span class="show-xs">Snap</span></button>` : ""}
@@ -4838,7 +4842,7 @@ VIEWS.plan = function () {
 };
 function mealCard(date, m, day, T) {
   const items = day.meals[m.id] || [];
-  const mt = mealTotals(items), me = mealTotals(items, true); const tgt = T.kcal * mealShare(m.id);
+  const mt = mealTotals(items), me = mealTotals(items, true), mc = mealCost(date, m.id); const tgt = T.kcal * mealShare(m.id);
   const dish = m.on ? day.dish?.[m.id] : "Off in Settings, still counts in the day";
   const pp = clamp(mt.kcal / (tgt || 1) * 100, 0, 100), ep = clamp(me.kcal / (tgt || 1) * 100, 0, 100);
   return `<section class="meal" data-meal-drop="${esc(m.id)}">
@@ -4848,7 +4852,7 @@ function mealCard(date, m, day, T) {
       <span class="meal-cp">${clipBtns(date, m.id, "icon-btn", esc(m.name.toLowerCase()))}</span><button class="icon-btn" data-act="meal-menu" data-meal="${esc(m.id)}" aria-label="${esc(m.name)} options">${ic("more")}</button></div>
     ${items.length && m.on ? `<div class="mprog ${mt.kcal > tgt * 1.1 ? "over" : ""}" aria-hidden="true"><i class="pl" style="width:${pp}%"></i><i style="width:${ep}%"></i></div>` : ""}
     <ul class="items" data-meal="${esc(m.id)}">${items.map(it => itemRow(it, m.id)).join("")}</ul>
-    ${m.on ? `<button class="add-row" data-act="open-add" data-meal="${esc(m.id)}">${ic("plus", "sm")}Add to ${esc(m.name.toLowerCase())}</button>` : ""}</section>`;
+    ${(eur => m.on ? `<button class="add-row" data-act="open-add" data-meal="${esc(m.id)}">${ic("plus", "sm")}Add to ${esc(m.name.toLowerCase())}${eur}</button>` : eur ? `<div class="add-row">${eur}</div>` : "")(costTxt(mc) ? `<span class="meal-eur" title="${esc(costTip(mc))}">${costTxt(mc, true)}</span>` : "")}</section>`;
 }
 function itemRow(it, mealId) {
   const mm = itemMacros(it);
@@ -7092,27 +7096,27 @@ const PW_DC = 172, PW_CELL = 210;   // the day column and the narrowest readable
 const pwStack = n => ($("#main")?.clientWidth || innerWidth) - 48 < PW_DC + n * PW_CELL;
 /* a table: one row per day, the meals side by side. The day's total against its target is on the left, every meal has its own total, every food its amount, kcal and macros (C P F) */
 function weekPlanView() {
-  const t = todayISO(), ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), M = S.settings.meals.filter(m => m.on || days.some(d => (getDay(d).meals[m.id] || []).length)), now = ws <= t && t < addDays(ws, 7), stack = pwStack(M.length);
+  const t = todayISO(), ws = weekStartOf(UI.date), days = [...Array(7)].map((_, i) => addDays(ws, i)), M = S.settings.meals.filter(m => m.on || days.some(d => (getDay(d).meals[m.id] || []).length)), now = ws <= t && t < addDays(ws, 7), stack = pwStack(M.length), wc = planCost(ws, 7);
   const mac = m => `C ${fmtN(m.c)} · P ${fmtN(m.p)} · F ${fmtN(m.f)}`;
   const nameOf = d => `${DOW[dow(d)]} ${+d.slice(8)}`;
-  const dayHead = d => { const day = getDay(d), tot = dayTotals(day), TT = targetsFor(d), T = TT.kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0, kOver = overTarget(tot.kcal, T), filled = dayItems(day).length,
+  const dayHead = d => { const day = getDay(d), tot = dayTotals(day), TT = targetsFor(d), T = TT.kcal, pct = T ? clamp(tot.kcal / T * 100, 0, 100) : 0, kOver = overTarget(tot.kcal, T), filled = dayItems(day).length, dc = dayCost(d),
       gaps = d >= t && M.some(m => !day.lock?.[m.id] && !(day.meals?.[m.id] || []).length && habitSrc(d, m.id));
     const tool = (act, ico, label) => `<button class="pw-add pw-ic" data-act="${act}" data-date="${d}" aria-label="${label} (${nameOf(d)})" title="${label}">${ic(ico, "sm")}</button>`;
     return `<div class="pw-dh"><span class="pw-dt">${gaps ? tool("day-fill", "spark", "Fill the empty meals from your habits") : ""}${clipBtns(d, null, "pw-add pw-ic", `the day (${esc(nameOf(d))})`)}${filled ? tool("clear-day", "trash", "Clear the whole day") : ""}</span><button class="pw-day${d === t ? " now" : ""}" draggable="true" data-act="pw-day" data-date="${d}" data-date-h="${d}" aria-label="${DOWL[dow(d)]} ${fmtDM(d)}: ${fmtN(tot.kcal)} of ${fmtN(T)} kcal${kOver ? ` (over by ${fmtN(tot.kcal - T)})` : ""}, carbs ${fmtN(tot.c)} of ${fmtN(TT.c)} g${overTarget(tot.c, TT.c) ? " (over)" : ""}, protein ${fmtN(tot.p)} of ${fmtN(TT.p)} g${overTarget(tot.p, TT.p) ? " (over)" : ""}, fat ${fmtN(tot.f)} of ${fmtN(TT.f)} g${overTarget(tot.f, TT.f) ? " (over)" : ""}">
       <span class="pw-dn"><small>${DOW[dow(d)]}</small><b>${+d.slice(8)}</b></span><span class="pw-kcal${kOver ? " over" : ""}"><b>${fmtN(tot.kcal)}</b><small> / ${fmtN(T)} kcal</small>${kOver ? `<em class="pw-ov">+${fmtN(tot.kcal - T)}</em>` : ""}</span><i class="pw-bar${kOver ? " over" : ""}"><i style="width:${pct}%"></i></i>
-      <span class="pw-mac">${[["C", "carb", tot.c, TT.c, "Carbs"], ["P", "pro", tot.p, TT.p, "Protein"], ["F", "fat", tot.f, TT.f, "Fat"]].map(([l, c, v, g, n]) => `<span class="pw-mc${overTarget(v, g) ? " over" : ""}" style="--c:var(--${c})" title="${n}: eaten or planned / target, in grams${overTarget(v, g) ? `, over by ${fmtN(v - g)} g` : ""}"><i>${l}</i><b>${fmtN(v)}</b><small>${overTarget(v, g) ? `<em class="pw-ov">+${fmtN(v - g)} g</em>` : ` / ${fmtN(g)} g`}</small><span class="pw-mb"><span style="width:${g ? clamp(v / g * 100, 0, 100) : 0}%"></span></span></span>`).join("")}</span></button></div>`; };
+      <span class="pw-mac">${[["C", "carb", tot.c, TT.c, "Carbs"], ["P", "pro", tot.p, TT.p, "Protein"], ["F", "fat", tot.f, TT.f, "Fat"]].map(([l, c, v, g, n]) => `<span class="pw-mc${overTarget(v, g) ? " over" : ""}" style="--c:var(--${c})" title="${n}: eaten or planned / target, in grams${overTarget(v, g) ? `, over by ${fmtN(v - g)} g` : ""}"><i>${l}</i><b>${fmtN(v)}</b><small>${overTarget(v, g) ? `<em class="pw-ov">+${fmtN(v - g)} g</em>` : ` / ${fmtN(g)} g`}</small><span class="pw-mb"><span style="width:${g ? clamp(v / g * 100, 0, 100) : 0}%"></span></span></span>`).join("")}</span>${costTxt(dc) ? `<span class="pw-deur" title="${esc(costTip(dc))}">${ic("cart", "sm")}<span>${costTxt(dc, true)}</span></span>` : ""}</button></div>`; };
   const cell = (d, m) => { const day = getDay(d), items = day.meals[m.id] || [], nm = `${esc(m.name)} on ${DOW[dow(d)]}`, at = `data-date="${d}" data-meal="${esc(m.id)}"`;
     const cp = clipBtns(d, m.id, "pw-add pw-ic", nm);
     const more = `<button class="pw-add pw-ic pw-x" data-act="pw-cm" ${at} aria-label="Meal options: ${nm}" title="Meal options: copy to other days, save as recipe, clear">${ic("more", "sm")}</button>`;
     if (!items.length) { const us = d >= t && !day.lock?.[m.id] ? habitSrc(d, m.id) : null;
       return `<div class="pw-cell vac${d === t ? " now" : ""}" ${at}><span class="pw-ml">${esc(m.name)}</span><button class="pw-e" data-act="pw-add" ${at} aria-label="Add to ${nm}">${ic("plus", "sm")}<span>Add</span></button><span class="pw-ca">${us ? `<button class="pw-add pw-us" data-act="pw-usual" ${at} title="Fill with what you usually have here: ${esc(us.map(itemName).join(", "))}" aria-label="Fill ${nm} with what you usually have">${ic("spark", "sm")}<span>Usual</span></button>` : ""}${more}${cp}</span></div>`; }
-    const mt = items.reduce((a, it) => addM(a, itemMacros(it), 1), ZERO());
-    return `<div class="pw-cell${d === t ? " now" : ""}" ${at}><div class="pw-ch"><div class="pw-mt" title="Meal total: carbs · protein · fat, in grams"><span class="pw-ml">${esc(m.name)}${m.on ? "" : " · off"}</span><b>${fmtN(mt.kcal)} kcal</b><span>${mac(mt)}</span></div>
+    const mt = items.reduce((a, it) => addM(a, itemMacros(it), 1), ZERO()), mc = mealCost(d, m.id);
+    return `<div class="pw-cell${d === t ? " now" : ""}" ${at}><div class="pw-ch"><div class="pw-mt" title="Meal total: carbs · protein · fat, in grams"><span class="pw-ml">${esc(m.name)}${m.on ? "" : " · off"}</span><b>${fmtN(mt.kcal)} kcal</b><span>${mac(mt)}</span>${costTxt(mc) ? `<span class="pw-eur" title="${esc(costTip(mc))}">${costTxt(mc, true)}</span>` : ""}</div>
       <span class="pw-ca">${day.lock?.[m.id] ? `<span class="lk" title="Locked: auto-plan leaves it as it is" aria-label="Locked">${ic("lock", "sm")}</span>` : ""}<span class="pw-mh pw-x" draggable="true" ${at} title="Drag the whole meal (Alt = copy)" aria-hidden="true">⋮⋮</span><button class="pw-add pw-ic" data-act="pw-add" ${at} aria-label="Add to ${nm}" title="Add food">${ic("plus", "sm")}</button>${more}${cp}</span></div>${items.map(it => { const mm = itemMacros(it), bd = itemBrand(it);
       return `<div class="pw-it${it.eaten ? " eaten" : ""}" draggable="${it.eaten ? "false" : "true"}" data-item="${esc(it.id)}" ${at}><button class="pw-n" data-act="pw-edit" ${at} data-id="${esc(it.id)}"><span class="pw-t"><span class="pw-nm">${it.eaten ? ic("check", "sm") : ""}${esc(itemName(it))}</span><b class="pw-k">${fmtN(mm.kcal)}<small> kcal</small></b></span><small class="pw-d"><span class="pw-q">${bd ? `<span class="bd">${esc(bd)}</span> · ` : ""}<span class="nw">${esc(itemQty(it))}</span></span><span class="nw pw-im">${mac(mm)}</span></small></button><button class="pw-o" data-act="pw-item" ${at} data-id="${esc(it.id)}" aria-label="Options for ${esc(itemName(it))}">${ic("more", "sm")}</button></div>`; }).join("")}</div>`; };
   const grid = `<div class="pw${stack ? " stack" : ""}" style="--m:${M.length};--dc:${PW_DC}px"><div class="pw-dr pw-th"><span></span>${M.map(m => `<span>${esc(m.name)}${m.on ? "" : " · off"}</span>`).join("")}</div>${days.map(d => `<div class="pw-dr${d === t ? " now" : ""}">${dayHead(d)}${M.map(m => cell(d, m)).join("")}</div>`).join("")}</div>`;
   const nav = d => `data-act="pw-nav" data-d="${d}"`;
-  return `<header class="top plan-top">${fuelNav()}<div class="top-row pw-top"><div class="pw-tt"><div class="top-title">${now ? "This week" : ws === addDays(weekStartOf(t), 7) ? "Next week" : ws === addDays(weekStartOf(t), -7) ? "Last week" : `Week of ${fmtDM(ws)}`}</div><div class="top-sub">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</div>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>
+  return `<header class="top plan-top">${fuelNav()}<div class="top-row pw-top"><div class="pw-tt"><div class="top-title">${now ? "This week" : ws === addDays(weekStartOf(t), 7) ? "Next week" : ws === addDays(weekStartOf(t), -7) ? "Last week" : `Week of ${fmtDM(ws)}`}</div><div class="top-sub">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}${costTxt(wc) ? ` · <span class="pw-wk" title="${esc(costTip(wc))}">${costTxt(wc, true)}</span>` : ""}</div>${UI.mclip ? `<span class="pw-clip">${ic("copy", "sm")}<span>${esc(UI.mclip.label)}</span><button data-act="mclip-clear" aria-label="Clear the clipboard">${ic("close", "sm")}</button></span>` : ""}</div>
     <div class="row pw-acts"><button class="btn soft sm pw-libbtn" data-act="pw-lib" aria-pressed="${!!UI.pwLib}">${ic("recipe", "sm")}Foods & recipes</button><button class="btn tonal sm" data-act="pw-plan">${ic("plate", "sm")}Auto-plan week</button><button class="btn soft sm" data-act="wt-open">${ic("calendar", "sm")}Saved weeks</button><button class="btn soft sm" data-act="pw-clear-week">${ic("trash", "sm")}Clear week</button></div>
     <div class="row top-acts"><button class="icon-btn" ${nav(-1)} aria-label="Previous week">${ic("chevL")}</button>${now ? "" : `<button class="btn soft sm" ${nav(0)}>Today</button>`}<button class="icon-btn" ${nav(1)} aria-label="Next week">${ic("chevR")}</button><button class="icon-btn" data-act="plan-view" data-k="day" aria-label="Day view" title="Day view">${ic("list")}</button>${shopBtn()}</div></div></header>
     <div class="pw-lay"><div class="pw-mn">${grid}</div>${UI.pwLib ? pwLibPanel() : ""}</div><div class="faint pw-hint">Drag an item, a whole meal (the grip) or a whole day (its header) to another place; <span class="pw-alt">hold Alt to copy. </span>A recipe dragged from the library adds its ingredients, each with its own amount. Copy and Paste are the last two buttons of every meal and every day; the ⋯ button of a meal saves a recipe or clears it.</div>`;
@@ -8031,6 +8035,10 @@ SHEETS.cheat = sh => {
   const impact = d.strategy === "day" ? `The other meals of ${relDay(sh.date).toLowerCase()} shrink by about ${fmtN(plan.excess)} kcal together (protein kept).`
     : d.strategy === "none" ? `Planned surplus of about ${fmtN(plan.excess)} kcal. Fine now and then; your weekly balance absorbs it.`
     : Object.keys(plan.per).length ? `${Object.entries(plan.per).map(([day, v]) => `${DOW[dow(day)]} ${fmtN(v)}`).join(" · ")} kcal (from carbs and fat; protein stays).${plan.leftover > 30 ? ` About ${fmtN(plan.leftover)} kcal stay as surplus to keep each day within 15%.` : ""}` : "Nothing to compensate.";
+  if (sh.ask) { const pl = cheatPlanned(sh.date, sh.meal), mn = mealName(sh.meal).toLowerCase();
+    return { title: "Plan a treat",
+      body: `<div class="field"><span class="flabel">${esc(relDay(sh.date))}'s ${esc(mn)} already has ${pl.length} food${pl.length === 1 ? "" : "s"}</span><div class="card">${pl.map(it => `<div class="lrow"><span><span class="t">${esc(itemName(it))}</span><span class="s">${fmtN(itemMacros(it).kcal)} kcal</span></span></div>`).join("")}</div><div class="note">The treat is added to the ${esc(mn)}. Keep these foods next to it, or remove them?</div><button class="btn text sm" data-act="ch-ask-back">Back</button></div>`,
+      foot: `<button class="btn soft" data-act="ch-keep" data-v="1" style="flex:1">Keep the foods</button><button class="btn primary" data-act="ch-keep" data-v="0" style="flex:1">Remove the foods</button>` }; }
   return {
     title: sh.out ? "Eaten out" : sh.itemId ? "Edit treat" : "Plan a treat", ...(sh.focus && !sh._f ? { focus: sh.focus } : {}),
     body: `<div class="field"><label for="ch-date">Day</label><input id="ch-date" class="inp" type="date" value="${sh.date}" data-in="ch-date"></div>
@@ -8095,8 +8103,14 @@ ACT["ch-ai"] = async () => {
   } catch (e) { if (UI.sheet === sh) toast(sampleErr(e)); }
   sh.busy = false; if (UI.sheet === sh) renderSheet();
 };
+/* the foods of a meal that are still only planned: what a new treat or a meal out would sit next to */
+const cheatPlanned = (date, meal) => (getDay(date).meals[meal] || []).filter(it => !it.eaten && !it.cheat);
+ACT["ch-keep"] = el => { const sh = S_(); sh.keep = el.dataset.v === "1"; sh.ask = false; ACT["ch-save"](); };
+ACT["ch-ask-back"] = () => { Object.assign(S_(), { ask: false, keep: undefined }); renderSheet(); };
 ACT["ch-save"] = () => {
   const sh = S_(), d = sh.draft; const kcal = num(d.kcal); if (!(kcal > 0)) { toast("Enter the estimated calories."); return; }
+  const planned = sh.itemId || sh.out ? [] : cheatPlanned(sh.date, sh.meal); if (planned.length && sh.keep == null) { sh.ask = true; renderSheet(); return; }
+  const kept = planned.length && sh.keep, said = planned.length ? ` · ${planned.length} planned food${planned.length === 1 ? "" : "s"} ${kept ? "kept" : "removed"}` : "";
   const m = { kcal, p: num(d.p), c: num(d.c), f: num(d.f) };
   const touched = new Set([sh.date]);
   const id = sh.itemId || uid(); const plan = cheatPlan(sh.date, sh.meal, kcal, d.strategy);
@@ -8104,13 +8118,13 @@ ACT["ch-save"] = () => {
   for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null || (sh.itemId && Object.values(dd.meals || {}).flat().some(it => it.id === id))) touched.add(day);   // every day the treat sits on or compensates
   const snap = snapshotDays([...touched]);
   if (sh.itemId) { clearCheatAdj(id); for (const [day, dd] of Object.entries(S.days)) if (Object.values(dd.meals || {}).flat().some(it => it.id === id)) mutateDay(day, x => { for (const k of Object.keys(x.meals)) x.meals[k] = x.meals[k].filter(it => it.id !== id); }); }
-  mutateDay(sh.date, x => { if (!sh.itemId) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish) delete x.dish[sh.meal]; });
+  mutateDay(sh.date, x => { if (!sh.itemId && !kept) x.meals[sh.meal] = (x.meals[sh.meal] || []).filter(it => it.eaten || it.cheat); const it = { id, kind: "quick", cheat: true, name: (d.name || (sh.out ? "Eaten out" : "Treat")).trim(), m, strategy: plan.strategy, eaten: !!sh.out, ...(sh.out ? { out: true } : {}) }; (x.meals[sh.meal] = x.meals[sh.meal] || []).push(it); if (x.dish && !kept) delete x.dish[sh.meal]; });
   applyCheatAdj(id, plan, sh.date);
   // shrink the rest of the cheat day, and the compensation days, if they are already planned
   const skip = new Set([id]); for (const day of touched) if (dayItems(getDay(day)).length) rebalanceDayFn(day, skip);
   closeSheet(); UI.date = sh.date;
-  if (sh.out) { toast(plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap)); return; }
-  toast(plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`, undoDays(snap));
+  if (sh.out) { toast((plan.strategy === "day" ? "Logged · the rest of the day was resized" : plan.strategy === "none" ? "Logged" : `Logged · ${Object.keys(plan.per).length} days adjusted`) + said, undoDays(snap)); return; }
+  toast((plan.strategy === "day" ? "Treat added · the rest of the day was resized" : plan.strategy === "none" ? "Treat added" : `Treat added · ${Object.keys(plan.per).length} days adjusted`) + said, undoDays(snap));
 };
 ACT["ch-del"] = () => {
   const sh = S_(), id = sh.itemId; const touched = new Set([sh.date]); for (const [day, dd] of Object.entries(S.days)) if (dd.adj?.[id] != null) touched.add(day);
@@ -10450,9 +10464,9 @@ VIEWS.today = function () {
     <div class="td-vs">${vit("Sleep", sl ? r1(sl) : null, "h", sl7 ? `${arrow(sl, sl7)}vs ${r1(sl7)}` : "")}${vit("HRV", hv ? r0(hv) : null, "ms", L.hrvOk ? `${arrow(hv, L.hrvBase)}vs ${r0(L.hrvBase)}` : "")}${vit("Resting HR", rh, "", L.base ? `${arrow(rh, L.base, true)}vs ${r0(L.base)}` : "")}${N ? vit("Form", `${N.form > 0 ? "+" : N.form < 0 ? "−" : ""}${r0(Math.abs(N.form))}`, "", N.zone ? esc(N.zone[1]) : "") : ""}</div></button>`;
 
   /* ---- fuel ---- */
-  const tot = dayTotals(getDay(today)), eat = eatenFor(today), base = eat.kcal ? eat : tot, nx = left[0]?.w;
+  const tot = dayTotals(getDay(today)), eat = eatenFor(today), base = eat.kcal ? eat : tot, nx = left[0]?.w, dcT = dayCost(today);
   const bar = (v, t, c) => `<span class="td-bar"${c ? ` style="--c:var(--${c})"` : ""}><i style="width:${clamp(t ? v / t * 100 : 0, 0, 100)}%"></i></span>`;
-  const fuel = `<section class="td-card td-fuel"><button class="td-fuel-m" data-act="tab" data-tab="plan"><div class="td-ov"><span>Fuel</span><span>${eat.kcal ? "eaten" : tot.kcal ? "planned" : "nothing planned yet"}</span></div>
+  const fuel = `<section class="td-card td-fuel"><button class="td-fuel-m" data-act="tab" data-tab="plan"><div class="td-ov"><span>Fuel</span><span>${eat.kcal ? "eaten" : tot.kcal ? "planned" : "nothing planned yet"}${costTxt(dcT) ? ` · <span class="td-eur" title="${esc(costTip(dcT))}">${costTxt(dcT, true)}</span>` : ""}</span></div>
       <div class="td-big"><b class="num">${fmtN(base.kcal)}</b><span>/ ${fmtN(T.kcal)} kcal</span></div>${bar(base.kcal, T.kcal)}
       <div class="td-mac">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"]].map(([l, k, c]) => `<div><small><i class="td-mdot" style="background:var(--${c})"></i>${l}</small><b>${r0(base[k])}<i>/${r0(T[k])} g</i></b>${bar(base[k], T[k], c)}</div>`).join("")}</div></button>
     ${deficitHTML(today)}
@@ -11696,7 +11710,7 @@ function stockPlan(start, n) {
         if (!(g > 0)) continue;
         let c = 0;
         if (dt >= today) { c = Math.min(free[id] || 0, g); free[id] = (free[id] || 0) - c; if (stock[id] > 0 && free[id] < 0.5 && !endsOn[id]) endsOn[id] = dt; }
-        const ic2 = itemCov[it.id] || (itemCov[it.id] = { c: 0, g: 0 }); ic2.c += c; ic2.g += g;
+        const ic2 = itemCov[it.id] || (itemCov[it.id] = { c: 0, g: 0 }); ic2.c += c; ic2.g += g; (ic2.l = ic2.l || {})[id] = (ic2.l[id] || 0) + c;
         if (dt > last && c < g - 0.5) later[id] = (later[id] || 0) + (g - c);   // planned after the window and not covered by the stock: it will use what a pack leaves over
         if (!win) continue;
         need[id] = (need[id] || 0) + g; cov[id] = (cov[id] || 0) + c;
@@ -14802,6 +14816,40 @@ const coverOf = id => { if (COV.v !== DATA_V) COV = { v: DATA_V, m: stockPlan(to
 { const _ir = itemRow; itemRow = function (it, mealId) { const h = _ir(it, mealId), c = it.eaten ? null : coverOf(it.id), took = it.eaten && it.took && Object.keys(it.took).length;
   const t = took ? "Taken from the pantry" : c && c.c > 0.5 ? (c.c >= c.g - 0.5 ? "At home: set aside" : "At home: partly set aside") : "";
   return t ? h.replace('<span class="item-name">', `<span class="item-name"><span class="pan-tag" title="${t}" aria-label="${t}">${ic("jar", "sm")}</span>`) : h; }; }
+/* ---- L214: what the meal plan costs ----
+   One source: eurPerG, the per-gram price Foods, the pantry and the shopping list use (half packs and pieces are just grams; a recipe counts its ingredients through itemStockLines).
+   A food with no price is unknown (na), never 0: the figure adds the known prices and says «+ n/a». What the pantry already covers (the per-line coverage stockPlan keeps in itemCov,
+   or what an eaten item took) is not money to spend: it is kept apart as «from pantry». Nothing here writes anything. */
+let COSTCOV = { v: -1, n: 0, m: {} };
+const costCover = date => { const n = Math.max(1, daysBetween(todayISO(), date) + 1); if (COSTCOV.v !== DATA_V || COSTCOV.n < n) COSTCOV = { v: DATA_V, n, m: stockPlan(todayISO(), n).itemCov }; return COSTCOV.m; };
+const noCost = () => ({ eur: 0, home: 0, n: 0, na: 0 });
+function itemCost(it, date) {
+  const c = noCost(), lines = itemStockLines(it);
+  if (!lines.length) { c.na = 1; return c; }   // a treat or a quick add has no foods to price
+  const cov = it.eaten ? it.took || {} : date >= todayISO() ? costCover(date)[it.id]?.l || {} : {};
+  for (const [id, g] of lines) { if (!(g > 0)) continue; const k = eurPerG(id); if (k == null) { c.na++; continue; } const h = Math.min(g, cov[id] || 0); c.eur += k * (g - h); c.home += k * h; c.n++; }
+  return c;
+}
+const addCost = (a, b) => { a.eur += b.eur; a.home += b.home; a.n += b.n; a.na += b.na; return a; };
+const mealCost = (date, meal) => (getDay(date).meals[meal] || []).reduce((a, it) => addCost(a, itemCost(it, date)), noCost());
+const dayCost = date => dayItems(getDay(date)).reduce((a, [, it]) => addCost(a, itemCost(it, date)), noCost());
+const planCost = (start, n) => { const a = noCost(); for (let i = 0; i < n; i++) addCost(a, dayCost(addDays(start, i))); return a; };
+/* «€2,40 · €0,20 from pantry», «€4,60 + n/a» (some foods without a price), «n/a» (none priced), «» (nothing planned).
+   html = true is for the tight places (a meal, a day column): the pantry part is the jar of the meal plan's items plus the amount, with «from pantry» as its label. */
+function costTxt(c, html) {
+  if (!c.n && !c.na) return "";
+  if (!c.n) return "n/a";
+  const e = Math.round(c.eur * 100) / 100, h = Math.round(c.home * 100) / 100, na = c.na ? " + n/a" : "";
+  const home = !(h > 0) ? "" : html ? `<span class="pan-eur" title="From the pantry: not counted in the money to spend" aria-label="${fmtEur(h)} from pantry">${ic("jar", "sm")}${fmtEur(h)}</span>` : `${fmtEur(h)} from pantry`;
+  return e > 0 || !home ? `${fmtEur(e)}${na}${home ? ` · ${home}` : ""}` : `${home}${na}`;
+}
+/* the day view's hero: one line with the day and, when it says something more, the week */
+function dayCostPill(date) {
+  const c = dayCost(date), t = costTxt(c); if (!t) return "";
+  const w = costTxt(planCost(weekStartOf(date), 7));
+  return `<div class="hero-eur" title="${esc(costTip(c))}"><span>${ic("cart", "sm")}<b>${esc(t)}</b></span>${w && w !== t ? `<span class="he-w">week <b>${esc(w)}</b></span>` : ""}</div>`;
+}
+const costTip = c => c.na ? `${c.n} price${c.n === 1 ? "" : "s"} known, ${c.na} food${c.na === 1 ? "" : "s"} without a price: the total is partial` : "Same prices as the shopping list; what you already have at home is not counted";
 /* the quantity sheet shows what is at home for the food */
 { const _q = SHEETS.qty; SHEETS.qty = sh => { const o = _q(sh); if (sh.kind === "food" && (getFood(sh.ref) || BUILTIN[sh.ref])) o.body += stockBoxHTML(sh.ref); return o; }; }
 /* ================= learning without AI: real pace on the scale, measured TDEE, own burn rates, watch left running ================= */
