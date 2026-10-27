@@ -179,6 +179,33 @@ test("today's partial food is out of the balance, the kg, the averages and the w
   assert.equal(r.typed.nI, 7);
 });
 
+/* MEDIO 8 -- the period in progress is not compared with the previous COMPLETE one.
+   Fixed clock: Monday 2026-10-26 10:00. This week = 1 day (Mon) with a run of 8 km, 1 weigh-in; last week (19-25 Oct) = 3 runs of 5 km = 15 km, 6 weigh-ins, intake typed on 6 days.
+   Before: «sessions ▼ 1», «km ▼ 7», «Running 8 km (−7)» under «To watch», «Only 1 weigh-ins» (week threshold 4).
+   Now: no ▲/▼ on the cards, no «To watch» / «Better than» comparison for the open week, and the weigh-in threshold scales with the days that have passed: ceil(4 * 1 / 7) = 1, so 1 weigh-in is enough on a Monday;
+   on Sunday 2026-11-01 (7 of 7 days) the threshold is the full 4 and «Only 1 weigh-in» (singular) is said. A finished week still compares: last week vs the one before. */
+test("an open period is not compared with the previous complete one; weigh-in threshold scales with the days passed", async () => {
+  const page = await start();
+  await page.clock.setFixedTime(new Date(2026, 9, 26, 10, 0, 0));
+  const r = await page.evaluate(() => {
+    const t = todayISO(); const run = (d, km) => mutateLog(d, x => { x.workouts = [{ sport: "Run", min: Math.round(km * 6), km, hr: 140 }]; });
+    for (const d of ["2026-10-19", "2026-10-21", "2026-10-23"]) run(d, 5);
+    for (let i = 19; i <= 24; i++) mutateLog("2026-10-" + i, x => { x.weight = 80; x.kcal = 2400; x.p = 150; x.c = 250; x.f = 70; });
+    run(t, 8); mutateLog(t, x => { x.weight = 80; });
+    UI.dashSeg = "week"; UI.repOff = 0;
+    const d = document.createElement("div"); d.innerHTML = reportsView(); const txt = d.textContent.replace(/\s+/g, " ");
+    const P = periodOf("week", 0), R = periodStats(P), Q = periodStats(periodOf("week", -1));
+    const G = weekGains(R, Q), H = reportHighlights(R, Q, false);
+    const closed = { R: periodStats(periodOf("week", -1)), Q: periodStats(periodOf("week", -2)) };
+    return { t, open: R.open, deltas: d.querySelectorAll(".dl").length, watch: /To watch|Better than/.test(txt), gains: G.up.length + G.dn.length, only: H.filter(x => /weigh-in/.test(x)), closedOpen: closed.R.open, closedGains: (G2 => G2.up.length + G2.dn.length)(weekGains(closed.R, closed.Q)) };
+  });
+  assert.equal(r.t, "2026-10-26"); assert.equal(r.open, true); assert.equal(r.deltas, 0); assert.equal(r.watch, false); assert.equal(r.gains, 0); assert.deepEqual(r.only, []);
+  assert.equal(r.closedOpen, false); assert.ok(r.closedGains >= 0);
+  await page.clock.setFixedTime(new Date(2026, 10, 1, 10, 0, 0));
+  const s = await page.evaluate(() => { DATA_V++; const R = periodStats(periodOf("week", 0)); return { open: R.open, weigh: R.weigh, only: reportHighlights(R, periodStats(periodOf("week", -1)), false).filter(x => /weigh-in/.test(x)) }; });
+  assert.equal(s.open, false); assert.equal(s.weigh, 1); assert.deepEqual(s.only, ["Only 1 weigh-in: aim for 5 a week so the trend stays reliable."]);
+});
+
 /* MEDIO 12 -- PDF recap: strings are escaped everywhere (the Info title too) and a long title wraps inside the page.
    Title «Easy :) run (((  a\b» -> the Info string must read back, with its escapes undone, as the same text (parentheses and the backslash balanced);
    a 63-character title at 22 pt is wider than the 511 pt of the text column: no 22 pt line of the page may be wider than that, and every word is still there. */
