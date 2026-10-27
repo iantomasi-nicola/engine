@@ -155,3 +155,28 @@ test("Journal: the AI summary is shown only for the period it was made for", asy
   });
   assert.deepEqual(r, { here: "A", earlier: "", back: "A", week: "", afterMove: "A", where: "B" });
 });
+
+/* MEDIO 3 -- Excel dates are whole serial numbers built from the calendar date, in any time zone.
+   Serial = days since 1899-12-30: 2026-01-01 = Date.UTC(2026,0,1)/86400000 + 25569 = 20454 + 25569 = 46023; 2026-01-05 = 46027; 2026-04-05 = 46117; 2026-10-04 = 46299.
+   (America/Sao_Paulo gave 46022.9997 and Australia/Sydney a day off on the days the clocks change.) The cell carries the format dd/mm/yyyy. */
+const inZone = async (timezoneId, fn, arg) => {
+  const { chromium } = H.loadPlaywright(), srv = await H.serve(dir), browser = await chromium.launch();
+  try {
+    const ctx = await browser.newContext({ timezoneId, serviceWorkers: "block" }); await ctx.addInitScript(([k, v]) => { localStorage.setItem("engine.localOnly", "true"); localStorage.setItem(k, v); }, [H.LS_KEY, JSON.stringify(F.seed({ withPlan: false }))]);
+    const page = await ctx.newPage(); await page.route(u => !/^(127\.0\.0\.1|localhost)$/.test(new URL(u).hostname), r => r.abort());
+    await page.goto(srv.url); await page.waitForFunction(() => typeof S !== "undefined" && S.settings); await page.waitForTimeout(500);
+    return await page.evaluate(fn, arg);
+  } finally { await browser.close(); srv.close(); }
+};
+for (const tz of ["America/Sao_Paulo", "Australia/Sydney", "Asia/Kolkata", "Europe/Rome"]) {
+  test("Excel export: dates are whole serial numbers with a date format in " + tz, async () => {
+    const r = await inZone(tz, async () => {
+      await loadXlsx(); const X = window.XLSX, t = todayISO();
+      for (let i = 0; i < 3; i++) mutateLog(addDays(t, -i), d => { d.weight = 80; d.workouts = [{ sport: "Run", min: 30, km: 5 }]; });
+      const wb = xlsxBook(X), back = X.read(X.write(wb, { type: "array", bookType: "xlsx" }), { type: "array", cellNF: true });
+      const cells = []; for (const n of back.SheetNames) { const ws = back.Sheets[n]; for (const a of Object.keys(ws)) if (a[0] !== "!" && /^[A-Z]+1$/.test(a) && ["Date", "Week of"].includes(ws[a].v)) { const col = a.replace("1", ""); for (let i = 2; ws[col + i]; i++) cells.push({ n, v: ws[col + i].v, t: ws[col + i].t, z: ws[col + i].z }); } }
+      return { xd: ["2026-01-01", "2026-01-05", "2026-04-05", "2026-10-04"].map(xd), cells: cells.length, bad: cells.filter(c => !(Number.isInteger(c.v) && c.t === "n" && c.z === "dd/mm/yyyy")).slice(0, 3) };
+    });
+    assert.deepEqual(r.xd, [46023, 46027, 46117, 46299]); assert.ok(r.cells >= 6, "date cells " + r.cells); assert.deepEqual(r.bad, []);
+  });
+}

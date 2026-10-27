@@ -8190,7 +8190,22 @@ async function saveFile(filename, data, okMsg) {
 }
 let xlsxReady = null;
 function loadXlsx() { if (window.XLSX) return Promise.resolve(); if (!xlsxReady) xlsxReady = loadScript(new URL("vendor/xlsx.full.min.js", location.href).href).catch(e => { xlsxReady = null; throw e; }); return xlsxReady; }
-const xd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+/* an Excel date is a whole serial number (days since 1899-12-30) built from the calendar date. A local Date would be turned into a serial by SheetJS with the time-zone offset of 1899,
+   which is a fraction of a day off in several zones and shows the day before in Excel. The cells of the date columns get the format dd/mm/yyyy in xlsxBook. */
+const xd = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d) / 86400000 + 25569; };
+const XL_DATE_COLS = ["Date", "Week of"];
+function xlsxBook(X) {
+  const wb = X.utils.book_new();
+  for (const [name, rows] of exportSheets()) {
+    const ws = X.utils.json_to_sheet(rows.length ? rows : [{ Info: "No data yet" }]);
+    const keys = Object.keys(rows[0] || { Info: 1 }); ws["!cols"] = keys.map(k => ({ wch: Math.min(40, Math.max(k.length + 2, 10)) }));
+    const rg = X.utils.decode_range(ws["!ref"]);
+    for (let c = rg.s.c; c <= rg.e.c; c++) if (XL_DATE_COLS.includes(ws[X.utils.encode_cell({ r: 0, c })]?.v)) for (let r = 1; r <= rg.e.r; r++) { const cell = ws[X.utils.encode_cell({ r, c })]; if (cell && cell.t === "n") cell.z = "dd/mm/yyyy"; }
+    if (rows.length) ws["!autofilter"] = { ref: ws["!ref"] }; ws["!freeze"] = { xSplit: 0, ySplit: 1 };
+    X.utils.book_append_sheet(wb, ws, name);
+  }
+  return wb;
+}
 const rd = (v, k = 1) => v == null || v === "" || !isFinite(v) ? null : Math.round(v * k) / k;
 function exportSheets() {
   const s = energySeries(), today = todayISO(), fit = FIT();
@@ -8227,14 +8242,7 @@ ACT["export-xlsx"] = async el => {
   const btn = el; btn.disabled = true; const old = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span>Preparing';
   try {
     await loadXlsx();
-    const X = window.XLSX, wb = X.utils.book_new();
-    for (const [name, rows] of exportSheets()) {
-      const ws = X.utils.json_to_sheet(rows.length ? rows : [{ Info: "No data yet" }], { dateNF: "dd/mm/yyyy", cellDates: true });
-      const keys = Object.keys(rows[0] || { Info: 1 }); ws["!cols"] = keys.map(k => ({ wch: Math.min(40, Math.max(k.length + 2, 10)) }));
-      if (rows.length) ws["!autofilter"] = { ref: ws["!ref"] }; ws["!freeze"] = { xSplit: 0, ySplit: 1 };
-      X.utils.book_append_sheet(wb, ws, name);
-    }
-    const buf = X.write(wb, { type: "array", bookType: "xlsx", cellDates: true });
+    const X = window.XLSX, buf = X.write(xlsxBook(X), { type: "array", bookType: "xlsx" });
     const name = `engine-export-${todayISO()}.xlsx`;
     if (!(await saveFile(name, new Uint8Array(buf), "Excel file saved"))) toast("Saving files isn't available in this view. Use the JSON backup instead.");
   } catch (e) { toast("Excel export couldn't start. Check your connection and try again."); }
