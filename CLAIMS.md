@@ -22,4 +22,4 @@
 | R4-progress | active | R4 correzioni audit area 9 | progress,settings | claude/r4-progress | 2026-10-26 23:56Z | 2026-10-27 04:56Z |  |
 | SHIP | released | pubblicazione L216 + fix test del martedì | other | claude/bf-icu-guard | 2026-10-27 00:05Z | 2026-10-27 00:05Z | L216 pubblicato |
 | M21-spike | released | Spike S400 live BLE | other | worktree-agent-ace082cf1f6491892 | 2026-10-27 08:46Z | 2026-10-27 09:02Z | Rilevata dalla sessione awesome-goldberg (l'utente conferma che nessun'altra IA lavora). Ramo claude/m21-spike-wip 94767e8 da continuare |
-| M21-bia | active | Ricerca BIA da studi PubMed | docs | ai-bia/proposal | 2026-10-27 08:46Z | 2026-10-27 10:46Z |  |
+| M21-bia | released | Ricerca BIA da studi PubMed | docs | ai-bia/proposal | 2026-10-27 08:46Z | 2026-10-27 09:02Z | Rilevata: ricerca mai salvata (nessun ramo), da rifare |
