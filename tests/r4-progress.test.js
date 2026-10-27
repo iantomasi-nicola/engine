@@ -80,3 +80,17 @@ test("goal below the current weight keeps its card; a goal inside 0.2 kg is reac
   const done = await goalCard(page, { value: 80.1, days: 60 });
   assert.equal(done.G.dir, "reached"); assert.match(done.text, /Reached/); assert.match(done.text, /Goal already reached\./);
 });
+
+/* MEDIO 4 -- a phase name the app does not know (a backup or a sync from another version: «Recomp») counts as Maintenance everywhere; Overview, Reports and the weekly table still draw. */
+test("an unknown phase name falls back to Maintenance in the weekly table, the coaching, Overview and Reports", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    const t = todayISO(); for (let i = 0; i < 30; i++) mutateLog(addDays(t, -i), d => { d.weight = 80 + (i % 3) * .1; d.kcal = 2300; d.p = 140; d.c = 250; d.f = 70; });
+    FIT().phases = [{ start: addDays(t, -40), phase: "Recomp", kcal: 0 }]; DATA_V++;
+    const out = { phase: phaseFor(t).phase, rows: weeklyTable().map(w => w.phase), coach: typeof coaching().summary };
+    try { overviewView(); UI.dashSeg = "week"; UI.repOff = 0; reportsView(); out.draw = "ok"; } catch (e) { out.draw = e.message; }
+    return out;
+  });
+  assert.equal(r.phase, "Maintenance"); assert.ok(r.rows.length >= 4 && r.rows.every(p => p === "Maintenance"), r.rows.join()); assert.equal(r.coach, "string");
+  assert.equal(r.draw, "ok"); assert.deepEqual(app.errors, []);
+});
