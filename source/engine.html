@@ -4169,6 +4169,9 @@ function intakeFor(date) {
   const d = S.days[date]; if (d) { const t = dayTotals(d, true); if (t.kcal > 0) return { ...t, src: "food" }; }
   return null;
 }
+/* today's food eaten so far is not a finished day (NUTRITION_SPEC, criterion 2): against a whole day of TDEE it would read as a huge deficit. Balance, kg, averages and days on target leave it out until midnight;
+   a total typed or imported for the day is the owner's own and counts. */
+const partialDay = (d, intake) => d === todayISO() && intake?.src === "food";
 const isWalkSport = sp => /walk|hik/i.test(sp || "");
 /* NEAT from steps (formula approved 24/10): a day with steps and no walk or run = what the steps cost (0.5 kcal per kg per km, stride 0.415 x height; ACSM walking)
    + the part steps don't show, the median over the previous 90 days of (typed watch NEAT - steps cost) on days with both and no walk or run; it needs 14 such days. */
@@ -4402,7 +4405,7 @@ function weeklyTable() {
       for (let i = 0; i < 7; i++) {
         const d = addDays(ws, i), r = s.rows[d]; if (!r) continue;
         if (r.real) { weigh++; wsum += r.real; }
-        if (r.intake && d <= today) { bal += r.balance; ek += r.estKg; if (!r.intake.est) { nI++; iSum += r.intake.kcal; tSum += r.tdeeW; tgSum += r.target; } }
+        if (r.intake && d <= today && !partialDay(d, r.intake)) { bal += r.balance; ek += r.estKg; if (!r.intake.est) { nI++; iSum += r.intake.kcal; tSum += r.tdeeW; tgSum += r.target; } }
         if (r.bf && bfAt(d)) bfs.push(r.bf);
         if (r.sess.src === "logged") { sess += r.sess.list.length; mins += r.sess.list.reduce((a, w) => a + (+w.min || 0), 0); kc += r.eat; km += r.sess.list.filter(w => w.sport === fit.runSport).reduce((a, w) => a + (+w.km || 0), 0); }
       }
@@ -4439,7 +4442,7 @@ function coaching() {
   const brk = ph.phase === "Cut" ? (weeksIn >= E.dietBreakWeeks ? `Diet break due: ${weeksIn} weeks of cut. Spend 1–2 weeks at maintenance, then resume.` : `Cut week ${weeksIn} of ${E.dietBreakWeeks} before a diet break.`) : "";
   // indicators over the last 7 days
   const r = s.rows[today]; const last7 = []; for (let i = 0; i < 7; i++) last7.push(s.rows[addDays(today, -i)]);
-  const iDays = last7.filter(x => x && x.intake && x.intake.src !== "est");
+  const iDays = last7.filter(x => x && x.intake && x.intake.src !== "est" && !partialDay(x.d, x.intake));
   const ind = [];
   const rateSrc = rate != null ? "2-week avg" : "14 days";
   if (rate == null && s.rows[addDays(today, -14)]) { const b = s.rows[addDays(today, -14)]; rate = (r.trend - b.trend) / b.trend / 2; }
@@ -5434,7 +5437,7 @@ function overviewView() {
     <div class="goal-main"><b class="num">${esc(G.text)}</b>${G.reached ? '<span class="pill" style="--c:var(--good)">Reached</span>' : ""}</div>
     <div class="stat-grid${G.dir === "gain" ? " two" : ""}" style="margin-top:4px">${kpi(G.toLose != null ? r1(Math.abs(G.toLose)) + " kg" : "—", G.dir === "gain" ? "to gain" : "to go", G.dir === "lose" ? `${r1(G.fat)} kg of fat` : "")}${G.dir === "gain" ? "" : kpi(G.energy != null ? fmtN(G.energy / 1000) + "k" : "—", "kcal needed", `${fmtN(G.kpk)} kcal per kg`)}${etaKpi(G)}</div>
     ${G.verdict ? `<div class="note" style="margin-top:10px">${esc(G.verdict)}</div>` : `<div class="faint" style="font-size:12.5px;margin-top:8px">Optional: set a target date in Settings to see the deficit it needs.</div>`}</div>`;
-  h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "from the formulas")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
+  h += `<div class="stat-grid four">${kpi(r1(r.trend) + " kg", "trend weight (7-day avg)")}${kpi(cw?.avgW ? r1(cw.avgW) + " kg" : "—", "avg weight this week", `${cw?.weigh || 0} weigh-ins`)}${kpi(fmtN(r.tdee), "TDEE today", r.factor !== 1 ? `calibrated ×${r.factor.toFixed(2)}` : "from the formulas")}${kpi(r14 ? sgn(r.trend - r14.trend) + " kg" : "—", "actual change 14 d", (() => { let e = 0, n = 0; for (let i = 0; i < 14; i++) { const x = s.rows[addDays(today, -i)]; if (x?.estKg != null && !partialDay(addDays(today, -i), x.intake)) { e += x.estKg; n++; } } return n ? `${sgn(e)} kg expected from intake` : ""; })())}</div>`;
   const advice = String(C.weekly || "").replace(/^Last[^)]*\)\.\s*/, ""); if (advice && advice !== C.weekly) C.ind = C.ind.map(i => i.k === "Rate of change" ? { ...i, d: `${i.d}. ${advice}` } : i);
   h += `<div class="section-h"><h2>How am I doing · last 7 days</h2><span class="faint" style="font-size:12px">${esc(C.summary)}</span></div><div class="card">${C.ind.map(i => `<div class="lrow" style="align-items:start"><span style="min-width:0"><span class="t">${i.k}</span><span class="s" style="white-space:normal">${esc(i.d)}</span></span><span class="end">${i.st === "-" ? "" : pill(i.st)}</span></div>`).join("")}</div>`;
   h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Expected vs actual change</h2></div><div class="card pad">${changeChart()}</div></div><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Weekly balance</h2></div><div class="card pad">${balanceChart()}</div></div></div>`;
@@ -5443,7 +5446,7 @@ function overviewView() {
 }
 function changeChart() {
   const s = energySeries(), today = todayISO(), base = s.rows[addDays(today, -30)] || s.rows[s.start]; const pts = []; let cum = 0;
-  for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
+  for (let i = 29; i >= 0; i--) { const d = addDays(today, -i), r = s.rows[d]; if (!r) continue; if (!partialDay(d, r.intake)) cum += r.estKg || 0; pts.push({ d, e: cum, a: base ? r.trend - base.trend : 0 }); }
   if (pts.length < 2 || pts.every(p => p.e === 0 && p.a === 0)) return `<div class="faint">Needs logged food and weigh‑ins.</div>`;
   const W = chartW(true), H = 170, L = 50, R = 8, Tp = 10, B = 22, all = pts.flatMap(p => [p.e, p.a]), [lo, hi] = zeroRange(all, 0.1);
   const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => Tp + (H - Tp - B) * (1 - (v - lo) / (hi - lo)); let g = "";
@@ -5455,9 +5458,9 @@ function changeChart() {
 }
 /* the balance of one week (Monday to Sunday): intake minus TDEE for every day that has food in it; the total is the sum, in kcal and in kg at your kcal-per-kg */
 function weekBalance(off = 0) {
-  const t = todayISO(), ws = addDays(weekStartOf(t), 7 * off), s = energySeries(), days = []; let total = 0, kg = 0, n = 0, est = 0;
-  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), r = s.rows[d], ok = r && r.intake && d <= t; if (ok) { total += r.balance || 0; kg += r.estKg || 0; n++; if (r.intake.est) est++; } days.push({ d, bal: ok ? r.balance || 0 : null, est: ok && !!r.intake.est, today: d === t }); }
-  return { ws, days, total: Math.round(total), n, est, kg };
+  const t = todayISO(), ws = addDays(weekStartOf(t), 7 * off), s = energySeries(), days = []; let total = 0, kg = 0, n = 0, est = 0, part = false;
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), r = s.rows[d], ok = r && r.intake && d <= t && !partialDay(d, r.intake); if (ok) { total += r.balance || 0; kg += r.estKg || 0; n++; if (r.intake.est) est++; } if (r && partialDay(d, r.intake)) part = true; days.push({ d, bal: ok ? r.balance || 0 : null, est: ok && !!r.intake.est, today: d === t }); }
+  return { ws, days, total: Math.round(total), n, est, kg, part };
 }
 function weekBalanceHTML() {
   const o = Math.min(0, UI.balWk || 0), W = weekBalance(o), last = W.days.filter(x => x.bal != null);
@@ -5466,8 +5469,8 @@ function weekBalanceHTML() {
     if (x.bal == null) return; const up = x.bal >= 0, y0 = y(0), y1 = y(x.bal); g += `<rect x="${cx - w / 2}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="3" fill="var(--${up ? "pro" : "fat"})" opacity="${x.est ? .45 : 1}"><title>${fmtDM(x.d)}: ${x.bal > 0 ? "+" : "−"}${fmtN(Math.abs(r0(x.bal)))} kcal${x.est ? " (planned, not logged)" : ""}</title></rect><text x="${cx}" y="${up ? y1 - 4 : y1 + 11}" text-anchor="middle">${x.bal > 0 ? "+" : x.bal < 0 ? "−" : ""}${fmtN(Math.abs(r0(x.bal)))}</text>`; });
   const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + fmtN(Math.abs(v)), word = W.total < 0 ? "deficit" : W.total > 0 ? "surplus" : "balanced", prev = weekBalance(o - 1);
   return `<div class="section-h"><h2>${o === 0 ? "This week" : `Week of ${fmtDM(W.ws)}`}</h2><span class="wbal-nav"><button class="icon-btn sm" data-act="wbal" data-d="-1" aria-label="Previous week">${ic("chevL", "sm")}</button><span class="faint">${fmtDM(W.ws)} – ${fmtDM(addDays(W.ws, 6))}</span><button class="icon-btn sm" data-act="wbal" data-d="1" aria-label="Next week" ${o === 0 ? "disabled" : ""}>${ic("chevR", "sm")}</button></span></div>
-    <div class="card pad wbal"><div class="wbal-top"><b class="wbal-n">${W.n ? sg(W.total) : "—"}</b><span>${W.n ? `kcal ${word}` : "nothing logged yet"}</span></div>
-      <div class="faint wbal-s">${W.n ? `≈ ${W.kg > 0 ? "+" : W.kg < 0 ? "−" : ""}${r1(Math.abs(W.kg))} kg of body mass · ${W.n} of 7 days with food${W.est ? ` (${W.est} planned, not logged)` : ""}${prev.n ? ` · week before ${sg(prev.total)}` : ""}` : "Log or plan what you eat: each day counts intake minus what you burn."}</div>
+    <div class="card pad wbal"><div class="wbal-top"><b class="wbal-n">${W.n ? sg(W.total) : "—"}</b><span>${W.n ? `kcal ${word}` : W.part ? "today counts once it's over" : "nothing logged yet"}</span></div>
+      <div class="faint wbal-s">${W.n ? `≈ ${W.kg > 0 ? "+" : W.kg < 0 ? "−" : ""}${r1(Math.abs(W.kg))} kg of body mass · ${W.n} of 7 days with food${W.est ? ` (${W.est} planned, not logged)` : ""}${prev.n ? ` · week before ${sg(prev.total)}` : ""}${W.part ? " · today counts once it's over" : ""}` : "Log or plan what you eat: each day counts intake minus what you burn."}</div>
       <svg class="chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Energy balance by day, ${fmtDM(W.ws)} to ${fmtDM(addDays(W.ws, 6))}">${g}</svg></div>`;
 }
 function balanceChart() {
@@ -8268,10 +8271,11 @@ function periodStats(P) {
   for (let d = P.a; d <= end; d = addDays(d, 1)) {
     R.days++; const r = s.rows[d], L = logGet(d) || {}; if (!r) continue;
     const it = r.intake, T = targetsFor(d);
-    dayRows.push({ d, T, tot: it || ZERO(), has: !!it });
-    if (it && !it.est) { nI++; sI += it.kcal; sT += T.kcal; const dev = Math.abs(it.kcal - T.kcal) / T.kcal; if (dev <= 0.1) onT++; if (!best || dev < best.dev) best = { d, dev, k: it.kcal }; if (!high || it.kcal > high.k) high = { d, k: it.kcal };
+    const part = partialDay(d, it);
+    dayRows.push({ d, T, tot: it || ZERO(), has: !!it && !part });
+    if (it && !it.est && !part) { nI++; sI += it.kcal; sT += T.kcal; const dev = Math.abs(it.kcal - T.kcal) / T.kcal; if (dev <= 0.1) onT++; if (!best || dev < best.dev) best = { d, dev, k: it.kcal }; if (!high || it.kcal > high.k) high = { d, k: it.kcal };
       if (it.p > 0 || it.c > 0) { nM++; mp += it.p; mc += it.c; mf += it.f; tp += T.p; tc += T.c; tf += T.f; } }
-    if (r.balance != null) { bal += r.balance; ek += r.estKg; }
+    if (r.balance != null && !part) { bal += r.balance; ek += r.estKg; }
     if (r.real) { weigh++; wsum += r.real; }
     if (L.sleep > 0) sleep.push(+L.sleep); if (L.rhr > 0) rhr.push(+L.rhr);
     const ws = (L.workouts || []).filter(w => w.sport && w.sport !== "Rest");

@@ -156,6 +156,29 @@ test("Journal: the AI summary is shown only for the period it was made for", asy
   assert.deepEqual(r, { here: "A", earlier: "", back: "A", week: "", afterMove: "A", where: "B" });
 });
 
+/* MEDIO 7 (docs/NUTRITION_SPEC.md, criterion 2: closed day / today so far / future) -- today's partly eaten food is not a finished day: it stays out of the balance, the kg, the averages and the days on target
+   (a breakfast of 350 kcal against a whole day of TDEE gave «-2,050 kcal ≈ -0.3 kg»). A day total TYPED for today (source manual) is the owner's own total and still counts.
+   Fixture: 6 earlier days typed 2400 kcal; today one eaten breakfast (food, 350 kcal). With the breakfast the numbers equal those without it.
+   Control: 6 days -> nI 6 and avgI 2400; add a typed 2400 for today -> nI 7. */
+test("today's partial food is out of the balance, the kg, the averages and the weekly table", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    const t = todayISO(); for (let i = 1; i <= 6; i++) mutateLog(addDays(t, -i), d => { d.kcal = 2400; d.p = 150; d.c = 250; d.f = 70; d.weight = 80; });
+    const P = { a: addDays(t, -6), b: t, label: "x", kind: "week" };
+    const snap = () => { DATA_V++; const R = periodStats(P), B = weekBalance(0), W = weeklyTable().slice(-1)[0], i = B.days.findIndex(x => x.d === t);
+      return { nI: R.nI, avgI: R.avgI, bal: R.bal, exp: R.expKg, onT: R.onT, wTotal: B.total, wN: B.n, wKg: B.kg, today: i < 0 ? "n/a" : B.days[i].bal, rowN: W.nI, rowBal: W.balance, rowKg: W.estKg, bars: R.dayRows.filter(x => x.d === t && x.has).length }; };
+    const without = snap();
+    S.days[t] = { date: t, meals: { m: [{ id: "x1", kind: "quick", name: "Breakfast", m: { kcal: 350, p: 20, c: 40, f: 10 }, eaten: true }] } };
+    const probe = intakeFor(t); const withPartial = snap();
+    mutateLog(t, d => { d.kcal = 2400; }); const typed = snap();
+    return { without, withPartial, typed, probe: probe && probe.src + ":" + probe.kcal };
+  });
+  assert.equal(r.probe, "food:350"); assert.equal(r.without.nI, 6); assert.equal(r.without.avgI, 2400);
+  assert.deepEqual(r.withPartial, r.without);
+  assert.equal(r.withPartial.bars, 0); if (r.withPartial.today !== "n/a") assert.equal(r.withPartial.today, null);
+  assert.equal(r.typed.nI, 7);
+});
+
 /* MEDIO 12 -- PDF recap: strings are escaped everywhere (the Info title too) and a long title wraps inside the page.
    Title «Easy :) run (((  a\b» -> the Info string must read back, with its escapes undone, as the same text (parentheses and the backslash balanced);
    a 63-character title at 22 pt is wider than the 511 pt of the text column: no 22 pt line of the page may be wider than that, and every word is still there. */
