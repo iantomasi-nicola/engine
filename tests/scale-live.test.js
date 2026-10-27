@@ -113,11 +113,11 @@ test("bind key: checked, kept only in this device's storage, never in the DOM, t
   await p.fill("#key", KEY.toUpperCase()); await p.fill("#mac", MAC); await p.click("#save");
   assert.equal(await ev(p, () => localStorage.getItem("engine.s400.bindkey")), KEY); assert.equal(await p.inputValue("#key"), "", "the field is emptied after saving");
   assert.match(await p.textContent("#keyst"), /saved on this device/);
-  for (const f of [frame(obj6e16(1, 813, 20, 5123), { counter: 9 }), frame(obj6e16(1, 0, 0, 4987), { counter: 10 }), frame(obj6e16(1, 813, 20, 5123), { counter: 9 })]) { await p.fill("#paste", f); await p.click("#dec"); }
+  for (const f of [frame(obj6e16(1, 813, 20, 5123), { counter: 9 }), frame(obj6e16(1, 0, 0, 4987), { counter: 10 })]) { await p.fill("#paste", f); await p.click("#dec"); }   // a hand-pasted frame is always decoded again; the repeats of the live broadcast are dropped (see the stubbed Bluetooth test)
   assert.match(await p.textContent("#w"), /81\.3/); assert.equal(await p.textContent("#i50"), "512.3 Ω"); assert.equal(await p.textContent("#i250"), "498.7 Ω"); assert.equal(await p.textContent("#hr"), "70 bpm");
   assert.match(await p.textContent("#phase"), /complete/);
   const csv = await p.inputValue("#log"), lines = csv.trim().split("\n");
-  assert.equal(lines.length, 3, "header + two distinct frames (the repeat is not logged twice)");
+  assert.equal(lines.length, 3, "header + the two frames");
   assert.match(lines[1], /,ok,166e0901[0-9a-f]+,81\.3,512\.3,,70,1$/);
   const dom = await ev(p, () => document.documentElement.outerHTML + [...document.querySelectorAll("input,textarea")].map(e => e.value).join("|"));
   for (const k of [KEY, KEY.toUpperCase()]) {
