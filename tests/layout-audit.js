@@ -21,6 +21,7 @@ const SHEETS_TO_OPEN = [
   ["sheet-buy-home", HOME + "openSheet('buy',{id:'t-rice',g:550,eur:''})"],
   ["sheet-home-pick", HOME + "openSheet('homepick',{from:'t-rice'})"],
   ["sheet-home-pick-to", HOME + "openSheet('homepick',{from:'t-rice',to:'t-cereal'})"],
+  ["sheet-home-pick-rec", HOME + "for(const [d,day] of Object.entries(S.days))day.meals.m=[{id:'bw'+d,kind:'recipe',ref:'t-bowl',qty:2,eaten:false}];DATA_V++;openSheet('homepick',{from:'t-rice',to:'t-pasta'})"],
   ["sheet-home-pick-q", HOME + "openSheet('homepick',{from:'t-rice',q:'zzz'})"],
   ["sheet-ready-str", "startWorkout({script:'Pull 3x\\n- 6 Pull-up\\n- 8 Ring row',name:'Gear day',sport:strengthSport(),date:todayISO()});UI.tab='live'"],
   ["sheet-ready-run", "WK().live=null;startWorkout({script:'Warm-up\\n- 10m Z1\\n\\nMain 3x\\n- 3m Z4\\n- 2m Z1',name:'Intervals',sport:'Running',date:todayISO()});UI.tab='live'"],

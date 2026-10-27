@@ -12108,15 +12108,21 @@ function swapFood(from, to, o = {}) {
   const key = o.by || (o.kcal ? "kcal" : null), k = key && A.per[key] > 0 && B.per[key] > 0 ? A.per[key] / B.per[key] : 1, today = o.since && o.since > todayISO() ? o.since : todayISO(), q = x => Math.round(x * 10) / 10;   // by: the macro the new food must match (kcal, p, c or f); since/until: only a window of the plan
   const touched = [], recBefore = {}, checked = clone(S.shop.checked?.[from] ?? null);   // touched: the items this swap changed (day, id, old qty, new qty), nothing else
   let meals = 0, nrec = 0;
-  for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => it.kind === "food" && it.ref === from && !it.eaten)) continue;
-    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) if (it.kind === "food" && it.ref === from && !it.eaten) { const was = it.qty; it.ref = to; it.qty = q((+it.qty || 0) * k); touched.push({ d, id: it.id, qty: was, now: it.qty }); meals++; } }); }
+  const inRec = it => o.home && it.kind === "recipe" && !it.eaten && !!itemRecipe(it)?.ingredients?.some(i => i.food === from);   // L204: a planned recipe that uses the product
+  for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => (it.kind === "food" && it.ref === from && !it.eaten) || inRec(it))) continue;
+    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) {
+      if (it.kind === "food" && it.ref === from && !it.eaten) { const was = it.qty; it.ref = to; it.qty = q((+it.qty || 0) * k); touched.push({ d, id: it.id, qty: was, now: it.qty }); meals++; }
+      else if (inRec(it)) { const r = itemRecipe(it), was = it.snap ? clone(it.snap) : null;   // this meal only: the saved recipe is never written
+        it.snap = { name: r.name, sv: r.servings || 1, ing: r.ingredients.map(i => ({ food: i.food === from ? to : i.food, g: i.food === from ? q(i.g * k) : i.g })) }; touched.push({ d, id: it.id, snap: was, snapNow: clone(it.snap) }); meals++; } } }); }
   if (o.recipes) for (const r of allRecipes().filter(r => (r.ingredients || []).some(i => i.food === from))) { recBefore[r.id] = S.recipes[r.id] ? clone(S.recipes[r.id]) : null; freezeRecipeUses(r.id);
     const n = clone(getRecipe(r.id)); n.ingredients = n.ingredients.map(i => i.food === from ? { food: to, g: q(i.g * k) } : i); if (n.source === "builtin") n.source = "custom"; put("recipes", r.id, n); nrec++; }
   if (S.shop.checked?.[from]) { delete S.shop.checked[from]; put("shop", "", S.shop); }
   toast(o.home ? `${B.name} from home instead of ${A.name}` : `${A.name} replaced by ${B.name}${meals ? ` in ${meals} meal${meals === 1 ? "" : "s"}` : ""}`, () => {
     /* only the items the swap changed go back, and only if they are still as the swap left them (not eaten, same food, same grams): a day added since, or a meal ticked since, is never rewritten */
     for (const d of new Set(touched.map(x => x.d))) { if (!S.days[d]) continue;
-      mutateDay(d, dd => { for (const [, it] of dayItems(dd)) { const t = touched.find(x => x.d === d && x.id === it.id); if (t && !it.eaten && it.ref === to && it.qty === t.now) { it.ref = from; it.qty = t.qty; } } }); }
+      mutateDay(d, dd => { for (const [, it] of dayItems(dd)) { const t = touched.find(x => x.d === d && x.id === it.id); if (!t || it.eaten) continue;
+        if (t.snapNow) { if (JSON.stringify(it.snap) === JSON.stringify(t.snapNow)) { if (t.snap) it.snap = t.snap; else delete it.snap; } }
+        else if (it.ref === to && it.qty === t.now) { it.ref = from; it.qty = t.qty; } } }); }
     for (const [id, v] of Object.entries(recBefore)) { if (v) put("recipes", id, v); else del("recipes", id); }
     if (checked) { S.shop.checked = { ...(S.shop.checked || {}), [from]: checked }; put("shop", "", S.shop); } scheduleRender(); });
   return { meals, recipes: nrec };
@@ -12131,9 +12137,11 @@ function homeNeed(id) {
   const start = UI.shopStart, n = S.shop.range || 7, today = todayISO(), since = start > today ? start : today, until = addDays(start, n - 1);
   const row = shoppingRows(start, n).find(r => r.id === id && r.buy > 0); if (!row) return null;
   const key = A.per[HOME_KEY[A.role]] > 0 ? HOME_KEY[A.role] : "kcal"; if (!(A.per[key] > 0)) return null;
-  let q = 0, meals = 0;
-  for (const [d, day] of Object.entries(S.days)) if (d >= since && d <= until) for (const [, it] of dayItems(day)) if (it.kind === "food" && it.ref === id && !it.eaten) { q += +it.qty || 0; meals++; }
-  return q > 0 && q >= row.need - 1 ? { A, key, q, meals, since, until, start, n } : null;
+  let q = 0, meals = 0; const recipes = new Set();   // meals: planned meals that use it, directly or inside a recipe; recipes: the names of those recipes
+  for (const [d, day] of Object.entries(S.days)) if (d >= since && d <= until) for (const [, it] of dayItems(day)) if (!it.eaten) {
+    const g = itemStockLines(it).reduce((a, [f, x]) => a + (f === id ? x : 0), 0); if (!(g > 0)) continue;
+    q += g; meals++; if (it.kind === "recipe") recipes.add(itemName(it)); }
+  return q > 0 && q >= row.need - 1 ? { A, key, q, meals, recipes: [...recipes], since, until, start, n } : null;
 }
 function homeSwaps(id) {
   const N = homeNeed(id); if (!N) return [];
@@ -12154,6 +12162,7 @@ SHEETS.homepick = sh => {
   if (x) { const B = x.food, ub = B.unit || "g", short = Math.max(0, x.qTo - x.free);
     return { title: T, body: `<div class="card"><div class="lrow"><span><span class="t">${esc(A.name)}</span><span class="s">${bdHTML(A)}${fmtN(A.per.kcal)} kcal /100 ${u}</span></span></div><div class="lrow"><span><span class="t">${esc(B.name)}</span><span class="s">${bdHTML(B)}${fmtN(B.per.kcal)} kcal /100 ${ub}</span></span></div></div>
       <div class="note"><b>${fmtN(x.qFrom)} ${u} of ${esc(A.name)} → ${fmtN(x.qTo)} ${ub} of ${esc(B.name)}</b> in ${N.meals} planned meal${N.meals === 1 ? "" : "s"}, same ${HOME_SAME[x.key]}.</div>
+      ${N.recipes.length ? `<div class="faint" style="font-size:13px">${esc(N.recipes.join(", "))}: the recipe stays as saved, only those planned meals change.</div>` : ""}
       <div class="faint" style="font-size:13px">${short > 0 ? (x.free > 0 ? `Only ${fmtN(x.free)} ${ub} of ${esc(B.name)} is free at home (the plan uses the rest): the other ${fmtN(short)} ${ub} will be on your list.` : `${esc(B.name)} is all set aside by the plan: ${fmtN(short)} ${ub} of it will be on your list.`) : `Your stock is not touched: it is used when you eat the meals.`}</div>`,
       foot: `<button class="btn soft" data-act="hm-back">Back</button><button class="btn primary" data-act="home-swap" data-id="${esc(sh.from)}" data-to="${esc(B.id)}">${ic("swap", "sm")}Use from home</button>` }; }
   const q = sh.q || "", flt = sh.filter || "all", ok = new Set(pantryList(q, "az", flt)), rows = L.filter(y => ok.has(y.food.id)), sug = rows.filter(y => y.suggested), rest = rows.filter(y => !y.suggested);

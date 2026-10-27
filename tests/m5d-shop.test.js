@@ -149,3 +149,60 @@ test("L203: nothing is offered when the product is not on the list", async () =>
   assert.deepEqual(r, [0, false]);
 });
 
+/* ---------- L204 ---------- */
+test("L204: the product also used inside planned recipes: those planned meals get a local copy of the recipe, the saved recipe never changes", async () => {
+  const page = await L204();
+  const r = await page.evaluate(() => {
+    const D = n => addDays(todayISO(), n), rec0 = JSON.stringify(S.recipes["t-bowl"]), pan0 = JSON.stringify(S.shop.pantry);
+    const sw = homeSwaps("t-rice").find(x => x.food.id === "t-pasta"); const rows0 = shoppingRows(todayISO(), 7).find(x => x.id === "t-rice");
+    ACT["home-swap"]({ dataset: { id: "t-rice", to: "t-pasta" } }); DATA_V++;
+    const it = (d, id) => dayItems(S.days[D(d)]).map(x => x[1]).find(x => x.id === id), lines = x => itemStockLines(x).map(([f, g]) => f + ":" + g).join();
+    const out = { q: [sw.qFrom, sw.qTo], need0: rows0.buy, rec: JSON.stringify(S.recipes["t-bowl"]) === rec0, pan: JSON.stringify(S.shop.pantry) === pan0,
+      dinner: [it(1, "r1").ref, it(1, "r1").qty], b1: [it(1, "b1").ref, lines(it(1, "b1"))], b2: lines(it(2, "b2")), plain: !it(2, "p2").snap, eaten: !it(3, "b3").snap, past: !it(-1, "b0").snap, far: !it(8, "b8").snap,
+      rows: shoppingRows(todayISO(), 7).map(x => x.id).sort().join(), snapName: it(1, "b1").snap.name, savedLines: itemStockLines({ kind: "recipe", ref: "t-bowl", qty: 2 }).map(([f, g]) => f + ":" + g).join() };
+    toast.undo(); DATA_V++;
+    out.back = { dinner: [it(1, "r1").ref, it(1, "r1").qty], b1: "snap" in it(1, "b1"), b2: "snap" in it(2, "b2"), rows: shoppingRows(todayISO(), 7).find(x => x.id === "t-rice")?.buy, rec: JSON.stringify(S.recipes["t-bowl"]) === rec0 };
+    return out;
+  });
+  assert.deepEqual(r.q, [600, 720]); assert.equal(r.need0, 600);
+  assert.equal(r.rec, true, "the saved recipe is untouched"); assert.equal(r.pan, true, "the real stock is untouched");
+  assert.deepEqual(r.dinner, ["t-pasta", 360]);
+  assert.deepEqual(r.b1, ["t-bowl", "t-pasta:240,t-chicken:300,t-oil:10"]); assert.equal(r.b2, "t-pasta:120,t-chicken:150,t-oil:5");
+  assert.equal(r.plain, true); assert.equal(r.eaten, true); assert.equal(r.past, true); assert.equal(r.far, true);
+  assert.equal(r.snapName, "Test bowl"); assert.equal(r.savedLines, "t-rice:200,t-chicken:300,t-oil:10");
+  assert.ok(!r.rows.split(",").includes("t-rice"), "no rice left to buy");
+  assert.deepEqual(r.back, { dinner: ["t-rice", 300], b1: false, b2: false, rows: 600, rec: true });
+  assert.deepEqual(app.errors, []);
+});
+
+test("L204: a swapped planned recipe still counts in the shopping list, the macros and the stock it uses (Σ need = Σ covered + Σ to buy)", async () => {
+  const page = await L204();
+  const r = await page.evaluate(() => {
+    const D = n => addDays(todayISO(), n), b1 = () => S.days[D(1)].meals.m[0], kcal0 = Math.round(itemMacros(b1()).kcal);
+    ACT["home-swap"]({ dataset: { id: "t-rice", to: "t-pasta" } }); DATA_V++;
+    const P = stockPlan(todayISO(), 7), pasta = Math.round(P.need["t-pasta"]), cov = Math.round(P.cov["t-pasta"]), buy = (shoppingRows(todayISO(), 7).find(x => x.id === "t-pasta") || { buy: 0 }).buy;
+    return { kcal0, kcal1: Math.round(itemMacros(b1()).kcal), pasta, cov, buy, ok: pasta === cov + buy };
+  });
+  /* the bowl, 2 servings, as saved: rice 200 g = 700 kcal + chicken 300 g = 330 + oil 10 g = 90 -> 1120; with 240 g pasta (355/100): 852 + 330 + 90 = 1272 */
+  assert.equal(r.kcal0, 1120); assert.equal(r.kcal1, 1272);
+  assert.deepEqual([r.pasta, r.cov, r.buy, r.ok], [720, 720, 0, true]);
+});
+
+test("L204: the preview names the recipes and says the saved recipe stays as it is", async () => {
+  const page = await L204();
+  const r = await page.evaluate(async () => {
+    ACT["shop-buy"]({ dataset: { id: "t-rice" } }); ACT["hm-open"]({ dataset: { id: "t-rice" } }); ACT["hm-pick"]({ dataset: { id: "t-pasta" } }); await new Promise(x => setTimeout(x, 120));
+    return document.querySelector(".sheet-b").textContent.replace(/\s+/g, " ");
+  });
+  assert.match(r, /600 g of Test rice/); assert.match(r, /720 g/); assert.match(r, /Test bowl/); assert.match(r, /stays as saved/);
+});
+
+test("L204: eating a swapped recipe takes the new food off the stock, un-eating gives it back", async () => {
+  const page = await L204();
+  const r = await page.evaluate(() => {
+    const d = addDays(todayISO(), 1); ACT["home-swap"]({ dataset: { id: "t-rice", to: "t-pasta" } });
+    const it = S.days[d].meals.m[0]; pantryAdjust(it, 1, d); const eaten = S.shop.pantry["t-pasta"].g; pantryAdjust(it, -1, d);
+    return [eaten, S.shop.pantry["t-pasta"].g];
+  });
+  assert.deepEqual(r, [1760, 2000]);   /* 2000 - 240 g */
+});
