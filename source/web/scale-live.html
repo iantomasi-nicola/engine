@@ -1,0 +1,228 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer"><title>Scale live test (S400)</title>
+<style>:root{--bg:#fff;--ink:#1c1b1f;--mut:#625b71;--sf:#f3edf7;--sf2:#e8def8;--ac:#6750a4;--ok:#1b6e3a;--bad:#b3261e;--warn:#7a5900}@media(prefers-color-scheme:dark){:root{--bg:#141218;--ink:#e6e0e9;--mut:#cac4d0;--sf:#211f26;--sf2:#2b2930;--ac:#d0bcff;--ok:#7fd99a;--bad:#f2b8b5;--warn:#f0c674}}
+*{box-sizing:border-box}body{margin:0 auto;padding:16px;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif;max-width:760px}
+h1{font-size:22px;line-height:1.25;margin:4px 0 6px}h2{font-size:15px;font-weight:600;margin:0 0 8px}p{margin:6px 0;color:var(--mut)}
+.card{background:var(--sf);border-radius:16px;padding:14px 16px;margin:12px 0}
+button{font:inherit;font-weight:500;padding:0 18px;border-radius:20px;border:0;background:var(--ac);color:var(--bg);margin:8px 8px 0 0;min-height:40px;cursor:pointer}button.soft{background:var(--sf2);color:var(--ink)}button:disabled{opacity:.5;cursor:default}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}label:first-of-type{margin-top:0}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:12px;padding:9px 12px;width:100%}
+textarea{height:200px;font:12px/1.35 ui-monospace,monospace;resize:vertical}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0}.row+.row{border-top:1px solid color-mix(in srgb,var(--mut) 18%,transparent)}
+.row .k{color:var(--mut)}.row .v{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.big{font-size:44px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}.big small{font-size:18px;font-weight:500;color:var(--mut)}
+.pill{display:inline-block;font-size:11px;line-height:18px;padding:0 8px;border-radius:9px;background:var(--sf2);color:var(--warn);margin-left:6px;vertical-align:1px;font-weight:500}
+.mono{font:12px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}.ok{color:var(--ok)}.bad{color:var(--bad)}.note{font-size:13px}
+@media(min-width:720px){.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}}</style></head><body>
+<h1>Scale live test (S400)</h1>
+<p>Reads the encrypted broadcasts of the Xiaomi Body Composition Scale S400 while this page is open, decrypts them on this phone and shows weight, impedance and heart rate. Your bind key stays on this device: the page cannot reach the network.</p>
+<div class="card"><h2>This browser</h2><div id="sup"></div></div>
+<div class="card"><h2>Scale</h2>
+<label for="key">Bind key (32 hex characters)</label><input id="key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" placeholder="Paste the bind key">
+<label for="mac">Scale MAC address</label><input id="mac" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="17" placeholder="AA:BB:CC:DD:EE:FF">
+<p class="note" id="keyst"></p>
+<div><button id="save">Save</button><button class="soft" id="forget">Forget key</button></div></div>
+<div class="card"><h2>Weigh</h2><p class="note">Press Connect, step on the scale barefoot so it wakes up, pick it in the list, then stay still until both packets have arrived.</p>
+<div><button id="go">Connect scale</button><button class="soft" id="scan">Scan all nearby</button><button class="soft" id="stop" disabled>Stop</button></div>
+<p class="note" id="st">Not listening.</p></div>
+<div class="card"><div class="big" id="w">–<small> kg</small></div><p class="note" id="phase">Waiting for a weight.</p>
+<div class="grid"><div>
+<div class="row"><span class="k">Impedance 50 kHz<span class="pill">unverified</span></span><span class="v" id="i50">–</span></div>
+<div class="row"><span class="k">Impedance 250 kHz<span class="pill">unverified</span></span><span class="v" id="i250">–</span></div>
+<div class="row"><span class="k">Heart rate<span class="pill">unverified</span></span><span class="v" id="hr">–</span></div>
+<div class="row"><span class="k">Profile<span class="pill">unverified</span></span><span class="v" id="prof">–</span></div>
+</div><div>
+<div class="row"><span class="k">MAC</span><span class="v mono" id="fmac">–</span></div>
+<div class="row"><span class="k">Frame counter</span><span class="v" id="cnt">–</span></div>
+<div class="row"><span class="k">Signal</span><span class="v" id="rssi">–</span></div>
+<div class="row"><span class="k">Frames</span><span class="v" id="nf">0</span></div>
+</div></div></div>
+<div class="card"><h2>Last frame</h2>
+<div class="row"><span class="k">Raw</span><span class="v mono" id="raw">–</span></div>
+<div class="row"><span class="k">Decrypted</span><span class="v mono" id="plain">–</span></div>
+<div class="row"><span class="k">Result</span><span class="v" id="why">–</span></div>
+<label for="paste">Decode a frame by hand (hex of the 0xFE95 service data)</label><input id="paste" class="mono" autocomplete="off" spellcheck="false" placeholder="4859d53b…"><div><button class="soft" id="dec">Decode</button></div></div>
+<div class="card"><h2>Log</h2><p class="note">One row per distinct frame, without the key. Copy it and send it back to check the decoding.</p>
+<textarea id="log" readonly spellcheck="false" aria-label="Received frames (CSV)"></textarea><div><button class="soft" id="copy">Copy log</button><button class="soft" id="clear">Clear</button></div></div>
+<script>
+/* Spike for docs/PRODUCT_REQUIREMENTS.md L217 (docs/SCALE_LIVE.md). MiBeacon v4/v5: AES-128-CCM, 12-byte nonce = MAC (byte-reversed) + product id + frame counter + 3-byte extended counter, associated data 0x11, 4-byte tag (xiaomi-ble parser.py decrypt_mibeacon_v4_v5).
+   WebCrypto has no CCM, so AES-128 (forward cipher only) and CCM (RFC 3610) are implemented here. */
+const S400 = (() => {
+  const xt = a => ((a << 1) ^ (a & 0x80 ? 0x1b : 0)) & 0xff, rotl = (x, s) => ((x << s) | (x >> (8 - s))) & 0xff;
+  const SBOX = new Uint8Array(256);
+  { let p = 1, q = 1; do { p = (p ^ (p << 1) ^ (p & 0x80 ? 0x1b : 0)) & 0xff; q = (q ^ (q << 1)) & 0xff; q = (q ^ (q << 2)) & 0xff; q = (q ^ (q << 4)) & 0xff; if (q & 0x80) q ^= 0x09; SBOX[p] = q ^ rotl(q, 1) ^ rotl(q, 2) ^ rotl(q, 3) ^ rotl(q, 4) ^ 0x63; } while (p !== 1); SBOX[0] = 0x63; }
+  function expand(k) {
+    const w = new Uint8Array(176); w.set(k); let rc = 1;
+    for (let i = 16; i < 176; i += 4) {
+      let t = [w[i - 4], w[i - 3], w[i - 2], w[i - 1]];
+      if (i % 16 === 0) { t = [SBOX[t[1]] ^ rc, SBOX[t[2]], SBOX[t[3]], SBOX[t[0]]]; rc = xt(rc); }
+      for (let j = 0; j < 4; j++) w[i + j] = w[i - 16 + j] ^ t[j];
+    }
+    return w;
+  }
+  function block(w, inp) {
+    let s = new Uint8Array(16); for (let i = 0; i < 16; i++) s[i] = inp[i] ^ w[i];
+    for (let r = 1; r <= 10; r++) {
+      const t = new Uint8Array(16);
+      for (let c = 0; c < 4; c++) for (let x = 0; x < 4; x++) t[x + 4 * c] = SBOX[s[x + 4 * ((c + x) % 4)]];
+      if (r < 10) for (let c = 0; c < 4; c++) { const a0 = t[4 * c], a1 = t[4 * c + 1], a2 = t[4 * c + 2], a3 = t[4 * c + 3]; t[4 * c] = xt(a0) ^ xt(a1) ^ a1 ^ a2 ^ a3; t[4 * c + 1] = a0 ^ xt(a1) ^ xt(a2) ^ a2 ^ a3; t[4 * c + 2] = a0 ^ a1 ^ xt(a2) ^ xt(a3) ^ a3; t[4 * c + 3] = xt(a0) ^ a0 ^ a1 ^ a2 ^ xt(a3); }
+      for (let i = 0; i < 16; i++) t[i] ^= w[16 * r + i];
+      s = t;
+    }
+    return s;
+  }
+  const aes = (key, inp) => block(expand(key), inp);
+  /* RFC 3610: tag length m (4..16, even), nonce of 7..13 bytes, associated data shorter than 0xFF00 bytes */
+  function ccmCore(key, nonce, aad, msg, m) {
+    const w = expand(key), L = 15 - nonce.length;
+    const ctr = i => { const a = new Uint8Array(16); a[0] = L - 1; a.set(nonce, 1); for (let j = 0; j < L; j++) a[15 - j] = (i / 2 ** (8 * j)) & 0xff; return block(w, a); };
+    let x = new Uint8Array(16);
+    const mac = b => { for (let i = 0; i < 16; i++) x[i] ^= b[i] || 0; x = block(w, x); };
+    const b0 = new Uint8Array(16); b0[0] = (aad.length ? 64 : 0) | (((m - 2) / 2) << 3) | (L - 1); b0.set(nonce, 1);
+    for (let j = 0; j < L; j++) b0[15 - j] = (msg.length / 2 ** (8 * j)) & 0xff;
+    mac(b0);
+    if (aad.length) { const a = new Uint8Array(2 + aad.length); a[0] = aad.length >> 8; a[1] = aad.length & 0xff; a.set(aad, 2); for (let i = 0; i < a.length; i += 16) mac(a.subarray(i, i + 16)); }
+    for (let i = 0; i < msg.length; i += 16) mac(msg.subarray(i, i + 16));
+    const s0 = ctr(0), tag = new Uint8Array(m); for (let i = 0; i < m; i++) tag[i] = x[i] ^ s0[i];
+    return { tag, ctr };
+  }
+  const xorCtr = (ctr, data) => { const out = new Uint8Array(data.length); for (let i = 0; i < data.length; i += 16) { const s = ctr(i / 16 + 1); for (let j = 0; j < 16 && i + j < data.length; j++) out[i + j] = data[i + j] ^ s[j]; } return out; };
+  function ccmEncrypt(key, nonce, aad, msg, m) { const { tag, ctr } = ccmCore(key, nonce, aad, msg, m); const c = xorCtr(ctr, msg), out = new Uint8Array(c.length + m); out.set(c); out.set(tag, c.length); return out; }
+  /* returns the plaintext, or null when the tag does not match */
+  function ccmDecrypt(key, nonce, aad, ct, tagIn) {
+    const msg = xorCtr(ccmCore(key, nonce, aad, new Uint8Array(0), tagIn.length).ctr, ct), { tag } = ccmCore(key, nonce, aad, msg, tagIn.length);
+    let d = 0; for (let i = 0; i < tag.length; i++) d |= tag[i] ^ tagIn[i];
+    return d === 0 ? msg : null;
+  }
+  const hex = b => Array.from(b, v => v.toString(16).padStart(2, "0")).join("");
+  const unhex = s => { const t = String(s).replace(/[^0-9a-f]/gi, ""); if (t.length % 2) return null; const b = new Uint8Array(t.length / 2); for (let i = 0; i < b.length; i++) b[i] = parseInt(t.substr(2 * i, 2), 16); return b; };
+  const keyOk = s => /^[0-9a-f]{32}$/i.test(String(s || ""));
+  const macOk = s => /^([0-9a-f]{2}[:-]?){5}[0-9a-f]{2}$/i.test(String(s || "").trim());
+  const macBytes = s => macOk(s) ? unhex(s) : null;
+  const macStr = b => Array.from(b, v => v.toString(16).padStart(2, "0").toUpperCase()).join(":");
+  /* object 0x6E16 of the S400 (xiaomi-ble obj6e16): profile byte, then a little-endian uint32 = mass (11 bits, 0.1 kg) | heart rate (7 bits, +50 bpm) | impedance (14 bits, 0.1 ohm); the last 4 bytes are not decoded by any source */
+  function decode6e16(b) {
+    if (b.length !== 9) return { error: "object 0x6E16 has " + b.length + " bytes, expected 9" };
+    const data = (b[1] | b[2] << 8 | b[3] << 16 | b[4] << 24) >>> 0;
+    let mass = data & 0x7ff; const hr = (data >>> 11) & 0x7f, imp = data >>> 18;
+    if (mass === 0x7ff) mass = 0;
+    const o = { profile: b[0], rest: hex(b.subarray(5)) };
+    if (!mass && !hr && !imp) { o.off = true; return o; }
+    if (mass) o.kg = mass / 10;
+    if (hr > 0 && hr < 127) o.bpm = hr + 50;
+    if (!mass && !hr) o.imp250 = imp / 10; else if (imp) o.imp50 = imp / 10;
+    return o;
+  }
+  /* d: service data bytes of 0xFE95; mac: the scale's MAC in the usual order (or null); key: 16 bytes (or null) */
+  function parseFrame(d, mac, key) {
+    const r = { ok: false, raw: hex(d) };
+    if (d.length < 5) { r.why = "frame too short (" + d.length + " bytes)"; return r; }
+    const fc = d[0] | d[1] << 8; let i = 5;
+    r.frctrl = fc; r.version = fc >> 12; r.product = d[2] | d[3] << 8; r.counter = d[4]; r.encrypted = !!(fc & 0x08);
+    if (fc & 0x80) { r.why = "mesh frame, not handled"; return r; }
+    if (fc & 0x10) { if (d.length < 11) { r.why = "frame too short for its MAC"; return r; } r.mac = macStr(Array.from(d.subarray(5, 11)).reverse()); i = 11; }
+    if (fc & 0x20) { i++; if (d.length >= i && d[i - 1] & 0x20) i++; }
+    if (!(fc & 0x40)) { r.ok = true; r.empty = true; r.why = "no data in this frame (scale idle)"; return r; }
+    let plain;
+    if (r.encrypted) {
+      if (r.version < 4) { r.why = "MiBeacon v" + r.version + " encryption is not handled (S400 uses v5)"; return r; }
+      if (d.length < i + 9) { r.why = "frame too short to decrypt (" + d.length + " bytes, need " + (i + 9) + ")"; return r; }
+      const m = r.mac ? unhex(r.mac) : mac;
+      if (!m) { r.why = "the frame has no MAC: type the scale's MAC address"; return r; }
+      if (!key) { r.why = "no bind key saved"; return r; }
+      r.ext = d[d.length - 7] | d[d.length - 6] << 8 | d[d.length - 5] << 16; r.counter = (r.counter + r.ext * 256) >>> 0;
+      const nonce = new Uint8Array(12); nonce.set(Array.from(m).reverse(), 0); nonce.set(d.subarray(2, 5), 6); nonce.set(d.subarray(d.length - 7, d.length - 4), 9);
+      r.nonce = hex(nonce);
+      plain = ccmDecrypt(key, nonce, Uint8Array.of(0x11), d.subarray(i, d.length - 7), d.subarray(d.length - 4));
+      if (!plain) { r.why = "tag does not match (wrong key or MAC?) · " + d.length + " bytes · nonce tried " + r.nonce; return r; }
+    } else plain = d.subarray(i);
+    r.plain = hex(plain); r.objects = [];
+    for (let p = 0; p + 3 <= plain.length;) {
+      const type = plain[p] | plain[p + 1] << 8, len = plain[p + 2], body = plain.subarray(p + 3, p + 3 + len);
+      if (body.length < len) { r.why = "object 0x" + type.toString(16) + " is cut short"; break; }
+      const o = { type, data: hex(body) }; if (type === 0x6e16) o.scale = decode6e16(body);
+      r.objects.push(o); p += 3 + len;
+    }
+    r.ok = true; return r;
+  }
+  return { aes, ccmEncrypt, ccmDecrypt, parseFrame, decode6e16, hex, unhex, keyOk, macOk, macBytes };
+})();
+
+const $ = id => document.getElementById(id), LK = "engine.s400.bindkey", LM = "engine.s400.mac";
+const store = { get: k => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const BT = typeof navigator !== "undefined" ? navigator.bluetooth : undefined, FE95 = "0000fe95-0000-1000-8000-00805f9b34fb";
+const sup = [["Secure page (https)", window.isSecureContext], ["Web Bluetooth", !!BT], ["Watch a device's broadcasts (watchAdvertisements)", !!(window.BluetoothDevice && "watchAdvertisements" in BluetoothDevice.prototype)], ["Scan all nearby (requestLEScan)", !!(BT && BT.requestLEScan)]];
+$("sup").innerHTML = sup.map(([k, v]) => `<div class="row"><span class="k">${k}</span><span class="v ${v ? "ok" : "bad"}">${v ? "Yes" : "No"}</span></div>`).join("") + (sup[2][1] && sup[3][1] ? "" : `<p class="note">On Chrome for Android, turn on chrome://flags/#enable-experimental-web-platform-features and restart Chrome if a line says No.</p>`);
+$("scan").hidden = !(BT && BT.requestLEScan);
+const keyBytes = () => { const k = store.get(LK); return S400.keyOk(k) ? S400.unhex(k) : null; };
+function showKey(msg) {
+  const has = !!keyBytes(); $("forget").disabled = !has;
+  $("keyst").innerHTML = msg || (has ? `<span class="ok">Bind key saved on this device.</span>` : "No bind key saved yet.");
+  $("key").placeholder = has ? "Saved · paste a new one to replace it" : "Paste the bind key";
+}
+$("mac").value = store.get(LM); showKey();
+$("save").onclick = () => {
+  const k = $("key").value.trim().replace(/\s+/g, ""), m = $("mac").value.trim();
+  if (k && !S400.keyOk(k)) { $("key").value = ""; return showKey(`<span class="bad">The bind key must be 32 characters, 0–9 and a–f.</span>`); }
+  if (m && !S400.macOk(m)) return showKey(`<span class="bad">The MAC must look like AA:BB:CC:DD:EE:FF.</span>`);
+  if (k) store.set(LK, k.toLowerCase());
+  if (m) store.set(LM, m.toUpperCase()); else store.del(LM);
+  $("key").value = ""; seen.clear(); showKey();
+};
+$("forget").onclick = () => { store.del(LK); $("key").value = ""; showKey("Bind key removed from this device."); };
+
+const rows = ["time,source,rssi,mac,counter,frctrl,raw_hex,result,plain_hex,weight_kg,imp50_ohm,imp250_ohm,hr_bpm,profile"], seen = new Set();
+let frames = 0, scan = null, watched = null;
+const csv = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+function handle(bytes, src, rssi, again) {
+  const r = S400.parseFrame(bytes, S400.macBytes(store.get(LM)), keyBytes());
+  frames++; $("nf").textContent = frames;
+  if (rssi != null) $("rssi").textContent = rssi + " dBm";
+  if (seen.has(r.raw) && !again) return r;   // the scale repeats each broadcast many times: a late copy of the weight packet must not undo «complete»
+  seen.add(r.raw); $("raw").textContent = r.raw; $("plain").textContent = r.plain || "–";
+  $("why").innerHTML = r.ok ? `<span class="ok">${r.empty ? r.why : "Decrypted"}</span>` : `<span class="bad">${r.why}</span>`;
+  if (r.counter != null) $("cnt").textContent = r.counter;
+  $("fmac").textContent = r.mac || store.get(LM) || "–";
+  const sc = (r.objects || []).map(o => o.scale).find(Boolean) || {};
+  if (sc.off) $("phase").textContent = "Stepped off.";
+  if (sc.kg != null) { $("w").innerHTML = `${sc.kg.toFixed(1)}<small> kg</small>`; $("phase").textContent = sc.imp50 != null ? "Weight and first impedance in. Stay still for the second packet." : "Weight in."; }
+  if (sc.imp50 != null) $("i50").textContent = sc.imp50.toFixed(1) + " Ω";
+  if (sc.imp250 != null) { $("i250").textContent = sc.imp250.toFixed(1) + " Ω"; $("phase").textContent = "Measurement complete."; }
+  if (sc.bpm != null) $("hr").textContent = sc.bpm + " bpm";
+  if (sc.profile != null) $("prof").textContent = sc.profile;
+  rows.push([new Date().toISOString(), src, rssi, r.mac || store.get(LM), r.counter, r.frctrl != null ? "0x" + r.frctrl.toString(16) : "", r.raw, r.ok ? (r.empty ? "idle" : "ok") : r.why, r.plain, sc.kg, sc.imp50, sc.imp250, sc.bpm, sc.profile].map(csv).join(","));
+  $("log").value = rows.join("\n"); $("log").scrollTop = $("log").scrollHeight;
+  return r;
+}
+function onAdv(e) {
+  const dv = e.serviceData && (e.serviceData.get(FE95) || e.serviceData.get(0xfe95)); if (!dv) return;
+  handle(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength), e.device && e.device.name ? e.device.name : "scale", e.rssi);
+}
+const status = (t, bad) => { $("st").innerHTML = bad ? `<span class="bad">${t}</span>` : t; };
+function stop() {
+  if (watched) { watched.removeEventListener("advertisementreceived", onAdv); try { watched.unwatchAdvertisements && watched.unwatchAdvertisements(); } catch (e) {} watched = null; }
+  if (scan) { try { scan.stop(); } catch (e) {} BT.removeEventListener("advertisementreceived", onAdv); scan = null; }
+  $("go").disabled = $("scan").disabled = false; $("stop").disabled = true; status("Not listening.");
+}
+$("go").onclick = async () => {
+  try {
+    if (!BT) throw new Error("This browser has no Web Bluetooth: open the page in Chrome on Android.");
+    const dev = await BT.requestDevice({ acceptAllDevices: true, optionalServices: [0xfe95] });
+    if (!dev.watchAdvertisements) throw new Error("This browser cannot watch broadcasts: see the flag above.");
+    dev.addEventListener("advertisementreceived", onAdv); await dev.watchAdvertisements(); watched = dev;
+    $("go").disabled = $("scan").disabled = true; $("stop").disabled = false; status(`Listening to ${dev.name || "the scale"}. Step on it.`);
+  } catch (e) { status(String(e.message || e), true); }
+};
+$("scan").onclick = async () => {
+  try {
+    scan = await BT.requestLEScan({ acceptAllAdvertisements: true, keepRepeatedDevices: true }); BT.addEventListener("advertisementreceived", onAdv);
+    $("go").disabled = $("scan").disabled = true; $("stop").disabled = false; status("Scanning everything nearby. Step on the scale.");
+  } catch (e) { scan = null; status(String(e.message || e), true); }
+};
+$("stop").onclick = stop;
+$("dec").onclick = () => { const b = S400.unhex($("paste").value); if (!b || !b.length) { $("why").innerHTML = `<span class="bad">Not a hex frame.</span>`; return; } handle(b, "pasted", null, true); };
+$("copy").onclick = async () => { try { await navigator.clipboard.writeText(rows.join("\n")); $("copy").textContent = "Copied"; } catch (e) { $("log").select(); $("copy").textContent = "Selected: copy it"; } setTimeout(() => { $("copy").textContent = "Copy log"; }, 1800); };
+$("clear").onclick = () => { rows.length = 1; seen.clear(); frames = 0; $("nf").textContent = 0; $("log").value = rows[0]; };
+$("log").value = rows[0];
+</script></body></html>
