@@ -20,6 +20,6 @@
 | M5d-fuel | released | L214 prezzo pasto + L205 sgarro | fuel | claude/m5d-fuel | 2026-10-26 23:35Z | 2026-10-27 00:01Z | Fatto e unito (5f163c9) |
 | M5d-shop | released | L203 scelta dalla dispensa + L204 ricetta | shopping | claude/m5d-shop | 2026-10-26 23:35Z | 2026-10-27 08:36Z | Fatto e unito (b55e5ef) |
 | R4-progress | active | R4 correzioni audit area 9 | progress,settings | claude/r4-progress | 2026-10-26 23:56Z | 2026-10-27 04:56Z |  |
-| SHIP | released | pubblicazione L216 + fix test del martedì | other | claude/bf-icu-guard | 2026-10-27 00:05Z | 2026-10-27 00:05Z | L216 pubblicato |
+| SHIP | released | pubblicazione L216 + fix test del martedì | other | claude/bf-icu-guard | 2026-10-27 00:05Z | 2026-10-27 09:28Z | fatto |
 | M21-spike | active | S400 live BLE: continuare lo spike | other | claude/m21-spike-wip | 2026-10-27 09:02Z | 2026-10-27 15:02Z | Rilevata dalla sessione awesome-goldberg (l'utente conferma che nessun'altra IA lavora). Ramo claude/m21-spike-wip 94767e8 da continuare |
 | M21-bia | released | Ricerca BIA da studi PubMed | docs | claude/m21-bia | 2026-10-27 09:02Z | 2026-10-27 09:15Z | Proposta scritta: docs/BIA_PROPOSAL.md (23a2cd5). Attende le decisioni D-BIA-1..10 dell'utente |
