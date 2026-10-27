@@ -111,6 +111,19 @@ test("Intake: days with only calories show unknown macros, no zeros and no donut
   assert.deepEqual(app.errors, []);
 });
 
+/* MEDIO 5 (continued) -- the «Per kg of body weight» card under Intake has the same rule: its 7-day average is over the days that have macros; none -> «—», never «0».
+   3 days with p 150, c 250, f 70 and 4 days with calories only, trend 80 kg: protein 150 / 80 = 1.875 -> «1.9», carbs 250 / 80 = 3.125 -> «3.1», fat 70 / 80 = 0.875 -> «0.9» (the kcal-only days do not pull it down). Calories only: «—». */
+test("Per kg of body weight: the average counts only days with macros", async () => {
+  const page = await start();
+  const r = await page.evaluate(() => {
+    const t = todayISO(), txt = () => { const d = document.createElement("div"); d.innerHTML = macroGkg(); return [...d.querySelectorAll(".gkg-r b")].map(b => b.textContent.replace(/\s+/g, " ")); };
+    for (let i = 0; i < 7; i++) mutateLog(addDays(t, -i), d => { d.weight = 80; d.kcal = 2300; });
+    const none = txt(); for (let i = 0; i < 3; i++) mutateLog(addDays(t, -i), d => { d.p = 150; d.c = 250; d.f = 70; });
+    return { none, some: txt() };
+  });
+  assert.ok(r.none.every(x => /→ —$/.test(x)), r.none.join("|")); assert.ok(/→ 3\.1$/.test(r.some[0]) && /→ 1\.9$/.test(r.some[1]) && /→ 0\.9$/.test(r.some[2]), r.some.join("|"));
+});
+
 /* MEDIO 6 -- g protein per kg uses the trend weight, the same as the card under it, not S.settings.weight (stale: only the weigh-in sheet and onboarding update it).
    settings.weight 99, weigh-ins a flat 81.5 kg for 14 days -> trend 81.5; protein 150 g a day: 150 / 81.5 = 1.84 -> «1.8» (with 99 it was 1.5). */
 test("Intake: g protein per kg is divided by the trend weight, like the card below", async () => {

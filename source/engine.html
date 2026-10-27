@@ -5484,7 +5484,7 @@ function balanceChart() {
 /* grams per kg of trend weight: the one number the averages above don't give */
 function macroGkg() {
   const today = todayISO(), r = energyAt(today), T = targetsFor(today), last = [];
-  for (let i = 0; i < 7; i++) { const x = intakeFor(addDays(today, -i)); if (x) last.push(x); }
+  for (let i = 0; i < 7; i++) { const x = intakeFor(addDays(today, -i)); if (x && (x.p > 0 || x.c > 0 || x.f > 0)) last.push(x); }   // calories typed without macros leave them unknown, not 0
   const av = k => last.length ? last.reduce((a, x) => a + (x[k] || 0), 0) / last.length : null; if (!r?.trend) return "";
   return `<div class="card pad gkg"><span class="flabel">Per kg of body weight (${r1(r.trend)} kg trend) · target → 7-day average</span><div class="gkg-r">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"]].map(([l, k, c]) => `<span style="--c:var(--${c})"><small><i></i>${l}</small><b>${r1(T[k] / r.trend)} → ${av(k) != null ? r1(av(k) / r.trend) : "—"}</b><small>g/kg</small></span>`).join("")}</div></div>`;
 }
