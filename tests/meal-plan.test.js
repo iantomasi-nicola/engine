@@ -26,7 +26,7 @@ test("the day menu offers «Swap lunch and dinner», and doing it twice is the s
 
 test("«What can I cook?» can target another day and meal; what you add lands there", async () => {
   const page = await start(); await plan(page);
-  const r = await page.evaluate(() => { const t = todayISO(), d = addDays(weekStartOf(t), 1); S.shop.pantry["t-rice"] = { g: 500 }; S.shop.pantry["t-chicken"] = { g: 400 }; S.shop.pantry["t-oil"] = { g: 100 }; DATA_V++;
+  const r = await page.evaluate(() => { const t = todayISO(), d = addDays(weekStartOf(t), addDays(weekStartOf(t), 1) === t ? 2 : 1); S.shop.pantry["t-rice"] = { g: 500 };   // a day of this week that is not today, whatever today is S.shop.pantry["t-chicken"] = { g: 400 }; S.shop.pantry["t-oil"] = { g: 100 }; DATA_V++;
     openSheet("cook", { meal: "dinner", date: d }); const html = document.querySelector(".sheet").innerHTML; const hasNav = /ck-go/.test(html), title = document.querySelector(".sheet-h").innerText;
     const n0 = (S.days[d].meals.dinner || []).length; ACT["ck-rec"]({ dataset: { id: "t-bowl" } }); const n1 = S.days[d].meals.dinner.length, today = S.days[t].meals.dinner.length; ACT["ck-go"]({ dataset: { date: addDays(t, 3) } }); return { hasNav, title, n: [n0, n1], today, d3: UI.sheet.date === addDays(t, 3) }; });
   assert.equal(r.hasNav, true); assert.deepEqual(r.n, [1, 2]); assert.equal(r.today, 1, "today was not touched"); assert.equal(r.d3, true);
