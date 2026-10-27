@@ -5009,7 +5009,8 @@ VIEWS.stats = function (embedded) {
   const setFor = k => k === "kcal" ? has : has.filter(r => r.tot.p > 0 || r.tot.c > 0 || r.tot.f > 0);
   /* fibre comes from the nutrient figures: only the days whose food has the value enough (F-09), not days where an unknown counted as 0 */
   const fibD = has.map(r => dayNut(r.d, basis === "eaten" ? "eaten" : "plan")).filter(a => nutrCovOn(end) ? a.kcal > 0 && nutCov(a, "fib") >= NUTCOV_MIN : (a.v.fib || 0) > 0);
-  const avg = k => { const rr = setFor(k); return rr.length ? rr.reduce((a, r) => a + (r.tot[k] || 0), 0) / rr.length : 0; };
+  /* null when no day has the figure: calories typed without macros leave protein, carbs and fat unknown, not 0 (F-09) */
+  const avg = k => { const rr = setFor(k); return rr.length ? rr.reduce((a, r) => a + (r.tot[k] || 0), 0) / rr.length : null; };
   const avgT = k => { const rr = setFor(k); return rr.length ? rr.reduce((a, r) => a + r.T[k], 0) / rr.length : 0; };
   const onTarget = has.filter(r => Math.abs(r.tot.kcal - r.T.kcal) <= r.T.kcal * 0.1).length;
   let streak = 0; for (let i = 0; i < 400; i++) { const d = S.days[addDays(end, -i)]; if (d && dayItems(d).some(([, it]) => it.eaten)) streak++; else if (i > 0) break; }
@@ -5020,14 +5021,14 @@ VIEWS.stats = function (embedded) {
   if (!has.length) return h + `<div class="empty"><h3>No ${basis} days in this range</h3><p>${basis === "eaten" ? "Tick the circle next to each food once you've eaten it. Your trends appear here." : "Plan a few days and your trends appear here."}</p><div class="row"><button class="btn primary" data-act="tab" data-tab="plan">Go to plan</button></div></div>`;
   h += `<div class="stat-grid four">
     <div class="stat"><b>${fmtN(avg("kcal"))}</b><small>avg kcal · ${r0(avg("kcal") / (avgT("kcal") || 1) * 100)}% of target</small></div>
-    <div class="stat"><b>${(avg("p") / w).toFixed(1)}</b><small>g protein per kg</small></div>
+    <div class="stat"><b>${avg("p") == null ? "—" : (avg("p") / w).toFixed(1)}</b><small>g protein per kg</small></div>
     <div class="stat"><b>${onTarget}/${has.length}</b><small>days within ±10%</small></div>${kpi(streak, "logging streak", `day${streak === 1 ? "" : "s"} with food eaten`)}</div>`;
   h += `<div class="section-h"><h2>Calories vs target</h2><span class="faint" style="font-size:12.5px">${basis === "eaten" ? "eaten" : "planned"} per day</span></div><div class="card pad">${kcalChart(rows)}</div>`;
   h += `<div class="section-h"><h2>Average macros vs target</h2></div><div class="card pad">${[["Carbs", "c", "carb"], ["Protein", "p", "pro"], ["Fat", "f", "fat"], ["Fibre", "fib", "good"]].map(([l, k, c]) => {
     const a = k === "fib" ? (fibD.length ? fibD.reduce((s, x) => s + x.v.fib, 0) / fibD.length : null) : avg(k), t = k === "fib" ? 30 : avgT(k); const pct = (a || 0) / (t || 1) * 100;
     return `<div class="adh" style="--c:var(--${c})"><span>${l}</span><span class="bar"><i style="width:${a == null ? 0 : clamp(pct / 1.3, 0, 100)}%"></i><u style="left:${100 / 1.3}%"></u></span><span class="v">${a == null ? "—" : `${r0(a)} g<br><small class="faint">${r0(pct)}%</small>`}</span></div>`; }).join("")}
     <div class="faint" style="font-size:12px;margin-top:4px">Marker = target. Fibre target is a general 30 g guideline${fibD.length < has.length ? `; fibre uses ${fibD.length} of ${has.length} days, the others lack data` : ""}.</div></div>`;
-  h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Where calories come from</h2></div><div class="card pad">${splitDonut(avg("p"), avg("c"), avg("f"))}</div></div>
+  h += `<div class="grid2 stack eq" style="gap:14px"><div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Where calories come from</h2></div><div class="card pad">${avg("p") == null ? `<div class="faint" style="font-size:13px">No protein, carbs or fat on these days.</div>` : splitDonut(avg("p"), avg("c"), avg("f"))}</div></div>
     <div style="min-width:0"><div class="section-h" style="margin-bottom:8px"><h2>Protein by day</h2></div><div class="card pad">${proteinChart(rows, w)}</div></div></div>`;
   h += topFoods(dates, basis);
   return h;
@@ -5087,6 +5088,7 @@ function kcalChart(rows) {
 function proteinChart(rows, w) {
   const W = chartW(true), H = 170, L = 30, R = 8, Tp = 10, B = 22, n = rows.length;
   const vals = rows.map(r => r.has && r.tot.p > 0 ? r.tot.p / w : null); const tg = rows.map(r => r.T.p / w);
+  if (vals.every(v => v == null)) return `<div class="faint" style="font-size:13px">No protein logged on these days.</div>`;
   const mx = Math.max(2.5, Math.ceil(Math.max(...vals.filter(v => v != null), ...tg) * 1.1 * 2) / 2);
   const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1));
   const y = v => Tp + (H - Tp - B) * (1 - v / mx);

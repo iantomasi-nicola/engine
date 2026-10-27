@@ -94,3 +94,19 @@ test("an unknown phase name falls back to Maintenance in the weekly table, the c
   assert.equal(r.phase, "Maintenance"); assert.ok(r.rows.length >= 4 && r.rows.every(p => p === "Maintenance"), r.rows.join()); assert.equal(r.coach, "string");
   assert.equal(r.draw, "ok"); assert.deepEqual(app.errors, []);
 });
+
+/* MEDIO 5 (F-09, null is not 0) -- Nutrition > Intake on days where only the calories were typed: protein, carbs and fat are UNKNOWN, not 0.
+   7 days with kcal 2300 and no macro -> avg kcal 2,300; g protein per kg «—» (not «0.0»); Carbs / Protein / Fat «—» (not «0 g»); no donut («100% Carbs» was a rounding artefact).
+   Add 3 days with p 150, c 250, f 70 (2,300 kcal: 600 + 1000 + 630 = 2230): the averages come from those 3 days only (150 / 250 / 70), the donut returns: carbs 1000/2230 = 44.8 %, protein 26.9 %, fat 28.3 % -> 45 / 27 / 28. */
+const statsText = async page => page.evaluate(() => { UI.statsRange = 7; UI.statsBasis = "eaten"; const d = document.createElement("div"); d.innerHTML = VIEWS.stats(true); return { text: d.innerHTML.replace(/<[^>]+>/g, " ").replace(/\s+/g, " "), donut: !!d.querySelector('svg[aria-label="Calorie split"]') }; });
+test("Intake: days with only calories show unknown macros, no zeros and no donut; days with macros come back", async () => {
+  const page = await start();
+  await page.evaluate(() => { const t = todayISO(); for (let i = 0; i < 7; i++) mutateLog(addDays(t, -i), d => { d.kcal = 2300; }); });
+  const a = await statsText(page);
+  assert.match(a.text, /2,?300/); assert.ok(!/0\.0 /.test(a.text) && !/\b0 g\b/.test(a.text) && !/100%/.test(a.text), a.text); assert.equal(a.donut, false);
+  assert.match(a.text, /— g protein per kg/);
+  await page.evaluate(() => { const t = todayISO(); for (let i = 0; i < 3; i++) mutateLog(addDays(t, -i), d => { d.p = 150; d.c = 250; d.f = 70; }); });
+  const b = await statsText(page);
+  assert.equal(b.donut, true); assert.match(b.text, /45%.*Carbs|Carbs.*45%/); assert.match(b.text, /150 g/);
+  assert.deepEqual(app.errors, []);
+});
