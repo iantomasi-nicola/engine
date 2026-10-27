@@ -1,5 +1,5 @@
 /* M14b groups E and F: deleted foods keep history, priceSet merges, Finish keeps pantry units, pack stepper keeps price/offer/store,
-   no ghost row, and L189 «Use something from home». Synthetic data only. */
+   no ghost row, and L189 «Use something from home» (the picker of L203 is in m5d-shop). Synthetic data only. */
 const test = require("node:test"), assert = require("node:assert/strict"), H = require("./lib/harness"), F = require("./fixtures/synthetic");
 let dir, app;
 test.before(async () => { dir = H.build(H.tmp("m14b-ef-build")); });
@@ -85,9 +85,9 @@ const L189 = async () => {
   });
   return page;
 };
-test("L189: the candidates are foods at home with free stock, same macro role, ordered by similarity, with the grams they need", async () => {
+test("L189: the suggested candidates are foods at home with free stock, same macro role, ordered by similarity, with the grams they need (L203: the others follow, see m5d-shop)", async () => {
   const page = await L189();
-  const r = await page.evaluate(() => homeSwaps("t-rice").map(x => [x.food.id, x.qFrom, x.qTo]));
+  const r = await page.evaluate(() => homeSwaps("t-rice").filter(x => x.suggested).map(x => [x.food.id, x.qFrom, x.qTo]));
   assert.deepEqual(r, [["t-pasta", 500, 600], ["t-bread", 500, 780]]);
 });
 test("L189: one tap swaps the plan, the row disappears, the stock is untouched, one Undo brings it all back", async () => {
@@ -103,12 +103,6 @@ test("L189: one tap swaps the plan, the row disappears, the stock is untouched, 
   assert.equal(r.rows0, "t-rice"); assert.deepEqual(r.mid, { rice: false, pasta: false, cov: 600, ref: "t-pasta", qty: 600, pan: true, undo: "function" });
   assert.equal(r.back, "t-rice"); assert.equal(r.refBack, "t-rice"); assert.equal(r.qtyBack, 500);
   assert.deepEqual(app.errors, []);
-});
-test("L189: the buy sheet offers it in a closed fold, the preview reads «500 g of X → 600 g of Y»", async () => {
-  const page = await L189();
-  const r = await page.evaluate(async () => { ACT["shop-buy"]({ dataset: { id: "t-rice" } }); const closed = !document.querySelector('.sheet [data-act="home-swap"]'), fold = !!document.querySelector('.sheet [data-act="fold-tog"][data-id="home"]');
-    document.querySelector('.sheet [data-act="fold-tog"][data-id="home"]').click(); await new Promise(x => setTimeout(x, 150)); const b = document.querySelector('.sheet [data-act="home-swap"]'); return { closed, fold, txt: b && b.textContent.replace(/\s+/g, " ") }; });
-  assert.equal(r.closed, true); assert.equal(r.fold, true); assert.match(r.txt, /Test pasta.*500 g of Test rice → 600 g of Test pasta/);
 });
 test("L189: nothing is offered when nothing at home fits", async () => {
   const page = await start(F.seed({ withPlan: true }));

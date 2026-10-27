@@ -305,7 +305,6 @@ span.shop-q{flex-direction:row;align-items:center;gap:6px}
 .chip.doms.l1{background:color-mix(in srgb,var(--warn) 14%,var(--surface-2))}.chip.doms.l2{background:color-mix(in srgb,var(--warn) 32%,var(--surface-2))}.chip.doms.l3{background:color-mix(in srgb,var(--bad) 30%,var(--surface-2))}
 .rec-sec{display:flex;flex-direction:column;border-radius:var(--r-card,20px);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .rec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;text-align:left;color:var(--ink)}.rec-h>span{display:flex;flex-direction:column;gap:2px;min-width:0}.rec-h b{font-family:var(--display);font-size:17px;font-weight:600}.rec-h small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hm-h{display:flex;align-items:center;gap:8px;width:100%;min-height:36px;padding:2px 0;text-align:left;color:var(--muted)}.hm-h .flabel{flex:1;min-width:0}.hm-h small{font-size:12.5px;color:var(--faint)}.hm-b{display:flex;flex-direction:column;margin-top:4px}.hm-b .lrow{padding:10px 0!important;border-top:0!important;background:none!important;border-radius:0!important}.hm-b .lrow+.lrow{border-top:1px solid var(--line)!important}
 .rec-b{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}.rec-b .section-h{margin:0}.rec-b>.card,.rec-b>.card.pad{box-shadow:none;background:var(--surface-2)}
 .rk{display:flex;flex-direction:column;gap:12px}.rk .rk-paste>summary.lrow{padding:6px 0;min-height:0}.rk-file{cursor:pointer;padding:6px 10px}.rk textarea{min-height:92px;resize:vertical;font-variant-numeric:tabular-nums}.rk-best{font-family:var(--display);font-size:22px;font-weight:650;padding:8px 0;font-variant-numeric:tabular-nums}.rk-res{display:flex;flex-direction:column;gap:2px}.rk-res b{font-size:17px}.rk-res span{font-size:13.5px;color:var(--muted);line-height:1.45}.rk-sp{display:flex;flex-direction:column;gap:8px}
 .wc{display:flex;flex-direction:column;gap:10px}.wc-main{display:grid;grid-template-columns:26px minmax(0,1fr);gap:6px}.wc-y{position:relative;height:110px}.wc-y span{position:absolute;left:0;font-size:10.5px;line-height:1;color:var(--faint);transform:translateY(50%)}
@@ -7608,7 +7607,9 @@ ACT["pa-save"] = () => { const sh = S_(), g = paGrams(sh), u = sh.u || "base", p
   if (g > 0) S.shop.pantry[sh.food] = clean0({ g: r0(g), exp: sh.exp || "", u: u === "base" ? null : u, pw: pw || old.pw || null, pk: pk || old.pk || null }); else delete S.shop.pantry[sh.food]; put("shop", "", S.shop);
   paDone(sh); toast(g > 0 ? `${F.name} · ${(q => `${q.v} ${q.u}`)(pantryQty(F, S.shop.pantry[sh.food]))} at home` : `${F.name} removed from the pantry`, stockUndoer(sh.food, had)); };
 ACT["pa-del"] = () => { const sh = S_(), had = S.shop.pantry[sh.food] ? clone(S.shop.pantry[sh.food]) : null; delete S.shop.pantry[sh.food]; put("shop", "", S.shop); paDone(sh); toast("Removed from the pantry", stockUndoer(sh.food, had)); };
-function paDone(sh) { if (sh.back) openSheet(sh.back.type, sh.back); else closeSheet(); }
+function paDone(sh) { let hp = sh._ret; while (hp && hp.type !== "homepick") hp = hp._ret;   // added from «Use something from home»: back to the picker with this food chosen
+  if (hp) { openSheet("homepick", { ...hp, to: S.shop.pantry[sh.food]?.g > 0 ? sh.food : hp.to }); return; }
+  if (sh.back) openSheet(sh.back.type, sh.back); else closeSheet(); }
 
 /* stats */
 ACT["stats-range"] = el => { UI.statsRange = +el.dataset.n; scheduleRender(); };
@@ -11828,7 +11829,7 @@ SHEETS.buy = sh => {
         <small class="faint">The list counts whole packs of this size. Changing it here changes the food everywhere.</small></div>
       ${g && r && g > r.buy ? `<div class="note">${fmtN(g - r.buy)} ${u} more than the plan needs: it goes to the pantry and the planner will use it.</div>` : ""}
       <div class="faint" style="font-size:12.5px">${p ? `Last price: ${fmtEur(p.eur)} for ${fmtN(p.g)} ${u} (${fmtEur(p.eur / p.g * 1000)}/${u === "ml" ? "l" : "kg"})${p.at ? `, ${fmtDM(p.at)}` : ""}.` : "No price yet: what you enter is remembered for next time and for the estimates."}</div>
-      ${homeSwapHTML(sh.id)}`,
+      ${homeOpenHTML(sh.id)}`,
     foot: `${S.shop.checked?.[sh.id] ? `<button class="btn soft" data-act="by-out" style="flex:0 0 auto">Take out</button>` : ""}<button class="btn tonal" data-act="by-swap" style="flex:0 0 auto" aria-label="Replace this product">${ic("swap", "sm")}Replace</button><button class="btn primary" data-act="by-ok">${ic("cart", "sm")}In the cart</button>` };
 };
 ACT["shop-buy"] = el => { const id = el.dataset.id, c = S.shop.checked?.[id], r = shoppingRows(UI.shopStart, S.shop.range || 7).find(x => x.id === id);
@@ -12121,40 +12122,80 @@ function swapFood(from, to, o = {}) {
   const key = o.by || (o.kcal ? "kcal" : null), k = key && A.per[key] > 0 && B.per[key] > 0 ? A.per[key] / B.per[key] : 1, today = o.since && o.since > todayISO() ? o.since : todayISO(), q = x => Math.round(x * 10) / 10;   // by: the macro the new food must match (kcal, p, c or f); since/until: only a window of the plan
   const touched = [], recBefore = {}, checked = clone(S.shop.checked?.[from] ?? null);   // touched: the items this swap changed (day, id, old qty, new qty), nothing else
   let meals = 0, nrec = 0;
-  for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => it.kind === "food" && it.ref === from && !it.eaten)) continue;
-    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) if (it.kind === "food" && it.ref === from && !it.eaten) { const was = it.qty; it.ref = to; it.qty = q((+it.qty || 0) * k); touched.push({ d, id: it.id, qty: was, now: it.qty }); meals++; } }); }
+  const inRec = it => o.home && it.kind === "recipe" && !it.eaten && !!itemRecipe(it)?.ingredients?.some(i => i.food === from);   // L204: a planned recipe that uses the product
+  for (const [d, day] of Object.entries(S.days)) { if (d < today || (o.until && d > o.until) || !dayItems(day).some(([, it]) => (it.kind === "food" && it.ref === from && !it.eaten) || inRec(it))) continue;
+    mutateDay(d, dd => { for (const [, it] of dayItems(dd)) {
+      if (it.kind === "food" && it.ref === from && !it.eaten) { const was = it.qty; it.ref = to; it.qty = q((+it.qty || 0) * k); touched.push({ d, id: it.id, qty: was, now: it.qty }); meals++; }
+      else if (inRec(it)) { const r = itemRecipe(it), was = it.snap ? clone(it.snap) : null;   // this meal only: the saved recipe is never written
+        it.snap = { name: r.name, sv: r.servings || 1, ing: r.ingredients.map(i => ({ food: i.food === from ? to : i.food, g: i.food === from ? q(i.g * k) : i.g })) }; touched.push({ d, id: it.id, snap: was, snapNow: clone(it.snap) }); meals++; } } }); }
   if (o.recipes) for (const r of allRecipes().filter(r => (r.ingredients || []).some(i => i.food === from))) { recBefore[r.id] = S.recipes[r.id] ? clone(S.recipes[r.id]) : null; freezeRecipeUses(r.id);
     const n = clone(getRecipe(r.id)); n.ingredients = n.ingredients.map(i => i.food === from ? { food: to, g: q(i.g * k) } : i); if (n.source === "builtin") n.source = "custom"; put("recipes", r.id, n); nrec++; }
   if (S.shop.checked?.[from]) { delete S.shop.checked[from]; put("shop", "", S.shop); }
   toast(o.home ? `${B.name} from home instead of ${A.name}` : `${A.name} replaced by ${B.name}${meals ? ` in ${meals} meal${meals === 1 ? "" : "s"}` : ""}`, () => {
     /* only the items the swap changed go back, and only if they are still as the swap left them (not eaten, same food, same grams): a day added since, or a meal ticked since, is never rewritten */
     for (const d of new Set(touched.map(x => x.d))) { if (!S.days[d]) continue;
-      mutateDay(d, dd => { for (const [, it] of dayItems(dd)) { const t = touched.find(x => x.d === d && x.id === it.id); if (t && !it.eaten && it.ref === to && it.qty === t.now) { it.ref = from; it.qty = t.qty; } } }); }
+      mutateDay(d, dd => { for (const [, it] of dayItems(dd)) { const t = touched.find(x => x.d === d && x.id === it.id); if (!t || it.eaten) continue;
+        if (t.snapNow) { if (JSON.stringify(it.snap) === JSON.stringify(t.snapNow)) { if (t.snap) it.snap = t.snap; else delete it.snap; } }
+        else if (it.ref === to && it.qty === t.now) { it.ref = from; it.qty = t.qty; } } }); }
     for (const [id, v] of Object.entries(recBefore)) { if (v) put("recipes", id, v); else del("recipes", id); }
     if (checked) { S.shop.checked = { ...(S.shop.checked || {}), [from]: checked }; put("shop", "", S.shop); } scheduleRender(); });
   return { meals, recipes: nrec };
 }
-/* «Use something from home» (L189): for a row to buy, foods at home with stock to spare that do the same job (same role P/C/F),
-   closest in macros first. The planned meals of the list window that use the product move to it in the grams that match the role's
-   macro (500 g of X → 430 g of Y); the real stock is never touched, the row simply stops being needed. Only offered when the product is planned
-   as itself (not inside a recipe) and the stock to spare covers all of it. */
-const HOME_KEY = { P: "p", C: "c", F: "f" };
-function homeSwaps(id) {
-  const A = getFood(id), key = A && HOME_KEY[A.role]; if (!A?.per || !key || !(A.per[key] > 0)) return [];
+/* «Use something from home» (L189, L203): for a row to buy, any food at home can take its place. The planned meals of the list window that use the product
+   move to the chosen food in the grams that match the macro of the product's role (500 g of X → 430 g of Y; calories when the chosen food lacks that macro);
+   the real stock is never touched, the row simply stops being needed (what the chosen food's free stock does not cover goes on the list under its own name).
+   Suggested = same role, enough free stock. */
+const HOME_KEY = { P: "p", C: "c", F: "f" }, HOME_SAME = { p: "protein", c: "carbs", f: "fat", kcal: "calories" };
+function homeNeed(id) {
+  const A = getFood(id); if (!A?.per) return null;
   const start = UI.shopStart, n = S.shop.range || 7, today = todayISO(), since = start > today ? start : today, until = addDays(start, n - 1);
-  const row = shoppingRows(start, n).find(r => r.id === id && r.buy > 0); if (!row) return [];
-  let q = 0; for (const [d, day] of Object.entries(S.days)) if (d >= since && d <= until) for (const [, it] of dayItems(day)) if (it.kind === "food" && it.ref === id && !it.eaten) q += +it.qty || 0;
-  if (!(q > 0) || q < row.need - 1) return [];
-  const free = stockPlan(start, n).free, near = g => Math.hypot(g.per.p - A.per.p, g.per.c - A.per.c, g.per.f - A.per.f);
-  return allFoods().filter(g => g.id !== id && g.role === A.role && g.per && g.per[key] > 0 && dietOK(g) && (free[g.id] || 0) > 0)
-    .map(g => { const x = q * A.per[key] / g.per[key]; return { food: g, key, since, until, qFrom: r0(q), qTo: x >= 50 ? Math.round(x / 5) * 5 : r0(x), d: near(g) }; })
-    .filter(x => x.qTo > 0 && x.qTo <= q * 3 && x.qTo <= (free[x.food.id] || 0) + 0.5).sort((a, b) => a.d - b.d || a.food.name.localeCompare(b.food.name)).slice(0, 4);
+  const row = shoppingRows(start, n).find(r => r.id === id && r.buy > 0); if (!row) return null;
+  const key = A.per[HOME_KEY[A.role]] > 0 ? HOME_KEY[A.role] : "kcal"; if (!(A.per[key] > 0)) return null;
+  let q = 0, meals = 0; const recipes = new Set();   // meals: planned meals that use it, directly or inside a recipe; recipes: the names of those recipes
+  for (const [d, day] of Object.entries(S.days)) if (d >= since && d <= until) for (const [, it] of dayItems(day)) if (!it.eaten) {
+    const g = itemStockLines(it).reduce((a, [f, x]) => a + (f === id ? x : 0), 0); if (!(g > 0)) continue;
+    q += g; meals++; if (it.kind === "recipe") recipes.add(itemName(it)); }
+  return q > 0 && q >= row.need - 1 ? { A, key, q, meals, recipes: [...recipes], since, until, start, n } : null;
 }
-const homeSwapHTML = id => { const L = homeSwaps(id); if (!L.length) return "";
-  const A = getFood(id), u = A.unit || "g";
-  const T = "Use something from home", open = !!UI.fold?.home?.[T];
-  return `<div class="field hm-sw"><button class="hm-h" data-act="fold-tog" data-id="home" data-k="${esc(T)}" aria-expanded="${open}"><span class="flabel">${T}</span><small>${L.length} at home</small>${ic(open ? "chevU" : "chevD", "sm")}</button>${open ? `<div class="hm-b">${L.map(x => `<button class="lrow" data-act="home-swap" data-id="${esc(id)}" data-to="${esc(x.food.id)}"><span style="min-width:0"><span class="t">${esc(x.food.name)}</span><span class="s">${fmtN(x.qFrom)} ${u} of ${esc(A.name)} → ${fmtN(x.qTo)} ${x.food.unit || "g"} of ${esc(x.food.name)}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("")}</div>` : ""}</div>`; };
-ACT["home-swap"] = el => { const x = homeSwaps(el.dataset.id).find(y => y.food.id === el.dataset.to); if (!x) return; if (UI.sheet) closeToRoot(); swapFood(el.dataset.id, x.food.id, { by: x.key, since: x.since, until: x.until, home: true }); };
+function homeSwaps(id) {
+  const N = homeNeed(id); if (!N) return [];
+  const { A, key: kA, q, since, until } = N, free = stockPlan(N.start, N.n).free, near = g => Math.hypot(g.per.p - A.per.p, g.per.c - A.per.c, g.per.f - A.per.f);
+  return Object.entries(S.shop.pantry || {}).filter(([g, p]) => g !== id && p.g > 0 && getFood(g)?.per).map(([g, p]) => {
+    const B = getFood(g), key = B.per[kA] > 0 ? kA : "kcal", x = A.per[key] > 0 && B.per[key] > 0 ? q * A.per[key] / B.per[key] : q, qTo = r0(x), fr = Math.max(0, r0(free[g] || 0));
+    return { food: B, key, since, until, qFrom: r0(q), qTo, free: fr, stock: p.g, suggested: B.role === A.role && key === kA && qTo <= q * 3 && qTo <= fr + 0.5 && dietOK(B), d: near(B) };
+  }).filter(x => x.qTo > 0).sort((a, b) => (b.suggested - a.suggested) || (a.suggested ? a.d - b.d : 0) || a.food.name.localeCompare(b.food.name));
+}
+const homeOpenHTML = id => homeNeed(id) ? `<button class="btn tonal" data-act="hm-open" data-id="${esc(id)}">${ic("jar", "sm")}Use something from home</button>` : "";
+const closeUpTo = skip => { let r = UI.sheet; while (r && skip.includes(r.type)) r = r._ret; if (!r) { closeSheet(true); return; } navBlur(); camRelease(); UI.dest = null; UI.sheet = r; r._new = false; renderSheet(); };   // the flow's own sheets close, the one it started from stays
+ACT["home-swap"] = el => { const x = homeSwaps(el.dataset.id).find(y => y.food.id === el.dataset.to); if (!x) return; if (UI.sheet) closeUpTo(["homepick", "buy"]); swapFood(el.dataset.id, x.food.id, { by: x.key, since: x.since, until: x.until, home: true }); };
+/* the picker: the whole pantry with the Pantry's search and filters; choosing shows the grams in the same sheet; a food that is not at home is added to the pantry and the picker comes back with it chosen */
+SHEETS.homepick = sh => {
+  const A = getFood(sh.from), N = A && homeNeed(sh.from), T = "Use something from home";
+  if (!N) return { title: T, body: `<div class="empty slim"><p>That product is not on the list any more.</p></div>`, foot: `<button class="btn soft" data-act="close-sheet">Close</button>` };
+  const u = A.unit || "g", L = homeSwaps(sh.from), x = sh.to ? L.find(y => y.food.id === sh.to) : null;
+  if (x) { const B = x.food, ub = B.unit || "g", short = Math.max(0, x.qTo - x.free);
+    return { title: T, body: `<div class="card"><div class="lrow"><span><span class="t">${esc(A.name)}</span><span class="s">${bdHTML(A)}${fmtN(A.per.kcal)} kcal /100 ${u}</span></span></div><div class="lrow"><span><span class="t">${esc(B.name)}</span><span class="s">${bdHTML(B)}${fmtN(B.per.kcal)} kcal /100 ${ub}</span></span></div></div>
+      <div class="note"><b>${fmtN(x.qFrom)} ${u} of ${esc(A.name)} → ${fmtN(x.qTo)} ${ub} of ${esc(B.name)}</b> in ${N.meals} planned meal${N.meals === 1 ? "" : "s"}, same ${HOME_SAME[x.key]}.</div>
+      ${N.recipes.length ? `<div class="faint" style="font-size:13px">${esc(N.recipes.join(", "))}: the recipe stays as saved, only those planned meals change.</div>` : ""}
+      <div class="faint" style="font-size:13px">${short > 0 ? (x.free > 0 ? `Only ${fmtN(x.free)} ${ub} of ${esc(B.name)} is free at home (the plan uses the rest): the other ${fmtN(short)} ${ub} will be on your list.` : `${esc(B.name)} is all set aside by the plan: ${fmtN(short)} ${ub} of it will be on your list.`) : `Your stock is not touched: it is used when you eat the meals.`}</div>`,
+      foot: `<button class="btn soft" data-act="hm-back">Back</button><button class="btn primary" data-act="home-swap" data-id="${esc(sh.from)}" data-to="${esc(B.id)}">${ic("swap", "sm")}Use from home</button>` }; }
+  const q = sh.q || "", flt = sh.filter || "all", ok = new Set(pantryList(q, "az", flt)), rows = L.filter(y => ok.has(y.food.id)), sug = rows.filter(y => y.suggested), rest = rows.filter(y => !y.suggested);
+  const row = y => { const f = y.food, p = S.shop.pantry[f.id], dl = p.exp ? daysBetween(todayISO(), p.exp) : null;
+    return `<button class="lrow" data-act="hm-pick" data-id="${esc(f.id)}"><span style="min-width:0"><span class="t">${esc(f.name)}</span><span class="s">${bdHTML(f)}→ ${fmtN(y.qTo)} ${f.unit || "g"}${y.qTo > y.free + 0.5 ? ` · <span style="color:var(--warn)">${y.free > 0 ? `only ${fmtN(y.free)} free` : "set aside"}</span>` : ""}${dl != null && dl <= 3 ? ` · <span style="color:var(--${dl < 0 ? "bad" : "warn"})">${dl < 0 ? "expired" : "use soon"}</span>` : ""}</span></span><span class="end"><span class="faint">${(z => `${z.v} ${z.u}`)(pantryQty(f, p))}</span>${ic("chevR", "sm")}</span></button>`; };
+  const sub = t => `<div class="lrow sub-h"><span class="s">${t}</span></div>`;
+  return { title: T, focus: "hm-q",
+    body: `<div class="faint" style="font-size:13px">Instead of ${fmtN(N.q)} ${u} of ${esc(A.name)}: pick anything you have at home.</div>
+      <div class="search">${ic("search")}<input id="hm-q" type="search" placeholder="Search the pantry" value="${esc(q)}" data-in="hm-q" autocomplete="off"></div>
+      <div class="chips">${PAN_FILTERS.map(([k, l]) => `<button class="chip sm" data-act="hm-filter" data-k="${esc(k)}" aria-pressed="${flt === k}">${l}</button>`).join("")}</div>
+      <div class="card">${rows.length ? (sug.length && rest.length ? sub("Suggested") + sug.map(row).join("") + sub("Also at home") + rest.map(row).join("") : rows.map(row).join("")) : `<div class="lrow"><span class="s">${q ? `Nothing at home called “${esc(q)}”.` : L.length ? "Nothing in this filter." : "Nothing at home yet."}</span></div>`}</div>
+      <div class="card"><button class="lrow" data-act="hm-add" data-name="${esc(q)}"><span style="min-width:0"><span class="t">Not at home? Add it</span><span class="s">Add it to the pantry and come straight back</span></span><span class="end">${ic("plus", "sm")}</span></button></div>` };
+};
+INP["hm-q"] = v => { S_().q = v; renderSheet(); };
+ACT["hm-open"] = el => openSheet("homepick", { from: el.dataset.id });
+ACT["hm-pick"] = el => { S_().to = el.dataset.id; renderSheet(); };
+ACT["hm-back"] = () => { S_().to = null; renderSheet(); };
+ACT["hm-filter"] = el => { S_().filter = el.dataset.k; renderSheet(); };
+ACT["hm-add"] = el => { UI.dest = "pantry"; openSheet("prodadd", { q: el.dataset.name || "", dest: "pantry" }); };
 SHEETS.swapfood = sh => {
   const A = getFood(sh.from) || BUILTIN[sh.from]; if (!A) return { title: "Replace", body: `<div class="empty slim"><p>That product is gone.</p></div>`, foot: "" };
   if (!sh.to) { const q = sh.q || "", res = q ? foodSearch(q, "all").filter(r => r.t === "food" && r.x.id !== sh.from).slice(0, 8) : [];
@@ -12198,7 +12239,7 @@ const _goQty = goQty;
 goQty = function (food, from) { if (UI.dest) return destPick(food); return _goQty(food, from); };
 SHEETS.prodadd = sh => {
   const q = sh.q || "", res = q ? foodSearch(q, "all").filter(r => r.t === "food").slice(0, 10) : [];
-  const dest = UI.dest, list = dest === "shop" ? shopToBuy().filter(r => !S.shop.checked?.[r.id]).slice(0, 8) : [];
+  const dest = sh.dest ?? UI.dest, list = dest === "shop" ? shopToBuy().filter(r => !S.shop.checked?.[r.id]).slice(0, 8) : [];
   return { title: dest === "pantry" ? "Add to the pantry" : "Bought something", focus: "pd-q",
     body: `<div class="search">${ic("search")}<input id="pd-q" type="search" placeholder="Search your foods" value="${esc(q)}" data-in="pd-q" autocomplete="off"><button class="btn ink sm" data-act="pd-scan" style="gap:6px">${ic("scan", "sm")}Scan</button></div>
       <div class="add-acts"><button class="aa aa-main" data-act="pd-new">${ic("plus")}<span>New food</span></button><button class="aa" data-act="pd-label">${ic("camera")}<span>Label</span></button><button class="aa" data-act="pd-scan">${ic("scan")}<span>Barcode</span></button></div>
@@ -12206,13 +12247,14 @@ SHEETS.prodadd = sh => {
         : list.length ? `<div class="lrow sub-h"><span class="s">Still on the list</span></div>` + list.map(r => `<button class="lrow" data-act="pd-pick" data-id="${esc(r.id)}"><span><span class="t">${esc(r.f.name)}</span><span class="s">${fmtN(r.buy)} ${r.f.unit || "g"}</span></span><span class="end">${ic("chevR", "sm")}</span></button>`).join("") : `<div class="lrow"><span class="s">Type to search, or scan the barcode.</span></div>`}</div>` };
 };
 INP["pd-q"] = v => { const sh = S_(); sh.q = v; renderSheet(); };
-const pdOpen = dest => { UI.dest = dest; openSheet("prodadd", {}); };
+const pdOpen = dest => { UI.dest = dest; openSheet("prodadd", { dest }); };
+const pdDest = () => { const sh = S_(); return sh?.type === "prodadd" ? sh.dest ?? UI.dest : UI.dest; };   // the sheet remembers what it was opened for: cancelling a sheet it opened clears UI.dest
 ACT["shop-prod"] = () => pdOpen("shop");
 ACT["pantry-prod"] = () => pdOpen("pantry");
-ACT["pd-pick"] = el => destPick(getFood(el.dataset.id));
-ACT["pd-scan"] = () => { const d = UI.dest; openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); UI.dest = d; camOpen("barcode"); };
-ACT["pd-label"] = () => { const d = UI.dest; openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "label", labelOnly: true }); UI.dest = d; camOpen("label"); };
-ACT["pd-new"] = el => { const d = UI.dest; openSheet("food", { draft: blankFood(el?.dataset?.name || S_()?.q || ""), isNew: true, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = d; };
+ACT["pd-pick"] = el => { UI.dest = pdDest(); destPick(getFood(el.dataset.id)); };
+ACT["pd-scan"] = () => { const d = pdDest(); openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "start" }); UI.dest = d; camOpen("barcode"); };
+ACT["pd-label"] = () => { const d = pdDest(); openSheet("scan", { date: UI.date, meal: suggestMeal(), stage: "label", labelOnly: true }); UI.dest = d; camOpen("label"); };
+ACT["pd-new"] = el => { const d = pdDest(); openSheet("food", { draft: blankFood(el?.dataset?.name || S_()?.q || ""), isNew: true, then: "qty", date: UI.date, meal: suggestMeal() }); UI.dest = d; };
 
 /* ================= training progress: maxes, circuits and running over time ================= */
 const RM_N = t => { const m = /^(\d+)RM/.exec(t || ""); return m ? +m[1] : null; };
