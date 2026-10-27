@@ -2,7 +2,7 @@
    App files: network first with a short timeout (the newest version when online, the saved one when not).
    Libraries, the label reader and icons: each kept in its own cache, renamed by the build when a file of that group changes (the old one is then deleted), so a new icon does not download the label reader again.
    The fonts of Google Fonts: saved the first time, so the app has its type offline too. */
-const V = "engine-202610270005", LIB = "engine-lib-7a6d919ff9", OCR = "engine-ocr-becf52da4d", ICO = "engine-icons-3ce539fbd9", FONTS = "engine-fonts-1";
+const V = "engine-202610270928", LIB = "engine-lib-7a6d919ff9", OCR = "engine-ocr-becf52da4d", ICO = "engine-icons-3ce539fbd9", FONTS = "engine-fonts-1";
 const heavyCache = path => /(^|\/)ocr\//.test(path) ? OCR : /(^|\/)icons\//.test(path) ? ICO : LIB;
 const CORE = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon-192.png", "icons/favicon-32.png", "icons/apple-180.png"];
 /* only the Tesseract core this browser will run (the SIMD one where it can): the other variant is fetched on demand if ever needed */
